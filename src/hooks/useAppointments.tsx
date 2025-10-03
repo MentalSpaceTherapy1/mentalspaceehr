@@ -380,7 +380,7 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
           last_modified: now,
           last_modified_by: user?.id
         })
-        .eq('parent_recurrence_id', parentId)
+        .or(`id.eq.${parentId},parent_recurrence_id.eq.${parentId}`)
         .gte('appointment_date', new Date().toISOString().split('T')[0]);
 
       if (error) throw error;

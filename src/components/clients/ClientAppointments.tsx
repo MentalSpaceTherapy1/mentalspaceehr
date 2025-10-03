@@ -3,8 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, MapPin, Video, Users, Plus } from 'lucide-react';
-import { format } from 'date-fns';
+import { Calendar, Clock, MapPin, Video, Users, Plus, Filter } from 'lucide-react';
+import { format, isToday, differenceInMinutes, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
@@ -30,9 +30,36 @@ export function ClientAppointments({ clientId }: ClientAppointmentsProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [clinicians, setClinicians] = useState<Record<string, any>>({});
+  const [showCancelled, setShowCancelled] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string[]>(['Scheduled', 'Confirmed', 'Checked In', 'Completed']);
 
   useEffect(() => {
     fetchAppointments();
+  }, [clientId]);
+
+  // Realtime subscription for appointment updates
+  useEffect(() => {
+    if (!clientId) return;
+
+    const channel = supabase
+      .channel('client-appointments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appointments',
+          filter: `client_id=eq.${clientId}`,
+        },
+        () => {
+          fetchAppointments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [clientId]);
 
   const fetchAppointments = async () => {
@@ -79,6 +106,30 @@ export function ClientAppointments({ clientId }: ClientAppointmentsProps) {
     }
   };
 
+  const filteredAppointments = appointments.filter(apt => {
+    if (!showCancelled && (apt.status === 'Cancelled' || apt.status === 'No Show')) {
+      return false;
+    }
+    return statusFilter.includes(apt.status);
+  });
+
+  const canJoinSession = (apt: Appointment) => {
+    return (
+      apt.service_location === 'Telehealth' &&
+      apt.telehealth_platform === 'Internal' &&
+      apt.telehealth_link &&
+      isToday(parseISO(apt.appointment_date)) &&
+      (apt.status === 'Scheduled' || apt.status === 'Confirmed' || apt.status === 'Checked In')
+    );
+  };
+
+  const isSessionStartingSoon = (apt: Appointment) => {
+    if (!isToday(parseISO(apt.appointment_date))) return false;
+    const appointmentTime = parseISO(`${apt.appointment_date}T${apt.start_time}`);
+    const minutesUntil = differenceInMinutes(appointmentTime, new Date());
+    return minutesUntil > 0 && minutesUntil <= 15;
+  };
+
   if (loading) {
     return (
       <Card>
@@ -102,20 +153,60 @@ export function ClientAppointments({ clientId }: ClientAppointmentsProps) {
         </Button>
       </div>
 
-      {appointments.length === 0 ? (
+      {/* Status Filter */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Filter:</span>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {['Scheduled', 'Confirmed', 'Checked In', 'Completed'].map(status => (
+                <Badge
+                  key={status}
+                  variant={statusFilter.includes(status) ? 'default' : 'outline'}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    setStatusFilter(prev =>
+                      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
+                    );
+                  }}
+                >
+                  {status}
+                </Badge>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCancelled(!showCancelled)}
+            >
+              {showCancelled ? 'Hide' : 'Show'} Cancelled/No-Show
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {filteredAppointments.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground mb-4">No appointments scheduled</p>
+            <p className="text-muted-foreground mb-4">
+              {appointments.length === 0 
+                ? 'No appointments scheduled'
+                : 'No appointments match your filters'
+              }
+            </p>
             <Button onClick={() => navigate(`/schedule?clientId=${clientId}`)}>
               <Plus className="h-4 w-4 mr-2" />
-              Schedule First Appointment
+              {appointments.length === 0 ? 'Schedule First Appointment' : 'Schedule Appointment'}
             </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {appointments.map((appointment) => {
+          {filteredAppointments.map((appointment) => {
             const clinician = clinicians[appointment.clinician_id];
             return (
               <Card key={appointment.id} className="hover:shadow-md transition-shadow">
@@ -123,6 +214,11 @@ export function ClientAppointments({ clientId }: ClientAppointmentsProps) {
                   <div className="flex items-start justify-between">
                     <div className="space-y-3 flex-1">
                       <div className="flex items-center gap-2">
+                        {isSessionStartingSoon(appointment) && (
+                          <Badge variant="default" className="animate-pulse">
+                            Starting Soon
+                          </Badge>
+                        )}
                         <Badge 
                           variant="outline" 
                           className={statusColors[appointment.status as keyof typeof statusColors]}
@@ -144,7 +240,7 @@ export function ClientAppointments({ clientId }: ClientAppointmentsProps) {
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-sm">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <span>{format(new Date(appointment.appointment_date), 'EEEE, MMMM d, yyyy')}</span>
+                            <span>{format(parseISO(appointment.appointment_date), 'EEEE, MMMM d, yyyy')}</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm">
                             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -187,6 +283,23 @@ export function ClientAppointments({ clientId }: ClientAppointmentsProps) {
                         <div className="text-sm pt-2 border-t">
                           <span className="text-muted-foreground">Notes: </span>
                           <span>{appointment.appointment_notes}</span>
+                        </div>
+                      )}
+
+                      {/* Telehealth Join Button */}
+                      {canJoinSession(appointment) && (
+                        <div className="pt-3 border-t space-y-2">
+                          <Button
+                            onClick={() => navigate(appointment.telehealth_link!)}
+                            className="w-full bg-primary hover:bg-primary/90"
+                            size="sm"
+                          >
+                            <Video className="mr-2 h-4 w-4" />
+                            Join Telehealth Session
+                          </Button>
+                          <p className="text-xs text-muted-foreground text-center">
+                            Meeting Link: {appointment.telehealth_link}
+                          </p>
                         </div>
                       )}
                     </div>

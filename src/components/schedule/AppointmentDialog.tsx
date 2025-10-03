@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Sparkles, Repeat } from 'lucide-react';
+import { format, isToday, isPast } from 'date-fns';
+import { Calendar as CalendarIcon, Sparkles, Repeat, Video } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { TimeSlotPicker } from './TimeSlotPicker';
 import { RecurringAppointmentForm } from './RecurringAppointmentForm';
 import { GroupSessionParticipants } from './GroupSessionParticipants';
@@ -104,6 +105,7 @@ export function AppointmentDialog({
   const [groupParticipants, setGroupParticipants] = useState<string[]>([]);
   const [maxParticipants, setMaxParticipants] = useState(10);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const getMaxDays = (frequency: string) => {
     if (frequency === 'Weekly') return 1;
@@ -590,6 +592,22 @@ export function AppointmentDialog({
               >
                 Close
               </Button>
+              {appointment && 
+                appointment.service_location === 'Telehealth' && 
+                appointment.telehealth_platform === 'Internal' && 
+                appointment.telehealth_link &&
+                (appointment.status === 'Scheduled' || appointment.status === 'Confirmed') &&
+                (isToday(new Date(appointment.appointment_date)) || isPast(new Date(appointment.appointment_date))) && (
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={() => navigate(appointment.telehealth_link!)}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  <Video className="mr-2 h-4 w-4" />
+                  Join Telehealth Session
+                </Button>
+              )}
               {appointment && onRequestCancel && (
                 <Button
                   type="button"
