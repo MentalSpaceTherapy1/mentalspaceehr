@@ -183,10 +183,16 @@ export default function Dashboard() {
                   Manage users, roles, and system settings
                 </p>
               </div>
-              <Button onClick={() => navigate('/admin/users')}>
-                <Users className="mr-2 h-4 w-4" />
-                Manage Users
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => navigate('/admin/users')}>
+                  <Users className="mr-2 h-4 w-4" />
+                  Manage Users
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/admin/practice-settings')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Practice Settings
+                </Button>
+              </div>
             </div>
           </Card>
         )}

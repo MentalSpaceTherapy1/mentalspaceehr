@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import CreateUser from "./pages/admin/CreateUser";
+import PracticeSettings from "./pages/admin/PracticeSettings";
 import Profile from "./pages/Profile";
 import MFASetup from "./pages/MFASetup";
 import TrustedDevices from "./pages/TrustedDevices";
@@ -59,7 +60,15 @@ const App = () => (
               } 
             />
             <Route 
-              path="/profile" 
+              path="/admin/practice-settings" 
+              element={
+                <AdminRoute>
+                  <PracticeSettings />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/profile"
               element={
                 <ProtectedRoute>
                   <Profile />

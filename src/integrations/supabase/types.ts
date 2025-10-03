@@ -44,6 +44,165 @@ export type Database = {
         }
         Relationships: []
       }
+      practice_locations: {
+        Row: {
+          city: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          location_name: string
+          phone_number: string
+          place_of_service_code: string | null
+          state: string
+          street1: string
+          street2: string | null
+          updated_at: string | null
+          zip_code: string
+        }
+        Insert: {
+          city: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          location_name: string
+          phone_number: string
+          place_of_service_code?: string | null
+          state: string
+          street1: string
+          street2?: string | null
+          updated_at?: string | null
+          zip_code: string
+        }
+        Update: {
+          city?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          location_name?: string
+          phone_number?: string
+          place_of_service_code?: string | null
+          state?: string
+          street1?: string
+          street2?: string | null
+          updated_at?: string | null
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      practice_settings: {
+        Row: {
+          allow_note_correction_after_lockout: boolean | null
+          billing_city: string | null
+          billing_state: string | null
+          billing_street1: string | null
+          billing_street2: string | null
+          billing_zip_code: string | null
+          city: string
+          county: string | null
+          created_at: string | null
+          dba: string | null
+          default_appointment_duration: number | null
+          default_session_types: string[] | null
+          documentation_grace_period: number | null
+          email_address: string
+          fax_number: string | null
+          id: string
+          logo: string | null
+          main_phone_number: string
+          note_due_days: number | null
+          note_lockout_day: string | null
+          note_lockout_time: string | null
+          npi_number: string
+          office_hours: Json
+          practice_name: string
+          primary_color: string | null
+          require_supervisor_cosign: boolean | null
+          requires_insurance_auth: boolean | null
+          secondary_color: string | null
+          state: string
+          street1: string
+          street2: string | null
+          tax_id: string
+          updated_at: string | null
+          website: string | null
+          zip_code: string
+        }
+        Insert: {
+          allow_note_correction_after_lockout?: boolean | null
+          billing_city?: string | null
+          billing_state?: string | null
+          billing_street1?: string | null
+          billing_street2?: string | null
+          billing_zip_code?: string | null
+          city: string
+          county?: string | null
+          created_at?: string | null
+          dba?: string | null
+          default_appointment_duration?: number | null
+          default_session_types?: string[] | null
+          documentation_grace_period?: number | null
+          email_address: string
+          fax_number?: string | null
+          id?: string
+          logo?: string | null
+          main_phone_number: string
+          note_due_days?: number | null
+          note_lockout_day?: string | null
+          note_lockout_time?: string | null
+          npi_number: string
+          office_hours?: Json
+          practice_name: string
+          primary_color?: string | null
+          require_supervisor_cosign?: boolean | null
+          requires_insurance_auth?: boolean | null
+          secondary_color?: string | null
+          state: string
+          street1: string
+          street2?: string | null
+          tax_id: string
+          updated_at?: string | null
+          website?: string | null
+          zip_code: string
+        }
+        Update: {
+          allow_note_correction_after_lockout?: boolean | null
+          billing_city?: string | null
+          billing_state?: string | null
+          billing_street1?: string | null
+          billing_street2?: string | null
+          billing_zip_code?: string | null
+          city?: string
+          county?: string | null
+          created_at?: string | null
+          dba?: string | null
+          default_appointment_duration?: number | null
+          default_session_types?: string[] | null
+          documentation_grace_period?: number | null
+          email_address?: string
+          fax_number?: string | null
+          id?: string
+          logo?: string | null
+          main_phone_number?: string
+          note_due_days?: number | null
+          note_lockout_day?: string | null
+          note_lockout_time?: string | null
+          npi_number?: string
+          office_hours?: Json
+          practice_name?: string
+          primary_color?: string | null
+          require_supervisor_cosign?: boolean | null
+          requires_insurance_auth?: boolean | null
+          secondary_color?: string | null
+          state?: string
+          street1?: string
+          street2?: string | null
+          tax_id?: string
+          updated_at?: string | null
+          website?: string | null
+          zip_code?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           accepts_new_patients: boolean | null
