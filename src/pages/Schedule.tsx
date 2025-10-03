@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Clock } from 'lucide-react';
+import { Plus, Clock, Users, Calendar as CalendarIcon } from 'lucide-react';
 import { useAppointments, Appointment } from '@/hooks/useAppointments';
 import { useBlockedTimes } from '@/hooks/useBlockedTimes';
 import { AppointmentDialog } from '@/components/schedule/AppointmentDialog';
@@ -243,21 +243,28 @@ export default function Schedule() {
               Manage appointments and view your calendar
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             {canCreateAppointments && (
               <>
-                <Button variant="outline" onClick={() => {
-                  setSelectedBlockedTime(null);
-                  setBlockedTimeDialogOpen(true);
-                }}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setSelectedBlockedTime(null);
+                    setBlockedTimeDialogOpen(true);
+                  }}
+                  className="border-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-all shadow-sm"
+                >
                   <Clock className="mr-2 h-4 w-4" />
                   Block Time
                 </Button>
-                <Button onClick={() => {
-                  setDefaultDate(new Date());
-                  setSelectedAppointment(null);
-                  setDialogOpen(true);
-                }}>
+                <Button 
+                  onClick={() => {
+                    setDefaultDate(new Date());
+                    setSelectedAppointment(null);
+                    setDialogOpen(true);
+                  }}
+                  className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md hover:shadow-lg transition-all"
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   New Appointment
                 </Button>
@@ -266,51 +273,68 @@ export default function Schedule() {
           </div>
         </div>
 
-        <div className="flex gap-4 items-center flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Clinician:</span>
-            <Select value={selectedClinician} onValueChange={setSelectedClinician}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Clinicians</SelectItem>
-                {clinicians.map(c => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.first_name} {c.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <Card className="border-2 shadow-md bg-gradient-to-r from-background via-muted/20 to-background">
+          <CardContent className="pt-6">
+            <div className="flex gap-4 items-center flex-wrap">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold">Clinician:</span>
+                <Select value={selectedClinician} onValueChange={setSelectedClinician}>
+                  <SelectTrigger className="w-[200px] border-2 border-primary/20 hover:border-primary/40 transition-colors">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Clinicians</SelectItem>
+                    {clinicians.map(c => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.first_name} {c.last_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Color by:</span>
-            <Select value={colorBy} onValueChange={(v) => setColorBy(v as ColorBy)}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="status">Status</SelectItem>
-                <SelectItem value="type">Type</SelectItem>
-                <SelectItem value="clinician">Clinician</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 rounded-full bg-gradient-to-br from-primary to-primary/60" />
+                <span className="text-sm font-semibold">Color by:</span>
+                <Select value={colorBy} onValueChange={(v) => setColorBy(v as ColorBy)}>
+                  <SelectTrigger className="w-[150px] border-2 border-primary/20 hover:border-primary/40 transition-colors">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="status">Status</SelectItem>
+                    <SelectItem value="type">Type</SelectItem>
+                    <SelectItem value="clinician">Clinician</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="flex gap-2 flex-wrap">
-            <Badge variant="outline" className="bg-primary text-primary-foreground">Scheduled</Badge>
-            <Badge variant="outline" style={{ backgroundColor: 'hsl(142, 71%, 45%)', color: 'white' }}>Checked In</Badge>
-            <Badge variant="outline" style={{ backgroundColor: 'hsl(221, 83%, 53%)', color: 'white' }}>Completed</Badge>
-            <Badge variant="outline" style={{ backgroundColor: 'hsl(0, 84%, 60%)', color: 'white' }}>No Show</Badge>
-          </div>
-        </div>
+              <div className="flex gap-2 flex-wrap ml-auto">
+                <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md">
+                  Scheduled
+                </Badge>
+                <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md">
+                  Checked In
+                </Badge>
+                <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md">
+                  Completed
+                </Badge>
+                <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md">
+                  No Show
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Calendar View</CardTitle>
+        <Card className="border-2 shadow-lg bg-gradient-to-br from-background via-background to-primary/5">
+          <CardHeader className="border-b-2 border-primary/10 bg-gradient-to-r from-background via-muted/30 to-background">
+            <CardTitle className="text-2xl font-bold flex items-center gap-2">
+              <CalendarIcon className="h-6 w-6 text-primary" />
+              Calendar View
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="h-[700px]">
               <DnDCalendar
                 localizer={localizer}

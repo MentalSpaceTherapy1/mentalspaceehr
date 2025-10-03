@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { Calendar as CalendarIcon, Sparkles } from 'lucide-react';
+import { TimeSlotPicker } from './TimeSlotPicker';
 import {
   Dialog,
   DialogContent,
@@ -159,9 +160,10 @@ export function AppointmentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-background via-background to-primary/5">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
             {appointment ? 'Edit Appointment' : 'New Appointment'}
           </DialogTitle>
         </DialogHeader>
@@ -264,14 +266,10 @@ export function AppointmentDialog({
                   <FormItem>
                     <FormLabel>Start Time</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          type="time"
-                          className="pl-10"
-                          {...field}
-                        />
-                      </div>
+                      <TimeSlotPicker
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

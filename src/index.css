@@ -154,43 +154,175 @@ All colors MUST be HSL.
   }
 }
 
-/* Calendar custom styles */
+/* Calendar custom styles - Modern & Colorful */
 .rbc-calendar {
-  @apply bg-card text-card-foreground border border-border rounded-lg;
+  font-family: inherit;
+  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--primary) / 0.02) 100%);
+  border-radius: 12px;
+  padding: 8px;
 }
 
 .rbc-header {
-  @apply bg-muted text-muted-foreground font-semibold py-2 border-b border-border;
+  padding: 16px 8px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 3px solid hsl(var(--primary) / 0.2);
+  background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.3) 100%);
+  color: hsl(var(--primary));
+}
+
+.rbc-time-view {
+  border: 2px solid hsl(var(--border));
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.rbc-time-header {
+  border-bottom: 3px solid hsl(var(--primary) / 0.3);
+  background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--accent) / 0.3) 100%);
+}
+
+.rbc-time-content {
+  border-top: 3px solid hsl(var(--primary) / 0.2);
+  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.1) 100%);
 }
 
 .rbc-today {
-  @apply bg-primary/10;
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.08) 0%, hsl(var(--primary) / 0.12) 100%);
+  position: relative;
 }
 
-.rbc-event {
-  @apply rounded text-sm font-medium;
-}
-
-.rbc-event-label {
-  @apply text-xs;
-}
-
-.rbc-time-slot {
-  @apply border-t border-border/50;
+.rbc-today::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.5));
 }
 
 .rbc-current-time-indicator {
-  @apply bg-primary;
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.7));
+  height: 3px;
+  box-shadow: 0 0 8px hsl(var(--primary) / 0.5);
+}
+
+.rbc-current-time-indicator::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  box-shadow: 0 0 12px hsl(var(--primary) / 0.8);
+}
+
+.rbc-event {
+  padding: 6px 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.1);
+}
+
+.rbc-event:hover {
+  box-shadow: 0 8px 16px -4px rgb(0 0 0 / 0.2), 0 4px 8px -2px rgb(0 0 0 / 0.1);
+  transform: translateY(-2px) scale(1.02);
+  border-color: hsl(var(--background) / 0.3);
+}
+
+.rbc-event-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .rbc-toolbar {
-  @apply mb-4 gap-2 flex-wrap;
+  padding: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, hsl(var(--muted) / 0.3) 0%, hsl(var(--background)) 100%);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 2px solid hsl(var(--border));
 }
 
 .rbc-toolbar button {
-  @apply px-3 py-1.5 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded;
+  padding: 10px 20px;
+  border: 2px solid hsl(var(--border));
+  border-radius: 8px;
+  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.3) 100%);
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.05);
+}
+
+.rbc-toolbar button:hover {
+  background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--muted)) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px -2px rgb(0 0 0 / 0.1);
+  border-color: hsl(var(--primary) / 0.3);
 }
 
 .rbc-toolbar button.rbc-active {
-  @apply bg-primary text-primary-foreground;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%);
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+  box-shadow: 0 4px 12px -2px hsl(var(--primary) / 0.3);
+}
+
+.rbc-toolbar button.rbc-active:hover {
+  transform: translateY(-2px) scale(1.05);
+}
+
+.rbc-month-view {
+  border: 2px solid hsl(var(--border));
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  background: hsl(var(--background));
+}
+
+.rbc-day-bg {
+  transition: background-color 0.2s;
+}
+
+.rbc-day-bg:hover {
+  background-color: hsl(var(--accent) / 0.5);
+}
+
+.rbc-day-bg + .rbc-day-bg {
+  border-left: 1px solid hsl(var(--border));
+}
+
+.rbc-month-row + .rbc-month-row {
+  border-top: 1px solid hsl(var(--border));
+}
+
+.rbc-off-range-bg {
+  background: hsl(var(--muted) / 0.3);
+}
+
+.rbc-time-slot {
+  border-top: 1px solid hsl(var(--border) / 0.5);
+}
+
+.rbc-timeslot-group {
+  border-left: 1px solid hsl(var(--border));
+}
+
+.rbc-day-slot .rbc-time-slot {
+  border-top: 1px solid hsl(var(--border) / 0.3);
 }
