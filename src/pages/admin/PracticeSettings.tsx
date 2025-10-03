@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Save, Building2, MapPin, Clock, Shield, Stethoscope, Palette, Upload, X, Plus } from 'lucide-react';
+import { ArrowLeft, Save, Building2, MapPin, Clock, Shield, Stethoscope, Palette, Upload, X, Plus, LayoutDashboard } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +30,15 @@ export default function PracticeSettings() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [newSessionType, setNewSessionType] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [dashboardSettings, setDashboardSettings] = useState<any>({
+    administrator: { widgets: {} },
+    therapist: { widgets: {} },
+    associate_trainee: { widgets: {} },
+    supervisor: { widgets: {} },
+    billing_staff: { widgets: {} },
+    front_desk: { widgets: {} }
+  });
   
   const [formData, setFormData] = useState({
     practice_name: '',
@@ -137,6 +146,11 @@ export default function PracticeSettings() {
         if (data.logo) {
           setLogoPreview(data.logo);
         }
+        
+        // Load dashboard settings
+        if (data.dashboard_settings) {
+          setDashboardSettings(data.dashboard_settings);
+        }
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -149,6 +163,7 @@ export default function PracticeSettings() {
       const payload = {
         ...formData,
         office_hours: officeHours,
+        dashboard_settings: dashboardSettings,
       };
 
       if (settingsId) {
@@ -281,6 +296,10 @@ export default function PracticeSettings() {
             <TabsTrigger value="branding">
               <Palette className="h-4 w-4 mr-2" />
               Branding
+            </TabsTrigger>
+            <TabsTrigger value="dashboards">
+              <LayoutDashboard className="h-4 w-4 mr-2" />
+              Dashboards
             </TabsTrigger>
           </TabsList>
 
@@ -829,6 +848,277 @@ export default function PracticeSettings() {
                   Manage Locations
                 </Button>
               </div>
+            </Card>
+          </TabsContent>
+
+          {/* Dashboard Settings Tab */}
+          <TabsContent value="dashboards" className="space-y-6">
+            <Card className="p-6">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Dashboard Configuration</h3>
+                <p className="text-sm text-muted-foreground">
+                  Control which widgets and sections appear on each role's dashboard
+                </p>
+              </div>
+
+              <Tabs defaultValue="administrator" className="space-y-4">
+                <TabsList className="grid grid-cols-6 w-full">
+                  <TabsTrigger value="administrator">Administrator</TabsTrigger>
+                  <TabsTrigger value="therapist">Therapist</TabsTrigger>
+                  <TabsTrigger value="associate_trainee">Associate</TabsTrigger>
+                  <TabsTrigger value="supervisor">Supervisor</TabsTrigger>
+                  <TabsTrigger value="billing_staff">Billing</TabsTrigger>
+                  <TabsTrigger value="front_desk">Front Desk</TabsTrigger>
+                </TabsList>
+
+                {/* Administrator Dashboard Settings */}
+                <TabsContent value="administrator" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <Label htmlFor="admin-system-health" className="cursor-pointer">System Health Status</Label>
+                      <Switch
+                        id="admin-system-health"
+                        checked={dashboardSettings.administrator?.widgets?.system_health !== false}
+                        onCheckedChange={(checked) => 
+                          setDashboardSettings({
+                            ...dashboardSettings,
+                            administrator: {
+                              ...dashboardSettings.administrator,
+                              widgets: { ...dashboardSettings.administrator?.widgets, system_health: checked }
+                            }
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <Label htmlFor="admin-active-users" className="cursor-pointer">Active Users</Label>
+                      <Switch
+                        id="admin-active-users"
+                        checked={dashboardSettings.administrator?.widgets?.active_users !== false}
+                        onCheckedChange={(checked) => 
+                          setDashboardSettings({
+                            ...dashboardSettings,
+                            administrator: {
+                              ...dashboardSettings.administrator,
+                              widgets: { ...dashboardSettings.administrator?.widgets, active_users: checked }
+                            }
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <Label htmlFor="admin-pending-approvals" className="cursor-pointer">Pending Approvals</Label>
+                      <Switch
+                        id="admin-pending-approvals"
+                        checked={dashboardSettings.administrator?.widgets?.pending_approvals !== false}
+                        onCheckedChange={(checked) => 
+                          setDashboardSettings({
+                            ...dashboardSettings,
+                            administrator: {
+                              ...dashboardSettings.administrator,
+                              widgets: { ...dashboardSettings.administrator?.widgets, pending_approvals: checked }
+                            }
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <Label htmlFor="admin-compliance-alerts" className="cursor-pointer">Compliance Alerts</Label>
+                      <Switch
+                        id="admin-compliance-alerts"
+                        checked={dashboardSettings.administrator?.widgets?.compliance_alerts !== false}
+                        onCheckedChange={(checked) => 
+                          setDashboardSettings({
+                            ...dashboardSettings,
+                            administrator: {
+                              ...dashboardSettings.administrator,
+                              widgets: { ...dashboardSettings.administrator?.widgets, compliance_alerts: checked }
+                            }
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <Label htmlFor="admin-financial-summary" className="cursor-pointer">Financial Summary</Label>
+                      <Switch
+                        id="admin-financial-summary"
+                        checked={dashboardSettings.administrator?.widgets?.financial_summary !== false}
+                        onCheckedChange={(checked) => 
+                          setDashboardSettings({
+                            ...dashboardSettings,
+                            administrator: {
+                              ...dashboardSettings.administrator,
+                              widgets: { ...dashboardSettings.administrator?.widgets, financial_summary: checked }
+                            }
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <Label htmlFor="admin-recent-activity" className="cursor-pointer">Recent Activity</Label>
+                      <Switch
+                        id="admin-recent-activity"
+                        checked={dashboardSettings.administrator?.widgets?.recent_activity !== false}
+                        onCheckedChange={(checked) => 
+                          setDashboardSettings({
+                            ...dashboardSettings,
+                            administrator: {
+                              ...dashboardSettings.administrator,
+                              widgets: { ...dashboardSettings.administrator?.widgets, recent_activity: checked }
+                            }
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <Label htmlFor="admin-quick-actions" className="cursor-pointer">Quick Actions</Label>
+                      <Switch
+                        id="admin-quick-actions"
+                        checked={dashboardSettings.administrator?.widgets?.quick_actions !== false}
+                        onCheckedChange={(checked) => 
+                          setDashboardSettings({
+                            ...dashboardSettings,
+                            administrator: {
+                              ...dashboardSettings.administrator,
+                              widgets: { ...dashboardSettings.administrator?.widgets, quick_actions: checked }
+                            }
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* Therapist Dashboard Settings */}
+                <TabsContent value="therapist" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {['todays_sessions', 'pending_notes', 'active_clients', 'compliance', 'schedule', 'tasks', 'productivity', 'recent_activity', 'quick_actions'].map((widget) => (
+                      <div key={widget} className="flex items-center justify-between p-3 border rounded-lg">
+                        <Label htmlFor={`therapist-${widget}`} className="cursor-pointer capitalize">
+                          {widget.replace(/_/g, ' ')}
+                        </Label>
+                        <Switch
+                          id={`therapist-${widget}`}
+                          checked={dashboardSettings.therapist?.widgets?.[widget] !== false}
+                          onCheckedChange={(checked) => 
+                            setDashboardSettings({
+                              ...dashboardSettings,
+                              therapist: {
+                                ...dashboardSettings.therapist,
+                                widgets: { ...dashboardSettings.therapist?.widgets, [widget]: checked }
+                              }
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                {/* Associate Trainee Dashboard Settings */}
+                <TabsContent value="associate_trainee" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {['todays_sessions', 'pending_notes', 'active_clients', 'compliance', 'schedule', 'tasks', 'productivity', 'recent_activity', 'quick_actions'].map((widget) => (
+                      <div key={widget} className="flex items-center justify-between p-3 border rounded-lg">
+                        <Label htmlFor={`associate-${widget}`} className="cursor-pointer capitalize">
+                          {widget.replace(/_/g, ' ')}
+                        </Label>
+                        <Switch
+                          id={`associate-${widget}`}
+                          checked={dashboardSettings.associate_trainee?.widgets?.[widget] !== false}
+                          onCheckedChange={(checked) => 
+                            setDashboardSettings({
+                              ...dashboardSettings,
+                              associate_trainee: {
+                                ...dashboardSettings.associate_trainee,
+                                widgets: { ...dashboardSettings.associate_trainee?.widgets, [widget]: checked }
+                              }
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                {/* Supervisor Dashboard Settings */}
+                <TabsContent value="supervisor" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {['supervisees', 'pending_cosigns', 'supervision_hours', 'compliance_issues', 'supervisee_list', 'pending_notes', 'supervision_summary', 'compliance_status', 'upcoming_meetings', 'quick_actions'].map((widget) => (
+                      <div key={widget} className="flex items-center justify-between p-3 border rounded-lg">
+                        <Label htmlFor={`supervisor-${widget}`} className="cursor-pointer capitalize">
+                          {widget.replace(/_/g, ' ')}
+                        </Label>
+                        <Switch
+                          id={`supervisor-${widget}`}
+                          checked={dashboardSettings.supervisor?.widgets?.[widget] !== false}
+                          onCheckedChange={(checked) => 
+                            setDashboardSettings({
+                              ...dashboardSettings,
+                              supervisor: {
+                                ...dashboardSettings.supervisor,
+                                widgets: { ...dashboardSettings.supervisor?.widgets, [widget]: checked }
+                              }
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                {/* Billing Staff Dashboard Settings */}
+                <TabsContent value="billing_staff" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {['revenue_today', 'pending_claims', 'outstanding_balance', 'collection_rate', 'claims_status', 'revenue_summary', 'insurance_verification', 'client_balances', 'quick_actions'].map((widget) => (
+                      <div key={widget} className="flex items-center justify-between p-3 border rounded-lg">
+                        <Label htmlFor={`billing-${widget}`} className="cursor-pointer capitalize">
+                          {widget.replace(/_/g, ' ')}
+                        </Label>
+                        <Switch
+                          id={`billing-${widget}`}
+                          checked={dashboardSettings.billing_staff?.widgets?.[widget] !== false}
+                          onCheckedChange={(checked) => 
+                            setDashboardSettings({
+                              ...dashboardSettings,
+                              billing_staff: {
+                                ...dashboardSettings.billing_staff,
+                                widgets: { ...dashboardSettings.billing_staff?.widgets, [widget]: checked }
+                              }
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                {/* Front Desk Dashboard Settings */}
+                <TabsContent value="front_desk" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {['todays_appointments', 'checkins', 'waiting', 'messages', 'schedule', 'pending_tasks', 'checkin_queue', 'quick_actions'].map((widget) => (
+                      <div key={widget} className="flex items-center justify-between p-3 border rounded-lg">
+                        <Label htmlFor={`frontdesk-${widget}`} className="cursor-pointer capitalize">
+                          {widget.replace(/_/g, ' ')}
+                        </Label>
+                        <Switch
+                          id={`frontdesk-${widget}`}
+                          checked={dashboardSettings.front_desk?.widgets?.[widget] !== false}
+                          onCheckedChange={(checked) => 
+                            setDashboardSettings({
+                              ...dashboardSettings,
+                              front_desk: {
+                                ...dashboardSettings.front_desk,
+                                widgets: { ...dashboardSettings.front_desk?.widgets, [widget]: checked }
+                              }
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
             </Card>
           </TabsContent>
         </Tabs>

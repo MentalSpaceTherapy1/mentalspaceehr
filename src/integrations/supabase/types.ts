@@ -100,6 +100,7 @@ export type Database = {
           city: string
           county: string | null
           created_at: string | null
+          dashboard_settings: Json | null
           dba: string | null
           default_appointment_duration: number | null
           default_session_types: string[] | null
@@ -137,6 +138,7 @@ export type Database = {
           city: string
           county?: string | null
           created_at?: string | null
+          dashboard_settings?: Json | null
           dba?: string | null
           default_appointment_duration?: number | null
           default_session_types?: string[] | null
@@ -174,6 +176,7 @@ export type Database = {
           city?: string
           county?: string | null
           created_at?: string | null
+          dashboard_settings?: Json | null
           dba?: string | null
           default_appointment_duration?: number | null
           default_session_types?: string[] | null
