@@ -10,17 +10,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Clock, Users, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Clock, Users, Calendar as CalendarIcon, Repeat } from 'lucide-react';
 import { useAppointments, Appointment } from '@/hooks/useAppointments';
 import { useBlockedTimes } from '@/hooks/useBlockedTimes';
 import { AppointmentDialog } from '@/components/schedule/AppointmentDialog';
 import { AppointmentStatusDialog } from '@/components/schedule/AppointmentStatusDialog';
 import { CancellationDialog } from '@/components/schedule/CancellationDialog';
 import { BlockedTimesDialog } from '@/components/schedule/BlockedTimesDialog';
+import { RecurringEditDialog } from '@/components/schedule/RecurringEditDialog';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { isRecurringAppointment } from '@/lib/recurringAppointments';
 
 const locales = {
   'en-US': enUS,
@@ -56,6 +58,9 @@ export default function Schedule() {
   const [cancellationDialogOpen, setCancellationDialogOpen] = useState(false);
   const [blockedTimeDialogOpen, setBlockedTimeDialogOpen] = useState(false);
   const [selectedBlockedTime, setSelectedBlockedTime] = useState<any>(null);
+  const [recurringEditDialogOpen, setRecurringEditDialogOpen] = useState(false);
+  const [recurringEditAction, setRecurringEditAction] = useState<'edit' | 'delete'>('edit');
+  const [pendingRecurringAction, setPendingRecurringAction] = useState<(() => void) | null>(null);
   
   // Calculate date range for fetching appointments
   const dateRange = useMemo(() => {
@@ -70,6 +75,9 @@ export default function Schedule() {
     createAppointment,
     updateAppointment,
     cancelAppointment,
+    deleteAppointment,
+    deleteRecurringSeries,
+    updateRecurringSeries,
   } = useAppointments(dateRange.start, dateRange.end, selectedClinician === 'all' ? undefined : selectedClinician);
 
   const { blockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime } = useBlockedTimes(
@@ -108,7 +116,7 @@ export default function Schedule() {
   const events = useMemo(() => {
     return appointments.map((apt) => ({
       id: apt.id,
-      title: `${apt.appointment_type}`,
+      title: `${apt.appointment_type}${isRecurringAppointment(apt) ? ' 🔁' : ''}`,
       start: new Date(`${apt.appointment_date}T${apt.start_time}`),
       end: new Date(`${apt.appointment_date}T${apt.end_time}`),
       resource: apt,
@@ -122,8 +130,17 @@ export default function Schedule() {
   }, []);
 
   const handleSelectEvent = useCallback((event: any) => {
-    setSelectedAppointment(event.resource);
-    setDialogOpen(true);
+    const appointment = event.resource as Appointment;
+    
+    // Check if this is a recurring appointment and we're trying to edit
+    if (isRecurringAppointment(appointment)) {
+      setSelectedAppointment(appointment);
+      setRecurringEditAction('edit');
+      setRecurringEditDialogOpen(true);
+    } else {
+      setSelectedAppointment(appointment);
+      setDialogOpen(true);
+    }
   }, []);
 
   const handleSaveAppointment = async (data: Partial<Appointment>) => {
@@ -184,6 +201,32 @@ export default function Schedule() {
       await updateBlockedTime(data.id, data);
     } else {
       await createBlockedTime(data);
+    }
+  };
+
+  const handleRecurringEditSingle = () => {
+    setRecurringEditDialogOpen(false);
+    if (recurringEditAction === 'edit') {
+      setDialogOpen(true);
+    } else if (recurringEditAction === 'delete' && selectedAppointment) {
+      deleteAppointment(selectedAppointment.id);
+    }
+  };
+
+  const handleRecurringEditSeries = async () => {
+    setRecurringEditDialogOpen(false);
+    if (recurringEditAction === 'delete' && selectedAppointment) {
+      const parentId = selectedAppointment.parent_recurrence_id || selectedAppointment.id;
+      await deleteRecurringSeries(parentId);
+      setSelectedAppointment(null);
+    } else {
+      // For edit series, we'll show a simplified dialog
+      // In a full implementation, this would allow editing series-wide properties
+      toast({
+        title: "Edit Series",
+        description: "Editing entire series is not yet implemented. Please delete and recreate.",
+        variant: "default"
+      });
     }
   };
 
@@ -415,6 +458,14 @@ export default function Schedule() {
               clinicianId={user?.id || ''}
               onSave={handleSaveBlockedTime}
               blockedTime={selectedBlockedTime}
+            />
+
+            <RecurringEditDialog
+              open={recurringEditDialogOpen}
+              onOpenChange={setRecurringEditDialogOpen}
+              onEditSingle={handleRecurringEditSingle}
+              onEditSeries={handleRecurringEditSeries}
+              action={recurringEditAction}
             />
           </>
         )}

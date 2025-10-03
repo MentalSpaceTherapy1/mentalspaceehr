@@ -3,8 +3,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Sparkles } from 'lucide-react';
+import { Calendar as CalendarIcon, Sparkles, Repeat } from 'lucide-react';
 import { TimeSlotPicker } from './TimeSlotPicker';
+import { RecurringAppointmentForm } from './RecurringAppointmentForm';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -85,6 +87,13 @@ export function AppointmentDialog({
   const [clinicians, setClinicians] = useState<any[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrencePattern, setRecurrencePattern] = useState({
+    frequency: 'Weekly',
+    interval: 1,
+    daysOfWeek: [] as string[],
+    numberOfOccurrences: 10,
+  });
 
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
@@ -114,6 +123,18 @@ export function AppointmentDialog({
         room: appointment.room,
         appointment_notes: appointment.appointment_notes,
         client_notes: appointment.client_notes,
+      });
+      setIsRecurring(appointment.is_recurring || false);
+      if (appointment.recurrence_pattern) {
+        setRecurrencePattern(appointment.recurrence_pattern);
+      }
+    } else {
+      setIsRecurring(false);
+      setRecurrencePattern({
+        frequency: 'Weekly',
+        interval: 1,
+        daysOfWeek: [],
+        numberOfOccurrences: 10,
       });
     }
   }, [appointment, form]);
@@ -147,10 +168,13 @@ export function AppointmentDialog({
         appointment_date: format(data.appointment_date, 'yyyy-MM-dd'),
         end_time: format(endTime, 'HH:mm'),
         timezone: 'America/New_York',
+        is_recurring: isRecurring,
+        recurrence_pattern: isRecurring ? recurrencePattern : undefined,
       });
       
       onOpenChange(false);
       form.reset();
+      setIsRecurring(false);
     } catch (error) {
       console.error('Error saving appointment:', error);
     } finally {
@@ -165,6 +189,12 @@ export function AppointmentDialog({
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" />
             {appointment ? 'Edit Appointment' : 'New Appointment'}
+            {appointment?.is_recurring && (
+              <Badge variant="outline" className="ml-2 flex items-center gap-1">
+                <Repeat className="h-3 w-3" />
+                Recurring
+              </Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -397,6 +427,15 @@ export function AppointmentDialog({
                 </FormItem>
               )}
             />
+
+            {!appointment && (
+              <RecurringAppointmentForm
+                isRecurring={isRecurring}
+                onIsRecurringChange={setIsRecurring}
+                recurrencePattern={recurrencePattern}
+                onRecurrencePatternChange={setRecurrencePattern}
+              />
+            )}
 
             <DialogFooter>
               <Button
