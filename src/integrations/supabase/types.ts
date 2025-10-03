@@ -1330,6 +1330,190 @@ export type Database = {
           },
         ]
       }
+      session_participants: {
+        Row: {
+          connection_quality: Json | null
+          connection_state: string
+          created_at: string | null
+          device_fingerprint: string | null
+          id: string
+          ip_address: string | null
+          is_muted: boolean | null
+          is_screen_sharing: boolean | null
+          is_video_enabled: boolean | null
+          joined_at: string | null
+          left_at: string | null
+          participant_name: string
+          participant_role: string
+          session_id: string | null
+          updated_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          connection_quality?: Json | null
+          connection_state?: string
+          created_at?: string | null
+          device_fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          is_muted?: boolean | null
+          is_screen_sharing?: boolean | null
+          is_video_enabled?: boolean | null
+          joined_at?: string | null
+          left_at?: string | null
+          participant_name: string
+          participant_role: string
+          session_id?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          connection_quality?: Json | null
+          connection_state?: string
+          created_at?: string | null
+          device_fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          is_muted?: boolean | null
+          is_screen_sharing?: boolean | null
+          is_video_enabled?: boolean | null
+          joined_at?: string | null
+          left_at?: string | null
+          participant_name?: string
+          participant_role?: string
+          session_id?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "telehealth_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_recordings: {
+        Row: {
+          consent_device_fingerprint: string
+          consent_granted_by: string
+          consent_ip_address: string
+          consent_timestamp: string
+          consent_user_agent: string
+          created_at: string | null
+          duration_seconds: number | null
+          encryption_key_id: string | null
+          file_size_bytes: number | null
+          hipaa_compliant: boolean | null
+          id: string
+          recording_url: string
+          session_id: string | null
+          started_at: string
+          stopped_at: string | null
+        }
+        Insert: {
+          consent_device_fingerprint: string
+          consent_granted_by: string
+          consent_ip_address: string
+          consent_timestamp: string
+          consent_user_agent: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          encryption_key_id?: string | null
+          file_size_bytes?: number | null
+          hipaa_compliant?: boolean | null
+          id?: string
+          recording_url: string
+          session_id?: string | null
+          started_at: string
+          stopped_at?: string | null
+        }
+        Update: {
+          consent_device_fingerprint?: string
+          consent_granted_by?: string
+          consent_ip_address?: string
+          consent_timestamp?: string
+          consent_user_agent?: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          encryption_key_id?: string | null
+          file_size_bytes?: number | null
+          hipaa_compliant?: boolean | null
+          id?: string
+          recording_url?: string
+          session_id?: string | null
+          started_at?: string
+          stopped_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_recordings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "telehealth_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_transcriptions: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          id: string
+          recording_id: string | null
+          session_id: string | null
+          speaker_id: string | null
+          speaker_role: string | null
+          timestamp_end: string | null
+          timestamp_start: string
+          transcript_text: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          recording_id?: string | null
+          session_id?: string | null
+          speaker_id?: string | null
+          speaker_role?: string | null
+          timestamp_end?: string | null
+          timestamp_start: string
+          transcript_text: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          recording_id?: string | null
+          session_id?: string | null
+          speaker_id?: string | null
+          speaker_role?: string | null
+          timestamp_end?: string | null
+          timestamp_start?: string
+          transcript_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_transcriptions_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "session_recordings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_transcriptions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "telehealth_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supervision_relationships: {
         Row: {
           created_at: string | null
@@ -1508,6 +1692,127 @@ export type Database = {
         }
         Relationships: []
       }
+      telehealth_security_events: {
+        Row: {
+          created_at: string | null
+          device_fingerprint: string | null
+          event_description: string | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          session_id: string | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_fingerprint?: string | null
+          event_description?: string | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          session_id?: string | null
+          severity: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_fingerprint?: string | null
+          event_description?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          session_id?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telehealth_security_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "telehealth_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      telehealth_sessions: {
+        Row: {
+          appointment_id: string | null
+          created_at: string | null
+          current_participant_count: number | null
+          duration_seconds: number | null
+          ended_at: string | null
+          host_id: string
+          id: string
+          max_participants: number | null
+          recording_consent_given: boolean | null
+          recording_enabled: boolean | null
+          recording_url: string | null
+          session_id: string
+          session_metadata: Json | null
+          started_at: string | null
+          status: string
+          transcript_enabled: boolean | null
+          updated_at: string | null
+          waiting_room_enabled: boolean | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string | null
+          current_participant_count?: number | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          host_id: string
+          id?: string
+          max_participants?: number | null
+          recording_consent_given?: boolean | null
+          recording_enabled?: boolean | null
+          recording_url?: string | null
+          session_id: string
+          session_metadata?: Json | null
+          started_at?: string | null
+          status?: string
+          transcript_enabled?: boolean | null
+          updated_at?: string | null
+          waiting_room_enabled?: boolean | null
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string | null
+          current_participant_count?: number | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          host_id?: string
+          id?: string
+          max_participants?: number | null
+          recording_consent_given?: boolean | null
+          recording_enabled?: boolean | null
+          recording_url?: string | null
+          session_id?: string
+          session_metadata?: Json | null
+          started_at?: string | null
+          status?: string
+          transcript_enabled?: boolean | null
+          updated_at?: string | null
+          waiting_room_enabled?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telehealth_sessions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trusted_devices: {
         Row: {
           created_at: string | null
@@ -1606,6 +1911,65 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waiting_room_queue: {
+        Row: {
+          admitted_at: string | null
+          admitted_by: string | null
+          created_at: string | null
+          denial_reason: string | null
+          denied_at: string | null
+          denied_by: string | null
+          id: string
+          joined_at: string | null
+          left_at: string | null
+          session_id: string | null
+          status: string
+          user_email: string | null
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          admitted_at?: string | null
+          admitted_by?: string | null
+          created_at?: string | null
+          denial_reason?: string | null
+          denied_at?: string | null
+          denied_by?: string | null
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          session_id?: string | null
+          status?: string
+          user_email?: string | null
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          admitted_at?: string | null
+          admitted_by?: string | null
+          created_at?: string | null
+          denial_reason?: string | null
+          denied_at?: string | null
+          denied_by?: string | null
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          session_id?: string | null
+          status?: string
+          user_email?: string | null
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waiting_room_queue_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "telehealth_sessions"
             referencedColumns: ["id"]
           },
         ]

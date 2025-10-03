@@ -23,6 +23,7 @@ import ClientRegistration from "./pages/ClientRegistration";
 import ClientChart from "./pages/ClientChart";
 import Schedule from "./pages/Schedule";
 import Waitlist from "./pages/Waitlist";
+import TelehealthSession from "./pages/TelehealthSession";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -151,6 +152,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Waitlist />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/telehealth/session/:sessionId" 
+              element={
+                <ProtectedRoute>
+                  <TelehealthSession />
                 </ProtectedRoute>
               } 
             />
