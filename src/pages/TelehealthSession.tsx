@@ -56,10 +56,14 @@ export default function TelehealthSession() {
         .from('telehealth_sessions')
         .select('*')
         .eq('session_id', sessionId)
-        .single();
+        .maybeSingle();
 
       if (sessionError) throw sessionError;
-      if (!sessionData) throw new Error('Session not found');
+      if (!sessionData) {
+        setError('Session not found or access denied');
+        setLoading(false);
+        return;
+      }
 
       setSession(sessionData);
       setIsHost(sessionData.host_id === user?.id);
@@ -69,7 +73,7 @@ export default function TelehealthSession() {
         .from('profiles')
         .select('first_name, last_name')
         .eq('id', user?.id)
-        .single();
+        .maybeSingle();
 
       setProfile(profileData);
 
