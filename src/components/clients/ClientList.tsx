@@ -1,13 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Phone, Mail, Calendar, Star } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Phone, Mail, Calendar, Star, Edit, FileText, CalendarPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Database } from '@/integrations/supabase/types';
 import { format, differenceInYears } from 'date-fns';
@@ -131,29 +125,39 @@ export function ClientList({ clients, loading, onToggleFavorite, favoriteClients
                   />
                 </Button>
               )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-card border z-50">
-                  <DropdownMenuItem onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/clients/${client.id}`);
-                  }}>
-                    View Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/clients/${client.id}/edit`);
-                  }}>
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Schedule Appointment</DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()}>View Chart</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/clients/${client.id}`);
+                }}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                View Chart
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/clients/${client.id}/edit`);
+                }}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/schedule?clientId=${client.id}`);
+                }}
+              >
+                <CalendarPlus className="h-4 w-4 mr-2" />
+                Schedule
+              </Button>
             </div>
           </div>
         </Card>

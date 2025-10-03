@@ -21,6 +21,7 @@ import Tasks from "./pages/Tasks";
 import Clients from "./pages/Clients";
 import ClientRegistration from "./pages/ClientRegistration";
 import ClientChart from "./pages/ClientChart";
+import ClientEdit from "./pages/ClientEdit";
 import Schedule from "./pages/Schedule";
 import Waitlist from "./pages/Waitlist";
 import TelehealthSession from "./pages/TelehealthSession";
@@ -140,6 +141,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/clients/:id/edit" 
+              element={
+                <ProtectedRoute>
+                  <ClientEdit />
+                </ProtectedRoute>
+              } 
+            />
+            <Route
               path="/schedule" 
               element={
                 <ProtectedRoute>
