@@ -73,9 +73,10 @@ export function CancellationDialog({
       setNotes('');
       setApplyFee(false);
     } catch (error) {
+      console.error('Cancellation error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to cancel appointment.',
+        description: error instanceof Error ? error.message : 'Failed to cancel appointment.',
         variant: 'destructive'
       });
     } finally {
