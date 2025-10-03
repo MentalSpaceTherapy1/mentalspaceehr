@@ -22,6 +22,7 @@ import Clients from "./pages/Clients";
 import ClientRegistration from "./pages/ClientRegistration";
 import ClientChart from "./pages/ClientChart";
 import Schedule from "./pages/Schedule";
+import Waitlist from "./pages/Waitlist";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -142,6 +143,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Schedule />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/waitlist" 
+              element={
+                <ProtectedRoute>
+                  <Waitlist />
                 </ProtectedRoute>
               } 
             />

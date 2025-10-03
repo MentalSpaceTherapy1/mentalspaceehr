@@ -47,6 +47,18 @@ const appointmentSchema = z.object({
   room: z.string().optional(),
   appointment_notes: z.string().optional(),
   client_notes: z.string().optional(),
+  telehealth_platform: z.string().optional(),
+  telehealth_link: z.string().optional(),
+  cpt_code: z.string().optional(),
+  icd_codes: z.array(z.string()).optional(),
+  is_recurring: z.boolean().optional(),
+  recurrence_pattern: z.object({
+    frequency: z.string(),
+    interval: z.number(),
+    daysOfWeek: z.array(z.string()).optional(),
+    endDate: z.date().optional(),
+    numberOfOccurrences: z.number().optional(),
+  }).optional(),
 });
 
 type AppointmentFormData = z.infer<typeof appointmentSchema>;
@@ -81,6 +93,9 @@ export function AppointmentDialog({
       duration: 50,
       service_location: 'Office',
       appointment_type: 'Individual Therapy',
+      is_recurring: false,
+      telehealth_platform: 'Internal',
+      icd_codes: [],
     },
   });
 

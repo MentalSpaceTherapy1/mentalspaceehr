@@ -1,16 +1,26 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar';
+import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
 import { format, parse, startOfWeek, getDay, addDays, subDays } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Clock } from 'lucide-react';
 import { useAppointments, Appointment } from '@/hooks/useAppointments';
+import { useBlockedTimes } from '@/hooks/useBlockedTimes';
 import { AppointmentDialog } from '@/components/schedule/AppointmentDialog';
+import { AppointmentStatusDialog } from '@/components/schedule/AppointmentStatusDialog';
+import { CancellationDialog } from '@/components/schedule/CancellationDialog';
+import { BlockedTimesDialog } from '@/components/schedule/BlockedTimesDialog';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const locales = {
   'en-US': enUS,
@@ -24,7 +34,13 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
+const DnDCalendar = withDragAndDrop(Calendar);
+
+type ColorBy = 'status' | 'type' | 'clinician';
+type StatusAction = 'check-in' | 'check-out' | 'no-show' | 'complete';
+
 export default function Schedule() {
+  const { toast } = useToast();
   const { user } = useAuth();
   const { roles } = useCurrentUserRoles();
   const [view, setView] = useState<View>('week');
@@ -32,6 +48,14 @@ export default function Schedule() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [defaultDate, setDefaultDate] = useState<Date>();
+  const [colorBy, setColorBy] = useState<ColorBy>('status');
+  const [selectedClinician, setSelectedClinician] = useState<string>('all');
+  const [clinicians, setClinicians] = useState<any[]>([]);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [statusAction, setStatusAction] = useState<StatusAction>('check-in');
+  const [cancellationDialogOpen, setCancellationDialogOpen] = useState(false);
+  const [blockedTimeDialogOpen, setBlockedTimeDialogOpen] = useState(false);
+  const [selectedBlockedTime, setSelectedBlockedTime] = useState<any>(null);
   
   // Calculate date range for fetching appointments
   const dateRange = useMemo(() => {
@@ -45,7 +69,25 @@ export default function Schedule() {
     loading,
     createAppointment,
     updateAppointment,
-  } = useAppointments(dateRange.start, dateRange.end);
+    cancelAppointment,
+  } = useAppointments(dateRange.start, dateRange.end, selectedClinician === 'all' ? undefined : selectedClinician);
+
+  const { blockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime } = useBlockedTimes(
+    selectedClinician === 'all' ? undefined : selectedClinician
+  );
+
+  // Fetch clinicians
+  useMemo(() => {
+    const fetchClinicians = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .eq('is_active', true)
+        .eq('available_for_scheduling', true);
+      if (data) setClinicians(data);
+    };
+    fetchClinicians();
+  }, []);
 
   // Convert appointments to calendar events
   const events = useMemo(() => {
@@ -85,31 +127,94 @@ export default function Schedule() {
     setView(newView);
   };
 
+  const handleEventDrop = async ({ event, start, end }: any) => {
+    try {
+      const appointment = event.resource as Appointment;
+      const newDate = format(start, 'yyyy-MM-dd');
+      const newStartTime = format(start, 'HH:mm');
+      const newEndTime = format(end, 'HH:mm');
+
+      await updateAppointment(appointment.id, {
+        appointment_date: newDate,
+        start_time: newStartTime,
+        end_time: newEndTime,
+      });
+
+      toast({
+        title: 'Success',
+        description: 'Appointment rescheduled successfully.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to reschedule appointment. Time slot may be unavailable.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleStatusAction = (appointment: Appointment, action: StatusAction) => {
+    setSelectedAppointment(appointment);
+    setStatusAction(action);
+    setStatusDialogOpen(true);
+  };
+
+  const handleCancelClick = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setCancellationDialogOpen(true);
+  };
+
+  const handleSaveBlockedTime = async (data: any) => {
+    if (data.id) {
+      await updateBlockedTime(data.id, data);
+    } else {
+      await createBlockedTime(data);
+    }
+  };
+
   const eventStyleGetter = (event: any) => {
     const appointment = event.resource as Appointment;
     let backgroundColor = 'hsl(var(--primary))';
     
-    switch (appointment.status) {
-      case 'Confirmed':
-        backgroundColor = 'hsl(var(--primary))';
-        break;
-      case 'Checked In':
-        backgroundColor = 'hsl(142, 71%, 45%)'; // green
-        break;
-      case 'In Session':
-        backgroundColor = 'hsl(262, 83%, 58%)'; // purple
-        break;
-      case 'Completed':
-        backgroundColor = 'hsl(221, 83%, 53%)'; // blue
-        break;
-      case 'No Show':
-        backgroundColor = 'hsl(0, 84%, 60%)'; // red
-        break;
-      case 'Cancelled':
-        backgroundColor = 'hsl(0, 0%, 60%)'; // gray
-        break;
-      default:
-        backgroundColor = 'hsl(var(--primary))';
+    if (colorBy === 'status') {
+      switch (appointment.status) {
+        case 'Confirmed':
+          backgroundColor = 'hsl(var(--primary))';
+          break;
+        case 'Checked In':
+          backgroundColor = 'hsl(142, 71%, 45%)';
+          break;
+        case 'In Session':
+          backgroundColor = 'hsl(262, 83%, 58%)';
+          break;
+        case 'Completed':
+          backgroundColor = 'hsl(221, 83%, 53%)';
+          break;
+        case 'No Show':
+          backgroundColor = 'hsl(0, 84%, 60%)';
+          break;
+        case 'Cancelled':
+          backgroundColor = 'hsl(0, 0%, 60%)';
+          break;
+        default:
+          backgroundColor = 'hsl(var(--primary))';
+      }
+    } else if (colorBy === 'type') {
+      const typeColors: Record<string, string> = {
+        'Initial Evaluation': 'hsl(262, 83%, 58%)',
+        'Individual Therapy': 'hsl(221, 83%, 53%)',
+        'Couples Therapy': 'hsl(340, 82%, 52%)',
+        'Family Therapy': 'hsl(142, 71%, 45%)',
+        'Group Therapy': 'hsl(47, 96%, 53%)',
+        'Medication Management': 'hsl(280, 87%, 65%)',
+        'Testing': 'hsl(200, 98%, 39%)',
+        'Crisis': 'hsl(0, 84%, 60%)',
+      };
+      backgroundColor = typeColors[appointment.appointment_type] || 'hsl(var(--primary))';
+    } else if (colorBy === 'clinician') {
+      const hash = appointment.clinician_id.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0);
+      const hue = hash % 360;
+      backgroundColor = `hsl(${hue}, 70%, 50%)`;
     }
 
     return {
@@ -138,16 +243,67 @@ export default function Schedule() {
               Manage appointments and view your calendar
             </p>
           </div>
-          {canCreateAppointments && (
-            <Button onClick={() => {
-              setDefaultDate(new Date());
-              setSelectedAppointment(null);
-              setDialogOpen(true);
-            }}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Appointment
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {canCreateAppointments && (
+              <>
+                <Button variant="outline" onClick={() => {
+                  setSelectedBlockedTime(null);
+                  setBlockedTimeDialogOpen(true);
+                }}>
+                  <Clock className="mr-2 h-4 w-4" />
+                  Block Time
+                </Button>
+                <Button onClick={() => {
+                  setDefaultDate(new Date());
+                  setSelectedAppointment(null);
+                  setDialogOpen(true);
+                }}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Appointment
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-4 items-center flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Clinician:</span>
+            <Select value={selectedClinician} onValueChange={setSelectedClinician}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Clinicians</SelectItem>
+                {clinicians.map(c => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.first_name} {c.last_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Color by:</span>
+            <Select value={colorBy} onValueChange={(v) => setColorBy(v as ColorBy)}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="status">Status</SelectItem>
+                <SelectItem value="type">Type</SelectItem>
+                <SelectItem value="clinician">Clinician</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex gap-2 flex-wrap">
+            <Badge variant="outline" className="bg-primary text-primary-foreground">Scheduled</Badge>
+            <Badge variant="outline" style={{ backgroundColor: 'hsl(142, 71%, 45%)', color: 'white' }}>Checked In</Badge>
+            <Badge variant="outline" style={{ backgroundColor: 'hsl(221, 83%, 53%)', color: 'white' }}>Completed</Badge>
+            <Badge variant="outline" style={{ backgroundColor: 'hsl(0, 84%, 60%)', color: 'white' }}>No Show</Badge>
+          </div>
         </div>
 
         <Card>
@@ -156,7 +312,7 @@ export default function Schedule() {
           </CardHeader>
           <CardContent>
             <div className="h-[700px]">
-              <Calendar
+              <DnDCalendar
                 localizer={localizer}
                 events={events}
                 startAccessor="start"
@@ -167,6 +323,9 @@ export default function Schedule() {
                 onNavigate={handleNavigate}
                 onSelectSlot={handleSelectSlot}
                 onSelectEvent={handleSelectEvent}
+                onEventDrop={handleEventDrop}
+                onEventResize={handleEventDrop}
+                resizable
                 selectable={canCreateAppointments}
                 eventPropGetter={eventStyleGetter}
                 step={15}
@@ -182,14 +341,43 @@ export default function Schedule() {
         </Card>
 
         {canCreateAppointments && (
-          <AppointmentDialog
-            open={dialogOpen}
-            onOpenChange={setDialogOpen}
-            appointment={selectedAppointment}
-            defaultDate={defaultDate}
-            defaultClinicianId={user?.id}
-            onSave={handleSaveAppointment}
-          />
+          <>
+            <AppointmentDialog
+              open={dialogOpen}
+              onOpenChange={setDialogOpen}
+              appointment={selectedAppointment}
+              defaultDate={defaultDate}
+              defaultClinicianId={user?.id}
+              onSave={handleSaveAppointment}
+            />
+
+            <AppointmentStatusDialog
+              open={statusDialogOpen}
+              onOpenChange={setStatusDialogOpen}
+              appointment={selectedAppointment}
+              action={statusAction}
+              onStatusUpdate={async (id, updates) => {
+                await updateAppointment(id, updates);
+              }}
+            />
+
+            <CancellationDialog
+              open={cancellationDialogOpen}
+              onOpenChange={setCancellationDialogOpen}
+              appointment={selectedAppointment}
+              onCancel={async (id, reason, notes, applyFee) => {
+                await cancelAppointment(id, reason, notes);
+              }}
+            />
+
+            <BlockedTimesDialog
+              open={blockedTimeDialogOpen}
+              onOpenChange={setBlockedTimeDialogOpen}
+              clinicianId={user?.id || ''}
+              onSave={handleSaveBlockedTime}
+              blockedTime={selectedBlockedTime}
+            />
+          </>
         )}
       </div>
     </DashboardLayout>
