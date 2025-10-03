@@ -133,6 +133,9 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
             ...series[0],
             is_recurring: true,
             recurrence_pattern: appointment.recurrence_pattern,
+            is_group_session: appointment.is_group_session || false,
+            max_participants: appointment.max_participants,
+            current_participants: appointment.current_participants || 1,
             created_by: user?.id,
             last_modified_by: user?.id,
           }])
@@ -148,6 +151,9 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
             is_recurring: true,
             recurrence_pattern: appointment.recurrence_pattern,
             parent_recurrence_id: parentData.id,
+            is_group_session: appointment.is_group_session || false,
+            max_participants: appointment.max_participants,
+            current_participants: appointment.current_participants || 1,
             created_by: user?.id,
             last_modified_by: user?.id,
           }));
@@ -171,6 +177,9 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
           .from('appointments')
           .insert([{
             ...appointment,
+            is_group_session: appointment.is_group_session || false,
+            max_participants: appointment.max_participants,
+            current_participants: appointment.current_participants || 1,
             created_by: user?.id,
             last_modified_by: user?.id
           }])

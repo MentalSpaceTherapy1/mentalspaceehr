@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Sparkles, Repeat } from 'lucide-react';
 import { TimeSlotPicker } from './TimeSlotPicker';
 import { RecurringAppointmentForm } from './RecurringAppointmentForm';
+import { GroupSessionParticipants } from './GroupSessionParticipants';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -94,6 +95,9 @@ export function AppointmentDialog({
     daysOfWeek: [] as string[],
     numberOfOccurrences: 10,
   });
+  const [isGroupSession, setIsGroupSession] = useState(false);
+  const [groupParticipants, setGroupParticipants] = useState<string[]>([]);
+  const [maxParticipants, setMaxParticipants] = useState(10);
 
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
@@ -165,12 +169,21 @@ export function AppointmentDialog({
       
       await onSave({
         ...data,
+        client_id: isGroupSession && groupParticipants.length > 0 ? groupParticipants[0] : data.client_id,
         appointment_date: format(data.appointment_date, 'yyyy-MM-dd'),
         end_time: format(endTime, 'HH:mm'),
         timezone: 'America/New_York',
         is_recurring: isRecurring,
         recurrence_pattern: isRecurring ? recurrencePattern : undefined,
-      });
+        is_group_session: isGroupSession,
+        max_participants: isGroupSession ? maxParticipants : null,
+        current_participants: isGroupSession ? groupParticipants.length : 1,
+      } as any);
+
+      // If group session, add participants
+      if (isGroupSession && groupParticipants.length > 0) {
+        // Participants will be added via a separate hook/function after appointment creation
+      }
       
       onOpenChange(false);
       form.reset();
@@ -429,12 +442,23 @@ export function AppointmentDialog({
             />
 
             {!appointment && (
-              <RecurringAppointmentForm
-                isRecurring={isRecurring}
-                onIsRecurringChange={setIsRecurring}
-                recurrencePattern={recurrencePattern}
-                onRecurrencePatternChange={setRecurrencePattern}
-              />
+              <>
+                <RecurringAppointmentForm
+                  isRecurring={isRecurring}
+                  onIsRecurringChange={setIsRecurring}
+                  recurrencePattern={recurrencePattern}
+                  onRecurrencePatternChange={setRecurrencePattern}
+                />
+                
+                <GroupSessionParticipants
+                  participants={groupParticipants}
+                  onParticipantsChange={setGroupParticipants}
+                  isGroupSession={isGroupSession}
+                  onIsGroupSessionChange={setIsGroupSession}
+                  maxParticipants={maxParticipants}
+                  onMaxParticipantsChange={setMaxParticipants}
+                />
+              </>
             )}
 
             <DialogFooter>

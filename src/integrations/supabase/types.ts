@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_participants: {
+        Row: {
+          added_by: string | null
+          added_date: string | null
+          appointment_id: string
+          client_id: string
+          id: string
+          notes: string | null
+          status: string
+        }
+        Insert: {
+          added_by?: string | null
+          added_date?: string | null
+          appointment_id: string
+          client_id: string
+          id?: string
+          notes?: string | null
+          status?: string
+        }
+        Update: {
+          added_by?: string | null
+          added_date?: string | null
+          appointment_id?: string
+          client_id?: string
+          id?: string
+          notes?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_participants_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_participants_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_waitlist: {
         Row: {
           added_by: string | null
@@ -120,13 +165,16 @@ export type Database = {
           cpt_code: string | null
           created_by: string | null
           created_date: string | null
+          current_participants: number | null
           duration: number
           end_time: string
           icd_codes: string[] | null
           id: string
+          is_group_session: boolean | null
           is_recurring: boolean | null
           last_modified: string | null
           last_modified_by: string | null
+          max_participants: number | null
           no_show_date: string | null
           no_show_fee_applied: boolean | null
           no_show_notes: string | null
@@ -166,13 +214,16 @@ export type Database = {
           cpt_code?: string | null
           created_by?: string | null
           created_date?: string | null
+          current_participants?: number | null
           duration: number
           end_time: string
           icd_codes?: string[] | null
           id?: string
+          is_group_session?: boolean | null
           is_recurring?: boolean | null
           last_modified?: string | null
           last_modified_by?: string | null
+          max_participants?: number | null
           no_show_date?: string | null
           no_show_fee_applied?: boolean | null
           no_show_notes?: string | null
@@ -212,13 +263,16 @@ export type Database = {
           cpt_code?: string | null
           created_by?: string | null
           created_date?: string | null
+          current_participants?: number | null
           duration?: number
           end_time?: string
           icd_codes?: string[] | null
           id?: string
+          is_group_session?: boolean | null
           is_recurring?: boolean | null
           last_modified?: string | null
           last_modified_by?: string | null
+          max_participants?: number | null
           no_show_date?: string | null
           no_show_fee_applied?: boolean | null
           no_show_notes?: string | null
