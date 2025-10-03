@@ -23,49 +23,49 @@ export const AdminDashboard = () => {
     <div className="space-y-6">
       {/* System Health & Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Status</CardTitle>
-            <Activity className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-success">Operational</div>
+        <GradientCard gradient="accent">
+          <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <GradientCardTitle className="text-sm font-medium">System Status</GradientCardTitle>
+            <Activity className="h-5 w-5 text-success" />
+          </GradientCardHeader>
+          <GradientCardContent>
+            <div className="text-3xl font-bold text-success">Operational</div>
             <p className="text-xs text-muted-foreground">All systems running smoothly</p>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <Users className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
+        <GradientCard gradient="primary">
+          <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <GradientCardTitle className="text-sm font-medium">Active Users</GradientCardTitle>
+            <Users className="h-5 w-5 text-primary" />
+          </GradientCardHeader>
+          <GradientCardContent>
+            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">0</div>
             <p className="text-xs text-muted-foreground">Currently logged in</p>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-            <Clock className="h-4 w-4 text-warning" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
+        <GradientCard gradient="secondary">
+          <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <GradientCardTitle className="text-sm font-medium">Pending Approvals</GradientCardTitle>
+            <Clock className="h-5 w-5 text-warning" />
+          </GradientCardHeader>
+          <GradientCardContent>
+            <div className="text-3xl font-bold text-warning">0</div>
             <p className="text-xs text-muted-foreground">Items awaiting review</p>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compliance Alerts</CardTitle>
-            <AlertCircle className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
+        <GradientCard gradient="primary">
+          <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <GradientCardTitle className="text-sm font-medium">Compliance Alerts</GradientCardTitle>
+            <AlertCircle className="h-5 w-5 text-destructive" />
+          </GradientCardHeader>
+          <GradientCardContent>
+            <div className="text-3xl font-bold text-destructive">0</div>
             <p className="text-xs text-muted-foreground">Issues requiring attention</p>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
       </div>
 
       {/* Financial Summary */}

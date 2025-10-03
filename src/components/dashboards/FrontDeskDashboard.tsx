@@ -1,4 +1,3 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GradientCard, GradientCardContent, GradientCardDescription, GradientCardHeader, GradientCardTitle } from '@/components/ui/gradient-card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -18,92 +17,92 @@ export const FrontDeskDashboard = () => {
     <div className="space-y-6">
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Appointments</CardTitle>
-            <Calendar className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
+        <GradientCard gradient="primary">
+          <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <GradientCardTitle className="text-sm font-medium">Today's Appointments</GradientCardTitle>
+            <Calendar className="h-5 w-5 text-primary" />
+          </GradientCardHeader>
+          <GradientCardContent>
+            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">0</div>
             <p className="text-xs text-muted-foreground">Scheduled today</p>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Check-ins</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
+        <GradientCard gradient="accent">
+          <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <GradientCardTitle className="text-sm font-medium">Check-ins</GradientCardTitle>
+            <CheckCircle2 className="h-5 w-5 text-success" />
+          </GradientCardHeader>
+          <GradientCardContent>
+            <div className="text-3xl font-bold text-success">0</div>
             <p className="text-xs text-muted-foreground">Patients checked in</p>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Waiting</CardTitle>
-            <Clock className="h-4 w-4 text-warning" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
+        <GradientCard gradient="secondary">
+          <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <GradientCardTitle className="text-sm font-medium">Waiting</GradientCardTitle>
+            <Clock className="h-5 w-5 text-warning" />
+          </GradientCardHeader>
+          <GradientCardContent>
+            <div className="text-3xl font-bold text-warning">0</div>
             <p className="text-xs text-muted-foreground">In waiting room</p>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Messages</CardTitle>
-            <Phone className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
+        <GradientCard gradient="primary">
+          <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <GradientCardTitle className="text-sm font-medium">Messages</GradientCardTitle>
+            <Phone className="h-5 w-5 text-primary" />
+          </GradientCardHeader>
+          <GradientCardContent>
+            <div className="text-3xl font-bold text-primary">0</div>
             <p className="text-xs text-muted-foreground">Pending callbacks</p>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Today's Schedule */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+        <GradientCard gradient="primary" className="hover:shadow-colored">
+          <GradientCardHeader>
+            <GradientCardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
               Today's Schedule
-            </CardTitle>
-            <CardDescription>
+            </GradientCardTitle>
+            <GradientCardDescription>
               {new Date().toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 year: 'numeric', 
                 month: 'long', 
                 day: 'numeric' 
               })}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </GradientCardDescription>
+          </GradientCardHeader>
+          <GradientCardContent>
             <div className="space-y-3">
               <div className="flex items-center justify-center p-8 text-center">
                 <div>
-                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                  <Calendar className="h-12 w-12 text-primary/50 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">No appointments scheduled</p>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
 
         {/* Pending Tasks */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5" />
+        <GradientCard gradient="secondary" className="hover:shadow-colored">
+          <GradientCardHeader>
+            <GradientCardTitle className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5 text-secondary" />
               Pending Tasks
-            </CardTitle>
-            <CardDescription>Items requiring attention</CardDescription>
-          </CardHeader>
-          <CardContent>
+            </GradientCardTitle>
+            <GradientCardDescription>Items requiring attention</GradientCardDescription>
+          </GradientCardHeader>
+          <GradientCardContent>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
                 <div className="flex items-center gap-3">
                   <Phone className="h-4 w-4 text-primary" />
                   <div>
@@ -114,7 +113,7 @@ export const FrontDeskDashboard = () => {
                 <Badge variant="secondary">0</Badge>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
                 <div className="flex items-center gap-3">
                   <AlertCircle className="h-4 w-4 text-warning" />
                   <div>
@@ -125,7 +124,7 @@ export const FrontDeskDashboard = () => {
                 <Badge variant="secondary">0</Badge>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
                 <div className="flex items-center gap-3">
                   <Users className="h-4 w-4 text-success" />
                   <div>
@@ -136,56 +135,56 @@ export const FrontDeskDashboard = () => {
                 <Badge variant="secondary">0</Badge>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
       </div>
 
       {/* Check-in Queue */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
+      <GradientCard gradient="accent" className="hover:shadow-colored">
+        <GradientCardHeader>
+          <GradientCardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-accent" />
             Check-in Queue
-          </CardTitle>
-          <CardDescription>Patients in waiting room</CardDescription>
-        </CardHeader>
-        <CardContent>
+          </GradientCardTitle>
+          <GradientCardDescription>Patients in waiting room</GradientCardDescription>
+        </GradientCardHeader>
+        <GradientCardContent>
           <div className="flex items-center justify-center p-8">
             <div className="text-center">
               <CheckCircle2 className="h-12 w-12 text-success mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">No patients waiting</p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </GradientCardContent>
+      </GradientCard>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Common front desk tasks</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <GradientCard gradient="primary" className="hover:shadow-colored">
+        <GradientCardHeader>
+          <GradientCardTitle>Quick Actions</GradientCardTitle>
+          <GradientCardDescription>Common front desk tasks</GradientCardDescription>
+        </GradientCardHeader>
+        <GradientCardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4 hover:bg-primary/5 hover:border-primary transition-all">
               <UserPlus className="h-5 w-5" />
               <span className="text-sm">Check-in Patient</span>
             </Button>
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4 hover:bg-accent/5 hover:border-accent transition-all">
               <Calendar className="h-5 w-5" />
               <span className="text-sm">Schedule</span>
             </Button>
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4 hover:bg-secondary/5 hover:border-secondary transition-all">
               <Phone className="h-5 w-5" />
               <span className="text-sm">Log Call</span>
             </Button>
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4 hover:bg-primary/5 hover:border-primary transition-all">
               <Users className="h-5 w-5" />
               <span className="text-sm">Patient Lookup</span>
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </GradientCardContent>
+      </GradientCard>
     </div>
   );
 };

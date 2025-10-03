@@ -144,12 +144,12 @@ export const TherapistDashboard = () => {
 
       {/* Quick Actions & Productivity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common clinical tasks</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <GradientCard gradient="accent" className="hover:shadow-colored">
+          <GradientCardHeader>
+            <GradientCardTitle>Quick Actions</GradientCardTitle>
+            <GradientCardDescription>Common clinical tasks</GradientCardDescription>
+          </GradientCardHeader>
+          <GradientCardContent>
             <div className="grid grid-cols-2 gap-3">
               <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
                 <FileText className="h-5 w-5" />
@@ -168,18 +168,18 @@ export const TherapistDashboard = () => {
                 <span className="text-sm">To-Do</span>
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
+        <GradientCard gradient="primary" className="hover:shadow-colored">
+          <GradientCardHeader>
+            <GradientCardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
               Productivity Metrics
-            </CardTitle>
-            <CardDescription>Your performance this week</CardDescription>
-          </CardHeader>
-          <CardContent>
+            </GradientCardTitle>
+            <GradientCardDescription>Your performance this week</GradientCardDescription>
+          </GradientCardHeader>
+          <GradientCardContent>
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
@@ -210,25 +210,25 @@ export const TherapistDashboard = () => {
                 <span className="font-medium">N/A</span>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
       </div>
 
       {/* Recent Client Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
+      <GradientCard gradient="secondary" className="hover:shadow-colored">
+        <GradientCardHeader>
+          <GradientCardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-secondary" />
             Recent Client Activity
-          </CardTitle>
-          <CardDescription>Latest interactions with your clients</CardDescription>
-        </CardHeader>
-        <CardContent>
+          </GradientCardTitle>
+          <GradientCardDescription>Latest interactions with your clients</GradientCardDescription>
+        </GradientCardHeader>
+        <GradientCardContent>
           <div className="flex items-center justify-center p-8">
             <p className="text-sm text-muted-foreground">No recent activity</p>
           </div>
-        </CardContent>
-      </Card>
+        </GradientCardContent>
+      </GradientCard>
     </div>
   );
 };
