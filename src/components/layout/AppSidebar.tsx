@@ -46,7 +46,7 @@ export function AppSidebar() {
   const mainItems = [
     { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard, roles: ['all'], color: 'from-primary to-accent' },
     { title: 'Schedule', url: '/schedule', icon: Calendar, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-secondary to-primary' },
-    { title: 'Patients', url: '/patients', icon: Users, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-accent to-primary' },
+    { title: 'Clients', url: '/clients', icon: Users, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-accent to-primary' },
     { title: 'Clinical Notes', url: '/notes', icon: FileText, roles: ['therapist', 'associate_trainee', 'supervisor'], color: 'from-warning to-accent' },
     { title: 'Tasks', url: '/tasks', icon: CheckSquare, roles: ['all'], color: 'from-blue-400 to-purple-400' },
     { title: 'Billing', url: '/billing', icon: DollarSign, roles: ['billing_staff', 'administrator'], color: 'from-success to-accent' },

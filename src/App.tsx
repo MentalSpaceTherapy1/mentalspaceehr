@@ -18,6 +18,8 @@ import Profile from "./pages/Profile";
 import MFASetup from "./pages/MFASetup";
 import TrustedDevices from "./pages/TrustedDevices";
 import Tasks from "./pages/Tasks";
+import Clients from "./pages/Clients";
+import ClientRegistration from "./pages/ClientRegistration";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -106,6 +108,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Tasks />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/clients" 
+              element={
+                <ProtectedRoute>
+                  <Clients />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/clients/new" 
+              element={
+                <ProtectedRoute>
+                  <ClientRegistration />
                 </ProtectedRoute>
               } 
             />

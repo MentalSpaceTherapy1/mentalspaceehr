@@ -14,6 +14,293 @@ export type Database = {
   }
   public: {
     Tables: {
+      clients: {
+        Row: {
+          accessibility_needs: string[] | null
+          allergy_alerts: string[] | null
+          case_manager_id: string | null
+          city: string
+          consents: Json | null
+          county: string | null
+          created_at: string | null
+          created_by: string | null
+          date_of_birth: string
+          deceased_date: string | null
+          discharge_date: string | null
+          discharge_reason: string | null
+          education: string | null
+          email: string | null
+          employer: string | null
+          employment_status: string | null
+          ethnicity: string | null
+          first_name: string
+          gender: string | null
+          gender_identity: string | null
+          guarantor: Json | null
+          guardian_name: string | null
+          guardian_phone: string | null
+          guardian_relationship: string | null
+          housing_status: string | null
+          id: string
+          interpreter_language: string | null
+          is_temporary_address: boolean | null
+          is_veteran: boolean | null
+          last_name: string
+          legal_status: string | null
+          living_arrangement: string | null
+          mailing_address: Json | null
+          marital_status: string | null
+          medical_record_number: string
+          middle_name: string | null
+          military_branch: string | null
+          military_discharge_type: string | null
+          needs_interpreter: boolean | null
+          occupation: string | null
+          okay_to_leave_message: boolean | null
+          other_languages_spoken: string[] | null
+          preferred_contact_method: string | null
+          preferred_name: string | null
+          preferred_pharmacy: Json | null
+          previous_mrn: string | null
+          previous_names: string[] | null
+          previous_system_name: string | null
+          primary_care_provider: Json | null
+          primary_language: string | null
+          primary_phone: string
+          primary_phone_type: string | null
+          primary_therapist_id: string | null
+          pronouns: string | null
+          psychiatrist_id: string | null
+          race: string[] | null
+          referring_provider: Json | null
+          registration_date: string | null
+          religion: string | null
+          secondary_phone: string | null
+          secondary_phone_type: string | null
+          sex_assigned_at_birth: string | null
+          sexual_orientation: string | null
+          special_needs: string | null
+          state: string
+          status: string
+          status_date: string | null
+          street1: string
+          street2: string | null
+          suffix: string | null
+          temporary_until: string | null
+          updated_at: string | null
+          updated_by: string | null
+          zip_code: string
+        }
+        Insert: {
+          accessibility_needs?: string[] | null
+          allergy_alerts?: string[] | null
+          case_manager_id?: string | null
+          city: string
+          consents?: Json | null
+          county?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          date_of_birth: string
+          deceased_date?: string | null
+          discharge_date?: string | null
+          discharge_reason?: string | null
+          education?: string | null
+          email?: string | null
+          employer?: string | null
+          employment_status?: string | null
+          ethnicity?: string | null
+          first_name: string
+          gender?: string | null
+          gender_identity?: string | null
+          guarantor?: Json | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          guardian_relationship?: string | null
+          housing_status?: string | null
+          id?: string
+          interpreter_language?: string | null
+          is_temporary_address?: boolean | null
+          is_veteran?: boolean | null
+          last_name: string
+          legal_status?: string | null
+          living_arrangement?: string | null
+          mailing_address?: Json | null
+          marital_status?: string | null
+          medical_record_number: string
+          middle_name?: string | null
+          military_branch?: string | null
+          military_discharge_type?: string | null
+          needs_interpreter?: boolean | null
+          occupation?: string | null
+          okay_to_leave_message?: boolean | null
+          other_languages_spoken?: string[] | null
+          preferred_contact_method?: string | null
+          preferred_name?: string | null
+          preferred_pharmacy?: Json | null
+          previous_mrn?: string | null
+          previous_names?: string[] | null
+          previous_system_name?: string | null
+          primary_care_provider?: Json | null
+          primary_language?: string | null
+          primary_phone: string
+          primary_phone_type?: string | null
+          primary_therapist_id?: string | null
+          pronouns?: string | null
+          psychiatrist_id?: string | null
+          race?: string[] | null
+          referring_provider?: Json | null
+          registration_date?: string | null
+          religion?: string | null
+          secondary_phone?: string | null
+          secondary_phone_type?: string | null
+          sex_assigned_at_birth?: string | null
+          sexual_orientation?: string | null
+          special_needs?: string | null
+          state: string
+          status?: string
+          status_date?: string | null
+          street1: string
+          street2?: string | null
+          suffix?: string | null
+          temporary_until?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          zip_code: string
+        }
+        Update: {
+          accessibility_needs?: string[] | null
+          allergy_alerts?: string[] | null
+          case_manager_id?: string | null
+          city?: string
+          consents?: Json | null
+          county?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          date_of_birth?: string
+          deceased_date?: string | null
+          discharge_date?: string | null
+          discharge_reason?: string | null
+          education?: string | null
+          email?: string | null
+          employer?: string | null
+          employment_status?: string | null
+          ethnicity?: string | null
+          first_name?: string
+          gender?: string | null
+          gender_identity?: string | null
+          guarantor?: Json | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          guardian_relationship?: string | null
+          housing_status?: string | null
+          id?: string
+          interpreter_language?: string | null
+          is_temporary_address?: boolean | null
+          is_veteran?: boolean | null
+          last_name?: string
+          legal_status?: string | null
+          living_arrangement?: string | null
+          mailing_address?: Json | null
+          marital_status?: string | null
+          medical_record_number?: string
+          middle_name?: string | null
+          military_branch?: string | null
+          military_discharge_type?: string | null
+          needs_interpreter?: boolean | null
+          occupation?: string | null
+          okay_to_leave_message?: boolean | null
+          other_languages_spoken?: string[] | null
+          preferred_contact_method?: string | null
+          preferred_name?: string | null
+          preferred_pharmacy?: Json | null
+          previous_mrn?: string | null
+          previous_names?: string[] | null
+          previous_system_name?: string | null
+          primary_care_provider?: Json | null
+          primary_language?: string | null
+          primary_phone?: string
+          primary_phone_type?: string | null
+          primary_therapist_id?: string | null
+          pronouns?: string | null
+          psychiatrist_id?: string | null
+          race?: string[] | null
+          referring_provider?: Json | null
+          registration_date?: string | null
+          religion?: string | null
+          secondary_phone?: string | null
+          secondary_phone_type?: string | null
+          sex_assigned_at_birth?: string | null
+          sexual_orientation?: string | null
+          special_needs?: string | null
+          state?: string
+          status?: string
+          status_date?: string | null
+          street1?: string
+          street2?: string | null
+          suffix?: string | null
+          temporary_until?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      emergency_contacts: {
+        Row: {
+          address: string | null
+          alternate_phone: string | null
+          client_id: string
+          created_at: string | null
+          email: string | null
+          id: string
+          is_primary: boolean | null
+          name: string
+          okay_to_discuss_health_info: boolean | null
+          okay_to_leave_message: boolean | null
+          phone: string
+          relationship: string
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          alternate_phone?: string | null
+          client_id: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_primary?: boolean | null
+          name: string
+          okay_to_discuss_health_info?: boolean | null
+          okay_to_leave_message?: boolean | null
+          phone: string
+          relationship: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          alternate_phone?: string | null
+          client_id?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_primary?: boolean | null
+          name?: string
+          okay_to_discuss_health_info?: boolean | null
+          okay_to_leave_message?: boolean | null
+          phone?: string
+          relationship?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       login_attempts: {
         Row: {
           attempt_time: string | null
@@ -641,6 +928,10 @@ export type Database = {
       cleanup_expired_devices: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generate_mrn: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_user_roles: {
         Args: { _user_id: string }
