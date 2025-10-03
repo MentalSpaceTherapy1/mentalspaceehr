@@ -209,6 +209,7 @@ export default function Auth() {
                     type="button"
                     variant="link" 
                     className="text-sm"
+                    onClick={() => navigate('/forgot-password')}
                   >
                     Forgot Password?
                   </Button>

@@ -12,6 +12,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<ProfileData>) => Promise<{ error: Error | null }>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
 }
 
 interface SignUpData {
@@ -67,6 +69,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .eq('id', userId);
   };
 
+  const logLoginAttempt = async (email: string, success: boolean, failureReason?: string) => {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const { ip } = await response.json();
+      
+      await supabase.from('login_attempts').insert({
+        email,
+        success,
+        failure_reason: failureReason,
+        ip_address: ip,
+        user_agent: navigator.userAgent,
+      });
+    } catch (error) {
+      console.error('Failed to log login attempt:', error);
+    }
+  };
+
+  const checkAccountLockout = async (email: string) => {
+    try {
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      
+      const { data, error } = await supabase
+        .from('login_attempts')
+        .select('*')
+        .eq('email', email)
+        .eq('success', false)
+        .gte('attempt_time', thirtyMinutesAgo)
+        .order('attempt_time', { ascending: false });
+
+      if (error) throw error;
+
+      if (data && data.length >= 5) {
+        const oldestFailedAttempt = data[data.length - 1];
+        const lockoutEndsAt = new Date(new Date(oldestFailedAttempt.attempt_time).getTime() + 30 * 60 * 1000);
+        const minutesRemaining = Math.max(0, (lockoutEndsAt.getTime() - Date.now()) / (60 * 1000));
+        
+        return { isLocked: true, minutesRemaining };
+      }
+
+      return { isLocked: false, minutesRemaining: 0 };
+    } catch (error) {
+      console.error('Failed to check account lockout:', error);
+      return { isLocked: false, minutesRemaining: 0 };
+    }
+  };
+
   const signUp = async (email: string, password: string, userData: SignUpData) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
@@ -96,19 +144,70 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      // Check if account is locked due to failed attempts
+      const lockoutCheck = await checkAccountLockout(email);
+      if (lockoutCheck.isLocked) {
+        const minutesLeft = Math.ceil(lockoutCheck.minutesRemaining || 0);
+        toast.error(`Account locked due to too many failed attempts. Try again in ${minutesLeft} minutes.`);
+        return { error: new Error('Account locked') };
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Log failed attempt
+        await logLoginAttempt(email, false, error.message);
+        throw error;
+      }
 
+      // Log successful attempt
+      await logLoginAttempt(email, true);
+      
       toast.success('Welcome back!');
       navigate('/dashboard');
       return { error: null };
     } catch (error) {
       const err = error as Error;
       toast.error(err.message || 'Failed to sign in');
+      return { error: err };
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const redirectUrl = `${window.location.origin}/reset-password`;
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+
+      if (error) throw error;
+
+      toast.success('Password reset email sent! Check your inbox.');
+      return { error: null };
+    } catch (error) {
+      const err = error as Error;
+      toast.error(err.message || 'Failed to send reset email');
+      return { error: err };
+    }
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      toast.success('Password updated successfully');
+      return { error: null };
+    } catch (error) {
+      const err = error as Error;
+      toast.error(err.message || 'Failed to update password');
       return { error: err };
     }
   };
@@ -147,7 +246,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, updateProfile }}>
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, updateProfile, resetPassword, updatePassword }}>
       {children}
     </AuthContext.Provider>
   );
