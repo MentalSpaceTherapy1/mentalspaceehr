@@ -148,6 +148,8 @@ export function AppointmentDialog({
         room: appointment.room,
         appointment_notes: appointment.appointment_notes,
         client_notes: appointment.client_notes,
+        telehealth_platform: appointment.telehealth_platform || 'Internal',
+        telehealth_link: appointment.telehealth_link || '',
       });
       setIsRecurring(appointment.is_recurring || false);
       if (appointment.recurrence_pattern) {
@@ -443,6 +445,75 @@ export function AppointmentDialog({
                 )}
               />
             </div>
+
+            {form.watch('service_location') === 'Telehealth' && (
+              <div className="space-y-4 p-4 border border-primary/20 rounded-lg bg-primary/5">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <h3 className="font-semibold text-sm">Telehealth Settings</h3>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="telehealth_platform"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Platform</FormLabel>
+                        <Select 
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            // Auto-generate link for Internal platform
+                            if (value === 'Internal' && !appointment) {
+                              const sessionId = crypto.randomUUID();
+                              form.setValue('telehealth_link', `/telehealth/session/${sessionId}`);
+                            } else if (value !== 'Internal') {
+                              form.setValue('telehealth_link', '');
+                            }
+                          }} 
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select platform" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Internal">Internal WebRTC</SelectItem>
+                            <SelectItem value="Zoom">Zoom</SelectItem>
+                            <SelectItem value="Doxy.me">Doxy.me</SelectItem>
+                            <SelectItem value="External">External Link</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="telehealth_link"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Meeting Link</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder={
+                              form.watch('telehealth_platform') === 'Internal' 
+                                ? 'Auto-generated' 
+                                : 'Enter meeting URL'
+                            }
+                            disabled={form.watch('telehealth_platform') === 'Internal'}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
 
             <FormField
               control={form.control}
