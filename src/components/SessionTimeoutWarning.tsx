@@ -13,7 +13,7 @@ export const SessionTimeoutWarning = () => {
   const { showWarning, extendSession } = useSessionTimeout();
 
   return (
-    <AlertDialog open={showWarning}>
+    <AlertDialog open={showWarning} onOpenChange={() => {}}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Session Expiring Soon</AlertDialogTitle>
