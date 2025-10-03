@@ -14,6 +14,364 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_waitlist: {
+        Row: {
+          added_by: string | null
+          added_date: string | null
+          appointment_type: string
+          client_id: string
+          clinician_id: string | null
+          contacted_by: string | null
+          contacted_date: string | null
+          id: string
+          notes: string | null
+          preferred_days: string[] | null
+          preferred_times: string[] | null
+          priority: string | null
+          removed_date: string | null
+          removed_reason: string | null
+          status: string | null
+        }
+        Insert: {
+          added_by?: string | null
+          added_date?: string | null
+          appointment_type: string
+          client_id: string
+          clinician_id?: string | null
+          contacted_by?: string | null
+          contacted_date?: string | null
+          id?: string
+          notes?: string | null
+          preferred_days?: string[] | null
+          preferred_times?: string[] | null
+          priority?: string | null
+          removed_date?: string | null
+          removed_reason?: string | null
+          status?: string | null
+        }
+        Update: {
+          added_by?: string | null
+          added_date?: string | null
+          appointment_type?: string
+          client_id?: string
+          clinician_id?: string | null
+          contacted_by?: string | null
+          contacted_date?: string | null
+          id?: string
+          notes?: string | null
+          preferred_days?: string[] | null
+          preferred_times?: string[] | null
+          priority?: string | null
+          removed_date?: string | null
+          removed_reason?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_waitlist_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_waitlist_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_waitlist_clinician_id_fkey"
+            columns: ["clinician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_waitlist_contacted_by_fkey"
+            columns: ["contacted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointments: {
+        Row: {
+          actual_duration: number | null
+          appointment_date: string
+          appointment_notes: string | null
+          appointment_type: string
+          billing_status: string
+          cancellation_date: string | null
+          cancellation_fee_applied: boolean | null
+          cancellation_notes: string | null
+          cancellation_reason: string | null
+          cancelled_by: string | null
+          charge_amount: number | null
+          checked_in_by: string | null
+          checked_in_time: string | null
+          checked_out_by: string | null
+          checked_out_time: string | null
+          client_id: string
+          client_notes: string | null
+          clinician_id: string
+          cpt_code: string | null
+          created_by: string | null
+          created_date: string | null
+          duration: number
+          end_time: string
+          icd_codes: string[] | null
+          id: string
+          is_recurring: boolean | null
+          last_modified: string | null
+          last_modified_by: string | null
+          no_show_date: string | null
+          no_show_fee_applied: boolean | null
+          no_show_notes: string | null
+          office_location_id: string | null
+          parent_recurrence_id: string | null
+          recurrence_pattern: Json | null
+          reminders_sent: Json | null
+          room: string | null
+          service_location: string
+          start_time: string
+          status: string
+          status_updated_by: string | null
+          status_updated_date: string | null
+          telehealth_link: string | null
+          telehealth_platform: string | null
+          timezone: string
+        }
+        Insert: {
+          actual_duration?: number | null
+          appointment_date: string
+          appointment_notes?: string | null
+          appointment_type: string
+          billing_status?: string
+          cancellation_date?: string | null
+          cancellation_fee_applied?: boolean | null
+          cancellation_notes?: string | null
+          cancellation_reason?: string | null
+          cancelled_by?: string | null
+          charge_amount?: number | null
+          checked_in_by?: string | null
+          checked_in_time?: string | null
+          checked_out_by?: string | null
+          checked_out_time?: string | null
+          client_id: string
+          client_notes?: string | null
+          clinician_id: string
+          cpt_code?: string | null
+          created_by?: string | null
+          created_date?: string | null
+          duration: number
+          end_time: string
+          icd_codes?: string[] | null
+          id?: string
+          is_recurring?: boolean | null
+          last_modified?: string | null
+          last_modified_by?: string | null
+          no_show_date?: string | null
+          no_show_fee_applied?: boolean | null
+          no_show_notes?: string | null
+          office_location_id?: string | null
+          parent_recurrence_id?: string | null
+          recurrence_pattern?: Json | null
+          reminders_sent?: Json | null
+          room?: string | null
+          service_location: string
+          start_time: string
+          status?: string
+          status_updated_by?: string | null
+          status_updated_date?: string | null
+          telehealth_link?: string | null
+          telehealth_platform?: string | null
+          timezone?: string
+        }
+        Update: {
+          actual_duration?: number | null
+          appointment_date?: string
+          appointment_notes?: string | null
+          appointment_type?: string
+          billing_status?: string
+          cancellation_date?: string | null
+          cancellation_fee_applied?: boolean | null
+          cancellation_notes?: string | null
+          cancellation_reason?: string | null
+          cancelled_by?: string | null
+          charge_amount?: number | null
+          checked_in_by?: string | null
+          checked_in_time?: string | null
+          checked_out_by?: string | null
+          checked_out_time?: string | null
+          client_id?: string
+          client_notes?: string | null
+          clinician_id?: string
+          cpt_code?: string | null
+          created_by?: string | null
+          created_date?: string | null
+          duration?: number
+          end_time?: string
+          icd_codes?: string[] | null
+          id?: string
+          is_recurring?: boolean | null
+          last_modified?: string | null
+          last_modified_by?: string | null
+          no_show_date?: string | null
+          no_show_fee_applied?: boolean | null
+          no_show_notes?: string | null
+          office_location_id?: string | null
+          parent_recurrence_id?: string | null
+          recurrence_pattern?: Json | null
+          reminders_sent?: Json | null
+          room?: string | null
+          service_location?: string
+          start_time?: string
+          status?: string
+          status_updated_by?: string | null
+          status_updated_date?: string | null
+          telehealth_link?: string | null
+          telehealth_platform?: string | null
+          timezone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_cancelled_by_fkey"
+            columns: ["cancelled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_checked_in_by_fkey"
+            columns: ["checked_in_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_checked_out_by_fkey"
+            columns: ["checked_out_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_clinician_id_fkey"
+            columns: ["clinician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_last_modified_by_fkey"
+            columns: ["last_modified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_office_location_id_fkey"
+            columns: ["office_location_id"]
+            isOneToOne: false
+            referencedRelation: "practice_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_parent_recurrence_id_fkey"
+            columns: ["parent_recurrence_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_status_updated_by_fkey"
+            columns: ["status_updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blocked_times: {
+        Row: {
+          block_type: string
+          clinician_id: string
+          created_by: string | null
+          created_date: string | null
+          end_date: string
+          end_time: string
+          id: string
+          is_recurring: boolean | null
+          notes: string | null
+          recurrence_pattern: Json | null
+          start_date: string
+          start_time: string
+          title: string
+        }
+        Insert: {
+          block_type: string
+          clinician_id: string
+          created_by?: string | null
+          created_date?: string | null
+          end_date: string
+          end_time: string
+          id?: string
+          is_recurring?: boolean | null
+          notes?: string | null
+          recurrence_pattern?: Json | null
+          start_date: string
+          start_time: string
+          title: string
+        }
+        Update: {
+          block_type?: string
+          clinician_id?: string
+          created_by?: string | null
+          created_date?: string | null
+          end_date?: string
+          end_time?: string
+          id?: string
+          is_recurring?: boolean | null
+          notes?: string | null
+          recurrence_pattern?: Json | null
+          start_date?: string
+          start_time?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_times_clinician_id_fkey"
+            columns: ["clinician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocked_times_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_insurance: {
         Row: {
           back_card_image: string | null
