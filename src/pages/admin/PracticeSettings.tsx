@@ -158,8 +158,8 @@ export default function PracticeSettings() {
         }
         
         // Load schedule settings (if they exist)
-        if (data.schedule_settings) {
-          setScheduleSettings(prev => ({ ...prev, ...data.schedule_settings }));
+        if ((data as any).schedule_settings) {
+          setScheduleSettings(prev => ({ ...prev, ...(data as any).schedule_settings }));
         }
         
         // Check if billing address is different

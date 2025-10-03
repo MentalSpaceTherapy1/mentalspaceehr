@@ -1108,6 +1108,7 @@ export type Database = {
           primary_color: string | null
           require_supervisor_cosign: boolean | null
           requires_insurance_auth: boolean | null
+          schedule_settings: Json | null
           secondary_color: string | null
           state: string
           street1: string
@@ -1146,6 +1147,7 @@ export type Database = {
           primary_color?: string | null
           require_supervisor_cosign?: boolean | null
           requires_insurance_auth?: boolean | null
+          schedule_settings?: Json | null
           secondary_color?: string | null
           state: string
           street1: string
@@ -1184,6 +1186,7 @@ export type Database = {
           primary_color?: string | null
           require_supervisor_cosign?: boolean | null
           requires_insurance_auth?: boolean | null
+          schedule_settings?: Json | null
           secondary_color?: string | null
           state?: string
           street1?: string
