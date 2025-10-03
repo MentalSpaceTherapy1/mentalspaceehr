@@ -38,6 +38,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { Appointment } from '@/hooks/useAppointments';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const appointmentSchema = z.object({
   client_id: z.string().min(1, 'Client is required'),
@@ -100,6 +101,7 @@ export function AppointmentDialog({
   const [isGroupSession, setIsGroupSession] = useState(false);
   const [groupParticipants, setGroupParticipants] = useState<string[]>([]);
   const [maxParticipants, setMaxParticipants] = useState(10);
+  const { toast } = useToast();
 
   const getMaxDays = (frequency: string) => {
     if (frequency === 'Weekly') return 1;
@@ -133,6 +135,7 @@ export function AppointmentDialog({
       is_recurring: false,
       telehealth_platform: 'Internal',
       icd_codes: [],
+      start_time: '09:00', // Add default start time
     },
   });
 
@@ -187,12 +190,13 @@ export function AppointmentDialog({
   const onSubmit = async (data: AppointmentFormData) => {
     try {
       setSaving(true);
+      console.log('Form data being submitted:', data);
       
       const [hours, minutes] = data.start_time.split(':').map(Number);
       const endTime = new Date();
       endTime.setHours(hours, minutes + data.duration);
       
-      await onSave({
+      const appointmentData = {
         ...data,
         client_id: isGroupSession && groupParticipants.length > 0 ? groupParticipants[0] : data.client_id,
         appointment_date: format(data.appointment_date, 'yyyy-MM-dd'),
@@ -203,18 +207,26 @@ export function AppointmentDialog({
         is_group_session: isGroupSession,
         max_participants: isGroupSession ? maxParticipants : null,
         current_participants: isGroupSession ? groupParticipants.length : 1,
-      } as any, editSeries);
+        // Ensure room and notes are null instead of undefined if empty
+        room: data.room || null,
+        appointment_notes: data.appointment_notes || null,
+        client_notes: data.client_notes || null,
+      };
 
-      // If group session, add participants
-      if (isGroupSession && groupParticipants.length > 0) {
-        // Participants will be added via a separate hook/function after appointment creation
-      }
+      console.log('Processed appointment data:', appointmentData);
+      
+      await onSave(appointmentData as any, editSeries);
       
       onOpenChange(false);
       form.reset();
       setIsRecurring(false);
     } catch (error) {
       console.error('Error saving appointment:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save appointment",
+        variant: "destructive"
+      });
     } finally {
       setSaving(false);
     }
