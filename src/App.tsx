@@ -17,6 +17,7 @@ import Locations from "./pages/admin/Locations";
 import Profile from "./pages/Profile";
 import MFASetup from "./pages/MFASetup";
 import TrustedDevices from "./pages/TrustedDevices";
+import Tasks from "./pages/Tasks";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -97,6 +98,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <TrustedDevices />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/tasks" 
+              element={
+                <ProtectedRoute>
+                  <Tasks />
                 </ProtectedRoute>
               } 
             />
