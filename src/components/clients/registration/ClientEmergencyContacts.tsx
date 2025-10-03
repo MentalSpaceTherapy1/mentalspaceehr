@@ -20,12 +20,12 @@ export function ClientEmergencyContacts({ formData, setFormData }: ClientEmergen
           name: '',
           relationship: '',
           phone: '',
-          alternatePhone: '',
+          alternate_phone: '',
           email: '',
           address: '',
-          isPrimary: formData.emergencyContacts.length === 0,
-          okayToDiscussHealthInfo: false,
-          okayToLeaveMessage: false,
+          is_primary: formData.emergencyContacts.length === 0,
+          okay_to_discuss_health_info: false,
+          okay_to_leave_message: false,
         }
       ]
     });
@@ -105,8 +105,8 @@ export function ClientEmergencyContacts({ formData, setFormData }: ClientEmergen
                     <Label>Alternate Phone</Label>
                     <Input
                       type="tel"
-                      value={contact.alternatePhone}
-                      onChange={(e) => updateContact(index, 'alternatePhone', e.target.value)}
+                      value={contact.alternate_phone}
+                      onChange={(e) => updateContact(index, 'alternate_phone', e.target.value)}
                     />
                   </div>
 
@@ -132,8 +132,8 @@ export function ClientEmergencyContacts({ formData, setFormData }: ClientEmergen
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id={`primary-${index}`}
-                      checked={contact.isPrimary}
-                      onCheckedChange={(checked) => updateContact(index, 'isPrimary', checked)}
+                      checked={contact.is_primary}
+                      onCheckedChange={(checked) => updateContact(index, 'is_primary', checked)}
                     />
                     <Label htmlFor={`primary-${index}`} className="cursor-pointer">
                       Primary Contact
@@ -143,8 +143,8 @@ export function ClientEmergencyContacts({ formData, setFormData }: ClientEmergen
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id={`discuss-${index}`}
-                      checked={contact.okayToDiscussHealthInfo}
-                      onCheckedChange={(checked) => updateContact(index, 'okayToDiscussHealthInfo', checked)}
+                      checked={contact.okay_to_discuss_health_info}
+                      onCheckedChange={(checked) => updateContact(index, 'okay_to_discuss_health_info', checked)}
                     />
                     <Label htmlFor={`discuss-${index}`} className="cursor-pointer">
                       Okay to discuss health info
@@ -154,8 +154,8 @@ export function ClientEmergencyContacts({ formData, setFormData }: ClientEmergen
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id={`message-${index}`}
-                      checked={contact.okayToLeaveMessage}
-                      onCheckedChange={(checked) => updateContact(index, 'okayToLeaveMessage', checked)}
+                      checked={contact.okay_to_leave_message}
+                      onCheckedChange={(checked) => updateContact(index, 'okay_to_leave_message', checked)}
                     />
                     <Label htmlFor={`message-${index}`} className="cursor-pointer">
                       Okay to leave message
