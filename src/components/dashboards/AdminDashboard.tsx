@@ -15,12 +15,21 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/hooks/useAuth';
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <div className="space-y-6">
+      {/* Welcome Header */}
+      <div className="mb-2">
+        <h2 className="text-3xl font-bold mb-2">Administrator Dashboard</h2>
+        <p className="text-muted-foreground">
+          Welcome back, {user?.email?.split('@')[0]}
+        </p>
+      </div>
       {/* System Health & Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <GradientCard gradient="success" className="hover:shadow-colored border-l-4 border-l-success">

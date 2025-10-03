@@ -36,14 +36,6 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">{getDashboardTitle()}</h2>
-          <p className="text-muted-foreground">
-            Welcome back, {user?.email?.split('@')[0]}
-          </p>
-        </div>
-
-        {/* Role-based dashboard content */}
         {getDashboardComponent()}
       </div>
     </DashboardLayout>
