@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ClientMedicalInfoProps {
   formData: any;
@@ -9,6 +11,30 @@ interface ClientMedicalInfoProps {
 }
 
 export function ClientMedicalInfo({ formData, setFormData }: ClientMedicalInfoProps) {
+  const [therapists, setTherapists] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTherapists = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, title')
+          .eq('is_active', true)
+          .order('last_name');
+
+        if (error) throw error;
+        setTherapists(data || []);
+      } catch (error) {
+        console.error('Error fetching therapists:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTherapists();
+  }, []);
+
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold">Social Information</h3>
@@ -205,6 +231,71 @@ export function ClientMedicalInfo({ formData, setFormData }: ClientMedicalInfoPr
             </div>
           </>
         )}
+      </div>
+
+      <h3 className="text-lg font-semibold pt-4">Staff Assignment</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Primary Therapist</Label>
+          <Select
+            value={formData.primaryTherapistId}
+            onValueChange={(value) => setFormData({ ...formData, primaryTherapistId: value })}
+            disabled={loading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={loading ? "Loading..." : "Select primary therapist"} />
+            </SelectTrigger>
+            <SelectContent className="bg-card border z-50">
+              {therapists.map((therapist) => (
+                <SelectItem key={therapist.id} value={therapist.id}>
+                  {therapist.title ? `${therapist.title} ` : ''}{therapist.first_name} {therapist.last_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Psychiatrist (Optional)</Label>
+          <Select
+            value={formData.psychiatristId}
+            onValueChange={(value) => setFormData({ ...formData, psychiatristId: value })}
+            disabled={loading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={loading ? "Loading..." : "Select psychiatrist"} />
+            </SelectTrigger>
+            <SelectContent className="bg-card border z-50">
+              <SelectItem value="">None</SelectItem>
+              {therapists.map((therapist) => (
+                <SelectItem key={therapist.id} value={therapist.id}>
+                  {therapist.title ? `${therapist.title} ` : ''}{therapist.first_name} {therapist.last_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Case Manager (Optional)</Label>
+          <Select
+            value={formData.caseManagerId}
+            onValueChange={(value) => setFormData({ ...formData, caseManagerId: value })}
+            disabled={loading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={loading ? "Loading..." : "Select case manager"} />
+            </SelectTrigger>
+            <SelectContent className="bg-card border z-50">
+              <SelectItem value="">None</SelectItem>
+              {therapists.map((therapist) => (
+                <SelectItem key={therapist.id} value={therapist.id}>
+                  {therapist.title ? `${therapist.title} ` : ''}{therapist.first_name} {therapist.last_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <h3 className="text-lg font-semibold pt-4">Previous System Information</h3>

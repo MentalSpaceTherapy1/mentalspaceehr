@@ -4,7 +4,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, differenceInYears } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 interface ClientBasicInfoProps {
@@ -13,6 +13,13 @@ interface ClientBasicInfoProps {
 }
 
 export function ClientBasicInfo({ formData, setFormData }: ClientBasicInfoProps) {
+  const calculateAge = (dob: Date | undefined): number | null => {
+    if (!dob) return null;
+    return differenceInYears(new Date(), dob);
+  };
+
+  const age = calculateAge(formData.dateOfBirth);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -140,6 +147,15 @@ export function ClientBasicInfo({ formData, setFormData }: ClientBasicInfoProps)
             </PopoverContent>
           </Popover>
         </div>
+
+        {formData.dateOfBirth && (
+          <div className="space-y-2">
+            <Label>Age</Label>
+            <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm">
+              {age} years old
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

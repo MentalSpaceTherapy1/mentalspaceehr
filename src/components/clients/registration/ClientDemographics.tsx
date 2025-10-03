@@ -2,6 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 
 interface ClientDemographicsProps {
   formData: any;
@@ -168,6 +169,44 @@ export function ClientDemographics({ formData, setFormData }: ClientDemographics
             value={formData.primaryLanguage}
             onChange={(e) => setFormData({ ...formData, primaryLanguage: e.target.value })}
           />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <Label>Other Languages Spoken</Label>
+          <p className="text-sm text-muted-foreground mb-2">Add any additional languages the client speaks</p>
+          {(formData.otherLanguagesSpoken || []).map((lang: string, index: number) => (
+            <div key={index} className="flex gap-2 mb-2">
+              <Input
+                value={lang}
+                onChange={(e) => {
+                  const updated = [...formData.otherLanguagesSpoken];
+                  updated[index] = e.target.value;
+                  setFormData({ ...formData, otherLanguagesSpoken: updated });
+                }}
+                placeholder="Language name"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const updated = formData.otherLanguagesSpoken.filter((_: any, i: number) => i !== index);
+                  setFormData({ ...formData, otherLanguagesSpoken: updated });
+                }}
+              >
+                Remove
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setFormData({ ...formData, otherLanguagesSpoken: [...(formData.otherLanguagesSpoken || []), ''] });
+            }}
+            className="w-full"
+          >
+            Add Language
+          </Button>
         </div>
 
         <div className="space-y-2">
