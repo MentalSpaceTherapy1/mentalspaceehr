@@ -14,6 +14,177 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_insurance: {
+        Row: {
+          back_card_image: string | null
+          claims_address: Json | null
+          client_id: string
+          coinsurance: number | null
+          copay: number | null
+          created_at: string | null
+          created_by: string | null
+          customer_service_phone: string
+          deductible: number | null
+          deductible_met: number | null
+          effective_date: string
+          front_card_image: string | null
+          group_number: string | null
+          id: string
+          insurance_company: string
+          insurance_company_id: string | null
+          last_verification_date: string | null
+          last_verified_by: string | null
+          member_id: string
+          mental_health_coverage: boolean | null
+          out_of_pocket_max: number | null
+          out_of_pocket_met: number | null
+          plan_name: string
+          plan_type: string
+          precertification_phone: string | null
+          provider_phone: string | null
+          rank: string
+          relationship_to_subscriber: string | null
+          remaining_sessions_this_year: number | null
+          requires_prior_auth: boolean | null
+          requires_referral: boolean | null
+          subscriber_address: Json | null
+          subscriber_dob: string | null
+          subscriber_employer: string | null
+          subscriber_first_name: string | null
+          subscriber_is_client: boolean | null
+          subscriber_last_name: string | null
+          subscriber_ssn: string | null
+          termination_date: string | null
+          updated_at: string | null
+          updated_by: string | null
+          verification_notes: string | null
+        }
+        Insert: {
+          back_card_image?: string | null
+          claims_address?: Json | null
+          client_id: string
+          coinsurance?: number | null
+          copay?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_service_phone: string
+          deductible?: number | null
+          deductible_met?: number | null
+          effective_date: string
+          front_card_image?: string | null
+          group_number?: string | null
+          id?: string
+          insurance_company: string
+          insurance_company_id?: string | null
+          last_verification_date?: string | null
+          last_verified_by?: string | null
+          member_id: string
+          mental_health_coverage?: boolean | null
+          out_of_pocket_max?: number | null
+          out_of_pocket_met?: number | null
+          plan_name: string
+          plan_type: string
+          precertification_phone?: string | null
+          provider_phone?: string | null
+          rank: string
+          relationship_to_subscriber?: string | null
+          remaining_sessions_this_year?: number | null
+          requires_prior_auth?: boolean | null
+          requires_referral?: boolean | null
+          subscriber_address?: Json | null
+          subscriber_dob?: string | null
+          subscriber_employer?: string | null
+          subscriber_first_name?: string | null
+          subscriber_is_client?: boolean | null
+          subscriber_last_name?: string | null
+          subscriber_ssn?: string | null
+          termination_date?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          verification_notes?: string | null
+        }
+        Update: {
+          back_card_image?: string | null
+          claims_address?: Json | null
+          client_id?: string
+          coinsurance?: number | null
+          copay?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_service_phone?: string
+          deductible?: number | null
+          deductible_met?: number | null
+          effective_date?: string
+          front_card_image?: string | null
+          group_number?: string | null
+          id?: string
+          insurance_company?: string
+          insurance_company_id?: string | null
+          last_verification_date?: string | null
+          last_verified_by?: string | null
+          member_id?: string
+          mental_health_coverage?: boolean | null
+          out_of_pocket_max?: number | null
+          out_of_pocket_met?: number | null
+          plan_name?: string
+          plan_type?: string
+          precertification_phone?: string | null
+          provider_phone?: string | null
+          rank?: string
+          relationship_to_subscriber?: string | null
+          remaining_sessions_this_year?: number | null
+          requires_prior_auth?: boolean | null
+          requires_referral?: boolean | null
+          subscriber_address?: Json | null
+          subscriber_dob?: string | null
+          subscriber_employer?: string | null
+          subscriber_first_name?: string | null
+          subscriber_is_client?: boolean | null
+          subscriber_last_name?: string | null
+          subscriber_ssn?: string | null
+          termination_date?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          verification_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_insurance_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_insurance_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_insurance_insurance_company_id_fkey"
+            columns: ["insurance_company_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_insurance_last_verified_by_fkey"
+            columns: ["last_verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_insurance_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           accessibility_needs: string[] | null
@@ -351,6 +522,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      insurance_companies: {
+        Row: {
+          claims_address: Json | null
+          created_at: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          claims_address?: Json | null
+          created_at?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          claims_address?: Json | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       login_attempts: {
         Row: {

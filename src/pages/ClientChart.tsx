@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
+import { InsuranceBillingSection } from '@/components/clients/insurance/InsuranceBillingSection';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 
@@ -156,6 +157,8 @@ export default function ClientChart() {
             </CardContent>
           </Card>
         );
+      case 'insurance-billing':
+        return <InsuranceBillingSection clientId={id!} />;
       default:
         return (
           <Card>
