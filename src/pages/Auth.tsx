@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Activity, Shield, Users } from 'lucide-react';
 import { z } from 'zod';
 import logo from '@/assets/mentalspace-logo.png';
+import { MFAVerification } from '@/components/MFAVerification';
+import { EmailVerificationNotice } from '@/components/EmailVerificationNotice';
+import { supabase } from '@/integrations/supabase/client';
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -31,10 +34,18 @@ export default function Auth() {
   const { signIn, signUp, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showMFA, setShowMFA] = useState(false);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
 
   // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
   if (user) {
-    navigate('/dashboard');
     return null;
   }
 
@@ -51,6 +62,29 @@ export default function Auth() {
 
     try {
       signInSchema.parse(data);
+      
+      // Check if user has MFA enabled
+      const { data: { user: authUser }, error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (error) {
+        if (error.message.includes('MFA')) {
+          setShowMFA(true);
+          return;
+        }
+        throw error;
+      }
+
+      // Check for email verification
+      if (authUser && !authUser.email_confirmed_at) {
+        setPendingEmail(data.email);
+        setShowEmailVerification(true);
+        await supabase.auth.signOut();
+        return;
+      }
+
       await signIn(data.email, data.password);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -89,7 +123,9 @@ export default function Auth() {
       });
       
       if (!error) {
-        navigate('/dashboard');
+        // Show email verification notice
+        setPendingEmail(data.email);
+        setShowEmailVerification(true);
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -105,6 +141,27 @@ export default function Auth() {
       setLoading(false);
     }
   };
+
+  // Show MFA verification if needed
+  if (showMFA) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--gradient-hero)' }}>
+        <MFAVerification
+          onVerified={() => navigate('/dashboard')}
+          onCancel={() => setShowMFA(false)}
+        />
+      </div>
+    );
+  }
+
+  // Show email verification notice if needed
+  if (showEmailVerification) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--gradient-hero)' }}>
+        <EmailVerificationNotice email={pendingEmail} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--gradient-hero)' }}>

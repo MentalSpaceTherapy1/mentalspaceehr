@@ -11,6 +11,9 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import UserManagement from "./pages/admin/UserManagement";
+import CreateUser from "./pages/admin/CreateUser";
+import Profile from "./pages/Profile";
+import MFASetup from "./pages/MFASetup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -44,6 +47,30 @@ const App = () => (
                 <AdminRoute>
                   <UserManagement />
                 </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/users/create" 
+              element={
+                <AdminRoute>
+                  <CreateUser />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/mfa-setup" 
+              element={
+                <ProtectedRoute>
+                  <MFASetup />
+                </ProtectedRoute>
               } 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

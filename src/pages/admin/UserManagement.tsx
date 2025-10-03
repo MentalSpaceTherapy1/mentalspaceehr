@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -6,7 +7,7 @@ import { RoleBadge } from '@/components/admin/RoleBadge';
 import { RoleAssignmentDialog } from '@/components/admin/RoleAssignmentDialog';
 import { getAllUsersWithRoles } from '@/lib/api/userRoles';
 import { AppRole } from '@/hooks/useUserRoles';
-import { Search, UserCog } from 'lucide-react';
+import { Search, UserCog, UserPlus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
@@ -22,6 +23,7 @@ interface UserWithRoles {
 }
 
 export default function UserManagement() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserWithRoles[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -80,11 +82,17 @@ export default function UserManagement() {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage user roles and permissions
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">User Management</h1>
+            <p className="text-muted-foreground mt-2">
+              Manage user roles and permissions
+            </p>
+          </div>
+          <Button onClick={() => navigate('/admin/users/create')}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Create User
+          </Button>
         </div>
 
         <div className="flex items-center gap-4">

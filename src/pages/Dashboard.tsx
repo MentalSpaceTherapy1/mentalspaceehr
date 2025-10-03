@@ -34,9 +34,13 @@ export default function Dashboard() {
                 ))}
               </div>
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => navigate('/profile')}>
               <Settings className="h-4 w-4 mr-2" />
-              Settings
+              Profile
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/mfa-setup')}>
+              <Shield className="h-4 w-4 mr-2" />
+              MFA
             </Button>
             <Button variant="outline" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-2" />
