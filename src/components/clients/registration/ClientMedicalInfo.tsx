@@ -258,15 +258,14 @@ export function ClientMedicalInfo({ formData, setFormData }: ClientMedicalInfoPr
         <div className="space-y-2">
           <Label>Psychiatrist (Optional)</Label>
           <Select
-            value={formData.psychiatristId}
+            value={formData.psychiatristId || undefined}
             onValueChange={(value) => setFormData({ ...formData, psychiatristId: value })}
             disabled={loading}
           >
             <SelectTrigger>
-              <SelectValue placeholder={loading ? "Loading..." : "Select psychiatrist"} />
+              <SelectValue placeholder={loading ? "Loading..." : "Select psychiatrist (optional)"} />
             </SelectTrigger>
             <SelectContent className="bg-card border z-50">
-              <SelectItem value="">None</SelectItem>
               {therapists.map((therapist) => (
                 <SelectItem key={therapist.id} value={therapist.id}>
                   {therapist.title ? `${therapist.title} ` : ''}{therapist.first_name} {therapist.last_name}
@@ -279,15 +278,14 @@ export function ClientMedicalInfo({ formData, setFormData }: ClientMedicalInfoPr
         <div className="space-y-2">
           <Label>Case Manager (Optional)</Label>
           <Select
-            value={formData.caseManagerId}
+            value={formData.caseManagerId || undefined}
             onValueChange={(value) => setFormData({ ...formData, caseManagerId: value })}
             disabled={loading}
           >
             <SelectTrigger>
-              <SelectValue placeholder={loading ? "Loading..." : "Select case manager"} />
+              <SelectValue placeholder={loading ? "Loading..." : "Select case manager (optional)"} />
             </SelectTrigger>
             <SelectContent className="bg-card border z-50">
-              <SelectItem value="">None</SelectItem>
               {therapists.map((therapist) => (
                 <SelectItem key={therapist.id} value={therapist.id}>
                   {therapist.title ? `${therapist.title} ` : ''}{therapist.first_name} {therapist.last_name}
