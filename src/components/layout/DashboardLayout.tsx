@@ -19,7 +19,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         
         <div className="flex-1 flex flex-col w-full">
           {/* Top Header */}
-          <header className="sticky top-0 z-10 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+          <header className="sticky top-0 z-10 border-b bg-gradient-to-r from-card/95 to-primary/5 backdrop-blur supports-[backdrop-filter]:bg-card/60 shadow-sm">
             <div className="flex h-14 items-center gap-4 px-4">
               <SidebarTrigger />
               

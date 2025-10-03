@@ -64,15 +64,15 @@ export function AppSidebar() {
   };
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? 'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground' : 'hover:bg-accent';
+    isActive ? 'bg-gradient-to-r from-primary to-accent text-white hover:from-primary hover:to-accent shadow-md' : 'hover:bg-sidebar-accent transition-all duration-200';
 
   return (
-    <Sidebar collapsible="icon" className="border-r">
-      <SidebarHeader className="border-b p-4">
+    <Sidebar collapsible="icon" className="border-r shadow-lg">
+      <SidebarHeader className="border-b p-4 bg-gradient-to-br from-primary/5 to-accent/5">
         <div className="flex items-center gap-2">
           <img src={logo} alt="MentalSpace" className={collapsed ? "h-8" : "h-8"} />
           {!collapsed && (
-            <span className="font-semibold text-lg">MentalSpace</span>
+            <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">MentalSpace</span>
           )}
         </div>
       </SidebarHeader>

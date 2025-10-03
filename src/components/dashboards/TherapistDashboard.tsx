@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { GradientCard, GradientCardContent, GradientCardDescription, GradientCardHeader, GradientCardTitle } from '@/components/ui/gradient-card';
 import { Button } from '@/components/ui/button';
 import { 
   Calendar, 
@@ -18,91 +19,91 @@ export const TherapistDashboard = () => {
     <div className="space-y-6">
       {/* Today's Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Sessions</CardTitle>
-            <Calendar className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
+        <GradientCard gradient="primary">
+          <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <GradientCardTitle className="text-sm font-medium">Today's Sessions</GradientCardTitle>
+            <Calendar className="h-5 w-5 text-primary" />
+          </GradientCardHeader>
+          <GradientCardContent>
+            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">0</div>
             <p className="text-xs text-muted-foreground">Scheduled appointments</p>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Notes</CardTitle>
-            <FileText className="h-4 w-4 text-warning" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
+        <GradientCard gradient="secondary">
+          <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <GradientCardTitle className="text-sm font-medium">Pending Notes</GradientCardTitle>
+            <FileText className="h-5 w-5 text-warning" />
+          </GradientCardHeader>
+          <GradientCardContent>
+            <div className="text-3xl font-bold text-warning">0</div>
             <p className="text-xs text-muted-foreground">Unsigned notes</p>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Clients</CardTitle>
-            <Users className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
+        <GradientCard gradient="accent">
+          <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <GradientCardTitle className="text-sm font-medium">Active Clients</GradientCardTitle>
+            <Users className="h-5 w-5 text-accent" />
+          </GradientCardHeader>
+          <GradientCardContent>
+            <div className="text-3xl font-bold text-accent">0</div>
             <p className="text-xs text-muted-foreground">On your caseload</p>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compliance</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">100%</div>
+        <GradientCard gradient="primary">
+          <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <GradientCardTitle className="text-sm font-medium">Compliance</GradientCardTitle>
+            <CheckCircle2 className="h-5 w-5 text-success" />
+          </GradientCardHeader>
+          <GradientCardContent>
+            <div className="text-3xl font-bold text-success">100%</div>
             <p className="text-xs text-muted-foreground">Documentation on time</p>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Today's Schedule */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+        <GradientCard gradient="primary" className="hover:shadow-colored">
+          <GradientCardHeader>
+            <GradientCardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
               Today's Schedule
-            </CardTitle>
-            <CardDescription>
+            </GradientCardTitle>
+            <GradientCardDescription>
               {new Date().toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 year: 'numeric', 
                 month: 'long', 
                 day: 'numeric' 
               })}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </GradientCardDescription>
+          </GradientCardHeader>
+          <GradientCardContent>
             <div className="space-y-3">
               <div className="flex items-center justify-center p-8 text-center">
                 <div>
-                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                  <Calendar className="h-12 w-12 text-primary/50 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">No appointments scheduled</p>
-                  <Button variant="link" className="mt-2">Schedule an appointment</Button>
+                  <Button variant="default" className="mt-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">Schedule an appointment</Button>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
 
         {/* Pending Tasks */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5" />
+        <GradientCard gradient="secondary" className="hover:shadow-colored">
+          <GradientCardHeader>
+            <GradientCardTitle className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5 text-secondary" />
               Pending Tasks
-            </CardTitle>
-            <CardDescription>Items requiring your attention</CardDescription>
-          </CardHeader>
-          <CardContent>
+            </GradientCardTitle>
+            <GradientCardDescription>Items requiring your attention</GradientCardDescription>
+          </GradientCardHeader>
+          <GradientCardContent>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center gap-3">
@@ -137,8 +138,8 @@ export const TherapistDashboard = () => {
                 <Badge variant="secondary">0</Badge>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </GradientCardContent>
+        </GradientCard>
       </div>
 
       {/* Quick Actions & Productivity */}

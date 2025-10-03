@@ -8,8 +8,8 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Professional Healthcare Design System */
-    --background: 0 0% 100%;
+    /* Modern Colorful Healthcare Design System */
+    --background: 192 95% 98%;
     --foreground: 215 25% 17%;
 
     --card: 0 0% 100%;
@@ -24,52 +24,56 @@ All colors MUST be HSL.
     --primary-light: 192 95% 92%;
     --primary-dark: 192 95% 45%;
 
-    /* Soft Neutral - Clean & Clinical */
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 215 25% 17%;
+    /* Vibrant Purple - Secondary */
+    --secondary: 270 60% 65%;
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 210 20% 96%;
     --muted-foreground: 215 15% 45%;
 
     /* MentalSpace Green - Brand Accent */
-    --accent: 145 60% 45%;
+    --accent: 145 60% 50%;
     --accent-foreground: 0 0% 100%;
 
     /* Status Colors */
-    --success: 142 71% 45%;
+    --success: 142 71% 50%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 38 92% 50%;
+    --warning: 38 92% 55%;
     --warning-foreground: 0 0% 100%;
     
-    --destructive: 0 84% 60%;
+    --destructive: 0 84% 65%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 210 100% 44%;
+    --ring: 192 95% 55%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    /* Sidebar */
-    --sidebar-background: 215 25% 17%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 210 100% 44%;
+    /* Sidebar - Light & Branded */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 25% 17%;
+    --sidebar-primary: 192 95% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 22%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 215 20% 25%;
-    --sidebar-ring: 210 100% 44%;
+    --sidebar-accent: 192 95% 96%;
+    --sidebar-accent-foreground: 215 25% 17%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 192 95% 55%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(192 95% 55%), hsl(145 60% 45%));
+    --gradient-primary: linear-gradient(135deg, hsl(192 95% 55%), hsl(145 60% 50%));
+    --gradient-secondary: linear-gradient(135deg, hsl(270 60% 65%), hsl(192 95% 55%));
+    --gradient-accent: linear-gradient(135deg, hsl(145 60% 50%), hsl(192 95% 55%));
     --gradient-hero: linear-gradient(180deg, hsl(192 95% 96%), hsl(0 0% 100%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(192 95% 98%));
     
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(215 25% 17% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(215 25% 17% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(215 25% 17% / 0.15);
-    --shadow-xl: 0 20px 25px -5px hsl(215 25% 17% / 0.2);
+    /* Shadows - Colorful */
+    --shadow-sm: 0 1px 2px 0 hsl(192 95% 55% / 0.1);
+    --shadow-md: 0 4px 6px -1px hsl(192 95% 55% / 0.15);
+    --shadow-lg: 0 10px 15px -3px hsl(192 95% 55% / 0.2);
+    --shadow-xl: 0 20px 25px -5px hsl(192 95% 55% / 0.25);
+    --shadow-colored: 0 8px 16px -4px hsl(192 95% 55% / 0.3);
     
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -90,44 +94,48 @@ All colors MUST be HSL.
     --primary-light: 192 95% 20%;
     --primary-dark: 192 95% 50%;
 
-    --secondary: 215 20% 20%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 270 60% 70%;
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 215 20% 20%;
     --muted-foreground: 215 15% 65%;
 
-    --accent: 145 60% 50%;
+    --accent: 145 60% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
+    --success: 142 71% 50%;
     --success-foreground: 0 0% 100%;
     
-    --warning: 38 92% 50%;
+    --warning: 38 92% 55%;
     --warning-foreground: 0 0% 100%;
     
-    --destructive: 0 84% 60%;
+    --destructive: 0 84% 65%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 215 20% 25%;
     --input: 215 20% 25%;
-    --ring: 210 100% 55%;
+    --ring: 192 95% 60%;
 
-    --sidebar-background: 215 25% 10%;
+    --sidebar-background: 215 25% 15%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 210 100% 55%;
+    --sidebar-primary: 192 95% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 15%;
+    --sidebar-accent: 215 25% 20%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 215 20% 20%;
-    --sidebar-ring: 210 100% 55%;
+    --sidebar-border: 215 20% 25%;
+    --sidebar-ring: 192 95% 60%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(192 95% 60%), hsl(145 60% 50%));
+    --gradient-primary: linear-gradient(135deg, hsl(192 95% 60%), hsl(145 60% 55%));
+    --gradient-secondary: linear-gradient(135deg, hsl(270 60% 70%), hsl(192 95% 60%));
+    --gradient-accent: linear-gradient(135deg, hsl(145 60% 55%), hsl(192 95% 60%));
     --gradient-hero: linear-gradient(180deg, hsl(215 25% 15%), hsl(215 25% 12%));
+    --gradient-card: linear-gradient(145deg, hsl(215 25% 15%), hsl(215 25% 18%));
     
     --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
     --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4);
     --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.5);
     --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.6);
+    --shadow-colored: 0 8px 16px -4px hsl(192 95% 60% / 0.3);
   }
 }
 
