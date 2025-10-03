@@ -58,7 +58,7 @@ export function RecurringAppointmentForm({
     onRecurrencePatternChange({
       ...recurrencePattern,
       frequency,
-      daysOfWeek: frequency === 'Daily' ? undefined : recurrencePattern.daysOfWeek,
+      daysOfWeek: frequency === 'Daily' || frequency === 'Monthly' ? undefined : [],
     });
   };
 
@@ -72,16 +72,46 @@ export function RecurringAppointmentForm({
     }
   };
 
+  const getMaxDays = () => {
+    if (recurrencePattern.frequency === 'Weekly') return 1;
+    if (recurrencePattern.frequency === 'TwiceWeekly') return 2;
+    return 7; // For Biweekly
+  };
+
   const handleDayToggle = (day: string) => {
     const currentDays = recurrencePattern.daysOfWeek || [];
-    const newDays = currentDays.includes(day)
-      ? currentDays.filter((d) => d !== day)
-      : [...currentDays, day];
+    const maxDays = getMaxDays();
     
-    onRecurrencePatternChange({
-      ...recurrencePattern,
-      daysOfWeek: newDays,
-    });
+    if (currentDays.includes(day)) {
+      // Always allow removal
+      const newDays = currentDays.filter((d) => d !== day);
+      onRecurrencePatternChange({
+        ...recurrencePattern,
+        daysOfWeek: newDays,
+      });
+    } else {
+      // Check if we can add more days
+      if (currentDays.length < maxDays) {
+        const newDays = [...currentDays, day];
+        onRecurrencePatternChange({
+          ...recurrencePattern,
+          daysOfWeek: newDays,
+        });
+      }
+    }
+  };
+
+  const isValidDaySelection = () => {
+    const currentDays = recurrencePattern.daysOfWeek || [];
+    const maxDays = getMaxDays();
+    
+    if (recurrencePattern.frequency === 'Weekly') {
+      return currentDays.length === 1;
+    }
+    if (recurrencePattern.frequency === 'TwiceWeekly') {
+      return currentDays.length === 2;
+    }
+    return true; // Biweekly can have any number
   };
 
   const handleEndConditionChange = (value: 'endDate' | 'occurrences') => {
@@ -116,7 +146,20 @@ export function RecurringAppointmentForm({
     }
   };
 
-  const showDaysOfWeek = recurrencePattern.frequency === 'Weekly' || recurrencePattern.frequency === 'Biweekly';
+  const showDaysOfWeek = 
+    recurrencePattern.frequency === 'Weekly' || 
+    recurrencePattern.frequency === 'TwiceWeekly' || 
+    recurrencePattern.frequency === 'Biweekly';
+
+  const getDaySelectionHint = () => {
+    if (recurrencePattern.frequency === 'Weekly') {
+      return 'Select exactly 1 day';
+    }
+    if (recurrencePattern.frequency === 'TwiceWeekly') {
+      return 'Select exactly 2 days';
+    }
+    return 'Select days to repeat on';
+  };
 
   return (
     <div className="space-y-4 p-4 rounded-lg border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
@@ -143,9 +186,10 @@ export function RecurringAppointmentForm({
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   <SelectItem value="Daily">Daily</SelectItem>
-                  <SelectItem value="Weekly">Weekly</SelectItem>
+                  <SelectItem value="Weekly">Weekly (1x per week)</SelectItem>
+                  <SelectItem value="TwiceWeekly">Twice a Week (2x per week)</SelectItem>
                   <SelectItem value="Biweekly">Biweekly (Every 2 weeks)</SelectItem>
                   <SelectItem value="Monthly">Monthly</SelectItem>
                 </SelectContent>
@@ -168,25 +212,40 @@ export function RecurringAppointmentForm({
 
           {showDaysOfWeek && (
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Repeat on</Label>
-              <div className="flex gap-2 flex-wrap">
-                {DAYS_OF_WEEK.map((day) => (
-                  <Button
-                    key={day.value}
-                    type="button"
-                    variant={
-                      (recurrencePattern.daysOfWeek || []).includes(day.value)
-                        ? 'default'
-                        : 'outline'
-                    }
-                    size="sm"
-                    onClick={() => handleDayToggle(day.value)}
-                    className="w-12"
-                  >
-                    {day.label}
-                  </Button>
-                ))}
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Repeat on</Label>
+                <span className="text-xs text-muted-foreground">
+                  {getDaySelectionHint()}
+                </span>
               </div>
+              <div className="flex gap-2 flex-wrap">
+                {DAYS_OF_WEEK.map((day) => {
+                  const isSelected = (recurrencePattern.daysOfWeek || []).includes(day.value);
+                  const currentDays = recurrencePattern.daysOfWeek || [];
+                  const maxDays = getMaxDays();
+                  const canAdd = currentDays.length < maxDays;
+                  
+                  return (
+                    <Button
+                      key={day.value}
+                      type="button"
+                      variant={isSelected ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => handleDayToggle(day.value)}
+                      disabled={!isSelected && !canAdd}
+                      className="w-12"
+                    >
+                      {day.label}
+                    </Button>
+                  );
+                })}
+              </div>
+              {!isValidDaySelection() && (
+                <p className="text-sm text-destructive">
+                  {recurrencePattern.frequency === 'Weekly' && 'Please select exactly 1 day'}
+                  {recurrencePattern.frequency === 'TwiceWeekly' && 'Please select exactly 2 days'}
+                </p>
+              )}
             </div>
           )}
 
@@ -214,7 +273,7 @@ export function RecurringAppointmentForm({
                             : 'Pick end date'}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-0 bg-background z-50" align="start">
                         <Calendar
                           mode="single"
                           selected={recurrencePattern.endDate}

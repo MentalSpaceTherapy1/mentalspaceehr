@@ -40,3 +40,55 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Calendar sticky headers */
+.rbc-time-header-content {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.rbc-time-content {
+  position: relative;
+}
+
+.rbc-time-column {
+  position: relative;
+}
+
+.rbc-time-slot {
+  position: relative;
+}
+
+.rbc-time-header-gutter {
+  position: sticky;
+  left: 0;
+  z-index: 11;
+  background: hsl(var(--background));
+}
+
+.rbc-label {
+  position: sticky;
+  left: 0;
+  z-index: 9;
+  background: hsl(var(--background));
+  padding-right: 8px;
+}
+
+.rbc-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+/* Ensure dropdown content has proper background and z-index */
+[role="listbox"],
+[role="menu"],
+.select-content {
+  background: hsl(var(--background)) !important;
+  z-index: 50 !important;
+}

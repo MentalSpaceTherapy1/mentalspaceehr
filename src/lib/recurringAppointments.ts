@@ -1,7 +1,7 @@
 import { addDays, addWeeks, addMonths, format, getDay, isBefore, isAfter } from 'date-fns';
 
 export interface RecurrencePattern {
-  frequency: 'Daily' | 'Weekly' | 'Biweekly' | 'Monthly';
+  frequency: 'Daily' | 'Weekly' | 'TwiceWeekly' | 'Biweekly' | 'Monthly';
   interval: number;
   daysOfWeek?: string[];
   endDate?: Date;
@@ -54,14 +54,18 @@ export function generateRecurringSeries(
   const endDate = recurrencePattern.endDate || addMonths(startDate, 12);
 
   while (occurrenceCount < maxOccurrences && isBefore(currentDate, endDate)) {
-    // For weekly/biweekly with specific days
+    // For weekly/twice weekly/biweekly with specific days
     if (
-      (recurrencePattern.frequency === 'Weekly' || recurrencePattern.frequency === 'Biweekly') &&
+      (recurrencePattern.frequency === 'Weekly' || 
+       recurrencePattern.frequency === 'TwiceWeekly' || 
+       recurrencePattern.frequency === 'Biweekly') &&
       recurrencePattern.daysOfWeek &&
       recurrencePattern.daysOfWeek.length > 0
     ) {
       const currentWeekStart = currentDate;
-      const weeksToAdd = recurrencePattern.frequency === 'Weekly' ? 1 : 2;
+      const weeksToAdd = 
+        recurrencePattern.frequency === 'Biweekly' ? 2 : 
+        recurrencePattern.frequency === 'TwiceWeekly' ? 1 : 1;
 
       // Generate appointments for selected days in this week/period
       recurrencePattern.daysOfWeek.forEach((day) => {
@@ -100,6 +104,7 @@ export function generateRecurringSeries(
           currentDate = addDays(currentDate, recurrencePattern.interval);
           break;
         case 'Weekly':
+        case 'TwiceWeekly':
           currentDate = addWeeks(currentDate, recurrencePattern.interval);
           break;
         case 'Biweekly':
@@ -144,6 +149,12 @@ export function getRecurrenceLabel(pattern: RecurrencePattern): string {
       label += ` week${interval > 1 ? 's' : ''}`;
       if (daysOfWeek && daysOfWeek.length > 0) {
         label += ` on ${daysOfWeek.join(', ')}`;
+      }
+      break;
+    case 'TwiceWeekly':
+      label = 'Twice a week';
+      if (daysOfWeek && daysOfWeek.length > 0) {
+        label += ` on ${daysOfWeek.join(' and ')}`;
       }
       break;
     case 'Biweekly':

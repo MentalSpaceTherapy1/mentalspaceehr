@@ -99,6 +99,27 @@ export function AppointmentDialog({
   const [groupParticipants, setGroupParticipants] = useState<string[]>([]);
   const [maxParticipants, setMaxParticipants] = useState(10);
 
+  const getMaxDays = (frequency: string) => {
+    if (frequency === 'Weekly') return 1;
+    if (frequency === 'TwiceWeekly') return 2;
+    return 7; // For Biweekly
+  };
+
+  const isValidDaySelection = () => {
+    if (!isRecurring) return true;
+    
+    const currentDays = recurrencePattern.daysOfWeek || [];
+    const { frequency } = recurrencePattern;
+    
+    if (frequency === 'Weekly') {
+      return currentDays.length === 1;
+    }
+    if (frequency === 'TwiceWeekly') {
+      return currentDays.length === 2;
+    }
+    return true; // Biweekly and others can have any number
+  };
+
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
@@ -469,7 +490,7 @@ export function AppointmentDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={saving}>
+              <Button type="submit" disabled={saving || !isValidDaySelection()}>
                 {saving ? 'Saving...' : 'Save Appointment'}
               </Button>
             </DialogFooter>
