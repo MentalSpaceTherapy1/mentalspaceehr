@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -9,8 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Save, Building2, MapPin, Clock, Shield, Stethoscope, Palette } from 'lucide-react';
+import { ArrowLeft, Save, Building2, MapPin, Clock, Shield, Stethoscope, Palette, Upload, X, Plus } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 
 interface OfficeHours {
   [key: string]: {
@@ -24,6 +26,11 @@ export default function PracticeSettings() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [settingsId, setSettingsId] = useState<string | null>(null);
+  const [useDifferentBillingAddress, setUseDifferentBillingAddress] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [newSessionType, setNewSessionType] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [formData, setFormData] = useState({
     practice_name: '',
     dba: '',
@@ -51,7 +58,9 @@ export default function PracticeSettings() {
     allow_note_correction_after_lockout: false,
     documentation_grace_period: null as number | null,
     default_appointment_duration: 50,
+    default_session_types: ['Individual Therapy', 'Family Therapy', 'Group Therapy'],
     requires_insurance_auth: false,
+    logo: '',
     primary_color: '#3B82F6',
     secondary_color: '#10B981',
   });
@@ -108,13 +117,25 @@ export default function PracticeSettings() {
           allow_note_correction_after_lockout: data.allow_note_correction_after_lockout ?? false,
           documentation_grace_period: data.documentation_grace_period,
           default_appointment_duration: data.default_appointment_duration || 50,
+          default_session_types: data.default_session_types || ['Individual Therapy', 'Family Therapy', 'Group Therapy'],
           requires_insurance_auth: data.requires_insurance_auth ?? false,
+          logo: data.logo || '',
           primary_color: data.primary_color || '#3B82F6',
           secondary_color: data.secondary_color || '#10B981',
         });
 
         if (data.office_hours) {
           setOfficeHours(data.office_hours as OfficeHours);
+        }
+        
+        // Check if billing address is different
+        if (data.billing_street1 || data.billing_city || data.billing_state || data.billing_zip_code) {
+          setUseDifferentBillingAddress(true);
+        }
+        
+        // Set logo preview if exists
+        if (data.logo) {
+          setLogoPreview(data.logo);
         }
       }
     } catch (error) {
@@ -170,6 +191,44 @@ export default function PracticeSettings() {
         ...prev[day],
         [field]: value,
       },
+    }));
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setLogoPreview(base64String);
+      setFormData(prev => ({ ...prev, logo: base64String }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeLogo = () => {
+    setLogoPreview(null);
+    setFormData(prev => ({ ...prev, logo: '' }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const addSessionType = () => {
+    if (newSessionType.trim() && !formData.default_session_types.includes(newSessionType.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        default_session_types: [...prev.default_session_types, newSessionType.trim()]
+      }));
+      setNewSessionType('');
+    }
+  };
+
+  const removeSessionType = (typeToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      default_session_types: prev.default_session_types.filter(type => type !== typeToRemove)
     }));
   };
 
@@ -371,6 +430,79 @@ export default function PracticeSettings() {
                   </div>
                 </div>
               </div>
+
+              <Separator />
+
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Billing Address</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="use-different-billing"
+                      checked={useDifferentBillingAddress}
+                      onCheckedChange={(checked) => setUseDifferentBillingAddress(checked as boolean)}
+                    />
+                    <Label htmlFor="use-different-billing" className="cursor-pointer">
+                      Billing address is different from physical address
+                    </Label>
+                  </div>
+
+                  {useDifferentBillingAddress && (
+                    <div className="space-y-4 pl-6">
+                      <div>
+                        <Label htmlFor="billing_street1">Street Address</Label>
+                        <Input
+                          id="billing_street1"
+                          value={formData.billing_street1}
+                          onChange={(e) => setFormData({ ...formData, billing_street1: e.target.value })}
+                          placeholder="456 Billing Street"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="billing_street2">Street Address Line 2</Label>
+                        <Input
+                          id="billing_street2"
+                          value={formData.billing_street2}
+                          onChange={(e) => setFormData({ ...formData, billing_street2: e.target.value })}
+                          placeholder="Suite 200"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-4 gap-4">
+                        <div className="col-span-2">
+                          <Label htmlFor="billing_city">City</Label>
+                          <Input
+                            id="billing_city"
+                            value={formData.billing_city}
+                            onChange={(e) => setFormData({ ...formData, billing_city: e.target.value })}
+                            placeholder="Springfield"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="billing_state">State</Label>
+                          <Input
+                            id="billing_state"
+                            value={formData.billing_state}
+                            onChange={(e) => setFormData({ ...formData, billing_state: e.target.value })}
+                            placeholder="IL"
+                            maxLength={2}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="billing_zip_code">ZIP Code</Label>
+                          <Input
+                            id="billing_zip_code"
+                            value={formData.billing_zip_code}
+                            onChange={(e) => setFormData({ ...formData, billing_zip_code: e.target.value })}
+                            placeholder="62701"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </Card>
           </TabsContent>
 
@@ -557,11 +689,94 @@ export default function PracticeSettings() {
                   </div>
                 </div>
               </div>
+
+              <Separator />
+
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Session Types</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Manage available session types for scheduling
+                </p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {formData.default_session_types.map((type) => (
+                    <Badge key={type} variant="secondary" className="gap-1 py-1 px-3">
+                      {type}
+                      <X
+                        className="h-3 w-3 cursor-pointer hover:text-destructive ml-1"
+                        onClick={() => removeSessionType(type)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add new session type..."
+                    value={newSessionType}
+                    onChange={(e) => setNewSessionType(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addSessionType();
+                      }
+                    }}
+                  />
+                  <Button onClick={addSessionType} size="icon">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </Card>
           </TabsContent>
 
           <TabsContent value="branding">
             <Card className="p-6 space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Practice Logo</h3>
+                <div className="space-y-4">
+                  {logoPreview && (
+                    <div className="relative w-48 h-48 border rounded-lg overflow-hidden bg-muted">
+                      <img
+                        src={logoPreview}
+                        alt="Logo preview"
+                        className="w-full h-full object-contain p-2"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 h-8 w-8"
+                        onClick={removeLogo}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <div
+                    className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      PNG, JPG or SVG (max. 2MB)
+                    </p>
+                  </div>
+                  
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoUpload}
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
               <div>
                 <h3 className="text-lg font-semibold mb-4">Brand Colors</h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -601,6 +816,8 @@ export default function PracticeSettings() {
                   </div>
                 </div>
               </div>
+
+              <Separator />
 
               <div>
                 <h3 className="text-lg font-semibold mb-4">Locations</h3>

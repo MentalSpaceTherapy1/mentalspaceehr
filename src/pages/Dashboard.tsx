@@ -197,27 +197,6 @@ export default function Dashboard() {
           </Card>
         )}
 
-        {/* Phase 1 Complete Notice */}
-        <Card className="mt-8 border-primary">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
-              Phase 1: Foundation Complete
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              The authentication and user management foundation has been established. You now have:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Secure authentication with email/password</li>
-              <li>Comprehensive user profile system</li>
-              <li>Role-based access control (6 user types)</li>
-              <li>Supervision relationship tracking</li>
-              <li>HIPAA-compliant database architecture</li>
-            </ul>
-          </CardContent>
-        </Card>
       </main>
     </div>
   );
