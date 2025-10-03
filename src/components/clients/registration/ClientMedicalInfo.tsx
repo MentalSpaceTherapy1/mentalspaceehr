@@ -206,6 +206,29 @@ export function ClientMedicalInfo({ formData, setFormData }: ClientMedicalInfoPr
           </>
         )}
       </div>
+
+      <h3 className="text-lg font-semibold pt-4">Previous System Information</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="previousMRN">Previous Medical Record Number</Label>
+          <Input
+            id="previousMRN"
+            value={formData.previousMRN}
+            onChange={(e) => setFormData({ ...formData, previousMRN: e.target.value })}
+            placeholder="Previous chart number"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="previousSystemName">Previous System Name</Label>
+          <Input
+            id="previousSystemName"
+            value={formData.previousSystemName}
+            onChange={(e) => setFormData({ ...formData, previousSystemName: e.target.value })}
+            placeholder="Name of previous EHR or practice"
+          />
+        </div>
+      </div>
     </div>
   );
 }

@@ -6,6 +6,8 @@ import { ClientBasicInfo } from '@/components/clients/registration/ClientBasicIn
 import { ClientContactInfo } from '@/components/clients/registration/ClientContactInfo';
 import { ClientDemographics } from '@/components/clients/registration/ClientDemographics';
 import { ClientMedicalInfo } from '@/components/clients/registration/ClientMedicalInfo';
+import { ClientProvidersPharmacy } from '@/components/clients/registration/ClientProvidersPharmacy';
+import { ClientSpecialNeeds } from '@/components/clients/registration/ClientSpecialNeeds';
 import { ClientEmergencyContacts } from '@/components/clients/registration/ClientEmergencyContacts';
 import { ClientConsents } from '@/components/clients/registration/ClientConsents';
 import { Button } from '@/components/ui/button';
@@ -29,12 +31,13 @@ export default function ClientRegistration() {
     preferredName: '',
     pronouns: '',
     dateOfBirth: undefined as Date | undefined,
+    previousNames: [] as string[],
     
     // Contact Info
     primaryPhone: '',
     primaryPhoneType: 'Mobile',
     secondaryPhone: '',
-    secondaryPhoneType: undefined,
+    secondaryPhoneType: '',
     email: '',
     preferredContactMethod: 'Phone',
     okayToLeaveMessage: false,
@@ -48,6 +51,8 @@ export default function ClientRegistration() {
     county: '',
     isTemporaryAddress: false,
     temporaryUntil: undefined as Date | undefined,
+    hasMailingAddress: false,
+    mailingAddress: null as any,
     
     // Demographics
     gender: undefined,
@@ -82,8 +87,25 @@ export default function ClientRegistration() {
     guardianPhone: '',
     guardianRelationship: '',
     
+    // Previous System
+    previousMRN: '',
+    previousSystemName: '',
+    
+    // Providers & Pharmacy
+    primaryCareProvider: null as any,
+    referringProvider: null as any,
+    preferredPharmacy: null as any,
+    guarantor: null as any,
+    
+    // Special Needs & Alerts
+    specialNeeds: '',
+    accessibilityNeeds: [] as string[],
+    allergyAlerts: [] as string[],
+    
     // Assignment
     primaryTherapistId: undefined,
+    psychiatristId: undefined,
+    caseManagerId: undefined,
     
     // Emergency Contacts
     emergencyContacts: [] as any[],
@@ -96,6 +118,12 @@ export default function ClientRegistration() {
       electronicCommunication: false,
       appointmentReminders: false,
       photographyConsent: false,
+      researchParticipation: false,
+    },
+    consentDates: {
+      treatmentConsentDate: null,
+      hipaaAcknowledgmentDate: null,
+      releaseOfInformationDate: null,
     },
   });
 
@@ -138,6 +166,7 @@ export default function ClientRegistration() {
           suffix: formData.suffix || null,
           preferred_name: formData.preferredName || null,
           pronouns: formData.pronouns || null,
+          previous_names: formData.previousNames.length > 0 ? formData.previousNames : null,
           date_of_birth: formData.dateOfBirth!.toISOString().split('T')[0],
           primary_phone: formData.primaryPhone,
           primary_phone_type: formData.primaryPhoneType,
@@ -154,6 +183,7 @@ export default function ClientRegistration() {
           county: formData.county || null,
           is_temporary_address: formData.isTemporaryAddress,
           temporary_until: formData.temporaryUntil?.toISOString().split('T')[0] || null,
+          mailing_address: formData.hasMailingAddress ? formData.mailingAddress : null,
           gender: formData.gender || null,
           gender_identity: formData.genderIdentity || null,
           sex_assigned_at_birth: formData.sexAssignedAtBirth || null,
@@ -179,7 +209,18 @@ export default function ClientRegistration() {
           guardian_name: formData.guardianName || null,
           guardian_phone: formData.guardianPhone || null,
           guardian_relationship: formData.guardianRelationship || null,
+          previous_mrn: formData.previousMRN || null,
+          previous_system_name: formData.previousSystemName || null,
+          primary_care_provider: formData.primaryCareProvider,
+          referring_provider: formData.referringProvider,
+          preferred_pharmacy: formData.preferredPharmacy,
+          guarantor: formData.guarantor,
+          special_needs: formData.specialNeeds || null,
+          accessibility_needs: formData.accessibilityNeeds.length > 0 ? formData.accessibilityNeeds : null,
+          allergy_alerts: formData.allergyAlerts.length > 0 ? formData.allergyAlerts : null,
           primary_therapist_id: formData.primaryTherapistId || null,
+          psychiatrist_id: formData.psychiatristId || null,
+          case_manager_id: formData.caseManagerId || null,
           consents: formData.consents,
           created_by: user.id,
           updated_by: user.id,
@@ -233,11 +274,13 @@ export default function ClientRegistration() {
 
         <Card className="p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 gap-1">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
               <TabsTrigger value="contact">Contact</TabsTrigger>
               <TabsTrigger value="demographics">Demographics</TabsTrigger>
               <TabsTrigger value="medical">Medical</TabsTrigger>
+              <TabsTrigger value="providers">Providers</TabsTrigger>
+              <TabsTrigger value="special">Special Needs</TabsTrigger>
               <TabsTrigger value="emergency">Emergency</TabsTrigger>
               <TabsTrigger value="consents">Consents</TabsTrigger>
             </TabsList>
@@ -256,6 +299,14 @@ export default function ClientRegistration() {
 
             <TabsContent value="medical" className="space-y-4 mt-6">
               <ClientMedicalInfo formData={formData} setFormData={setFormData} />
+            </TabsContent>
+
+            <TabsContent value="providers" className="space-y-4 mt-6">
+              <ClientProvidersPharmacy formData={formData} setFormData={setFormData} />
+            </TabsContent>
+
+            <TabsContent value="special" className="space-y-4 mt-6">
+              <ClientSpecialNeeds formData={formData} setFormData={setFormData} />
             </TabsContent>
 
             <TabsContent value="emergency" className="space-y-4 mt-6">

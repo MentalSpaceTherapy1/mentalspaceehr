@@ -58,6 +58,23 @@ export function ClientContactInfo({ formData, setFormData }: ClientContactInfoPr
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="secondaryPhoneType">Secondary Phone Type</Label>
+          <Select
+            value={formData.secondaryPhoneType}
+            onValueChange={(value) => setFormData({ ...formData, secondaryPhoneType: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent className="bg-card border z-50">
+              <SelectItem value="Mobile">Mobile</SelectItem>
+              <SelectItem value="Home">Home</SelectItem>
+              <SelectItem value="Work">Work</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
@@ -197,6 +214,82 @@ export function ClientContactInfo({ formData, setFormData }: ClientContactInfoPr
           </div>
         )}
       </div>
+
+      <h3 className="text-lg font-semibold pt-4">Mailing Address</h3>
+      <div className="flex items-center space-x-2 mb-4">
+        <Checkbox
+          id="hasMailingAddress"
+          checked={formData.hasMailingAddress}
+          onCheckedChange={(checked) => setFormData({ ...formData, hasMailingAddress: checked })}
+        />
+        <Label htmlFor="hasMailingAddress" className="cursor-pointer">
+          Mailing address different from physical address
+        </Label>
+      </div>
+
+      {formData.hasMailingAddress && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg">
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="mailingStreet1">Street Address</Label>
+            <Input
+              id="mailingStreet1"
+              value={formData.mailingAddress?.street1 || ''}
+              onChange={(e) => setFormData({
+                ...formData,
+                mailingAddress: { ...formData.mailingAddress, street1: e.target.value }
+              })}
+            />
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="mailingStreet2">Street Address Line 2</Label>
+            <Input
+              id="mailingStreet2"
+              value={formData.mailingAddress?.street2 || ''}
+              onChange={(e) => setFormData({
+                ...formData,
+                mailingAddress: { ...formData.mailingAddress, street2: e.target.value }
+              })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="mailingCity">City</Label>
+            <Input
+              id="mailingCity"
+              value={formData.mailingAddress?.city || ''}
+              onChange={(e) => setFormData({
+                ...formData,
+                mailingAddress: { ...formData.mailingAddress, city: e.target.value }
+              })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="mailingState">State</Label>
+            <Input
+              id="mailingState"
+              value={formData.mailingAddress?.state || ''}
+              onChange={(e) => setFormData({
+                ...formData,
+                mailingAddress: { ...formData.mailingAddress, state: e.target.value }
+              })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="mailingZipCode">ZIP Code</Label>
+            <Input
+              id="mailingZipCode"
+              value={formData.mailingAddress?.zipCode || ''}
+              onChange={(e) => setFormData({
+                ...formData,
+                mailingAddress: { ...formData.mailingAddress, zipCode: e.target.value }
+              })}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

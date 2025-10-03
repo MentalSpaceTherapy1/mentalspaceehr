@@ -64,18 +64,55 @@ export function ClientBasicInfo({ formData, setFormData }: ClientBasicInfoProps)
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="pronouns">Pronouns</Label>
-          <Input
-            id="pronouns"
-            value={formData.pronouns}
-            onChange={(e) => setFormData({ ...formData, pronouns: e.target.value })}
-            placeholder="He/Him, She/Her, They/Them, etc."
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="pronouns">Pronouns</Label>
+        <Input
+          id="pronouns"
+          value={formData.pronouns}
+          onChange={(e) => setFormData({ ...formData, pronouns: e.target.value })}
+          placeholder="He/Him, She/Her, They/Them, etc."
+        />
+      </div>
+    </div>
 
-        <div className="space-y-2">
-          <Label>Date of Birth *</Label>
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Previous Names</h3>
+      <p className="text-sm text-muted-foreground">Add any previous names (maiden name, previous surnames, etc.)</p>
+      {formData.previousNames?.map((name: string, index: number) => (
+        <div key={index} className="flex gap-2">
+          <Input
+            value={name}
+            onChange={(e) => {
+              const updated = [...formData.previousNames];
+              updated[index] = e.target.value;
+              setFormData({ ...formData, previousNames: updated });
+            }}
+            placeholder="Previous name"
+          />
+          <Button
+            variant="outline"
+            onClick={() => {
+              const updated = formData.previousNames.filter((_: any, i: number) => i !== index);
+              setFormData({ ...formData, previousNames: updated });
+            }}
+          >
+            Remove
+          </Button>
+        </div>
+      ))}
+      <Button
+        variant="outline"
+        onClick={() => {
+          setFormData({ ...formData, previousNames: [...(formData.previousNames || []), ''] });
+        }}
+      >
+        Add Previous Name
+      </Button>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label>Date of Birth *</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
