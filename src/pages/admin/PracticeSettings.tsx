@@ -185,7 +185,7 @@ export default function PracticeSettings() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      const payload = {
+      const payload: any = {
         ...formData,
         office_hours: officeHours,
         dashboard_settings: dashboardSettings,
