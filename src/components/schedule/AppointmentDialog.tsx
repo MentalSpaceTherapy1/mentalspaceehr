@@ -73,7 +73,8 @@ interface AppointmentDialogProps {
   appointment?: Appointment | null;
   defaultDate?: Date;
   defaultClinicianId?: string;
-  onSave: (data: Partial<Appointment>) => Promise<void>;
+  onSave: (data: Partial<Appointment>, editSeries?: boolean) => Promise<void>;
+  editSeries?: boolean;
 }
 
 export function AppointmentDialog({
@@ -83,6 +84,7 @@ export function AppointmentDialog({
   defaultDate,
   defaultClinicianId,
   onSave,
+  editSeries = false,
 }: AppointmentDialogProps) {
   const [clients, setClients] = useState<any[]>([]);
   const [clinicians, setClinicians] = useState<any[]>([]);
@@ -201,7 +203,7 @@ export function AppointmentDialog({
         is_group_session: isGroupSession,
         max_participants: isGroupSession ? maxParticipants : null,
         current_participants: isGroupSession ? groupParticipants.length : 1,
-      } as any);
+      } as any, editSeries);
 
       // If group session, add participants
       if (isGroupSession && groupParticipants.length > 0) {
@@ -232,6 +234,17 @@ export function AppointmentDialog({
               </Badge>
             )}
           </DialogTitle>
+          {editSeries && appointment?.is_recurring && (
+            <div className="mt-2 p-3 bg-primary/10 border border-primary/20 rounded-md">
+              <p className="text-sm font-medium flex items-center gap-2">
+                <Repeat className="h-4 w-4 text-primary" />
+                Editing all appointments in this series
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Changes will apply to all future occurrences of this recurring appointment.
+              </p>
+            </div>
+          )}
         </DialogHeader>
 
         <Form {...form}>

@@ -61,6 +61,7 @@ export default function Schedule() {
   const [recurringEditDialogOpen, setRecurringEditDialogOpen] = useState(false);
   const [recurringEditAction, setRecurringEditAction] = useState<'edit' | 'delete'>('edit');
   const [pendingRecurringAction, setPendingRecurringAction] = useState<(() => void) | null>(null);
+  const [isEditingSeries, setIsEditingSeries] = useState(false);
   
   // Calculate date range for fetching appointments
   const dateRange = useMemo(() => {
@@ -143,9 +144,14 @@ export default function Schedule() {
     }
   }, []);
 
-  const handleSaveAppointment = async (data: Partial<Appointment>) => {
+  const handleSaveAppointment = async (data: Partial<Appointment>, editSeries?: boolean) => {
     if (selectedAppointment) {
-      await updateAppointment(selectedAppointment.id, data);
+      if (editSeries && isRecurringAppointment(selectedAppointment)) {
+        const parentId = selectedAppointment.parent_recurrence_id || selectedAppointment.id;
+        await updateRecurringSeries(parentId, data);
+      } else {
+        await updateAppointment(selectedAppointment.id, data);
+      }
     } else {
       await createAppointment(data);
     }
@@ -206,6 +212,7 @@ export default function Schedule() {
 
   const handleRecurringEditSingle = () => {
     setRecurringEditDialogOpen(false);
+    setIsEditingSeries(false);
     if (recurringEditAction === 'edit') {
       setDialogOpen(true);
     } else if (recurringEditAction === 'delete' && selectedAppointment) {
@@ -215,18 +222,14 @@ export default function Schedule() {
 
   const handleRecurringEditSeries = async () => {
     setRecurringEditDialogOpen(false);
+    setIsEditingSeries(true);
     if (recurringEditAction === 'delete' && selectedAppointment) {
       const parentId = selectedAppointment.parent_recurrence_id || selectedAppointment.id;
       await deleteRecurringSeries(parentId);
       setSelectedAppointment(null);
     } else {
-      // For edit series, we'll show a simplified dialog
-      // In a full implementation, this would allow editing series-wide properties
-      toast({
-        title: "Edit Series",
-        description: "Editing entire series is not yet implemented. Please delete and recreate.",
-        variant: "default"
-      });
+      // For edit series, open the dialog in series edit mode
+      setDialogOpen(true);
     }
   };
 
@@ -426,11 +429,15 @@ export default function Schedule() {
           <>
             <AppointmentDialog
               open={dialogOpen}
-              onOpenChange={setDialogOpen}
+              onOpenChange={(open) => {
+                setDialogOpen(open);
+                if (!open) setIsEditingSeries(false);
+              }}
               appointment={selectedAppointment}
               defaultDate={defaultDate}
               defaultClinicianId={user?.id}
               onSave={handleSaveAppointment}
+              editSeries={isEditingSeries}
             />
 
             <AppointmentStatusDialog
