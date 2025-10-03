@@ -76,6 +76,7 @@ interface AppointmentDialogProps {
   defaultClinicianId?: string;
   onSave: (data: Partial<Appointment>, editSeries?: boolean) => Promise<void>;
   editSeries?: boolean;
+  onRequestCancel?: () => void;
 }
 
 export function AppointmentDialog({
@@ -86,6 +87,7 @@ export function AppointmentDialog({
   defaultClinicianId,
   onSave,
   editSeries = false,
+  onRequestCancel,
 }: AppointmentDialogProps) {
   const [clients, setClients] = useState<any[]>([]);
   const [clinicians, setClinicians] = useState<any[]>([]);
@@ -192,15 +194,17 @@ export function AppointmentDialog({
       setSaving(true);
       console.log('Form data being submitted:', data);
       
-      const [hours, minutes] = data.start_time.split(':').map(Number);
+      const startNormalized = data.start_time.length === 5 ? `${data.start_time}:00` : data.start_time;
+      const [hours, minutes] = startNormalized.split(':').map(Number);
       const endTime = new Date();
-      endTime.setHours(hours, minutes + data.duration);
+      endTime.setHours(hours, minutes + data.duration, 0, 0);
+      const endNormalized = format(endTime, 'HH:mm:ss');
       
       const appointmentData = {
         ...data,
-        client_id: isGroupSession && groupParticipants.length > 0 ? groupParticipants[0] : data.client_id,
+        start_time: startNormalized,
         appointment_date: format(data.appointment_date, 'yyyy-MM-dd'),
-        end_time: format(endTime, 'HH:mm'),
+        end_time: endNormalized,
         timezone: 'America/New_York',
         is_recurring: isRecurring,
         recurrence_pattern: isRecurring ? recurrencePattern : undefined,
@@ -211,11 +215,11 @@ export function AppointmentDialog({
         room: data.room || null,
         appointment_notes: data.appointment_notes || null,
         client_notes: data.client_notes || null,
-      };
+      } as Partial<Appointment>;
 
       console.log('Processed appointment data:', appointmentData);
       
-      await onSave(appointmentData as any, editSeries);
+      await onSave(appointmentData, editSeries);
       
       onOpenChange(false);
       form.reset();
@@ -584,8 +588,17 @@ export function AppointmentDialog({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                Cancel
+                Close
               </Button>
+              {appointment && onRequestCancel && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => onRequestCancel()}
+                >
+                  Cancel Appointment
+                </Button>
+              )}
               <Button type="submit" disabled={saving || !isValidDaySelection()}>
                 {saving ? 'Saving...' : 'Save Appointment'}
               </Button>

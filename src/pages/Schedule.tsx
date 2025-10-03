@@ -436,6 +436,16 @@ export default function Schedule() {
               defaultClinicianId={user?.id}
               onSave={handleSaveAppointment}
               editSeries={isEditingSeries}
+              onRequestCancel={() => {
+                if (!selectedAppointment) return;
+                if (isRecurringAppointment(selectedAppointment)) {
+                  setRecurringEditAction('cancel');
+                  setRecurringEditDialogOpen(true);
+                } else {
+                  setIsEditingSeries(false);
+                  setCancellationDialogOpen(true);
+                }
+              }}
             />
 
             <AppointmentStatusDialog

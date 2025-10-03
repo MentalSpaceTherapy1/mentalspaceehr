@@ -253,8 +253,17 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
 
   const updateAppointment = async (id: string, updates: any) => {
     try {
+      // Normalize time fields to HH:mm:ss if provided
+      const normalized: any = { ...updates };
+      if (typeof normalized.start_time === 'string' && normalized.start_time.length === 5) {
+        normalized.start_time = `${normalized.start_time}:00`;
+      }
+      if (typeof normalized.end_time === 'string' && normalized.end_time.length === 5) {
+        normalized.end_time = `${normalized.end_time}:00`;
+      }
+
       // If telehealth with Internal platform, create/ensure session
-      if (updates.service_location === 'Telehealth' && updates.telehealth_platform === 'Internal') {
+      if (normalized.service_location === 'Telehealth' && normalized.telehealth_platform === 'Internal') {
         const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         
         // Check if session exists
@@ -270,19 +279,19 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
             .from('telehealth_sessions')
             .insert({
               appointment_id: id,
-              host_id: updates.clinician_id,
+              host_id: normalized.clinician_id,
               session_id: sessionId,
               status: 'waiting'
             });
           
-          updates.telehealth_link = `/telehealth/${sessionId}`;
+          normalized.telehealth_link = `/telehealth/${sessionId}`;
         }
       }
 
       const { data, error } = await supabase
         .from('appointments')
         .update({
-          ...updates,
+          ...normalized,
           last_modified: new Date().toISOString(),
           last_modified_by: user?.id
         })
