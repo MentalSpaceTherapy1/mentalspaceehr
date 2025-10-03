@@ -13,6 +13,7 @@ import { ArrowLeft, Save, Building2, MapPin, Clock, Shield, Stethoscope, Palette
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 interface OfficeHours {
   [key: string]: {
@@ -250,26 +251,21 @@ export default function PracticeSettings() {
   const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
+    <DashboardLayout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">Practice Settings</h1>
               <p className="text-muted-foreground mt-1">
                 Configure your practice information and preferences
               </p>
             </div>
+            <Button onClick={handleSave} disabled={loading}>
+              <Save className="h-4 w-4 mr-2" />
+              {loading ? 'Saving...' : 'Save Changes'}
+            </Button>
           </div>
-          <Button onClick={handleSave} disabled={loading}>
-            <Save className="h-4 w-4 mr-2" />
-            {loading ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </div>
 
         <Tabs defaultValue="basic" className="space-y-6">
           <TabsList>
@@ -1122,7 +1118,8 @@ export default function PracticeSettings() {
             </Card>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
