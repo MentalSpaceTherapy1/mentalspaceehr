@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Phone, Mail, Calendar } from 'lucide-react';
+import { MoreVertical, Phone, Mail, Calendar, Star } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,8 @@ type Client = Database['public']['Tables']['clients']['Row'];
 interface ClientListProps {
   clients: Client[];
   loading: boolean;
+  onToggleFavorite?: (clientId: string) => void;
+  favoriteClients?: string[];
 }
 
 const statusColors = {
@@ -26,7 +28,7 @@ const statusColors = {
   Deceased: 'bg-slate-700/10 text-slate-700 border-slate-700/20',
 };
 
-export function ClientList({ clients, loading }: ClientListProps) {
+export function ClientList({ clients, loading, onToggleFavorite, favoriteClients = [] }: ClientListProps) {
   const navigate = useNavigate();
 
   const getAge = (dateOfBirth: string) => {
@@ -59,11 +61,13 @@ export function ClientList({ clients, loading }: ClientListProps) {
       {clients.map((client) => (
         <Card
           key={client.id}
-          className="p-6 hover:shadow-md transition-shadow cursor-pointer"
-          onClick={() => navigate(`/clients/${client.id}`)}
+          className="p-6 hover:shadow-md transition-shadow"
         >
           <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 space-y-3">
+            <div 
+              className="flex-1 space-y-3 cursor-pointer" 
+              onClick={() => navigate(`/clients/${client.id}`)}
+            >
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-lg">
@@ -74,23 +78,6 @@ export function ClientList({ clients, loading }: ClientListProps) {
                     MRN: {client.medical_record_number} | DOB: {format(new Date(client.date_of_birth), 'MM/dd/yyyy')} (Age {getAge(client.date_of_birth)})
                   </p>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                    <Button variant="ghost" size="icon">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-card border z-50">
-                    <DropdownMenuItem onClick={() => navigate(`/clients/${client.id}`)}>
-                      View Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate(`/clients/${client.id}/edit`)}>
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>Schedule Appointment</DropdownMenuItem>
-                    <DropdownMenuItem>View Chart</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
@@ -127,6 +114,46 @@ export function ClientList({ clients, loading }: ClientListProps) {
                   Primary Therapist: {(client as any).primary_therapist.first_name} {(client as any).primary_therapist.last_name}
                 </div>
               )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {onToggleFavorite && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleFavorite(client.id);
+                  }}
+                >
+                  <Star 
+                    className={`h-5 w-5 ${favoriteClients?.includes(client.id) ? 'fill-yellow-400 text-yellow-400' : ''}`}
+                  />
+                </Button>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-card border z-50">
+                  <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/clients/${client.id}`);
+                  }}>
+                    View Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/clients/${client.id}/edit`);
+                  }}>
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Schedule Appointment</DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()}>View Chart</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </Card>

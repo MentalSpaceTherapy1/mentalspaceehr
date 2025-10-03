@@ -20,6 +20,7 @@ import TrustedDevices from "./pages/TrustedDevices";
 import Tasks from "./pages/Tasks";
 import Clients from "./pages/Clients";
 import ClientRegistration from "./pages/ClientRegistration";
+import ClientChart from "./pages/ClientChart";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -124,6 +125,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ClientRegistration />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/clients/:id" 
+              element={
+                <ProtectedRoute>
+                  <ClientChart />
                 </ProtectedRoute>
               } 
             />

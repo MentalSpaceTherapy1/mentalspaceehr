@@ -23,11 +23,18 @@ export default function Clients() {
   const [filters, setFilters] = useState({
     status: 'all',
     therapist: 'all',
+    dateFrom: '',
+    dateTo: '',
+    insurance: 'all',
   });
+  const [recentlyViewed, setRecentlyViewed] = useState<Client[]>([]);
+  const [favoriteClients, setFavoriteClients] = useState<string[]>([]);
 
   useEffect(() => {
     if (user) {
       fetchClients();
+      fetchRecentlyViewed();
+      fetchFavoriteClients();
       subscribeToClients();
     }
   }, [user]);
@@ -80,18 +87,69 @@ export default function Clients() {
     };
   };
 
+  const fetchRecentlyViewed = async () => {
+    const { data } = await supabase
+      .from('recently_viewed_clients')
+      .select(`
+        client_id,
+        clients (*)
+      `)
+      .eq('user_id', user?.id)
+      .order('viewed_at', { ascending: false })
+      .limit(10);
+    
+    if (data) {
+      setRecentlyViewed(data.map((item: any) => item.clients).filter(Boolean));
+    }
+  };
+
+  const fetchFavoriteClients = async () => {
+    const { data } = await supabase
+      .from('favorite_clients')
+      .select('client_id')
+      .eq('user_id', user?.id);
+    
+    if (data) {
+      setFavoriteClients(data.map((item) => item.client_id));
+    }
+  };
+
+  const toggleFavorite = async (clientId: string) => {
+    if (favoriteClients.includes(clientId)) {
+      await supabase
+        .from('favorite_clients')
+        .delete()
+        .eq('user_id', user?.id)
+        .eq('client_id', clientId);
+      setFavoriteClients(favoriteClients.filter((id) => id !== clientId));
+    } else {
+      await supabase
+        .from('favorite_clients')
+        .insert({ user_id: user?.id, client_id: clientId });
+      setFavoriteClients([...favoriteClients, clientId]);
+    }
+  };
+
   const filteredClients = clients.filter((client) => {
     const matchesSearch = 
       client.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       client.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       client.medical_record_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.email?.toLowerCase().includes(searchQuery.toLowerCase());
+      client.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.primary_phone?.includes(searchQuery) ||
+      client.date_of_birth?.includes(searchQuery);
     
     const matchesStatus = filters.status === 'all' || client.status === filters.status;
     const matchesTherapist = filters.therapist === 'all' || client.primary_therapist_id === filters.therapist;
+    
+    const matchesDateRange = 
+      (!filters.dateFrom || client.registration_date >= filters.dateFrom) &&
+      (!filters.dateTo || client.registration_date <= filters.dateTo);
 
-    return matchesSearch && matchesStatus && matchesTherapist;
+    return matchesSearch && matchesStatus && matchesTherapist && matchesDateRange;
   });
+
+  const favoriteClientsList = clients.filter((client) => favoriteClients.includes(client.id));
 
   return (
     <DashboardLayout>
@@ -128,10 +186,39 @@ export default function Clients() {
           <ClientFilters filters={filters} onFiltersChange={setFilters} />
         )}
 
-        <ClientList
-          clients={filteredClients}
-          loading={loading}
-        />
+        {favoriteClientsList.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">Favorite Clients</h2>
+            <ClientList
+              clients={favoriteClientsList}
+              loading={false}
+              onToggleFavorite={toggleFavorite}
+              favoriteClients={favoriteClients}
+            />
+          </div>
+        )}
+
+        {recentlyViewed.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">Recently Viewed</h2>
+            <ClientList
+              clients={recentlyViewed}
+              loading={false}
+              onToggleFavorite={toggleFavorite}
+              favoriteClients={favoriteClients}
+            />
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">All Clients</h2>
+          <ClientList
+            clients={filteredClients}
+            loading={loading}
+            onToggleFavorite={toggleFavorite}
+            favoriteClients={favoriteClients}
+          />
+        </div>
       </div>
     </DashboardLayout>
   );

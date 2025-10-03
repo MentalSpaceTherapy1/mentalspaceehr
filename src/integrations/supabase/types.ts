@@ -323,6 +323,35 @@ export type Database = {
           },
         ]
       }
+      favorite_clients: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_clients_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       login_attempts: {
         Row: {
           attempt_time: string | null
@@ -661,6 +690,35 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      recently_viewed_clients: {
+        Row: {
+          client_id: string
+          id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          client_id: string
+          id?: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          client_id?: string
+          id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recently_viewed_clients_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       supervision_relationships: {
         Row: {
