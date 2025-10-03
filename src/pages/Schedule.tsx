@@ -335,7 +335,7 @@ export default function Schedule() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="h-[700px]">
+            <div className="h-[1200px]">
               <DnDCalendar
                 localizer={localizer}
                 events={events}
