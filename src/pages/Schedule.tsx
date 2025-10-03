@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
 import { format, parse, startOfWeek, getDay, addDays, subDays } from 'date-fns';
@@ -75,6 +75,21 @@ export default function Schedule() {
   const { blockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime } = useBlockedTimes(
     selectedClinician === 'all' ? undefined : selectedClinician
   );
+
+  // Auto-scroll to business hours (8 AM) on mount
+  useEffect(() => {
+    const scrollToBusinessHours = () => {
+      const timeContent = document.querySelector('.rbc-time-content');
+      if (timeContent) {
+        // Scroll to 8 AM (approximately 33% down for 24-hour view)
+        const scrollPosition = (timeContent.scrollHeight * 8) / 24;
+        timeContent.scrollTop = scrollPosition;
+      }
+    };
+    
+    // Delay to ensure calendar is rendered
+    setTimeout(scrollToBusinessHours, 100);
+  }, [view]); // Re-scroll when view changes
 
   // Fetch clinicians
   useMemo(() => {
