@@ -15,7 +15,7 @@ interface RecurringEditDialogProps {
   onOpenChange: (open: boolean) => void;
   onEditSingle: () => void;
   onEditSeries: () => void;
-  action: 'edit' | 'delete';
+  action: 'edit' | 'cancel';
 }
 
 export function RecurringEditDialog({
@@ -31,18 +31,18 @@ export function RecurringEditDialog({
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <Repeat className="h-5 w-5 text-primary" />
-            {action === 'edit' ? 'Edit' : 'Delete'} Recurring Appointment
+            {action === 'edit' ? 'Edit' : 'Cancel'} Recurring Appointment
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-3 pt-2">
             <p>This is a recurring appointment. Would you like to:</p>
             <ul className="list-disc list-inside space-y-1 text-sm">
               <li>
-                <strong>This occurrence only:</strong> {action === 'edit' ? 'Changes' : 'Deletion'}{' '}
+                <strong>This occurrence only:</strong> {action === 'edit' ? 'Changes' : 'Cancellation'}{' '}
                 will only affect this single appointment
               </li>
               <li>
-                <strong>All occurrences:</strong> {action === 'edit' ? 'Changes' : 'Deletion'}{' '}
-                will affect all appointments in this series
+                <strong>All occurrences:</strong> {action === 'edit' ? 'Changes' : 'Cancellation'}{' '}
+                will affect all future appointments in this series
               </li>
             </ul>
           </AlertDialogDescription>

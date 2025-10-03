@@ -59,7 +59,7 @@ export default function Schedule() {
   const [blockedTimeDialogOpen, setBlockedTimeDialogOpen] = useState(false);
   const [selectedBlockedTime, setSelectedBlockedTime] = useState<any>(null);
   const [recurringEditDialogOpen, setRecurringEditDialogOpen] = useState(false);
-  const [recurringEditAction, setRecurringEditAction] = useState<'edit' | 'delete'>('edit');
+  const [recurringEditAction, setRecurringEditAction] = useState<'edit' | 'cancel'>('edit');
   const [pendingRecurringAction, setPendingRecurringAction] = useState<(() => void) | null>(null);
   const [isEditingSeries, setIsEditingSeries] = useState(false);
   
@@ -76,8 +76,7 @@ export default function Schedule() {
     createAppointment,
     updateAppointment,
     cancelAppointment,
-    deleteAppointment,
-    deleteRecurringSeries,
+    cancelRecurringSeries,
     updateRecurringSeries,
   } = useAppointments(dateRange.start, dateRange.end, selectedClinician === 'all' ? undefined : selectedClinician);
 
@@ -215,18 +214,17 @@ export default function Schedule() {
     setIsEditingSeries(false);
     if (recurringEditAction === 'edit') {
       setDialogOpen(true);
-    } else if (recurringEditAction === 'delete' && selectedAppointment) {
-      deleteAppointment(selectedAppointment.id);
+    } else if (recurringEditAction === 'cancel' && selectedAppointment) {
+      setCancellationDialogOpen(true);
     }
   };
 
   const handleRecurringEditSeries = async () => {
     setRecurringEditDialogOpen(false);
     setIsEditingSeries(true);
-    if (recurringEditAction === 'delete' && selectedAppointment) {
-      const parentId = selectedAppointment.parent_recurrence_id || selectedAppointment.id;
-      await deleteRecurringSeries(parentId);
-      setSelectedAppointment(null);
+    if (recurringEditAction === 'cancel' && selectedAppointment) {
+      // For cancel series, open cancellation dialog with series flag
+      setCancellationDialogOpen(true);
     } else {
       // For edit series, open the dialog in series edit mode
       setDialogOpen(true);
@@ -455,7 +453,13 @@ export default function Schedule() {
               onOpenChange={setCancellationDialogOpen}
               appointment={selectedAppointment}
               onCancel={async (id, reason, notes, applyFee) => {
-                await cancelAppointment(id, reason, notes);
+                await cancelAppointment(id, reason, notes, applyFee);
+              }}
+              isSeries={isEditingSeries}
+              onCancelSeries={async (parentId, reason, notes, applyFee) => {
+                await cancelRecurringSeries(parentId, reason, notes, applyFee);
+                setSelectedAppointment(null);
+                setIsEditingSeries(false);
               }}
             />
 

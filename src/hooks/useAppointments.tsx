@@ -101,6 +101,13 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
 
   const createAppointment = async (appointment: any) => {
     try {
+      // Handle telehealth session creation for Internal platform
+      let telehealthLink = appointment.telehealth_link;
+      if (appointment.service_location === 'Telehealth' && appointment.telehealth_platform === 'Internal') {
+        const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        telehealthLink = `/telehealth/${sessionId}`;
+      }
+
       // Check if this is a recurring appointment
       if (appointment.is_recurring && appointment.recurrence_pattern) {
         // Generate the series
@@ -118,7 +125,7 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
           appointment_notes: appointment.appointment_notes,
           client_notes: appointment.client_notes,
           telehealth_platform: appointment.telehealth_platform,
-          telehealth_link: appointment.telehealth_link,
+          telehealth_link: telehealthLink,
           cpt_code: appointment.cpt_code,
           icd_codes: appointment.icd_codes,
           timezone: appointment.timezone,
@@ -144,6 +151,18 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
 
         if (parentError) throw parentError;
 
+        // Create telehealth session for Internal platform
+        if (appointment.service_location === 'Telehealth' && appointment.telehealth_platform === 'Internal' && parentData) {
+          await supabase
+            .from('telehealth_sessions')
+            .insert({
+              appointment_id: parentData.id,
+              host_id: parentData.clinician_id,
+              session_id: telehealthLink.split('/').pop(),
+              status: 'waiting'
+            });
+        }
+
         // Insert remaining appointments with parent reference
         if (series.length > 1) {
           const childAppointments = series.slice(1).map(apt => ({
@@ -158,11 +177,24 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
             last_modified_by: user?.id,
           }));
 
-          const { error: childError } = await supabase
+          const { data: childData, error: childError } = await supabase
             .from('appointments')
-            .insert(childAppointments);
+            .insert(childAppointments)
+            .select();
 
           if (childError) throw childError;
+
+          // Create telehealth sessions for all child appointments
+          if (appointment.service_location === 'Telehealth' && appointment.telehealth_platform === 'Internal' && childData) {
+            const sessions = childData.map(apt => ({
+              appointment_id: apt.id,
+              host_id: apt.clinician_id,
+              session_id: telehealthLink.split('/').pop(),
+              status: 'waiting'
+            }));
+            
+            await supabase.from('telehealth_sessions').insert(sessions);
+          }
         }
 
         toast({
@@ -177,6 +209,7 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
           .from('appointments')
           .insert([{
             ...appointment,
+            telehealth_link: telehealthLink,
             is_group_session: appointment.is_group_session || false,
             max_participants: appointment.max_participants,
             current_participants: appointment.current_participants || 1,
@@ -187,6 +220,18 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
           .single();
 
         if (error) throw error;
+
+        // Create telehealth session for Internal platform
+        if (appointment.service_location === 'Telehealth' && appointment.telehealth_platform === 'Internal' && data) {
+          await supabase
+            .from('telehealth_sessions')
+            .insert({
+              appointment_id: data.id,
+              host_id: data.clinician_id,
+              session_id: telehealthLink.split('/').pop(),
+              status: 'waiting'
+            });
+        }
         
         toast({
           title: "Success",
@@ -208,6 +253,32 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
 
   const updateAppointment = async (id: string, updates: any) => {
     try {
+      // If telehealth with Internal platform, create/ensure session
+      if (updates.service_location === 'Telehealth' && updates.telehealth_platform === 'Internal') {
+        const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Check if session exists
+        const { data: existingSession } = await supabase
+          .from('telehealth_sessions')
+          .select('id, session_id')
+          .eq('appointment_id', id)
+          .maybeSingle();
+
+        if (!existingSession) {
+          // Create new session
+          await supabase
+            .from('telehealth_sessions')
+            .insert({
+              appointment_id: id,
+              host_id: updates.clinician_id,
+              session_id: sessionId,
+              status: 'waiting'
+            });
+          
+          updates.telehealth_link = `/telehealth/${sessionId}`;
+        }
+      }
+
       const { data, error } = await supabase
         .from('appointments')
         .update({
@@ -238,52 +309,7 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
     }
   };
 
-  const deleteAppointment = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('appointments')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: "Appointment deleted successfully"
-      });
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to delete appointment",
-        variant: "destructive"
-      });
-      throw err;
-    }
-  };
-
-  const deleteRecurringSeries = async (parentId: string) => {
-    try {
-      // Delete all appointments in the series
-      const { error } = await supabase
-        .from('appointments')
-        .delete()
-        .or(`id.eq.${parentId},parent_recurrence_id.eq.${parentId}`);
-
-      if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: "Recurring series deleted successfully"
-      });
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to delete recurring series",
-        variant: "destructive"
-      });
-      throw err;
-    }
-  };
+  // Deletions are prevented at database level - use cancellation instead
 
   const updateRecurringSeries = async (parentId: string, updates: any) => {
     try {
@@ -313,13 +339,55 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
     }
   };
 
-  const cancelAppointment = async (id: string, reason: string, notes?: string) => {
+  const cancelAppointment = async (id: string, reason: string, notes?: string, applyFee?: boolean) => {
     return updateAppointment(id, {
       status: 'Cancelled',
+      cancellation_reason: reason,
+      cancellation_notes: notes,
+      cancellation_fee_applied: applyFee || false,
+      cancellation_date: new Date().toISOString(),
+      cancelled_by: user?.id,
       status_updated_date: new Date().toISOString(),
-      status_updated_by: user?.id,
-      cancelled_by: user?.id
+      status_updated_by: user?.id
     });
+  };
+
+  const cancelRecurringSeries = async (parentId: string, reason: string, notes?: string, applyFee?: boolean) => {
+    try {
+      const now = new Date().toISOString();
+      
+      // Cancel all future appointments in the series
+      const { error } = await supabase
+        .from('appointments')
+        .update({
+          status: 'Cancelled',
+          cancellation_reason: reason,
+          cancellation_notes: notes,
+          cancellation_fee_applied: applyFee || false,
+          cancellation_date: now,
+          cancelled_by: user?.id,
+          status_updated_date: now,
+          status_updated_by: user?.id,
+          last_modified: now,
+          last_modified_by: user?.id
+        })
+        .eq('parent_recurrence_id', parentId)
+        .gte('appointment_date', new Date().toISOString().split('T')[0]);
+
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Recurring series cancelled successfully"
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to cancel recurring series",
+        variant: "destructive"
+      });
+      throw err;
+    }
   };
 
   return {
@@ -328,10 +396,9 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
     error,
     createAppointment,
     updateAppointment,
-    deleteAppointment,
-    deleteRecurringSeries,
     updateRecurringSeries,
     cancelAppointment,
+    cancelRecurringSeries,
     refreshAppointments: fetchAppointments
   };
 };

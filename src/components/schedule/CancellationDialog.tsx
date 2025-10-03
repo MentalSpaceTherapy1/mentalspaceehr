@@ -13,6 +13,8 @@ interface CancellationDialogProps {
   onOpenChange: (open: boolean) => void;
   appointment: any;
   onCancel: (id: string, reason: string, notes?: string, applyFee?: boolean) => Promise<void>;
+  isSeries?: boolean;
+  onCancelSeries?: (parentId: string, reason: string, notes?: string, applyFee?: boolean) => Promise<void>;
 }
 
 const CANCELLATION_REASONS = [
@@ -31,7 +33,9 @@ export function CancellationDialog({
   open,
   onOpenChange,
   appointment,
-  onCancel
+  onCancel,
+  isSeries = false,
+  onCancelSeries
 }: CancellationDialogProps) {
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
@@ -51,11 +55,19 @@ export function CancellationDialog({
 
     setSaving(true);
     try {
-      await onCancel(appointment.id, reason, notes, applyFee);
-      toast({
-        title: 'Success',
-        description: 'Appointment cancelled successfully.'
-      });
+      if (isSeries && onCancelSeries && appointment.parent_recurrence_id) {
+        await onCancelSeries(appointment.parent_recurrence_id, reason, notes, applyFee);
+        toast({
+          title: 'Success',
+          description: 'Recurring series cancelled successfully.'
+        });
+      } else {
+        await onCancel(appointment.id, reason, notes, applyFee);
+        toast({
+          title: 'Success',
+          description: 'Appointment cancelled successfully.'
+        });
+      }
       onOpenChange(false);
       setReason('');
       setNotes('');
@@ -75,9 +87,10 @@ export function CancellationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Cancel Appointment</DialogTitle>
+          <DialogTitle>{isSeries ? 'Cancel Recurring Series' : 'Cancel Appointment'}</DialogTitle>
           <DialogDescription>
             {appointment && `${format(new Date(appointment.appointment_date), 'MMM d, yyyy')} at ${appointment.start_time}`}
+            {isSeries && ' and all future occurrences'}
           </DialogDescription>
         </DialogHeader>
 
