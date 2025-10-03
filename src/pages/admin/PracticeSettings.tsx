@@ -601,6 +601,17 @@ export default function PracticeSettings() {
                   </div>
                 </div>
               </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Locations</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Manage multiple office locations for your practice
+                </p>
+                <Button variant="outline" onClick={() => navigate('/admin/locations')}>
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Manage Locations
+                </Button>
+              </div>
             </Card>
           </TabsContent>
         </Tabs>

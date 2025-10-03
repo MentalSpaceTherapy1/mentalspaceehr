@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import CreateUser from "./pages/admin/CreateUser";
 import PracticeSettings from "./pages/admin/PracticeSettings";
+import Locations from "./pages/admin/Locations";
 import Profile from "./pages/Profile";
 import MFASetup from "./pages/MFASetup";
 import TrustedDevices from "./pages/TrustedDevices";
@@ -68,6 +69,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/admin/locations" 
+              element={
+                <AdminRoute>
+                  <Locations />
+                </AdminRoute>
+              } 
+            />
+            <Route
               path="/profile"
               element={
                 <ProtectedRoute>
