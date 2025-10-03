@@ -24,6 +24,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
 import { InsuranceBillingSection } from '@/components/clients/insurance/InsuranceBillingSection';
+import { ClientAppointments } from '@/components/clients/ClientAppointments';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 
@@ -159,6 +160,8 @@ export default function ClientChart() {
         );
       case 'insurance-billing':
         return <InsuranceBillingSection clientId={id!} />;
+      case 'appointments':
+        return <ClientAppointments clientId={id!} />;
       default:
         return (
           <Card>
