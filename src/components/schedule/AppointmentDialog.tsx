@@ -153,7 +153,7 @@ export function AppointmentDialog({
         telehealth_platform: appointment.telehealth_platform || 'Internal',
         telehealth_link: appointment.telehealth_link || '',
       });
-      setIsRecurring(appointment.is_recurring || false);
+      setIsRecurring(editSeries ? true : (appointment.is_recurring || false));
       if (appointment.recurrence_pattern) {
         setRecurrencePattern(appointment.recurrence_pattern);
       }
@@ -166,7 +166,7 @@ export function AppointmentDialog({
         numberOfOccurrences: 10,
       });
     }
-  }, [appointment, form]);
+  }, [appointment, form, editSeries]);
 
   useEffect(() => {
     fetchData();
@@ -547,23 +547,23 @@ export function AppointmentDialog({
             />
 
             {!appointment && (
-              <>
-                <RecurringAppointmentForm
-                  isRecurring={isRecurring}
-                  onIsRecurringChange={setIsRecurring}
-                  recurrencePattern={recurrencePattern}
-                  onRecurrencePatternChange={setRecurrencePattern}
-                />
-                
-                <GroupSessionParticipants
-                  participants={groupParticipants}
-                  onParticipantsChange={setGroupParticipants}
-                  isGroupSession={isGroupSession}
-                  onIsGroupSessionChange={setIsGroupSession}
-                  maxParticipants={maxParticipants}
-                  onMaxParticipantsChange={setMaxParticipants}
-                />
-              </>
+              <GroupSessionParticipants
+                participants={groupParticipants}
+                onParticipantsChange={setGroupParticipants}
+                isGroupSession={isGroupSession}
+                onIsGroupSessionChange={setIsGroupSession}
+                maxParticipants={maxParticipants}
+                onMaxParticipantsChange={setMaxParticipants}
+              />
+            )}
+
+            {(!appointment || editSeries) && (
+              <RecurringAppointmentForm
+                isRecurring={isRecurring}
+                onIsRecurringChange={setIsRecurring}
+                recurrencePattern={recurrencePattern}
+                onRecurrencePatternChange={setRecurrencePattern}
+              />
             )}
 
             <DialogFooter>
