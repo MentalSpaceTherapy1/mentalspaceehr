@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Activity, Shield, Users } from 'lucide-react';
@@ -12,6 +13,7 @@ import logo from '@/assets/mentalspace-logo.png';
 import { MFAVerification } from '@/components/MFAVerification';
 import { EmailVerificationNotice } from '@/components/EmailVerificationNotice';
 import { supabase } from '@/integrations/supabase/client';
+import { checkTrustedDevice, addTrustedDevice } from '@/lib/api/trustedDevices';
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -37,6 +39,7 @@ export default function Auth() {
   const [showMFA, setShowMFA] = useState(false);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
+  const [rememberDevice, setRememberDevice] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -71,6 +74,11 @@ export default function Auth() {
 
       if (error) {
         if (error.message.includes('MFA')) {
+          // Check if device is trusted - skip MFA if it is
+          if (authUser && await checkTrustedDevice(authUser.id)) {
+            await signIn(data.email, data.password);
+            return;
+          }
           setShowMFA(true);
           return;
         }
@@ -83,6 +91,15 @@ export default function Auth() {
         setShowEmailVerification(true);
         await supabase.auth.signOut();
         return;
+      }
+
+      // Add trusted device if "remember me" is checked
+      if (rememberDevice && authUser) {
+        try {
+          await addTrustedDevice(authUser.id);
+        } catch (err) {
+          console.error('Failed to add trusted device:', err);
+        }
       }
 
       await signIn(data.email, data.password);
@@ -250,6 +267,17 @@ export default function Auth() {
                       required 
                     />
                     {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="remember"
+                      checked={rememberDevice}
+                      onCheckedChange={(checked) => setRememberDevice(checked as boolean)}
+                    />
+                    <Label htmlFor="remember" className="text-sm cursor-pointer">
+                      Remember this device for 30 days
+                    </Label>
                   </div>
                 </CardContent>
                 

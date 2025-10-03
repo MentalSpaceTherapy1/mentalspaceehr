@@ -9,7 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Shield } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
 export default function Profile() {
@@ -273,6 +273,19 @@ export default function Profile() {
 
           <TabsContent value="settings">
             <Card className="p-6 space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Security</h3>
+                <div className="space-y-4">
+                  <Button variant="outline" onClick={() => navigate('/mfa-setup')}>
+                    <Shield className="h-4 w-4 mr-2" />
+                    Configure MFA
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate('/trusted-devices')} className="ml-2">
+                    Manage Trusted Devices
+                  </Button>
+                </div>
+              </div>
+
               <div>
                 <h3 className="text-lg font-semibold mb-4">Notification Preferences</h3>
                 <div className="space-y-4">

@@ -245,6 +245,42 @@ export type Database = {
           },
         ]
       }
+      trusted_devices: {
+        Row: {
+          created_at: string | null
+          device_fingerprint: string
+          device_name: string | null
+          expires_at: string
+          id: string
+          ip_address: string | null
+          last_used_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_fingerprint: string
+          device_name?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          last_used_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_fingerprint?: string
+          device_name?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          last_used_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_audit_log: {
         Row: {
           action_type: string
@@ -316,6 +352,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_devices: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]

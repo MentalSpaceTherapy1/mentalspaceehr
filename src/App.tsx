@@ -14,6 +14,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import CreateUser from "./pages/admin/CreateUser";
 import Profile from "./pages/Profile";
 import MFASetup from "./pages/MFASetup";
+import TrustedDevices from "./pages/TrustedDevices";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -70,6 +71,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <MFASetup />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/trusted-devices" 
+              element={
+                <ProtectedRoute>
+                  <TrustedDevices />
                 </ProtectedRoute>
               } 
             />

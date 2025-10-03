@@ -6,11 +6,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { RoleBadge } from '@/components/admin/RoleBadge';
 import { RoleAssignmentDialog } from '@/components/admin/RoleAssignmentDialog';
 import { getAllUsersWithRoles } from '@/lib/api/userRoles';
+import { toggleUserActive } from '@/lib/api/users';
 import { AppRole } from '@/hooks/useUserRoles';
 import { Search, UserCog, UserPlus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { formatDistanceToNow } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface UserWithRoles {
   id: string;
@@ -30,6 +42,7 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deactivateUser, setDeactivateUser] = useState<UserWithRoles | null>(null);
 
   const fetchUsers = async () => {
     try {
@@ -69,6 +82,49 @@ export default function UserManagement() {
 
   const handleRolesUpdated = () => {
     fetchUsers();
+  };
+
+  const handleToggleActive = async (user: UserWithRoles) => {
+    if (user.is_active) {
+      // Show confirmation dialog for deactivation
+      setDeactivateUser(user);
+    } else {
+      // Activate immediately
+      try {
+        await toggleUserActive(user.id, true);
+        toast({
+          title: 'Success',
+          description: `${user.first_name} ${user.last_name} has been activated`,
+        });
+        fetchUsers();
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to activate user',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const confirmDeactivate = async () => {
+    if (!deactivateUser) return;
+
+    try {
+      await toggleUserActive(deactivateUser.id, false);
+      toast({
+        title: 'Success',
+        description: `${deactivateUser.first_name} ${deactivateUser.last_name} has been deactivated`,
+      });
+      fetchUsers();
+      setDeactivateUser(null);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to deactivate user',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (loading) {
@@ -138,9 +194,15 @@ export default function UserManagement() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={user.is_active ? 'default' : 'outline'}>
-                      {user.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={user.is_active ? 'default' : 'outline'}>
+                        {user.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                      <Switch
+                        checked={user.is_active}
+                        onCheckedChange={() => handleToggleActive(user)}
+                      />
+                    </div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {user.last_login_date 
@@ -173,6 +235,24 @@ export default function UserManagement() {
             onRolesUpdated={handleRolesUpdated}
           />
         )}
+
+        <AlertDialog open={!!deactivateUser} onOpenChange={() => setDeactivateUser(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Deactivate User</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to deactivate {deactivateUser?.first_name} {deactivateUser?.last_name}? 
+                They will not be able to access the system until reactivated.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDeactivate}>
+                Deactivate
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
