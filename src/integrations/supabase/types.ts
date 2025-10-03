@@ -79,7 +79,9 @@ export type Database = {
           personal_email: string | null
           phone_number: string | null
           preferred_name: string | null
+          profile_completed: boolean | null
           required_supervision_hours: number | null
+          requires_password_change: boolean | null
           signature_date: string | null
           specialties: string[] | null
           suffix: string | null
@@ -125,7 +127,9 @@ export type Database = {
           personal_email?: string | null
           phone_number?: string | null
           preferred_name?: string | null
+          profile_completed?: boolean | null
           required_supervision_hours?: number | null
+          requires_password_change?: boolean | null
           signature_date?: string | null
           specialties?: string[] | null
           suffix?: string | null
@@ -171,7 +175,9 @@ export type Database = {
           personal_email?: string | null
           phone_number?: string | null
           preferred_name?: string | null
+          profile_completed?: boolean | null
           required_supervision_hours?: number | null
+          requires_password_change?: boolean | null
           signature_date?: string | null
           specialties?: string[] | null
           suffix?: string | null
@@ -238,6 +244,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_audit_log: {
+        Row: {
+          action_type: string
+          changes: Json | null
+          created_at: string | null
+          id: string
+          performed_by: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          changes?: Json | null
+          created_at?: string | null
+          id?: string
+          performed_by: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          changes?: Json | null
+          created_at?: string | null
+          id?: string
+          performed_by?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
