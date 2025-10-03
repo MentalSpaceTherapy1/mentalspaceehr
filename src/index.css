@@ -18,11 +18,11 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 17%;
 
-    /* Medical Blue - Trust & Professionalism */
-    --primary: 210 100% 44%;
+    /* MentalSpace Cyan - Brand Primary */
+    --primary: 192 95% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 210 100% 92%;
-    --primary-dark: 210 100% 35%;
+    --primary-light: 192 95% 92%;
+    --primary-dark: 192 95% 45%;
 
     /* Soft Neutral - Clean & Clinical */
     --secondary: 210 20% 96%;
@@ -31,8 +31,8 @@ All colors MUST be HSL.
     --muted: 210 20% 96%;
     --muted-foreground: 215 15% 45%;
 
-    /* Calming Teal - Healthcare Accent */
-    --accent: 180 65% 45%;
+    /* MentalSpace Green - Brand Accent */
+    --accent: 145 60% 45%;
     --accent-foreground: 0 0% 100%;
 
     /* Status Colors */
@@ -62,8 +62,8 @@ All colors MUST be HSL.
     --sidebar-ring: 210 100% 44%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(210 100% 44%), hsl(180 65% 45%));
-    --gradient-hero: linear-gradient(180deg, hsl(210 100% 96%), hsl(0 0% 100%));
+    --gradient-primary: linear-gradient(135deg, hsl(192 95% 55%), hsl(145 60% 45%));
+    --gradient-hero: linear-gradient(180deg, hsl(192 95% 96%), hsl(0 0% 100%));
     
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(215 25% 17% / 0.05);
@@ -85,10 +85,10 @@ All colors MUST be HSL.
     --popover: 215 25% 15%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 210 100% 55%;
+    --primary: 192 95% 60%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 210 100% 20%;
-    --primary-dark: 210 100% 45%;
+    --primary-light: 192 95% 20%;
+    --primary-dark: 192 95% 50%;
 
     --secondary: 215 20% 20%;
     --secondary-foreground: 0 0% 95%;
@@ -96,7 +96,7 @@ All colors MUST be HSL.
     --muted: 215 20% 20%;
     --muted-foreground: 215 15% 65%;
 
-    --accent: 180 65% 50%;
+    --accent: 145 60% 50%;
     --accent-foreground: 0 0% 100%;
 
     --success: 142 71% 45%;
@@ -121,7 +121,7 @@ All colors MUST be HSL.
     --sidebar-border: 215 20% 20%;
     --sidebar-ring: 210 100% 55%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(210 100% 55%), hsl(180 65% 50%));
+    --gradient-primary: linear-gradient(135deg, hsl(192 95% 60%), hsl(145 60% 50%));
     --gradient-hero: linear-gradient(180deg, hsl(215 25% 15%), hsl(215 25% 12%));
     
     --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);

@@ -3,8 +3,9 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Activity, Shield, Users, FileText, Calendar } from 'lucide-react';
+import { Shield, Users, FileText, Calendar } from 'lucide-react';
 import { useEffect } from 'react';
+import logo from '@/assets/mentalspace-logo.png';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -22,8 +23,7 @@ const Index = () => {
       <header className="container mx-auto px-4 py-6">
         <nav className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Activity className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">MentalSpace EHR</span>
+            <img src={logo} alt="MentalSpace" className="h-12" />
           </div>
           <Button onClick={() => navigate('/auth')}>
             Get Started

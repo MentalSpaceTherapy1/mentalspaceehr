@@ -2,6 +2,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Calendar, FileText, Users, LogOut, Settings } from 'lucide-react';
+import logo from '@/assets/mentalspace-logo.png';
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
@@ -12,8 +13,7 @@ export default function Dashboard() {
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Activity className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">MentalSpace EHR</h1>
+            <img src={logo} alt="MentalSpace" className="h-10" />
           </div>
           
           <div className="flex items-center gap-4">

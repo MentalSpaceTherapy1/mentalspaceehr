@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Activity, Shield, Users } from 'lucide-react';
 import { z } from 'zod';
+import logo from '@/assets/mentalspace-logo.png';
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -111,8 +112,7 @@ export default function Auth() {
         {/* Left side - Branding */}
         <div className="hidden lg:block space-y-6 text-foreground">
           <div className="flex items-center gap-3 mb-8">
-            <Activity className="h-10 w-10 text-primary" />
-            <h1 className="text-4xl font-bold">MentalSpace EHR</h1>
+            <img src={logo} alt="MentalSpace" className="h-16" />
           </div>
           
           <h2 className="text-3xl font-semibold">
@@ -154,9 +154,8 @@ export default function Auth() {
         <Card className="w-full shadow-xl">
           <Tabs defaultValue="signin" className="w-full">
             <CardHeader>
-              <div className="flex items-center gap-2 lg:hidden mb-4">
-                <Activity className="h-8 w-8 text-primary" />
-                <span className="text-2xl font-bold">MentalSpace</span>
+              <div className="flex justify-center lg:hidden mb-4">
+                <img src={logo} alt="MentalSpace" className="h-12" />
               </div>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
