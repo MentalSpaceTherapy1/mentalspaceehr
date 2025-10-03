@@ -21,6 +21,7 @@ import Tasks from "./pages/Tasks";
 import Clients from "./pages/Clients";
 import ClientRegistration from "./pages/ClientRegistration";
 import ClientChart from "./pages/ClientChart";
+import Schedule from "./pages/Schedule";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -133,6 +134,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ClientChart />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/schedule" 
+              element={
+                <ProtectedRoute>
+                  <Schedule />
                 </ProtectedRoute>
               } 
             />
