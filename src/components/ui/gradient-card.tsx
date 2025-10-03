@@ -3,15 +3,18 @@ import { cn } from "@/lib/utils"
 
 const GradientCard = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { gradient?: 'primary' | 'secondary' | 'accent' | 'none' }
+  React.HTMLAttributes<HTMLDivElement> & { gradient?: 'primary' | 'secondary' | 'accent' | 'warning' | 'success' | 'info' | 'none' }
 >(({ className, gradient = 'none', ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
       "rounded-lg border bg-card text-card-foreground shadow-md transition-all duration-300 hover:shadow-xl",
-      gradient === 'primary' && "bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20",
-      gradient === 'secondary' && "bg-gradient-to-br from-secondary/5 to-primary/5 border-secondary/20",
-      gradient === 'accent' && "bg-gradient-to-br from-accent/5 to-primary/5 border-accent/20",
+      gradient === 'primary' && "bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/30",
+      gradient === 'secondary' && "bg-gradient-to-br from-secondary/10 via-secondary/5 to-transparent border-secondary/30",
+      gradient === 'accent' && "bg-gradient-to-br from-accent/10 via-accent/5 to-transparent border-accent/30",
+      gradient === 'warning' && "bg-gradient-to-br from-warning/10 via-warning/5 to-transparent border-warning/30",
+      gradient === 'success' && "bg-gradient-to-br from-success/10 via-success/5 to-transparent border-success/30",
+      gradient === 'info' && "bg-gradient-to-br from-primary/10 via-secondary/5 to-transparent border-primary/20",
       className
     )}
     {...props}

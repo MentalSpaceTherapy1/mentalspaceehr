@@ -23,7 +23,7 @@ export const AdminDashboard = () => {
     <div className="space-y-6">
       {/* System Health & Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <GradientCard gradient="accent">
+        <GradientCard gradient="success" className="hover:shadow-colored border-l-4 border-l-success">
           <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <GradientCardTitle className="text-sm font-medium">System Status</GradientCardTitle>
             <Activity className="h-5 w-5 text-success" />
@@ -34,18 +34,18 @@ export const AdminDashboard = () => {
           </GradientCardContent>
         </GradientCard>
 
-        <GradientCard gradient="primary">
+        <GradientCard gradient="info" className="hover:shadow-colored border-l-4 border-l-primary">
           <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <GradientCardTitle className="text-sm font-medium">Active Users</GradientCardTitle>
             <Users className="h-5 w-5 text-primary" />
           </GradientCardHeader>
           <GradientCardContent>
-            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">0</div>
+            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">0</div>
             <p className="text-xs text-muted-foreground">Currently logged in</p>
           </GradientCardContent>
         </GradientCard>
 
-        <GradientCard gradient="secondary">
+        <GradientCard gradient="warning" className="hover:shadow-colored border-l-4 border-l-warning">
           <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <GradientCardTitle className="text-sm font-medium">Pending Approvals</GradientCardTitle>
             <Clock className="h-5 w-5 text-warning" />
@@ -56,7 +56,7 @@ export const AdminDashboard = () => {
           </GradientCardContent>
         </GradientCard>
 
-        <GradientCard gradient="primary">
+        <GradientCard gradient="secondary" className="hover:shadow-colored border-l-4 border-l-secondary">
           <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <GradientCardTitle className="text-sm font-medium">Compliance Alerts</GradientCardTitle>
             <AlertCircle className="h-5 w-5 text-destructive" />

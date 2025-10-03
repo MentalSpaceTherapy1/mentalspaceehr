@@ -19,7 +19,7 @@ export const TherapistDashboard = () => {
     <div className="space-y-6">
       {/* Today's Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <GradientCard gradient="primary">
+        <GradientCard gradient="primary" className="hover:shadow-colored border-l-4 border-l-primary">
           <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <GradientCardTitle className="text-sm font-medium">Today's Sessions</GradientCardTitle>
             <Calendar className="h-5 w-5 text-primary" />
@@ -30,7 +30,7 @@ export const TherapistDashboard = () => {
           </GradientCardContent>
         </GradientCard>
 
-        <GradientCard gradient="secondary">
+        <GradientCard gradient="warning" className="hover:shadow-colored border-l-4 border-l-warning">
           <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <GradientCardTitle className="text-sm font-medium">Pending Notes</GradientCardTitle>
             <FileText className="h-5 w-5 text-warning" />
@@ -41,7 +41,7 @@ export const TherapistDashboard = () => {
           </GradientCardContent>
         </GradientCard>
 
-        <GradientCard gradient="accent">
+        <GradientCard gradient="accent" className="hover:shadow-colored border-l-4 border-l-accent">
           <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <GradientCardTitle className="text-sm font-medium">Active Clients</GradientCardTitle>
             <Users className="h-5 w-5 text-accent" />
@@ -52,7 +52,7 @@ export const TherapistDashboard = () => {
           </GradientCardContent>
         </GradientCard>
 
-        <GradientCard gradient="primary">
+        <GradientCard gradient="success" className="hover:shadow-colored border-l-4 border-l-success">
           <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <GradientCardTitle className="text-sm font-medium">Compliance</GradientCardTitle>
             <CheckCircle2 className="h-5 w-5 text-success" />

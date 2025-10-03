@@ -17,18 +17,18 @@ export const FrontDeskDashboard = () => {
     <div className="space-y-6">
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <GradientCard gradient="primary">
+        <GradientCard gradient="info" className="hover:shadow-colored border-l-4 border-l-primary">
           <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <GradientCardTitle className="text-sm font-medium">Today's Appointments</GradientCardTitle>
             <Calendar className="h-5 w-5 text-primary" />
           </GradientCardHeader>
           <GradientCardContent>
-            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">0</div>
+            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">0</div>
             <p className="text-xs text-muted-foreground">Scheduled today</p>
           </GradientCardContent>
         </GradientCard>
 
-        <GradientCard gradient="accent">
+        <GradientCard gradient="success" className="hover:shadow-colored border-l-4 border-l-success">
           <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <GradientCardTitle className="text-sm font-medium">Check-ins</GradientCardTitle>
             <CheckCircle2 className="h-5 w-5 text-success" />
@@ -39,7 +39,7 @@ export const FrontDeskDashboard = () => {
           </GradientCardContent>
         </GradientCard>
 
-        <GradientCard gradient="secondary">
+        <GradientCard gradient="warning" className="hover:shadow-colored border-l-4 border-l-warning">
           <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <GradientCardTitle className="text-sm font-medium">Waiting</GradientCardTitle>
             <Clock className="h-5 w-5 text-warning" />
@@ -50,13 +50,13 @@ export const FrontDeskDashboard = () => {
           </GradientCardContent>
         </GradientCard>
 
-        <GradientCard gradient="primary">
+        <GradientCard gradient="secondary" className="hover:shadow-colored border-l-4 border-l-secondary">
           <GradientCardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <GradientCardTitle className="text-sm font-medium">Messages</GradientCardTitle>
-            <Phone className="h-5 w-5 text-primary" />
+            <Phone className="h-5 w-5 text-secondary" />
           </GradientCardHeader>
           <GradientCardContent>
-            <div className="text-3xl font-bold text-primary">0</div>
+            <div className="text-3xl font-bold text-secondary">0</div>
             <p className="text-xs text-muted-foreground">Pending callbacks</p>
           </GradientCardContent>
         </GradientCard>
