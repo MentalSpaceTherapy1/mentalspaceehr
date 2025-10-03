@@ -1,11 +1,18 @@
 import { useAuth } from '@/hooks/useAuth';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { isAdmin } from '@/lib/roleUtils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Calendar, FileText, Users, LogOut, Settings } from 'lucide-react';
+import { Activity, Calendar, FileText, Users, LogOut, Settings, Shield } from 'lucide-react';
+import { RoleBadge } from '@/components/admin/RoleBadge';
+import { useNavigate } from 'react-router-dom';
 import logo from '@/assets/mentalspace-logo.png';
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
+  const { roles } = useCurrentUserRoles();
+  const navigate = useNavigate();
+  const userIsAdmin = isAdmin(roles);
 
   return (
     <div className="min-h-screen bg-background">
@@ -17,9 +24,16 @@ export default function Dashboard() {
           </div>
           
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              {user?.email}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground hidden sm:inline">
+                {user?.email}
+              </span>
+              <div className="flex gap-1">
+                {roles.map(role => (
+                  <RoleBadge key={role} role={role} showTooltip={false} />
+                ))}
+              </div>
+            </div>
             <Button variant="outline" size="sm">
               <Settings className="h-4 w-4 mr-2" />
               Settings
@@ -151,6 +165,27 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Admin Panel - Only visible to administrators */}
+        {userIsAdmin && (
+          <Card className="mt-8 p-6 border-primary/20 bg-primary/5">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">Admin Panel</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Manage users, roles, and system settings
+                </p>
+              </div>
+              <Button onClick={() => navigate('/admin/users')}>
+                <Users className="mr-2 h-4 w-4" />
+                Manage Users
+              </Button>
+            </div>
+          </Card>
+        )}
 
         {/* Phase 1 Complete Notice */}
         <Card className="mt-8 border-primary">
