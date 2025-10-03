@@ -43,18 +43,23 @@ export function AppSidebar() {
   const userIsAdmin = isAdmin(roles);
 
   const mainItems = [
-    { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard, roles: ['all'] },
-    { title: 'Schedule', url: '/schedule', icon: Calendar, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'] },
-    { title: 'Patients', url: '/patients', icon: Users, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'] },
-    { title: 'Clinical Notes', url: '/notes', icon: FileText, roles: ['therapist', 'associate_trainee', 'supervisor'] },
-    { title: 'Billing', url: '/billing', icon: DollarSign, roles: ['billing_staff', 'administrator'] },
-    { title: 'Front Desk', url: '/front-desk', icon: ClipboardList, roles: ['front_desk'] },
+    { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard, roles: ['all'], color: 'from-primary to-accent' },
+    { title: 'Schedule', url: '/schedule', icon: Calendar, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-secondary to-primary' },
+    { title: 'Patients', url: '/patients', icon: Users, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-accent to-primary' },
+    { title: 'Clinical Notes', url: '/notes', icon: FileText, roles: ['therapist', 'associate_trainee', 'supervisor'], color: 'from-warning to-accent' },
+    { title: 'Billing', url: '/billing', icon: DollarSign, roles: ['billing_staff', 'administrator'], color: 'from-success to-accent' },
+    { title: 'Front Desk', url: '/front-desk', icon: ClipboardList, roles: ['front_desk'], color: 'from-primary to-secondary' },
   ];
 
   const adminItems = [
-    { title: 'User Management', url: '/admin/users', icon: UserCog },
-    { title: 'Practice Settings', url: '/admin/practice-settings', icon: Building2 },
-    { title: 'Locations', url: '/admin/locations', icon: MapPin },
+    { title: 'User Management', url: '/admin/users', icon: UserCog, color: 'from-secondary to-accent' },
+    { title: 'Practice Settings', url: '/admin/practice-settings', icon: Building2, color: 'from-primary to-success' },
+    { title: 'Locations', url: '/admin/locations', icon: MapPin, color: 'from-accent to-secondary' },
+  ];
+
+  const settingsItems = [
+    { title: 'Profile', url: '/profile', icon: Settings, color: 'from-primary to-accent' },
+    { title: 'Security (MFA)', url: '/mfa-setup', icon: Shield, color: 'from-secondary to-primary' },
   ];
 
   const hasAccess = (itemRoles: string[]) => {
@@ -63,8 +68,10 @@ export function AppSidebar() {
     return roles.some(role => itemRoles.includes(role));
   };
 
-  const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? 'bg-gradient-to-r from-primary to-accent text-white hover:from-primary hover:to-accent shadow-md' : 'hover:bg-sidebar-accent transition-all duration-200';
+  const getNavCls = (isActive: boolean, colorGradient: string) =>
+    isActive 
+      ? `bg-gradient-to-r ${colorGradient} text-white hover:opacity-90 shadow-md border-l-4 border-l-white/50` 
+      : 'hover:bg-sidebar-accent transition-all duration-200 hover:border-l-4 hover:border-l-sidebar-primary/30';
 
   return (
     <Sidebar collapsible="icon" className="border-r shadow-lg">
@@ -86,9 +93,13 @@ export function AppSidebar() {
               {mainItems.filter(item => hasAccess(item.roles)).map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end className={getNavCls}>
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span className="text-sidebar-foreground font-medium">{item.title}</span>}
+                    <NavLink to={item.url} end>
+                      {({ isActive }) => (
+                        <div className={`flex items-center gap-3 w-full px-3 py-2 rounded-md ${getNavCls(isActive, item.color)}`}>
+                          <item.icon className="h-4 w-4 shrink-0" />
+                          {!collapsed && <span className={isActive ? "text-white font-semibold" : "text-sidebar-foreground font-medium"}>{item.title}</span>}
+                        </div>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -111,9 +122,13 @@ export function AppSidebar() {
                   {adminItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild>
-                        <NavLink to={item.url} className={getNavCls}>
-                          <item.icon className="h-4 w-4" />
-                          {!collapsed && <span className="text-sidebar-foreground font-medium">{item.title}</span>}
+                        <NavLink to={item.url}>
+                          {({ isActive }) => (
+                            <div className={`flex items-center gap-3 w-full px-3 py-2 rounded-md ${getNavCls(isActive, item.color)}`}>
+                              <item.icon className="h-4 w-4 shrink-0" />
+                              {!collapsed && <span className={isActive ? "text-white font-semibold" : "text-sidebar-foreground font-medium"}>{item.title}</span>}
+                            </div>
+                          )}
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -130,22 +145,20 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-foreground font-semibold text-sm">{!collapsed && 'Settings'}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/profile" className={getNavCls}>
-                    <Settings className="h-4 w-4" />
-                    {!collapsed && <span className="text-sidebar-foreground font-medium">Profile</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/mfa-setup" className={getNavCls}>
-                    <Shield className="h-4 w-4" />
-                    {!collapsed && <span className="text-sidebar-foreground font-medium">Security (MFA)</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {settingsItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={item.url}>
+                      {({ isActive }) => (
+                        <div className={`flex items-center gap-3 w-full px-3 py-2 rounded-md ${getNavCls(isActive, item.color)}`}>
+                          <item.icon className="h-4 w-4 shrink-0" />
+                          {!collapsed && <span className={isActive ? "text-white font-semibold" : "text-sidebar-foreground font-medium"}>{item.title}</span>}
+                        </div>
+                      )}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
