@@ -80,7 +80,7 @@ export function AppSidebar() {
       <SidebarContent>
         {/* Main Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-foreground font-semibold text-sm">Main Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.filter(item => hasAccess(item.roles)).map((item) => (
@@ -88,7 +88,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
                       <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!collapsed && <span className="text-sidebar-foreground font-medium">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -102,8 +102,8 @@ export function AppSidebar() {
           <>
             <Separator className="my-2" />
             <SidebarGroup>
-              <SidebarGroupLabel>
-                <Shield className="h-4 w-4 mr-2 inline" />
+              <SidebarGroupLabel className="text-foreground font-semibold text-sm">
+                <Shield className="h-4 w-4 mr-2 inline text-primary" />
                 {!collapsed && 'Administration'}
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -113,7 +113,7 @@ export function AppSidebar() {
                       <SidebarMenuButton asChild>
                         <NavLink to={item.url} className={getNavCls}>
                           <item.icon className="h-4 w-4" />
-                          {!collapsed && <span>{item.title}</span>}
+                          {!collapsed && <span className="text-sidebar-foreground font-medium">{item.title}</span>}
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -127,14 +127,14 @@ export function AppSidebar() {
         {/* Settings Section */}
         <Separator className="my-2" />
         <SidebarGroup>
-          <SidebarGroupLabel>{!collapsed && 'Settings'}</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-foreground font-semibold text-sm">{!collapsed && 'Settings'}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <NavLink to="/profile" className={getNavCls}>
                     <Settings className="h-4 w-4" />
-                    {!collapsed && <span>Profile</span>}
+                    {!collapsed && <span className="text-sidebar-foreground font-medium">Profile</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -142,7 +142,7 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <NavLink to="/mfa-setup" className={getNavCls}>
                     <Shield className="h-4 w-4" />
-                    {!collapsed && <span>Security (MFA)</span>}
+                    {!collapsed && <span className="text-sidebar-foreground font-medium">Security (MFA)</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -154,11 +154,11 @@ export function AppSidebar() {
       <SidebarFooter className="border-t p-4">
         <Button 
           variant="ghost" 
-          className="w-full justify-start" 
+          className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground" 
           onClick={signOut}
         >
           <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="ml-2">Sign Out</span>}
+          {!collapsed && <span className="ml-2 font-medium">Sign Out</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>
