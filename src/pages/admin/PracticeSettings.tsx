@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Save, Building2, MapPin, Clock, Shield, Stethoscope, Palette, Upload, X, Plus, LayoutDashboard } from 'lucide-react';
+import { ArrowLeft, Save, Building2, MapPin, Clock, Shield, Stethoscope, Palette, Upload, X, Plus, LayoutDashboard, CalendarClock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -73,6 +73,25 @@ export default function PracticeSettings() {
     logo: '',
     primary_color: '#3B82F6',
     secondary_color: '#10B981',
+  });
+  
+  const [scheduleSettings, setScheduleSettings] = useState({
+    time_slot_interval: 15,
+    buffer_time: 0,
+    max_advance_booking_days: 90,
+    min_advance_booking_hours: 24,
+    allow_same_day_booking: false,
+    allow_online_booking: false,
+    cancellation_notice_hours: 24,
+    no_show_fee_enabled: false,
+    no_show_fee_amount: 0,
+    late_cancellation_fee_enabled: false,
+    late_cancellation_fee_amount: 0,
+    enable_waitlist: true,
+    send_appointment_reminders: true,
+    reminder_hours_before: [24, 2],
+    allow_recurring_appointments: true,
+    max_recurring_instances: 52,
   });
 
   const [officeHours, setOfficeHours] = useState<OfficeHours>({
@@ -138,6 +157,11 @@ export default function PracticeSettings() {
           setOfficeHours(data.office_hours as OfficeHours);
         }
         
+        // Load schedule settings (if they exist)
+        if (data.schedule_settings) {
+          setScheduleSettings(prev => ({ ...prev, ...data.schedule_settings }));
+        }
+        
         // Check if billing address is different
         if (data.billing_street1 || data.billing_city || data.billing_state || data.billing_zip_code) {
           setUseDifferentBillingAddress(true);
@@ -165,6 +189,7 @@ export default function PracticeSettings() {
         ...formData,
         office_hours: officeHours,
         dashboard_settings: dashboardSettings,
+        schedule_settings: scheduleSettings,
       };
 
       if (settingsId) {
@@ -280,6 +305,10 @@ export default function PracticeSettings() {
             <TabsTrigger value="hours">
               <Clock className="h-4 w-4 mr-2" />
               Business Hours
+            </TabsTrigger>
+            <TabsTrigger value="schedule">
+              <CalendarClock className="h-4 w-4 mr-2" />
+              Schedule
             </TabsTrigger>
             <TabsTrigger value="compliance">
               <Shield className="h-4 w-4 mr-2" />
@@ -524,6 +553,9 @@ export default function PracticeSettings() {
           <TabsContent value="hours">
             <Card className="p-6 space-y-4">
               <h3 className="text-lg font-semibold">Office Hours</h3>
+              <p className="text-sm text-muted-foreground">
+                Set your practice's operating hours for each day of the week
+              </p>
               <div className="space-y-3">
                 {daysOfWeek.map((day) => (
                   <div key={day} className="flex items-center gap-4 p-3 border rounded-lg">
@@ -562,6 +594,394 @@ export default function PracticeSettings() {
                 ))}
               </div>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="schedule">
+            <div className="space-y-6">
+              {/* Appointment Scheduling Settings */}
+              <Card className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">Appointment Scheduling</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Configure time slots, durations, and booking rules
+                  </p>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="time_slot_interval">Time Slot Interval (minutes)</Label>
+                    <Select
+                      value={scheduleSettings.time_slot_interval.toString()}
+                      onValueChange={(value) => 
+                        setScheduleSettings({ ...scheduleSettings, time_slot_interval: parseInt(value) })
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5 minutes</SelectItem>
+                        <SelectItem value="10">10 minutes</SelectItem>
+                        <SelectItem value="15">15 minutes</SelectItem>
+                        <SelectItem value="30">30 minutes</SelectItem>
+                        <SelectItem value="60">60 minutes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Interval for available appointment slots
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="buffer_time">Buffer Time Between Appointments (minutes)</Label>
+                    <Select
+                      value={scheduleSettings.buffer_time.toString()}
+                      onValueChange={(value) => 
+                        setScheduleSettings({ ...scheduleSettings, buffer_time: parseInt(value) })
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">No buffer</SelectItem>
+                        <SelectItem value="5">5 minutes</SelectItem>
+                        <SelectItem value="10">10 minutes</SelectItem>
+                        <SelectItem value="15">15 minutes</SelectItem>
+                        <SelectItem value="30">30 minutes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Time between back-to-back appointments
+                    </p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Booking Windows */}
+              <Card className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">Booking Windows</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Control how far in advance appointments can be booked
+                  </p>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="max_advance_booking">Maximum Advance Booking (days)</Label>
+                      <Input
+                        id="max_advance_booking"
+                        type="number"
+                        min="1"
+                        max="365"
+                        value={scheduleSettings.max_advance_booking_days}
+                        onChange={(e) => 
+                          setScheduleSettings({ 
+                            ...scheduleSettings, 
+                            max_advance_booking_days: parseInt(e.target.value) 
+                          })
+                        }
+                        className="w-full"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        How far ahead clients can book
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="min_advance_booking">Minimum Advance Notice (hours)</Label>
+                      <Input
+                        id="min_advance_booking"
+                        type="number"
+                        min="0"
+                        max="168"
+                        value={scheduleSettings.min_advance_booking_hours}
+                        onChange={(e) => 
+                          setScheduleSettings({ 
+                            ...scheduleSettings, 
+                            min_advance_booking_hours: parseInt(e.target.value) 
+                          })
+                        }
+                        className="w-full"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Minimum hours before appointment
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <Label>Allow Same-Day Booking</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Permit appointments to be scheduled for today
+                      </p>
+                    </div>
+                    <Switch
+                      checked={scheduleSettings.allow_same_day_booking}
+                      onCheckedChange={(checked) => 
+                        setScheduleSettings({ ...scheduleSettings, allow_same_day_booking: checked })
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <Label>Enable Online Booking</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Allow clients to self-schedule appointments
+                      </p>
+                    </div>
+                    <Switch
+                      checked={scheduleSettings.allow_online_booking}
+                      onCheckedChange={(checked) => 
+                        setScheduleSettings({ ...scheduleSettings, allow_online_booking: checked })
+                      }
+                    />
+                  </div>
+                </div>
+              </Card>
+
+              {/* Cancellation & No-Show Policies */}
+              <Card className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">Cancellation & No-Show Policies</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Set policies for appointment cancellations and fees
+                  </p>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="cancellation_notice">Cancellation Notice Requirement (hours)</Label>
+                    <Input
+                      id="cancellation_notice"
+                      type="number"
+                      min="0"
+                      max="168"
+                      value={scheduleSettings.cancellation_notice_hours}
+                      onChange={(e) => 
+                        setScheduleSettings({ 
+                          ...scheduleSettings, 
+                          cancellation_notice_hours: parseInt(e.target.value) 
+                        })
+                      }
+                      className="w-48"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Hours before appointment to cancel without penalty
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <Label>Enable Late Cancellation Fees</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Charge fee for cancellations within notice period
+                        </p>
+                      </div>
+                      <Switch
+                        checked={scheduleSettings.late_cancellation_fee_enabled}
+                        onCheckedChange={(checked) => 
+                          setScheduleSettings({ ...scheduleSettings, late_cancellation_fee_enabled: checked })
+                        }
+                      />
+                    </div>
+
+                    {scheduleSettings.late_cancellation_fee_enabled && (
+                      <div className="pl-6">
+                        <Label htmlFor="late_cancel_fee">Late Cancellation Fee ($)</Label>
+                        <Input
+                          id="late_cancel_fee"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={scheduleSettings.late_cancellation_fee_amount}
+                          onChange={(e) => 
+                            setScheduleSettings({ 
+                              ...scheduleSettings, 
+                              late_cancellation_fee_amount: parseFloat(e.target.value) 
+                            })
+                          }
+                          className="w-48"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <Label>Enable No-Show Fees</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Charge fee for missed appointments
+                        </p>
+                      </div>
+                      <Switch
+                        checked={scheduleSettings.no_show_fee_enabled}
+                        onCheckedChange={(checked) => 
+                          setScheduleSettings({ ...scheduleSettings, no_show_fee_enabled: checked })
+                        }
+                      />
+                    </div>
+
+                    {scheduleSettings.no_show_fee_enabled && (
+                      <div className="pl-6">
+                        <Label htmlFor="no_show_fee">No-Show Fee ($)</Label>
+                        <Input
+                          id="no_show_fee"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={scheduleSettings.no_show_fee_amount}
+                          onChange={(e) => 
+                            setScheduleSettings({ 
+                              ...scheduleSettings, 
+                              no_show_fee_amount: parseFloat(e.target.value) 
+                            })
+                          }
+                          className="w-48"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+
+              {/* Recurring Appointments & Waitlist */}
+              <Card className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">Advanced Features</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Configure recurring appointments and waitlist options
+                  </p>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <Label>Allow Recurring Appointments</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Enable series/recurring appointment booking
+                        </p>
+                      </div>
+                      <Switch
+                        checked={scheduleSettings.allow_recurring_appointments}
+                        onCheckedChange={(checked) => 
+                          setScheduleSettings({ ...scheduleSettings, allow_recurring_appointments: checked })
+                        }
+                      />
+                    </div>
+
+                    {scheduleSettings.allow_recurring_appointments && (
+                      <div className="pl-6">
+                        <Label htmlFor="max_recurring">Maximum Recurring Instances</Label>
+                        <Input
+                          id="max_recurring"
+                          type="number"
+                          min="1"
+                          max="104"
+                          value={scheduleSettings.max_recurring_instances}
+                          onChange={(e) => 
+                            setScheduleSettings({ 
+                              ...scheduleSettings, 
+                              max_recurring_instances: parseInt(e.target.value) 
+                            })
+                          }
+                          className="w-48"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Maximum number of appointments in a series
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <Label>Enable Appointment Waitlist</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Allow clients to join waitlist for full time slots
+                      </p>
+                    </div>
+                    <Switch
+                      checked={scheduleSettings.enable_waitlist}
+                      onCheckedChange={(checked) => 
+                        setScheduleSettings({ ...scheduleSettings, enable_waitlist: checked })
+                      }
+                    />
+                  </div>
+                </div>
+              </Card>
+
+              {/* Appointment Reminders */}
+              <Card className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">Appointment Reminders</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Configure automatic appointment reminder notifications
+                  </p>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <Label>Send Appointment Reminders</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Automatically send reminders to clients
+                      </p>
+                    </div>
+                    <Switch
+                      checked={scheduleSettings.send_appointment_reminders}
+                      onCheckedChange={(checked) => 
+                        setScheduleSettings({ ...scheduleSettings, send_appointment_reminders: checked })
+                      }
+                    />
+                  </div>
+
+                  {scheduleSettings.send_appointment_reminders && (
+                    <div className="pl-6 space-y-2">
+                      <Label>Reminder Schedule (hours before appointment)</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {[1, 2, 3, 6, 12, 24, 48, 72].map((hours) => (
+                          <Badge
+                            key={hours}
+                            variant={scheduleSettings.reminder_hours_before.includes(hours) ? 'default' : 'outline'}
+                            className="cursor-pointer"
+                            onClick={() => {
+                              const current = scheduleSettings.reminder_hours_before;
+                              const updated = current.includes(hours)
+                                ? current.filter(h => h !== hours)
+                                : [...current, hours].sort((a, b) => b - a);
+                              setScheduleSettings({ ...scheduleSettings, reminder_hours_before: updated });
+                            }}
+                          >
+                            {hours}h
+                          </Badge>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Click to toggle reminder times
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="compliance">
