@@ -78,6 +78,7 @@ export default function Schedule() {
     cancelAppointment,
     cancelRecurringSeries,
     updateRecurringSeries,
+    refreshAppointments,
   } = useAppointments(dateRange.start, dateRange.end, selectedClinician === 'all' ? undefined : selectedClinician);
 
   const { blockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime } = useBlockedTimes(
@@ -464,10 +465,12 @@ export default function Schedule() {
               appointment={selectedAppointment}
               onCancel={async (id, reason, notes, applyFee) => {
                 await cancelAppointment(id, reason, notes, applyFee);
+                await refreshAppointments();
               }}
               isSeries={isEditingSeries}
               onCancelSeries={async (parentId, reason, notes, applyFee) => {
                 await cancelRecurringSeries(parentId, reason, notes, applyFee);
+                await refreshAppointments();
                 setSelectedAppointment(null);
                 setIsEditingSeries(false);
               }}
