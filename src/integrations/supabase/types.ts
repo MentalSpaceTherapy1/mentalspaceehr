@@ -243,7 +243,29 @@ export type Database = {
           updated_by?: string | null
           zip_code?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_case_manager_id_fkey"
+            columns: ["case_manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_primary_therapist_id_fkey"
+            columns: ["primary_therapist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_psychiatrist_id_fkey"
+            columns: ["psychiatrist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       emergency_contacts: {
         Row: {
