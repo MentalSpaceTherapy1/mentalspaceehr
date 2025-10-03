@@ -356,8 +356,8 @@ export default function Schedule() {
                 timeslots={4}
                 defaultView="week"
                 views={['month', 'week', 'day']}
-                min={new Date(0, 0, 0, 7, 0, 0)}
-                max={new Date(0, 0, 0, 21, 0, 0)}
+                min={new Date(0, 0, 0, 0, 0, 0)}
+                max={new Date(0, 0, 0, 23, 59, 59)}
                 style={{ height: '100%' }}
               />
             </div>
