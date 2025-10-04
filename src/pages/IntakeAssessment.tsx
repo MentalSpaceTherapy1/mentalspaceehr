@@ -680,7 +680,7 @@ export default function IntakeAssessment() {
   const validateForm = () => {
     const errors: string[] = [];
 
-    if (!formData.clientId) errors.push('Client must be selected');
+    if (!clientId) errors.push('Client must be selected');
     if (!selectedAppointmentId) errors.push('Appointment must be selected');
     if (!formData.sessionDate) errors.push('Session date is required');
     if (!formData.sessionStartTime) errors.push('Session start time is required');
@@ -690,13 +690,19 @@ export default function IntakeAssessment() {
     if (!formData.clinicianImpression?.trim()) errors.push('Clinician impression is required');
 
     // Check if at least one diagnosis is provided
-    if (!formData.diagnosticFormulation?.primaryDiagnosis?.trim()) {
-      errors.push('Primary diagnosis is required');
+    if (!formData.diagnosticFormulation?.diagnoses || formData.diagnosticFormulation.diagnoses.length === 0) {
+      errors.push('At least one diagnosis is required');
     }
 
-    // Check if treatment recommendations exist
-    if (!formData.treatmentRecommendations?.recommendedServices?.length) {
-      errors.push('Treatment recommendations are required');
+    // Check if treatment recommendations exist (check for actual fields)
+    const hasRecommendations = formData.treatmentRecommendations?.recommendedFrequency || 
+                               formData.treatmentRecommendations?.recommendedModality ||
+                               formData.treatmentRecommendations?.therapeuticApproach?.length > 0;
+    
+    const hasGoals = formData.initialGoals && formData.initialGoals.length > 0;
+    
+    if (!hasRecommendations && !hasGoals) {
+      errors.push('Treatment recommendations or goals are required');
     }
 
     return errors;
