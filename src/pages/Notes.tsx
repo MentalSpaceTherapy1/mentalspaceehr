@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Search, FileText, Brain, Lock, AlertTriangle, ChevronDown } from 'lucide-react';
+import { Plus, Search, FileText, Brain, Lock, AlertTriangle, ChevronDown, Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
@@ -122,6 +122,10 @@ export default function Notes() {
                 <DropdownMenuItem onClick={() => navigate('/intake-assessment')}>
                   <Brain className="h-4 w-4 mr-2" />
                   Intake Assessment
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/treatment-plan')}>
+                  <Target className="h-4 w-4 mr-2" />
+                  Treatment Plan
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
