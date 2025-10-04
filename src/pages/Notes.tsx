@@ -207,7 +207,13 @@ export default function Notes() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => navigate(`/notes/${note.id}`)}
+                          onClick={() => {
+                            if (note.note_type === 'intake_assessment') {
+                              navigate(`/intake-assessment?noteId=${note.id}`);
+                            } else {
+                              navigate(`/notes/${note.id}`);
+                            }
+                          }}
                         >
                           <FileText className="h-4 w-4 mr-1" />
                           View
