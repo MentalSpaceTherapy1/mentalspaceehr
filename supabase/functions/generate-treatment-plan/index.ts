@@ -199,7 +199,40 @@ Return your response in valid JSON format with this exact structure:
                   },
                   psychoeducationTopics: {
                     type: "array",
-                    items: { type: "string" }
+                    items: { type: "string" },
+                    description: "List of psychoeducation topics to cover (e.g., stress management, coping skills, medication education)"
+                  },
+                  medicationPlan: {
+                    type: "object",
+                    properties: {
+                      medicationsRequired: {
+                        type: "boolean",
+                        description: "Whether medications are recommended as part of treatment"
+                      },
+                      prescribingProvider: {
+                        type: "string",
+                        description: "Name or type of prescribing provider if medications recommended"
+                      },
+                      medications: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            medicationName: { type: "string" },
+                            dosage: { type: "string" },
+                            frequency: { type: "string" },
+                            indication: { type: "string" }
+                          },
+                          required: ["medicationName", "indication"]
+                        },
+                        description: "Recommended medications if applicable"
+                      },
+                      monitoringPlan: {
+                        type: "string",
+                        description: "Plan for monitoring medication effectiveness and side effects"
+                      }
+                    },
+                    required: ["medicationsRequired", "medications", "monitoringPlan"]
                   }
                 },
                 required: ["problems", "goals", "treatmentModalities", "dischargeCriteria", "clientStrengths"]

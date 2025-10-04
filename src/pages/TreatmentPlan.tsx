@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Save, ArrowLeft, FileSignature, AlertTriangle, CheckCircle2, Brain, Sparkles, Check, X } from 'lucide-react';
 import { SignatureDialog } from '@/components/intake/SignatureDialog';
+import { SupervisorCosignDialog } from '@/components/intake/SupervisorCosignDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -22,6 +23,10 @@ import { GoalsSection } from '@/components/treatment-plan/GoalsSection';
 import { TreatmentModalitiesSection } from '@/components/treatment-plan/TreatmentModalitiesSection';
 import { StrengthsBarriersSection } from '@/components/treatment-plan/StrengthsBarriersSection';
 import { DischargeSection } from '@/components/treatment-plan/DischargeSection';
+import { MedicationPlanSection } from '@/components/treatment-plan/MedicationPlanSection';
+import { PsychoeducationSection } from '@/components/treatment-plan/PsychoeducationSection';
+import { ProgressReviewSection } from '@/components/treatment-plan/ProgressReviewSection';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export interface TreatmentPlanData {
   planId?: string;
@@ -120,13 +125,22 @@ export interface TreatmentPlanData {
   
   signedDate?: string;
   signedBy?: string;
+  digitalSignature?: string;
   clientAgreement: boolean;
   clientSignatureDate?: string;
+  clientSignature?: string;
   
   requiresSupervisorCosign: boolean;
   supervisorCosigned: boolean;
   supervisorCosignDate?: string;
   supervisorId?: string;
+  supervisorSignature?: string;
+  supervisorComments?: string;
+  
+  versionNumber: number;
+  previousVersionId?: string;
+  lastModified?: string;
+  lastModifiedBy?: string;
 }
 
 export default function TreatmentPlan() {
@@ -141,7 +155,9 @@ export default function TreatmentPlan() {
   const [saving, setSaving] = useState(false);
   const [availableClients, setAvailableClients] = useState<any[]>([]);
   const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
+  const [supervisorCosignDialogOpen, setSupervisorCosignDialogOpen] = useState(false);
   const [clinicianName, setClinicianName] = useState('');
+  const [supervisorName, setSupervisorName] = useState('');
   const [generatingAI, setGeneratingAI] = useState(false);
   const [aiInput, setAiInput] = useState('');
   const [aiSuggestion, setAiSuggestion] = useState<any>(null);
@@ -178,6 +194,7 @@ export default function TreatmentPlan() {
     clientAgreement: false,
     requiresSupervisorCosign: false,
     supervisorCosigned: false,
+    versionNumber: 1,
   });
 
   useEffect(() => {
@@ -342,10 +359,18 @@ export default function TreatmentPlan() {
           signedBy: data.signed_by,
           clientAgreement: Boolean(data.client_agreement),
           clientSignatureDate: data.client_signature_date,
+          clientSignature: data.client_signature,
+          digitalSignature: data.digital_signature,
           requiresSupervisorCosign: Boolean(data.requires_supervisor_cosign),
           supervisorCosigned: Boolean(data.supervisor_cosigned),
           supervisorCosignDate: data.supervisor_cosign_date,
           supervisorId: data.supervisor_id,
+          supervisorSignature: data.supervisor_signature,
+          supervisorComments: data.supervisor_comments || '',
+          versionNumber: data.version_number || 1,
+          previousVersionId: data.previous_version_id,
+          lastModified: data.last_modified,
+          lastModifiedBy: data.last_modified_by,
         });
       }
     } catch (error) {
@@ -472,6 +497,7 @@ export default function TreatmentPlan() {
         .update({
           signed_date: new Date().toISOString(),
           signed_by: user?.id,
+          digital_signature: clinicianName,
           status: 'Active',
         })
         .eq('id', planId);
@@ -483,8 +509,22 @@ export default function TreatmentPlan() {
         description: 'Treatment plan has been signed and activated',
       });
 
-      setFormData(prev => ({ ...prev, status: 'Active' }));
-      navigate(`/clients/${formData.clientId}/chart`);
+      setFormData(prev => ({ 
+        ...prev, 
+        status: 'Active',
+        signedDate: new Date().toISOString(),
+        signedBy: user?.id,
+        digitalSignature: clinicianName,
+      }));
+
+      if (formData.requiresSupervisorCosign && !formData.supervisorCosigned) {
+        toast({
+          title: 'Supervisor Co-sign Required',
+          description: 'This plan requires supervisor co-signature',
+        });
+      } else {
+        navigate(`/clients/${formData.clientId}/chart`);
+      }
     } catch (error) {
       console.error('Error signing treatment plan:', error);
       toast({
@@ -495,6 +535,71 @@ export default function TreatmentPlan() {
     } finally {
       setSaving(false);
       setSignatureDialogOpen(false);
+    }
+  };
+
+  const handleSupervisorCosign = async (comments: string) => {
+    try {
+      setSaving(true);
+
+      if (!planId) {
+        toast({
+          title: 'Error',
+          description: 'Please save the treatment plan before co-signing',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Load supervisor name
+      const { data: supervisorData } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', user?.id)
+        .single();
+
+      const supervisorFullName = supervisorData 
+        ? `${supervisorData.first_name} ${supervisorData.last_name}` 
+        : '';
+
+      const { error } = await supabase
+        .from('treatment_plans')
+        .update({
+          supervisor_cosigned: true,
+          supervisor_cosign_date: new Date().toISOString(),
+          supervisor_id: user?.id,
+          supervisor_signature: supervisorFullName,
+          supervisor_comments: comments,
+        })
+        .eq('id', planId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Treatment Plan Co-signed',
+        description: 'Supervisor co-signature has been added successfully',
+      });
+
+      setFormData(prev => ({ 
+        ...prev, 
+        supervisorCosigned: true,
+        supervisorCosignDate: new Date().toISOString(),
+        supervisorId: user?.id,
+        supervisorSignature: supervisorFullName,
+        supervisorComments: comments,
+      }));
+      
+      navigate(`/clients/${formData.clientId}/chart`);
+    } catch (error) {
+      console.error('Error co-signing treatment plan:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to co-sign treatment plan',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+      setSupervisorCosignDialogOpen(false);
     }
   };
 
@@ -564,6 +669,7 @@ export default function TreatmentPlan() {
         ...(aiSuggestion.treatmentModalities || {}),
       },
       psychoeducationTopics: aiSuggestion.psychoeducationTopics || prev.psychoeducationTopics,
+      medicationPlan: aiSuggestion.medicationPlan || prev.medicationPlan,
       dischargeCriteria: aiSuggestion.dischargeCriteria || prev.dischargeCriteria,
       clientStrengths: aiSuggestion.clientStrengths || prev.clientStrengths,
     }));
@@ -603,6 +709,29 @@ export default function TreatmentPlan() {
             </div>
           </div>
           <div className="flex gap-2">
+            {isSigned && formData.requiresSupervisorCosign && !formData.supervisorCosigned && (
+              <Button 
+                onClick={() => {
+                  // Load supervisor name
+                  supabase
+                    .from('profiles')
+                    .select('first_name, last_name')
+                    .eq('id', user?.id)
+                    .single()
+                    .then(({ data }) => {
+                      if (data) {
+                        setSupervisorName(`${data.first_name} ${data.last_name}`);
+                      }
+                      setSupervisorCosignDialogOpen(true);
+                    });
+                }}
+                disabled={saving || loading}
+                variant="default"
+              >
+                <FileSignature className="h-4 w-4 mr-2" />
+                Supervisor Co-sign
+              </Button>
+            )}
             {!isSigned && (
               <Button 
                 onClick={() => setSignatureDialogOpen(true)} 
@@ -624,7 +753,27 @@ export default function TreatmentPlan() {
           <Alert>
             <CheckCircle2 className="h-4 w-4" />
             <AlertDescription>
-              <strong>Signed & Active:</strong> This treatment plan has been signed. Create a new version to make changes.
+              <div className="flex items-center justify-between">
+                <div>
+                  <strong>Signed & Active:</strong> This treatment plan has been signed. 
+                  {formData.requiresSupervisorCosign && !formData.supervisorCosigned && (
+                    <span className="text-warning ml-2">Awaiting supervisor co-signature.</span>
+                  )}
+                  {formData.supervisorCosigned && (
+                    <span className="text-green-600 ml-2">Supervisor co-signed.</span>
+                  )}
+                </div>
+                <Badge variant="outline">Version {formData.versionNumber}</Badge>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {formData.requiresSupervisorCosign && !formData.supervisorCosigned && isSigned && (
+          <Alert variant="default">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              This treatment plan requires supervisor co-signature before it is fully active.
             </AlertDescription>
           </Alert>
         )}
@@ -662,11 +811,54 @@ export default function TreatmentPlan() {
 
               <div>
                 <Label>Status</Label>
-                <Badge variant={formData.status === 'Active' ? 'default' : 'secondary'}>
-                  {formData.status}
-                </Badge>
+                <div className="flex gap-2 items-center">
+                  <Badge variant={formData.status === 'Active' ? 'default' : 'secondary'}>
+                    {formData.status}
+                  </Badge>
+                  <Badge variant="outline">
+                    Version {formData.versionNumber}
+                  </Badge>
+                </div>
               </div>
             </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="requires-supervisor"
+                checked={formData.requiresSupervisorCosign}
+                onCheckedChange={(checked) => 
+                  setFormData(prev => ({ ...prev, requiresSupervisorCosign: checked as boolean }))
+                }
+                disabled={isSigned}
+              />
+              <Label htmlFor="requires-supervisor" className="cursor-pointer">
+                This plan requires supervisor co-signature
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="client-agreement"
+                checked={formData.clientAgreement}
+                onCheckedChange={(checked) => 
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    clientAgreement: checked as boolean,
+                    clientSignatureDate: checked ? new Date().toISOString() : undefined
+                  }))
+                }
+                disabled={isSigned}
+              />
+              <Label htmlFor="client-agreement" className="cursor-pointer">
+                Client has reviewed and agreed to this treatment plan
+              </Label>
+            </div>
+
+            {formData.clientAgreement && formData.clientSignatureDate && (
+              <p className="text-xs text-muted-foreground">
+                Client agreed on {format(new Date(formData.clientSignatureDate), 'MMM d, yyyy h:mm a')}
+              </p>
+            )}
 
             <div className="grid grid-cols-3 gap-4">
               <div>
@@ -786,13 +978,16 @@ export default function TreatmentPlan() {
         )}
 
         <Tabs defaultValue="diagnoses" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="diagnoses">Diagnoses</TabsTrigger>
             <TabsTrigger value="problems">Problems</TabsTrigger>
             <TabsTrigger value="goals">Goals</TabsTrigger>
             <TabsTrigger value="modalities">Modalities</TabsTrigger>
+            <TabsTrigger value="psychoeducation">Education</TabsTrigger>
+            <TabsTrigger value="medication">Medication</TabsTrigger>
             <TabsTrigger value="strengths">Strengths</TabsTrigger>
             <TabsTrigger value="discharge">Discharge</TabsTrigger>
+            <TabsTrigger value="review">Review</TabsTrigger>
           </TabsList>
 
           <TabsContent value="diagnoses" className="space-y-4">
@@ -843,6 +1038,30 @@ export default function TreatmentPlan() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="psychoeducation" className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <PsychoeducationSection
+                  data={formData}
+                  onChange={setFormData}
+                  disabled={isSigned}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="medication" className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <MedicationPlanSection
+                  data={formData}
+                  onChange={setFormData}
+                  disabled={isSigned}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="strengths" className="space-y-4">
             <Card>
               <CardContent className="pt-6">
@@ -866,6 +1085,18 @@ export default function TreatmentPlan() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="review" className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <ProgressReviewSection
+                  data={formData}
+                  onChange={setFormData}
+                  disabled={isSigned}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
 
         <SignatureDialog
@@ -873,6 +1104,14 @@ export default function TreatmentPlan() {
           onOpenChange={setSignatureDialogOpen}
           onSign={handleSign}
           clinicianName={clinicianName}
+          noteType="Treatment Plan"
+        />
+
+        <SupervisorCosignDialog
+          open={supervisorCosignDialogOpen}
+          onOpenChange={setSupervisorCosignDialogOpen}
+          onCosign={handleSupervisorCosign}
+          supervisorName={supervisorName}
         />
       </div>
     </DashboardLayout>
