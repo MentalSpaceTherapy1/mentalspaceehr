@@ -493,7 +493,7 @@ export function AppointmentDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="max-h-[300px]">
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {serviceCodes.map((code) => (
                         <SelectItem key={code.id} value={code.code}>
                           <div className="flex items-center gap-2">
