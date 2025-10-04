@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { assessRisks } from "./assessRisks.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -133,19 +134,42 @@ ${JSON.stringify(aiPrompts, null, 2)}`;
 
     const generatedContent = JSON.parse(aiResponse.choices[0].message.content);
 
-    // Risk assessment if enabled
+    // Enhanced risk assessment if enabled
     let riskFlags: string[] = [];
+    let riskSeverity = 'none';
+    let riskRationale = '';
+    
     if (aiSettings.risk_assessment_enabled) {
-      riskFlags = await assessRisks(generatedContent, sessionTranscript || freeTextInput || "");
+      const riskAssessment = await assessRisksEnhanced(
+        generatedContent, 
+        sessionTranscript || freeTextInput || "",
+        aiSettings.model
+      );
+      riskFlags = riskAssessment.flags;
+      riskSeverity = riskAssessment.severity;
+      riskRationale = riskAssessment.rationale;
     }
 
     // Calculate confidence score (simplified version)
     const confidenceScore = calculateConfidenceScore(aiResponse);
 
+    // Log AI request for audit trail
+    await supabase.from('ai_request_logs').insert({
+      request_type: 'note_generation',
+      model_used: aiSettings.model,
+      input_length: (sessionTranscript || freeTextInput || "").length,
+      output_length: JSON.stringify(generatedContent).length,
+      processing_time_ms: processingTime,
+      confidence_score: confidenceScore,
+      success: true
+    });
+
     const result = {
       success: true,
       content: generatedContent,
       riskFlags,
+      riskSeverity,
+      riskRationale,
       metadata: {
         ai_generated: true,
         ai_model_used: aiSettings.model,
@@ -185,27 +209,85 @@ function calculateAge(dateOfBirth: string): number {
   return age;
 }
 
-async function assessRisks(content: any, inputText: string): Promise<string[]> {
-  const risks: string[] = [];
-  const fullText = JSON.stringify(content) + " " + inputText;
-  const lowerText = fullText.toLowerCase();
+// Enhanced AI-powered risk assessment with severity scoring
+async function assessRisksEnhanced(content: any, inputText: string, model: string) {
+  const allText = JSON.stringify(content) + ' ' + inputText;
 
-  // Simple keyword-based risk detection
-  const riskPatterns = {
-    suicidal_ideation: ["suicidal", "kill myself", "end my life", "want to die", "not worth living"],
-    homicidal_ideation: ["kill someone", "hurt someone", "homicidal", "violent thoughts towards"],
-    self_harm: ["cut myself", "self-harm", "self harm", "cutting"],
-    substance_abuse: ["drinking heavily", "using drugs", "substance abuse", "addiction"],
-    abuse_disclosure: ["being abused", "abuse at home", "hitting me", "sexual abuse"],
-  };
+  try {
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${lovableApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "system",
+            content: "You are a clinical risk assessment expert. Analyze clinical content for safety risks and assess severity."
+          },
+          {
+            role: "user",
+            content: `Analyze this clinical content for risks:\n\n${allText}\n\nIdentify risks and assess severity level.`
+          }
+        ],
+        tools: [{
+          type: "function",
+          function: {
+            name: "assess_clinical_risks",
+            description: "Assess clinical safety risks and determine severity",
+            parameters: {
+              type: "object",
+              properties: {
+                risks: {
+                  type: "array",
+                  items: {
+                    type: "string",
+                    enum: ["suicidal_ideation", "homicidal_ideation", "self_harm", "abuse_disclosure", "substance_abuse", "psychosis", "manic_symptoms"]
+                  }
+                },
+                severity: {
+                  type: "string",
+                  enum: ["none", "low", "medium", "high", "critical"]
+                },
+                rationale: {
+                  type: "string"
+                }
+              },
+              required: ["risks", "severity", "rationale"],
+              additionalProperties: false
+            }
+          }
+        }],
+        tool_choice: { type: "function", function: { name: "assess_clinical_risks" } }
+      }),
+    });
 
-  for (const [risk, patterns] of Object.entries(riskPatterns)) {
-    if (patterns.some((pattern) => lowerText.includes(pattern))) {
-      risks.push(risk);
+    if (aiResponse.ok) {
+      const result = await aiResponse.json();
+      const toolCall = result.choices?.[0]?.message?.tool_calls?.[0];
+      
+      if (toolCall) {
+        const assessment = JSON.parse(toolCall.function.arguments);
+        return {
+          flags: assessment.risks || [],
+          severity: assessment.severity || 'none',
+          rationale: assessment.rationale || ''
+        };
+      }
     }
+  } catch (error) {
+    console.error("AI risk assessment error:", error);
   }
 
-  return risks;
+  // Fallback to basic assessment
+  const basicRisks = await assessRisks(content, inputText);
+  return {
+    flags: basicRisks,
+    severity: basicRisks.length > 0 ? 'low' : 'none',
+    rationale: 'Basic keyword-based assessment (AI unavailable)'
+  };
 }
 
 function calculateConfidenceScore(aiResponse: any): number {

@@ -2,3 +2,27 @@ project_id = "fpzuxwynuivqdyltpydj"
 
 [functions.transcribe-session]
 verify_jwt = true
+
+[functions.generate-clinical-note]
+verify_jwt = true
+
+[functions.suggest-clinical-content]
+verify_jwt = true
+
+[functions.confirm-appointment]
+verify_jwt = false
+
+[functions.create-user]
+verify_jwt = true
+
+[functions.notify-waitlist-slots]
+verify_jwt = true
+
+[functions.send-appointment-notification]
+verify_jwt = true
+
+[functions.send-appointment-reminder]
+verify_jwt = true
+
+[functions.send-waitlist-email]
+verify_jwt = true
