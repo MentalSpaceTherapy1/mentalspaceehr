@@ -8,10 +8,13 @@ interface SessionControlsProps {
   isVideoEnabled: boolean;
   isScreenSharing: boolean;
   isChatOpen: boolean;
+  isRecording?: boolean;
+  recordingDuration?: number;
   onToggleMute: () => void;
   onToggleVideo: () => void;
   onToggleScreenShare: () => void;
   onToggleChat: () => void;
+  onToggleRecording?: () => void;
   onEndSession: () => void;
 }
 
@@ -20,12 +23,20 @@ export const SessionControls = ({
   isVideoEnabled,
   isScreenSharing,
   isChatOpen,
+  isRecording = false,
+  recordingDuration = 0,
   onToggleMute,
   onToggleVideo,
   onToggleScreenShare,
   onToggleChat,
-  onEndSession
+  onToggleRecording,
+  onEndSession,
 }: SessionControlsProps) => {
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
   return (
     <Card className="p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-t">
       <div className="flex items-center justify-center gap-2">
@@ -70,6 +81,24 @@ export const SessionControls = ({
         >
           <MessageSquare className="h-5 w-5" />
         </Button>
+
+        {onToggleRecording && (
+          <Button
+            onClick={onToggleRecording}
+            variant={isRecording ? "destructive" : "secondary"}
+            size="lg"
+            className="rounded-full h-14 px-4 gap-2 relative"
+          >
+            {isRecording && (
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              </span>
+            )}
+            <Mic className="h-5 w-5" />
+            {isRecording && <span className="text-sm">{formatDuration(recordingDuration)}</span>}
+          </Button>
+        )}
 
         <div className="ml-4 border-l pl-4">
           <Button

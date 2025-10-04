@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useWebRTC } from '@/hooks/useWebRTC';
+import { useAudioRecording } from '@/hooks/useAudioRecording';
 import { supabase } from '@/integrations/supabase/client';
 import { VideoGrid } from '@/components/telehealth/VideoGrid';
 import { SessionControls } from '@/components/telehealth/SessionControls';
@@ -9,6 +10,8 @@ import { ConnectionQualityIndicator } from '@/components/telehealth/ConnectionQu
 import { WaitingRoom } from '@/components/telehealth/WaitingRoom';
 import { ChatSidebar } from '@/components/telehealth/ChatSidebar';
 import { ScreenProtection } from '@/components/telehealth/ScreenProtection';
+import { PostSessionDialog } from '@/components/telehealth/PostSessionDialog';
+import { RecordingConsentDialog } from '@/components/telehealth/RecordingConsentDialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Loader2, AlertCircle, Video as VideoIcon } from 'lucide-react';
@@ -28,6 +31,10 @@ export default function TelehealthSession() {
   const [isHost, setIsHost] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [mediaReady, setMediaReady] = useState(false);
+  const [showConsentDialog, setShowConsentDialog] = useState(false);
+  const [showPostSessionDialog, setShowPostSessionDialog] = useState(false);
+  const [recordingConsent, setRecordingConsent] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
 
   const {
     localStream,
@@ -43,6 +50,14 @@ export default function TelehealthSession() {
     startScreenShare,
     stopScreenShare
   } = useWebRTC(sessionId || '', user?.id || '', isHost ? 'host' : 'client');
+
+  const {
+    isRecording,
+    recordingDuration,
+    startRecording,
+    stopRecording,
+    error: recordingError,
+  } = useAudioRecording();
 
   useEffect(() => {
     if (!user || !sessionId) return;
@@ -196,8 +211,34 @@ export default function TelehealthSession() {
     }
   };
 
+  const handleToggleRecording = async () => {
+    if (!isRecording) {
+      if (!recordingConsent) {
+        setShowConsentDialog(true);
+        return;
+      }
+      await startRecording();
+    } else {
+      const blob = await stopRecording();
+      setAudioBlob(blob);
+    }
+  };
+
+  const handleRecordingConsent = async () => {
+    setRecordingConsent(true);
+    setShowConsentDialog(false);
+    await startRecording();
+  };
+
   const handleEndSession = async () => {
     try {
+      // Stop recording if active
+      let blob = audioBlob;
+      if (isRecording) {
+        blob = await stopRecording();
+        setAudioBlob(blob);
+      }
+
       // Update session
       await supabase
         .from('telehealth_sessions')
@@ -225,7 +266,8 @@ export default function TelehealthSession() {
         description: "Thank you for using telehealth"
       });
 
-      navigate('/schedule');
+      // Show post-session dialog
+      setShowPostSessionDialog(true);
     } catch (err) {
       console.error('Error ending session:', err);
       toast({
@@ -367,11 +409,31 @@ export default function TelehealthSession() {
         isVideoEnabled={isVideoEnabled}
         isScreenSharing={isScreenSharing}
         isChatOpen={isChatOpen}
+        isRecording={isRecording}
+        recordingDuration={recordingDuration}
         onToggleMute={toggleMute}
         onToggleVideo={toggleVideo}
         onToggleScreenShare={handleToggleScreenShare}
         onToggleChat={() => setIsChatOpen(!isChatOpen)}
+        onToggleRecording={handleToggleRecording}
         onEndSession={handleEndSession}
+      />
+
+      <RecordingConsentDialog
+        open={showConsentDialog}
+        onConsent={handleRecordingConsent}
+        onDecline={() => setShowConsentDialog(false)}
+      />
+
+      <PostSessionDialog
+        open={showPostSessionDialog}
+        onOpenChange={setShowPostSessionDialog}
+        sessionId={session?.session_id || ''}
+        hasRecording={!!audioBlob}
+        recordingDuration={recordingDuration}
+        audioBlob={audioBlob}
+        appointmentId={session?.appointment_id}
+        clientId={session?.appointments?.client_id || ''}
       />
     </div>
   );

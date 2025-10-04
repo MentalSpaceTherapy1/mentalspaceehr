@@ -19,7 +19,7 @@ interface GenerateNoteRequest {
   noteFormat: string;
   clientId: string;
   appointmentId?: string;
-  sessionId?: string;
+  sessionId?: string; // Database session ID for fetching transcript
 }
 
 serve(async (req) => {

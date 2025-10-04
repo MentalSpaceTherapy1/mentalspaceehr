@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,9 +17,14 @@ import { useAuth } from '@/hooks/useAuth';
 
 export default function NoteEditor() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  const sessionId = searchParams.get('sessionId');
+  const appointmentIdParam = searchParams.get('appointmentId');
+  const clientIdParam = searchParams.get('clientId');
   
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -27,9 +32,12 @@ export default function NoteEditor() {
   const [note, setNote] = useState<any>(null);
   const [freeTextInput, setFreeTextInput] = useState('');
   const [selectedClient, setSelectedClient] = useState('');
+  const [appointmentId, setAppointmentId] = useState('');
   const [selectedNoteType, setSelectedNoteType] = useState('progress_note');
   const [selectedFormat, setSelectedFormat] = useState('SOAP');
   const [dateOfService, setDateOfService] = useState(new Date().toISOString().split('T')[0]);
+  const [sessionMetadata, setSessionMetadata] = useState<any>(null);
+  const [hasTranscript, setHasTranscript] = useState(false);
   
   const [content, setContent] = useState({
     subjective: '',
@@ -44,10 +52,20 @@ export default function NoteEditor() {
   useEffect(() => {
     loadClients();
     loadAISettings();
+    
     if (id) {
       loadNote();
+    } else if (sessionId) {
+      loadSessionData();
     }
-  }, [id]);
+    
+    if (clientIdParam) {
+      setSelectedClient(clientIdParam);
+    }
+    if (appointmentIdParam) {
+      setAppointmentId(appointmentIdParam);
+    }
+  }, [id, sessionId, clientIdParam, appointmentIdParam]);
 
   const loadClients = async () => {
     const { data } = await supabase
@@ -94,6 +112,86 @@ export default function NoteEditor() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadSessionData = async () => {
+    if (!sessionId) return;
+
+    try {
+      setLoading(true);
+
+      // Load session metadata
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('telehealth_sessions')
+        .select('*, appointments(client_id, appointment_type, duration)')
+        .eq('session_id', sessionId)
+        .single();
+
+      if (sessionError) throw sessionError;
+
+      setSessionMetadata(sessionData);
+      
+      // Check if transcript exists
+      const { data: transcriptData } = await supabase
+        .from('session_transcripts')
+        .select('id')
+        .eq('session_id', sessionData.id)
+        .single();
+
+      if (transcriptData) {
+        setHasTranscript(true);
+        // Auto-generate note from transcript
+        await generateFromSession(sessionData.id);
+      }
+
+    } catch (error) {
+      console.error('Error loading session data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateFromSession = async (sessionDbId: string) => {
+    setGenerating(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-clinical-note', {
+        body: {
+          sessionId: sessionDbId,
+          noteType: selectedNoteType,
+          noteFormat: selectedFormat,
+          clientId: selectedClient,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.noteContent) {
+        setContent(data.noteContent);
+        
+        toast({
+          title: 'Note Generated',
+          description: 'Clinical note generated from session transcript',
+        });
+
+        if (data.riskFlags && data.riskFlags.length > 0) {
+          toast({
+            title: 'Risk Indicators Detected',
+            description: `${data.riskFlags.join(', ')}`,
+            variant: 'destructive',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error generating from session:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate note from session',
+        variant: 'destructive',
+      });
+    } finally {
+      setGenerating(false);
     }
   };
 
