@@ -46,19 +46,39 @@ export function MentalStatusExamSection({ data, onChange, clientId, fullContext 
     return (
       <div className="space-y-3 text-sm">
         {content.appearance && (
-          <div><span className="font-semibold">Appearance:</span> {content.appearance}</div>
+          <div>
+            <span className="font-semibold">Appearance:</span>{' '}
+            {typeof content.appearance === 'string' 
+              ? content.appearance 
+              : JSON.stringify(content.appearance)}
+          </div>
         )}
         {content.behavior && (
-          <div><span className="font-semibold">Behavior:</span> {content.behavior}</div>
+          <div>
+            <span className="font-semibold">Behavior:</span>{' '}
+            {typeof content.behavior === 'string'
+              ? content.behavior
+              : JSON.stringify(content.behavior)}
+          </div>
         )}
-        {content.speech?.rate && (
-          <div><span className="font-semibold">Speech:</span> {content.speech.rate} rate, {content.speech.volume} volume, {content.speech.articulation} articulation</div>
+        {content.speech && (
+          <div>
+            <span className="font-semibold">Speech:</span>{' '}
+            {typeof content.speech === 'string'
+              ? content.speech
+              : `${content.speech.rate || ''} rate, ${content.speech.volume || ''} volume, ${content.speech.articulation || ''} articulation`}
+          </div>
         )}
         {content.mood && (
           <div><span className="font-semibold">Mood:</span> {content.mood}</div>
         )}
-        {content.affect?.type && (
-          <div><span className="font-semibold">Affect:</span> {content.affect.type}, {content.affect.range} range, {content.affect.appropriateness} appropriateness</div>
+        {content.affect && (
+          <div>
+            <span className="font-semibold">Affect:</span>{' '}
+            {typeof content.affect === 'string'
+              ? content.affect
+              : `${content.affect.type || ''}, ${content.affect.range || ''} range, ${content.affect.appropriateness || ''} appropriateness`}
+          </div>
         )}
         {content.thoughtProcess && (
           <div><span className="font-semibold">Thought Process:</span> {content.thoughtProcess}</div>
@@ -69,11 +89,13 @@ export function MentalStatusExamSection({ data, onChange, clientId, fullContext 
         {content.perception && (
           <div><span className="font-semibold">Perception:</span> {content.perception}</div>
         )}
-        {content.cognition?.orientation && (
-          <div><span className="font-semibold">Orientation:</span> {content.cognition.orientation}</div>
-        )}
-        {content.cognition?.memory && (
-          <div><span className="font-semibold">Memory:</span> {content.cognition.memory}</div>
+        {content.cognition && (
+          <div>
+            <span className="font-semibold">Cognition:</span>{' '}
+            {typeof content.cognition === 'string'
+              ? content.cognition
+              : `Orientation: ${content.cognition.orientation || 'N/A'}, Memory: ${content.cognition.memory || 'N/A'}`}
+          </div>
         )}
         {content.insight && (
           <div><span className="font-semibold">Insight:</span> {content.insight}</div>
