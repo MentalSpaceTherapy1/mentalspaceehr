@@ -978,16 +978,12 @@ export default function TreatmentPlan() {
         )}
 
         <Tabs defaultValue="diagnoses" className="w-full">
-          <TabsList className="grid w-full grid-cols-9">
-            <TabsTrigger value="diagnoses">Diagnoses</TabsTrigger>
-            <TabsTrigger value="problems">Problems</TabsTrigger>
-            <TabsTrigger value="goals">Goals</TabsTrigger>
-            <TabsTrigger value="modalities">Modalities</TabsTrigger>
-            <TabsTrigger value="psychoeducation">Education</TabsTrigger>
-            <TabsTrigger value="medication">Medication</TabsTrigger>
-            <TabsTrigger value="strengths">Strengths</TabsTrigger>
-            <TabsTrigger value="discharge">Discharge</TabsTrigger>
-            <TabsTrigger value="review">Review</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="diagnoses">Diagnoses & Problems</TabsTrigger>
+            <TabsTrigger value="goals">Goals & Objectives</TabsTrigger>
+            <TabsTrigger value="treatment">Treatment Approach</TabsTrigger>
+            <TabsTrigger value="strengths">Strengths & Discharge</TabsTrigger>
+            <TabsTrigger value="review">Progress & Review</TabsTrigger>
           </TabsList>
 
           <TabsContent value="diagnoses" className="space-y-4">
@@ -1000,9 +996,6 @@ export default function TreatmentPlan() {
                 />
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="problems" className="space-y-4">
             <Card>
               <CardContent className="pt-6">
                 <ProblemsSection
@@ -1026,7 +1019,7 @@ export default function TreatmentPlan() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="modalities" className="space-y-4">
+          <TabsContent value="treatment" className="space-y-4">
             <Card>
               <CardContent className="pt-6">
                 <TreatmentModalitiesSection
@@ -1036,9 +1029,6 @@ export default function TreatmentPlan() {
                 />
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="psychoeducation" className="space-y-4">
             <Card>
               <CardContent className="pt-6">
                 <PsychoeducationSection
@@ -1048,9 +1038,6 @@ export default function TreatmentPlan() {
                 />
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="medication" className="space-y-4">
             <Card>
               <CardContent className="pt-6">
                 <MedicationPlanSection
@@ -1072,9 +1059,6 @@ export default function TreatmentPlan() {
                 />
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="discharge" className="space-y-4">
             <Card>
               <CardContent className="pt-6">
                 <DischargeSection
