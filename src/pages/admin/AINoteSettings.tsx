@@ -8,9 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Brain, Save, Shield, Sparkles, AlertTriangle } from 'lucide-react';
+import { Brain, Save, Shield, Sparkles, AlertTriangle, Key } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { OpenAIKeyDialog } from '@/components/admin/OpenAIKeyDialog';
 
 interface AISettings {
   id: string;
@@ -36,10 +37,37 @@ export default function AINoteSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<AISettings | null>(null);
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
+  const [apiKeyStatus, setApiKeyStatus] = useState<'checking' | 'set' | 'not_set'>('checking');
 
   useEffect(() => {
     loadSettings();
+    checkOpenAIKey();
   }, []);
+
+  const checkOpenAIKey = async () => {
+    try {
+      setApiKeyStatus('checking');
+      // Check if OpenAI key exists by making a test call
+      const { data, error } = await supabase.functions.invoke('check-openai-key');
+      setApiKeyStatus(data?.hasKey ? 'set' : 'not_set');
+    } catch (error) {
+      setApiKeyStatus('not_set');
+    }
+  };
+
+  const handleProviderChange = (provider: string) => {
+    const newSettings = { ...settings!, provider };
+    
+    // Set default model based on provider
+    if (provider === 'openai') {
+      newSettings.model = 'gpt-5-2025-08-07';
+    } else {
+      newSettings.model = 'google/gemini-2.5-flash';
+    }
+    
+    setSettings(newSettings);
+  };
 
   const loadSettings = async () => {
     try {
@@ -151,15 +179,21 @@ export default function AINoteSettings() {
                   <Label>AI Provider</Label>
                   <Select
                     value={settings.provider}
-                    onValueChange={(provider) => setSettings({ ...settings, provider })}
+                    onValueChange={handleProviderChange}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="lovable_ai">Lovable AI (Recommended)</SelectItem>
+                      <SelectItem value="openai">OpenAI</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {settings.provider === 'lovable_ai' 
+                      ? 'Built-in HIPAA-compliant AI service (Free tier included)'
+                      : 'Requires OpenAI API key and separate billing'}
+                  </p>
                 </div>
 
                 <div>
@@ -172,13 +206,42 @@ export default function AINoteSettings() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="google/gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</SelectItem>
-                      <SelectItem value="google/gemini-2.5-pro">Gemini 2.5 Pro (High Quality)</SelectItem>
-                      <SelectItem value="google/gemini-2.5-flash-lite">Gemini 2.5 Flash Lite (Fast)</SelectItem>
+                      {settings.provider === 'lovable_ai' ? (
+                        <>
+                          <SelectItem value="google/gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</SelectItem>
+                          <SelectItem value="google/gemini-2.5-pro">Gemini 2.5 Pro (High Quality)</SelectItem>
+                          <SelectItem value="google/gemini-2.5-flash-lite">Gemini 2.5 Flash Lite (Fast)</SelectItem>
+                        </>
+                      ) : (
+                        <>
+                          <SelectItem value="gpt-5-2025-08-07">GPT-5 (Latest)</SelectItem>
+                          <SelectItem value="gpt-5-mini-2025-08-07">GPT-5 Mini (Balanced)</SelectItem>
+                          <SelectItem value="gpt-5-nano-2025-08-07">GPT-5 Nano (Fast)</SelectItem>
+                          <SelectItem value="o3-2025-04-16">O3 (Reasoning)</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
+
+              {settings.provider === 'openai' && (
+                <Alert className={apiKeyStatus === 'set' ? 'border-green-500' : 'border-yellow-500'}>
+                  <Key className="h-4 w-4" />
+                  <AlertDescription className="flex items-center justify-between">
+                    <span>
+                      OpenAI API Key: {apiKeyStatus === 'checking' ? 'Checking...' : apiKeyStatus === 'set' ? 'Configured ✓' : 'Not configured'}
+                    </span>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => setShowApiKeyDialog(true)}
+                    >
+                      {apiKeyStatus === 'set' ? 'Update' : 'Add'} API Key
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           )}
         </Card>
@@ -429,6 +492,19 @@ export default function AINoteSettings() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <OpenAIKeyDialog
+          open={showApiKeyDialog}
+          onOpenChange={setShowApiKeyDialog}
+          onKeyAdded={() => {
+            toast({
+              title: 'Next Step: Add Your API Key',
+              description: 'Please add your OpenAI API key using the secrets management tool. Contact your administrator if you need assistance.',
+              duration: 10000
+            });
+            setShowApiKeyDialog(false);
+          }}
+        />
       </div>
     </DashboardLayout>
   );

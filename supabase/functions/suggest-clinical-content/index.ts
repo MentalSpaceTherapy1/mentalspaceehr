@@ -44,6 +44,17 @@ serve(async (req) => {
       );
     }
 
+    // Determine which API to use
+    const useOpenAI = aiSettings.provider === 'openai';
+    const apiKey = useOpenAI ? Deno.env.get("OPENAI_API_KEY") : LOVABLE_API_KEY;
+    const apiUrl = useOpenAI 
+      ? "https://api.openai.com/v1/chat/completions"
+      : "https://ai.gateway.lovable.dev/v1/chat/completions";
+
+    if (!apiKey) {
+      throw new Error(`${useOpenAI ? 'OpenAI' : 'Lovable AI'} API key not configured`);
+    }
+
     // Get client context if provided
     let clientContext = '';
     if (clientId) {
@@ -142,27 +153,28 @@ serve(async (req) => {
       });
     }
 
-    // Call Lovable AI
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // Call AI API
+    const aiResponse = await fetch(apiUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: aiSettings.model || "google/gemini-2.5-flash",
+        model: aiSettings.model || (useOpenAI ? "gpt-5-2025-08-07" : "google/gemini-2.5-flash"),
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
         ],
         tools,
+        ...(useOpenAI ? { max_completion_tokens: 2000 } : {}),
         tool_choice: tools.length === 1 ? { type: "function", function: { name: tools[0].function.name } } : "auto"
       }),
     });
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error("AI API error:", aiResponse.status, errorText);
+      console.error(`${useOpenAI ? 'OpenAI' : 'Lovable AI'} error:`, aiResponse.status, errorText);
       
       // Log the error
       await supabase.from('ai_request_logs').insert({

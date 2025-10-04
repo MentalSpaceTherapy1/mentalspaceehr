@@ -51,6 +51,17 @@ serve(async (req) => {
       throw new Error("AI note generation is not enabled");
     }
 
+    // Determine which API to use based on provider
+    const useOpenAI = aiSettings.provider === 'openai';
+    const apiKey = useOpenAI ? Deno.env.get("OPENAI_API_KEY") : lovableApiKey;
+    const apiUrl = useOpenAI 
+      ? "https://api.openai.com/v1/chat/completions"
+      : "https://ai.gateway.lovable.dev/v1/chat/completions";
+
+    if (!apiKey) {
+      throw new Error(`${useOpenAI ? 'OpenAI' : 'Lovable AI'} API key not configured`);
+    }
+
     // Get client information for context
     const { data: client } = await supabase
       .from("clients")
@@ -105,27 +116,27 @@ ${JSON.stringify(aiPrompts, null, 2)}`;
 
     const startTime = Date.now();
 
-    // Call Lovable AI
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // Call AI API (Lovable AI or OpenAI)
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${lovableApiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: aiSettings.model || "google/gemini-2.5-flash",
+        model: aiSettings.model || (useOpenAI ? "gpt-5-2025-08-07" : "google/gemini-2.5-flash"),
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        temperature: 0.3, // Lower temperature for more consistent clinical language
+        ...(useOpenAI ? { max_completion_tokens: 4000 } : { temperature: 0.3 }),
         response_format: { type: "json_object" },
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Lovable AI error:", response.status, errorText);
+      console.error(`${useOpenAI ? 'OpenAI' : 'Lovable AI'} error:`, response.status, errorText);
       throw new Error(`AI generation failed: ${response.statusText}`);
     }
 
@@ -213,11 +224,23 @@ function calculateAge(dateOfBirth: string): number {
 async function assessRisksEnhanced(content: any, inputText: string, model: string) {
   const allText = JSON.stringify(content) + ' ' + inputText;
 
+  // Get AI settings to determine provider
+  const { data: aiSettings } = await supabase
+    .from("ai_note_settings")
+    .select("provider")
+    .maybeSingle();
+
+  const useOpenAI = aiSettings?.provider === 'openai';
+  const apiKey = useOpenAI ? Deno.env.get("OPENAI_API_KEY") : lovableApiKey;
+  const apiUrl = useOpenAI 
+    ? "https://api.openai.com/v1/chat/completions"
+    : "https://ai.gateway.lovable.dev/v1/chat/completions";
+
   try {
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch(apiUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${lovableApiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -260,6 +283,7 @@ async function assessRisksEnhanced(content: any, inputText: string, model: strin
             }
           }
         }],
+        ...(useOpenAI ? { max_completion_tokens: 500 } : {}),
         tool_choice: { type: "function", function: { name: "assess_clinical_risks" } }
       }),
     });

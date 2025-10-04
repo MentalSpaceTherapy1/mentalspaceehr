@@ -9,6 +9,9 @@ verify_jwt = true
 [functions.suggest-clinical-content]
 verify_jwt = true
 
+[functions.check-openai-key]
+verify_jwt = true
+
 [functions.confirm-appointment]
 verify_jwt = false
 
