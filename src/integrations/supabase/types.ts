@@ -55,6 +55,50 @@ export type Database = {
           },
         ]
       }
+      appointment_notifications: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          notification_type: string
+          recipient_email: string
+          resend_id: string | null
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notification_type: string
+          recipient_email: string
+          resend_id?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notification_type?: string
+          recipient_email?: string
+          resend_id?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_notifications_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_participants: {
         Row: {
           added_by: string | null

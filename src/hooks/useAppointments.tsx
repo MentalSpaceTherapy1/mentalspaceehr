@@ -212,6 +212,18 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
           description: `Created ${series.length} recurring appointments`,
         });
 
+        // Send notification for created appointment
+        try {
+          await supabase.functions.invoke('send-appointment-notification', {
+            body: {
+              appointmentId: parentData.id,
+              notificationType: 'created'
+            }
+          });
+        } catch (notifError) {
+          console.error('Failed to send appointment notification:', notifError);
+        }
+
         return parentData;
       } else {
         // Single appointment
@@ -247,6 +259,18 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
           title: "Success",
           description: "Appointment created successfully"
         });
+
+        // Send notification for created appointment
+        try {
+          await supabase.functions.invoke('send-appointment-notification', {
+            body: {
+              appointmentId: data.id,
+              notificationType: 'created'
+            }
+          });
+        } catch (notifError) {
+          console.error('Failed to send appointment notification:', notifError);
+        }
         
         return data;
       }
@@ -315,6 +339,18 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
         title: "Success",
         description: "Appointment updated successfully"
       });
+
+      // Send notification for updated appointment
+      try {
+        await supabase.functions.invoke('send-appointment-notification', {
+          body: {
+            appointmentId: id,
+            notificationType: 'updated'
+          }
+        });
+      } catch (notifError) {
+        console.error('Failed to send appointment notification:', notifError);
+      }
       
       return data;
     } catch (err) {
@@ -359,7 +395,7 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
   };
 
   const cancelAppointment = async (id: string, reason: string, notes?: string, applyFee?: boolean) => {
-    return updateAppointment(id, {
+    const result = await updateAppointment(id, {
       status: 'Cancelled',
       cancellation_reason: reason,
       cancellation_notes: notes,
@@ -369,6 +405,20 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
       status_updated_date: new Date().toISOString(),
       status_updated_by: user?.id
     });
+
+    // Send notification for cancelled appointment
+    try {
+      await supabase.functions.invoke('send-appointment-notification', {
+        body: {
+          appointmentId: id,
+          notificationType: 'cancelled'
+        }
+      });
+    } catch (notifError) {
+      console.error('Failed to send appointment notification:', notifError);
+    }
+
+    return result;
   };
 
   const cancelRecurringSeries = async (parentId: string, reason: string, notes?: string, applyFee?: boolean) => {
