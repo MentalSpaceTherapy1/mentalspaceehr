@@ -32,7 +32,7 @@ export function SubjectiveSection({ data, onChange, disabled }: SubjectiveSectio
       subjective: {
         ...data.subjective,
         functionalImpairment: {
-          ...data.subjective.functionalImpairment,
+          ...(data.subjective.functionalImpairment || {}),
           [field]: value,
         },
       },
@@ -300,7 +300,7 @@ export function SubjectiveSection({ data, onChange, disabled }: SubjectiveSectio
             <div>
               <Label>Work Impairment</Label>
               <Select
-                value={data.subjective.functionalImpairment.work}
+                value={data.subjective.functionalImpairment?.work || 'None'}
                 onValueChange={(value) => updateFunctionalImpairment('work', value)}
                 disabled={disabled}
               >
@@ -319,7 +319,7 @@ export function SubjectiveSection({ data, onChange, disabled }: SubjectiveSectio
             <div>
               <Label>School Impairment</Label>
               <Select
-                value={data.subjective.functionalImpairment.school}
+                value={data.subjective.functionalImpairment?.school || 'N/A'}
                 onValueChange={(value) => updateFunctionalImpairment('school', value)}
                 disabled={disabled}
               >
@@ -339,7 +339,7 @@ export function SubjectiveSection({ data, onChange, disabled }: SubjectiveSectio
             <div>
               <Label>Relationship Impairment</Label>
               <Select
-                value={data.subjective.functionalImpairment.relationships}
+                value={data.subjective.functionalImpairment?.relationships || 'None'}
                 onValueChange={(value) => updateFunctionalImpairment('relationships', value)}
                 disabled={disabled}
               >
@@ -358,7 +358,7 @@ export function SubjectiveSection({ data, onChange, disabled }: SubjectiveSectio
             <div>
               <Label>Self-Care Impairment</Label>
               <Select
-                value={data.subjective.functionalImpairment.selfCare}
+                value={data.subjective.functionalImpairment?.selfCare || 'None'}
                 onValueChange={(value) => updateFunctionalImpairment('selfCare', value)}
                 disabled={disabled}
               >
@@ -377,7 +377,7 @@ export function SubjectiveSection({ data, onChange, disabled }: SubjectiveSectio
             <div>
               <Label>Social Impairment</Label>
               <Select
-                value={data.subjective.functionalImpairment.social}
+                value={data.subjective.functionalImpairment?.social || 'None'}
                 onValueChange={(value) => updateFunctionalImpairment('social', value)}
                 disabled={disabled}
               >
