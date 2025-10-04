@@ -96,13 +96,14 @@ export default function TelehealthSession() {
         const hostAppointment = (appts || []).find((a: any) => a.clinician_id === user?.id);
         if (hostAppointment && user?.id) {
           const canonicalId = withPrefix; // enforce canonical prefix
-          console.log('[Telehealth] Bootstrapping session with id:', canonicalId);
+          console.log('[Telehealth] Bootstrapping session with id:', canonicalId, 'for appointment:', hostAppointment.id);
 
           const { data: created, error: insertErr } = await supabase
             .from('telehealth_sessions')
             .insert({
               session_id: canonicalId,
               host_id: user.id,
+              appointment_id: hostAppointment.id,
               status: 'waiting'
             })
             .select('*')
