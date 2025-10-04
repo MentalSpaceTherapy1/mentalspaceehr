@@ -1159,7 +1159,7 @@ export default function IntakeAssessment() {
                   <CardContent>
                     <SessionInformationSection
                       data={formData}
-                      onChange={(data) => updateFormData('session', data)}
+                      onChange={(data) => { setFormData(data); setHasUnsavedChanges(true); }}
                       cptCode={formData.cptCode}
                       onCptCodeChange={(e) => {
                         setFormData(prev => ({ ...prev, cptCode: e.target.value }));
@@ -1174,7 +1174,7 @@ export default function IntakeAssessment() {
               <TabsContent value="presenting" className="space-y-4">
                 <PresentingProblemSection
                   data={formData}
-                  onChange={(data) => updateFormData('presenting', data)}
+                  onChange={(data) => { setFormData(data); setHasUnsavedChanges(true); }}
                   clientId={formData.clientId}
                   fullContext={buildFullContext()}
                   disabled={metadata.signedDate !== null}
