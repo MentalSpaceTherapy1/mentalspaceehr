@@ -25,6 +25,8 @@ import ClientEdit from "./pages/ClientEdit";
 import Schedule from "./pages/Schedule";
 import Waitlist from "./pages/Waitlist";
 import TelehealthSession from "./pages/TelehealthSession";
+import ConfirmAppointment from "./pages/ConfirmAppointment";
+import ReminderSettings from "./pages/admin/ReminderSettings";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -170,6 +172,18 @@ const App = () => (
                 <ProtectedRoute>
                   <TelehealthSession />
                 </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/confirm-appointment/:token" 
+              element={<ConfirmAppointment />} 
+            />
+            <Route 
+              path="/admin/reminder-settings" 
+              element={
+                <AdminRoute>
+                  <ReminderSettings />
+                </AdminRoute>
               } 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

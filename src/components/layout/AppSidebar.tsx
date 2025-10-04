@@ -12,7 +12,8 @@ import {
   MapPin,
   Clock,
   LogOut,
-  CheckSquare
+  CheckSquare,
+  Bell
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
@@ -57,6 +58,7 @@ export function AppSidebar() {
     { title: 'User Management', url: '/admin/users', icon: UserCog, color: 'from-secondary to-accent' },
     { title: 'Practice Settings', url: '/admin/practice-settings', icon: Building2, color: 'from-primary to-success' },
     { title: 'Locations', url: '/admin/locations', icon: MapPin, color: 'from-accent to-secondary' },
+    { title: 'Reminder Settings', url: '/admin/reminder-settings', icon: Bell, color: 'from-blue-400 to-purple-400' },
   ];
 
   const settingsItems = [
