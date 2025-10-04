@@ -4,15 +4,16 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, AlertTriangle, FileSignature, Clock, Sparkles } from 'lucide-react';
+import { Save, ArrowLeft, AlertTriangle, FileSignature, Clock, Sparkles, User, Loader2 } from 'lucide-react';
 import { SessionInformationSection } from '@/components/intake/SessionInformationSection';
 import { PresentingProblemSection } from '@/components/intake/PresentingProblemSection';
 import { CurrentSymptomsSection } from '@/components/intake/CurrentSymptomsSection';
@@ -33,6 +34,7 @@ export interface IntakeAssessmentData {
   sessionStartTime: string;
   sessionEndTime: string;
   sessionLocation: string;
+  cptCode?: string;
   chiefComplaint: string;
   historyOfPresentingProblem: string;
   symptomOnset?: string;
@@ -73,6 +75,8 @@ export default function IntakeAssessment() {
   const [supervisorDialogOpen, setSupervisorDialogOpen] = useState(false);
   const [documentationTime, setDocumentationTime] = useState(0);
   const [supervisors, setSupervisors] = useState<any[]>([]);
+  const [clientData, setClientData] = useState<any>(null);
+  const [generatingAI, setGeneratingAI] = useState(false);
   const timeTracker = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   
@@ -115,6 +119,9 @@ export default function IntakeAssessment() {
   });
 
   useEffect(() => {
+    if (clientId) {
+      loadClientData();
+    }
     if (noteId) {
       loadExistingNote();
     }
@@ -148,6 +155,28 @@ export default function IntakeAssessment() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [noteId]);
+
+  const loadClientData = async () => {
+    if (!clientId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('id', clientId)
+        .single();
+
+      if (error) throw error;
+      setClientData(data);
+    } catch (error) {
+      console.error('Error loading client:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load client information',
+        variant: 'destructive'
+      });
+    }
+  };
 
   const loadSupervisors = async () => {
     try {
@@ -214,6 +243,57 @@ export default function IntakeAssessment() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAIGenerate = async () => {
+    if (!clientId) {
+      toast({
+        title: 'Error',
+        description: 'No client selected',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      setGeneratingAI(true);
+      const { data, error } = await supabase.functions.invoke('generate-intake-note', {
+        body: { 
+          clientId,
+          existingData: {
+            chiefComplaint: formData.chiefComplaint,
+            historyOfPresentingProblem: formData.historyOfPresentingProblem
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.suggestions) {
+        toast({
+          title: 'AI Suggestions Generated',
+          description: 'Review the AI-generated suggestions and incorporate them as needed.',
+        });
+        
+        // Mark as AI assisted
+        setMetadata(prev => ({ ...prev, wasAIAssisted: true }));
+        
+        // Show suggestions in a dialog or alert
+        toast({
+          title: 'AI Clinical Suggestions',
+          description: data.suggestions.substring(0, 200) + '...',
+        });
+      }
+    } catch (error: any) {
+      console.error('Error generating AI content:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to generate AI suggestions',
+        variant: 'destructive'
+      });
+    } finally {
+      setGeneratingAI(false);
     }
   };
 
@@ -298,8 +378,10 @@ export default function IntakeAssessment() {
         note_format: 'SOAP' as any,
         date_of_service: formData.sessionDate,
         session_duration_minutes: calculateDuration(),
+        cpt_codes: formData.cptCode ? [formData.cptCode] : [],
         locked: status === 'Signed',
         content: {
+          cptCode: formData.cptCode,
           sessionStartTime: formData.sessionStartTime,
           sessionEndTime: formData.sessionEndTime,
           sessionLocation: formData.sessionLocation,
@@ -421,6 +503,23 @@ export default function IntakeAssessment() {
             )}
             <Button
               variant="outline"
+              onClick={handleAIGenerate}
+              disabled={generatingAI || !clientId || metadata.signedDate !== null}
+            >
+              {generatingAI ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  AI Assist
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => saveIntakeAssessment('Draft')}
               disabled={saving || metadata.signedDate !== null}
             >
@@ -436,6 +535,58 @@ export default function IntakeAssessment() {
             </Button>
           </div>
         </div>
+
+        {/* Client Demographics Header */}
+        {clientData && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                <CardTitle>Client Information</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Name</Label>
+                  <p className="font-medium">{clientData.first_name} {clientData.last_name}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">MRN</Label>
+                  <p className="font-medium">{clientData.medical_record_number}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Date of Birth</Label>
+                  <p className="font-medium">{new Date(clientData.date_of_birth).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Age</Label>
+                  <p className="font-medium">
+                    {new Date().getFullYear() - new Date(clientData.date_of_birth).getFullYear()} years
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Gender</Label>
+                  <p className="font-medium">{clientData.gender || 'Not specified'}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Phone</Label>
+                  <p className="font-medium">{clientData.primary_phone}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Email</Label>
+                  <p className="font-medium">{clientData.email || 'Not provided'}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Status</Label>
+                  <Badge variant={clientData.status === 'Active' ? 'default' : 'secondary'}>
+                    {clientData.status}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {metadata.signedDate && (
           <Alert>
@@ -544,6 +695,33 @@ export default function IntakeAssessment() {
               </TabsList>
 
               <TabsContent value="session" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>CPT Code</CardTitle>
+                    <CardDescription>Billing code for this intake session</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="cptCode">CPT Code</Label>
+                        <Input
+                          id="cptCode"
+                          value={formData.cptCode || ''}
+                          onChange={(e) => {
+                            setFormData(prev => ({ ...prev, cptCode: e.target.value }));
+                            setHasUnsavedChanges(true);
+                          }}
+                          placeholder="e.g., 90791 (Psychiatric Diagnostic Evaluation)"
+                          disabled={metadata.signedDate !== null}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Common codes: 90791 (Intake without medical services), 90792 (Intake with medical services)
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
                 <SessionInformationSection
                   data={formData}
                   onChange={(data) => updateFormData('session', data)}

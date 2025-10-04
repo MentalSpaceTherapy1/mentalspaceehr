@@ -6,6 +6,9 @@ verify_jwt = true
 [functions.generate-clinical-note]
 verify_jwt = true
 
+[functions.generate-intake-note]
+verify_jwt = true
+
 [functions.suggest-clinical-content]
 verify_jwt = true
 
