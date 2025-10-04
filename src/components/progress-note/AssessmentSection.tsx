@@ -25,7 +25,7 @@ export function AssessmentSection({ data, onChange, disabled, clientGoals = [] }
       assessment: {
         ...data.assessment,
         progressTowardGoals: {
-          ...data.assessment.progressTowardGoals,
+          ...(data.assessment.progressTowardGoals || {}),
           [field]: value,
         },
       },
@@ -43,7 +43,7 @@ export function AssessmentSection({ data, onChange, disabled, clientGoals = [] }
   };
 
   const addGoalProgress = () => {
-    const goalProgress = data.assessment.progressTowardGoals.goalProgress || [];
+    const goalProgress = data.assessment.progressTowardGoals?.goalProgress || [];
     updateProgressTowardGoals('goalProgress', [
       ...goalProgress,
       {
@@ -56,7 +56,7 @@ export function AssessmentSection({ data, onChange, disabled, clientGoals = [] }
   };
 
   const updateGoalProgress = (index: number, field: string, value: any) => {
-    const goalProgress = [...data.assessment.progressTowardGoals.goalProgress];
+    const goalProgress = [...(data.assessment.progressTowardGoals?.goalProgress || [])];
     goalProgress[index] = {
       ...goalProgress[index],
       [field]: value,
@@ -65,7 +65,7 @@ export function AssessmentSection({ data, onChange, disabled, clientGoals = [] }
   };
 
   const removeGoalProgress = (index: number) => {
-    const goalProgress = data.assessment.progressTowardGoals.goalProgress.filter(
+    const goalProgress = (data.assessment.progressTowardGoals?.goalProgress || []).filter(
       (_: any, i: number) => i !== index
     );
     updateProgressTowardGoals('goalProgress', goalProgress);
@@ -80,7 +80,7 @@ export function AssessmentSection({ data, onChange, disabled, clientGoals = [] }
   };
 
   const removeDiagnosis = (index: number) => {
-    const currentDiagnoses = data.assessment.currentDiagnoses.filter(
+    const currentDiagnoses = (data.assessment.currentDiagnoses || []).filter(
       (_: any, i: number) => i !== index
     );
     updateAssessment('currentDiagnoses', currentDiagnoses);
@@ -96,7 +96,7 @@ export function AssessmentSection({ data, onChange, disabled, clientGoals = [] }
           <div>
             <Label>Overall Progress</Label>
             <Select
-              value={data.assessment.progressTowardGoals.overallProgress}
+              value={data.assessment.progressTowardGoals?.overallProgress || 'Fair'}
               onValueChange={(value) => updateProgressTowardGoals('overallProgress', value)}
               disabled={disabled}
             >
@@ -129,7 +129,7 @@ export function AssessmentSection({ data, onChange, disabled, clientGoals = [] }
               </Button>
             </div>
 
-            {data.assessment.progressTowardGoals.goalProgress?.map((goal: any, index: number) => (
+            {data.assessment.progressTowardGoals?.goalProgress?.map((goal: any, index: number) => (
               <Card key={index} className="relative">
                 <CardContent className="pt-6 space-y-3">
                   {!disabled && (
@@ -261,7 +261,7 @@ export function AssessmentSection({ data, onChange, disabled, clientGoals = [] }
           <div>
             <Label>Clinical Impression *</Label>
             <Textarea
-              value={data.assessment.clinicalImpression}
+              value={data.assessment.clinicalImpression || ''}
               onChange={(e) => updateAssessment('clinicalImpression', e.target.value)}
               placeholder="Synthesize subjective and objective data. Clinical formulation of client's current status..."
               rows={6}
@@ -272,7 +272,7 @@ export function AssessmentSection({ data, onChange, disabled, clientGoals = [] }
           <div>
             <Label>Medical Necessity *</Label>
             <Textarea
-              value={data.assessment.medicalNecessity}
+              value={data.assessment.medicalNecessity || ''}
               onChange={(e) => updateAssessment('medicalNecessity', e.target.value)}
               placeholder="Justification for continued treatment. How does this treatment address the client's needs?"
               rows={4}
@@ -283,7 +283,7 @@ export function AssessmentSection({ data, onChange, disabled, clientGoals = [] }
           <div className="flex items-center space-x-2">
             <Checkbox
               id="treatment-plan-changes"
-              checked={data.assessment.changesToTreatmentPlan}
+              checked={data.assessment.changesToTreatmentPlan || false}
               onCheckedChange={(checked) => updateAssessment('changesToTreatmentPlan', checked)}
               disabled={disabled}
             />
