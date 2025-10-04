@@ -44,48 +44,9 @@ Client Information:
 - DOB: ${client.date_of_birth}
 `;
 
-    const systemPrompt = `You are an expert clinical psychologist helping to draft a comprehensive intake assessment. Generate detailed, professional clinical content based on the provided information.
+    const systemPrompt = `You are an expert clinical psychologist specializing in comprehensive psychiatric intake assessments. Generate detailed, professional clinical content following DSM-5-TR criteria and best practices in mental health documentation.
 
-Your response MUST be valid JSON with the following structure:
-{
-  "chiefComplaint": "string",
-  "historyOfPresentingProblem": "string", 
-  "currentSymptoms": {},
-  "mentalStatusExam": {
-    "appearance": "string",
-    "behavior": "string",
-    "speech": "string",
-    "mood": "string",
-    "affect": "string",
-    "thoughtProcess": "string",
-    "thoughtContent": "string",
-    "perceptions": "string",
-    "cognition": "string",
-    "insight": "string",
-    "judgment": "string"
-  },
-  "safetyAssessment": {
-    "suicidalIdeation": "string",
-    "homicidalIdeation": "string",
-    "selfHarmBehaviors": "string",
-    "riskLevel": "Low/Medium/High",
-    "protectiveFactors": "string"
-  },
-  "diagnosticFormulation": {
-    "preliminaryDiagnoses": "string",
-    "differentialDiagnoses": "string",
-    "diagnosticRationale": "string"
-  },
-  "treatmentRecommendations": {
-    "recommendedTreatmentModality": "string",
-    "frequency": "string",
-    "goals": "string",
-    "interventions": "string"
-  },
-  "clinicianImpression": "string"
-}
-
-Use clinical language appropriate for mental health documentation.`;
+Use clinical terminology, evidence-based observations, and realistic details appropriate for a thorough intake evaluation.`;
 
     const userPrompt = `Based on the following information, generate a complete intake assessment:\n\n${clientContext}\n\nClinician's Notes:\n${freeTextInput}\n\nGenerate comprehensive clinical content for all sections of the intake assessment. Return ONLY valid JSON, no other text.`;
 
@@ -93,6 +54,349 @@ Use clinical language appropriate for mental health documentation.`;
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
     }
+
+    // Define comprehensive tool schema for structured output
+    const tools = [{
+      type: "function",
+      function: {
+        name: "generate_intake_assessment",
+        description: "Generate a complete psychiatric intake assessment with all clinical sections",
+        parameters: {
+          type: "object",
+          properties: {
+            chiefComplaint: { type: "string", description: "Primary reason for seeking treatment" },
+            historyOfPresentingProblem: { type: "string", description: "Detailed narrative of presenting concerns" },
+            currentSymptoms: {
+              type: "object",
+              description: "Current symptom inventory with severity ratings",
+              properties: {
+                depression: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                anxiety: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                irritability: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                hopelessness: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                worthlessness: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                guilt: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                anhedonia: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                fatigue: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                sleepDisturbance: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                appetiteChanges: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                concentrationDifficulty: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                psychomotorChanges: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                panicAttacks: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                worryRumination: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                socialAnxiety: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                avoidanceBehavior: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                flashbacks: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                nightmares: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                hypervigilance: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                emotionalNumbing: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                moodSwings: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                impulsivity: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                agitation: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                paranoia: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                dissociation: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                hallucinationsAuditory: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                hallucinationsVisual: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                delusionalThinking: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                disorganizedThinking: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                obsessions: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                compulsions: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                attentionDifficulty: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+                hyperactivity: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } }
+              }
+            },
+            mentalStatusExam: {
+              type: "object",
+              properties: {
+                appearance: { type: "string" },
+                behavior: { type: "string" },
+                speech: { type: "string" },
+                mood: { type: "string" },
+                affect: { type: "string" },
+                thoughtProcess: { type: "string" },
+                thoughtContent: { type: "string" },
+                perceptions: { type: "string" },
+                cognition: { type: "string" },
+                insight: { type: "string" },
+                judgment: { type: "string" }
+              },
+              required: ["appearance", "behavior", "speech", "mood", "affect", "thoughtProcess", "thoughtContent", "perceptions", "cognition", "insight", "judgment"]
+            },
+            safetyAssessment: {
+              type: "object",
+              properties: {
+                suicide: {
+                  type: "object",
+                  properties: {
+                    currentIdeation: { type: "boolean" },
+                    frequency: { type: "string" },
+                    intensity: { type: "string" },
+                    plan: { type: "boolean" },
+                    planDetails: { type: "string" },
+                    intent: { type: "boolean" },
+                    means: { type: "boolean" },
+                    meansDetails: { type: "string" },
+                    pastAttempts: { type: "boolean" },
+                    attemptDetails: { type: "string" },
+                    protectiveFactors: { type: "string" },
+                    riskLevel: { type: "string", enum: ["Low", "Medium", "High"] }
+                  }
+                },
+                homicide: {
+                  type: "object",
+                  properties: {
+                    currentIdeation: { type: "boolean" },
+                    targetIdentified: { type: "boolean" },
+                    plan: { type: "boolean" },
+                    intent: { type: "boolean" },
+                    means: { type: "boolean" },
+                    riskLevel: { type: "string", enum: ["Low", "Medium", "High"] }
+                  }
+                },
+                selfHarm: {
+                  type: "object",
+                  properties: {
+                    currentBehaviors: { type: "boolean" },
+                    frequency: { type: "string" },
+                    methods: { type: "string" },
+                    functions: { type: "string" },
+                    riskLevel: { type: "string", enum: ["Low", "Medium", "High"] }
+                  }
+                }
+              }
+            },
+            developmentalHistory: {
+              type: "object",
+              properties: {
+                prenatal: {
+                  type: "object",
+                  properties: {
+                    plannedPregnancy: { type: "boolean" },
+                    maternalAge: { type: "number" },
+                    complications: { type: "string" },
+                    substanceUse: { type: "string" }
+                  }
+                },
+                birth: {
+                  type: "object",
+                  properties: {
+                    deliveryType: { type: "string" },
+                    birthWeight: { type: "string" },
+                    apgarScores: { type: "string" },
+                    complications: { type: "string" },
+                    neonatalComplications: { type: "string" }
+                  }
+                },
+                earlyDevelopment: {
+                  type: "object",
+                  properties: {
+                    milestoneDelays: { type: "boolean" },
+                    delayDetails: { type: "string" },
+                    earlyInterventions: { type: "string" }
+                  }
+                }
+              }
+            },
+            familyHistory: {
+              type: "object",
+              properties: {
+                mentalHealthHistory: {
+                  type: "object",
+                  properties: {
+                    hasFamilyHistory: { type: "boolean" },
+                    relatives: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          relationship: { type: "string" },
+                          conditions: { type: "array", items: { type: "string" } },
+                          treatmentHistory: { type: "string" },
+                          hospitalizations: { type: "boolean" },
+                          completedSuicide: { type: "boolean" },
+                          substanceAbuse: { type: "boolean" }
+                        }
+                      }
+                    }
+                  }
+                },
+                medicalHistory: {
+                  type: "object",
+                  properties: {
+                    significantConditions: { type: "string" }
+                  }
+                },
+                familyDynamics: { type: "string" },
+                childhoodEnvironment: { type: "string" },
+                traumaHistory: { type: "boolean" },
+                traumaDetails: { type: "string" }
+              }
+            },
+            medicalHistory: {
+              type: "object",
+              properties: {
+                currentMedicalConditions: { type: "array", items: { type: "string" } },
+                pastMedicalConditions: { type: "array", items: { type: "string" } },
+                surgeries: { type: "array", items: { type: "string" } },
+                allergies: {
+                  type: "object",
+                  properties: {
+                    medications: { type: "array", items: { type: "string" } },
+                    environmental: { type: "array", items: { type: "string" } },
+                    food: { type: "array", items: { type: "string" } }
+                  }
+                },
+                currentMedications: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string" },
+                      dosage: { type: "string" },
+                      frequency: { type: "string" },
+                      prescribedFor: { type: "string" },
+                      prescriber: { type: "string" }
+                    }
+                  }
+                },
+                lastPhysicalExam: { type: "string" },
+                primaryCarePhysician: { type: "string" }
+              }
+            },
+            substanceUseHistory: {
+              type: "object",
+              properties: {
+                alcohol: {
+                  type: "object",
+                  properties: {
+                    current: { type: "boolean" },
+                    frequency: { type: "string" },
+                    amount: { type: "string" },
+                    ageOfFirstUse: { type: "number" },
+                    problemsRelated: { type: "boolean" },
+                    problemDetails: { type: "string" }
+                  }
+                },
+                tobacco: {
+                  type: "object",
+                  properties: {
+                    current: { type: "boolean" },
+                    type: { type: "string" },
+                    packsPerDay: { type: "string" },
+                    yearsOfUse: { type: "number" }
+                  }
+                },
+                cannabis: {
+                  type: "object",
+                  properties: {
+                    current: { type: "boolean" },
+                    frequency: { type: "string" },
+                    ageOfFirstUse: { type: "number" }
+                  }
+                },
+                otherSubstances: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      substance: { type: "string" },
+                      current: { type: "boolean" },
+                      frequency: { type: "string" },
+                      ageOfFirstUse: { type: "number" },
+                      lastUse: { type: "string" },
+                      routeOfAdministration: { type: "string" }
+                    }
+                  }
+                },
+                previousTreatment: { type: "boolean" },
+                treatmentHistory: { type: "string" }
+              }
+            },
+            socialHistory: {
+              type: "object",
+              properties: {
+                currentLivingSituation: { type: "string" },
+                maritalStatus: { type: "string" },
+                children: { type: "boolean" },
+                childrenDetails: { type: "string" },
+                educationLevel: { type: "string" },
+                employmentStatus: { type: "string" },
+                occupationHistory: { type: "string" },
+                financialStressors: { type: "boolean" },
+                financialDetails: { type: "string" },
+                legalHistory: { type: "boolean" },
+                legalDetails: { type: "string" },
+                supportSystem: { type: "string" },
+                religiousSpirituality: { type: "string" },
+                hobbiesInterests: { type: "string" }
+              }
+            },
+            culturalHistory: {
+              type: "object",
+              properties: {
+                culturalIdentity: { type: "string" },
+                immigrationHistory: { type: "string" },
+                languagePreferences: { type: "string" },
+                culturalBeliefs: { type: "string" },
+                discriminationExperiences: { type: "string" }
+              }
+            },
+            diagnosticFormulation: {
+              type: "object",
+              properties: {
+                clinicianImpression: { type: "string" },
+                diagnoses: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      code: { type: "string", description: "ICD-10 code" },
+                      description: { type: "string" },
+                      type: { type: "string", enum: ["Primary", "Secondary"] },
+                      specifiers: { type: "string" }
+                    },
+                    required: ["code", "description", "type"]
+                  }
+                },
+                differentialDiagnoses: { type: "string" },
+                diagnosticRationale: { type: "string" },
+                strengthsAndResources: { type: "array", items: { type: "string" } }
+              }
+            },
+            treatmentRecommendations: {
+              type: "object",
+              properties: {
+                recommendedFrequency: { type: "string" },
+                recommendedModality: { type: "string" },
+                therapeuticApproach: { type: "string" },
+                medicationRecommendation: {
+                  type: "object",
+                  properties: {
+                    recommended: { type: "boolean" },
+                    referralMade: { type: "boolean" },
+                    referralTo: { type: "string" }
+                  }
+                },
+                additionalRecommendations: { type: "string" }
+              }
+            },
+            initialGoals: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  goalDescription: { type: "string" },
+                  targetDate: { type: "string" },
+                  measurableOutcome: { type: "string" }
+                },
+                required: ["goalDescription", "measurableOutcome"]
+              }
+            }
+          },
+          required: ["chiefComplaint", "historyOfPresentingProblem", "currentSymptoms", "mentalStatusExam", "safetyAssessment", "diagnosticFormulation", "treatmentRecommendations", "initialGoals"]
+        }
+      }
+    }];
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -106,6 +410,8 @@ Use clinical language appropriate for mental health documentation.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
+        tools: tools,
+        tool_choice: { type: "function", function: { name: "generate_intake_assessment" } }
       }),
     });
 
@@ -128,20 +434,26 @@ Use clinical language appropriate for mental health documentation.`;
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
     
-    // Parse JSON response
+    // Extract content from tool call response
     let content;
     try {
-      // Try to extract JSON from response
-      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        content = JSON.parse(jsonMatch[0]);
+      const toolCall = data.choices[0].message.tool_calls?.[0];
+      if (toolCall?.function?.arguments) {
+        // Parse the function arguments which contains our structured data
+        content = JSON.parse(toolCall.function.arguments);
       } else {
-        content = JSON.parse(aiResponse);
+        // Fallback to old format if tool calling didn't work
+        const aiResponse = data.choices[0].message.content;
+        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          content = JSON.parse(jsonMatch[0]);
+        } else {
+          content = JSON.parse(aiResponse);
+        }
       }
     } catch (parseError) {
-      console.error('Failed to parse AI response as JSON:', parseError);
+      console.error('Failed to parse AI response:', parseError);
       throw new Error('AI returned invalid format. Please try again.');
     }
 
