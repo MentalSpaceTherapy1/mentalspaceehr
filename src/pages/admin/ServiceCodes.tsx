@@ -184,7 +184,7 @@ export default function ServiceCodes() {
                         <TableCell className="font-medium">{code.service_type}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <code className="text-foreground font-mono font-semibold">{code.code}</code>
+                            <code className="text-green-700 dark:text-green-400 font-mono font-semibold">{code.code}</code>
                             {code.is_addon && (
                               <Badge variant="outline" className="text-xs">
                                 Add-on
