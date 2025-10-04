@@ -136,7 +136,7 @@ export function AppointmentDialog({
       clinician_id: defaultClinicianId || '',
       duration: 50,
       service_location: 'Office',
-      appointment_type: 'Individual Therapy',
+      appointment_type: 'Therapy Session',
       is_recurring: false,
       telehealth_platform: 'Internal',
       icd_codes: [],
@@ -397,17 +397,15 @@ export function AppointmentDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Initial Evaluation">Initial Evaluation</SelectItem>
-                        <SelectItem value="Individual Therapy">Individual Therapy</SelectItem>
-                        <SelectItem value="Couples Therapy">Couples Therapy</SelectItem>
-                        <SelectItem value="Family Therapy">Family Therapy</SelectItem>
+                        <SelectItem value="Therapy Intake">Therapy Intake</SelectItem>
+                        <SelectItem value="Therapy Session">Therapy Session</SelectItem>
                         <SelectItem value="Group Therapy">Group Therapy</SelectItem>
-                        <SelectItem value="Medication Management">Medication Management</SelectItem>
-                        <SelectItem value="Testing">Testing</SelectItem>
+                        <SelectItem value="Psychological Evaluation">Psychological Evaluation</SelectItem>
                         <SelectItem value="Consultation">Consultation</SelectItem>
-                        <SelectItem value="Crisis">Crisis</SelectItem>
-                        <SelectItem value="Telehealth">Telehealth</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
+                        <SelectItem value="Family Therapy">Family Therapy</SelectItem>
+                        <SelectItem value="Couples Therapy">Couples Therapy</SelectItem>
+                        <SelectItem value="Psychiatric Evaluation">Psychiatric Evaluation</SelectItem>
+                        <SelectItem value="Medication Management">Medication Management</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
