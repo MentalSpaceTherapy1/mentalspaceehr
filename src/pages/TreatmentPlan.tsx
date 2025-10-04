@@ -206,7 +206,85 @@ export default function TreatmentPlan() {
     } else if (clientIdParam) {
       loadClientIntakeData();
     }
+    
+    // Listen for client selection changes to reload intake data
+    const handleLoadIntakeData = (e: CustomEvent) => {
+      if (e.detail.clientId && !planId) {
+        // Update clientIdParam reference and reload
+        const newClientId = e.detail.clientId;
+        setTimeout(() => {
+          loadClientIntakeDataForClient(newClientId);
+        }, 200);
+      }
+    };
+    
+    window.addEventListener('load-intake-data', handleLoadIntakeData as EventListener);
+    
+    return () => {
+      window.removeEventListener('load-intake-data', handleLoadIntakeData as EventListener);
+    };
   }, [planId, clientIdParam]);
+
+  const loadClientIntakeDataForClient = async (selectedClientId: string) => {
+    if (!selectedClientId) return;
+
+    try {
+      // Load intake assessment
+      const { data: intakeData, error: intakeError } = await supabase
+        .from('clinical_notes')
+        .select('*')
+        .eq('client_id', selectedClientId)
+        .eq('note_type', 'intake_assessment')
+        .eq('locked', true)
+        .order('date_of_service', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (intakeError) {
+        console.error('Error loading intake:', intakeError);
+        throw intakeError;
+      }
+
+      console.log('Intake data loaded for client:', selectedClientId, intakeData);
+
+      // Pre-populate diagnoses from intake assessment
+      if (intakeData?.diagnoses && intakeData.diagnoses.length > 0) {
+        console.log('Found diagnoses in intake:', intakeData.diagnoses);
+        
+        const diagnoses = intakeData.diagnoses.map((icdCode: string, index: number) => {
+          // Look up the diagnosis description from ICD-10 codes
+          const icd10Code = icd10MentalHealthCodes.find(code => code.code === icdCode);
+          
+          console.log(`Mapping ${icdCode} to`, icd10Code);
+          
+          return {
+            icdCode,
+            diagnosis: icd10Code?.description || icdCode,
+            severity: 'Moderate' as 'Mild' | 'Moderate' | 'Severe',
+            type: (index === 0 ? 'Principal' : 'Secondary') as 'Principal' | 'Secondary',
+          };
+        });
+
+        console.log('Setting diagnoses:', diagnoses);
+
+        setFormData(prev => ({ ...prev, diagnoses, clientId: selectedClientId }));
+        
+        toast({
+          title: 'Diagnoses Loaded',
+          description: `${diagnoses.length} diagnosis(es) imported from intake assessment`,
+        });
+      } else {
+        console.log('No diagnoses found in intake assessment');
+        toast({
+          title: 'No Diagnoses Found',
+          description: 'No diagnoses were found in the intake assessment. Please complete an intake assessment first.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading intake data:', error);
+    }
+  };
 
   const loadClients = async () => {
     try {
@@ -260,7 +338,12 @@ export default function TreatmentPlan() {
         .limit(1)
         .maybeSingle();
 
-      if (intakeError) throw intakeError;
+      if (intakeError) {
+        console.error('Error loading intake:', intakeError);
+        throw intakeError;
+      }
+
+      console.log('Intake data loaded:', intakeData);
 
       // Load client demographics
       const { data: clientData, error: clientError } = await supabase
@@ -273,9 +356,13 @@ export default function TreatmentPlan() {
 
       // Pre-populate diagnoses from intake assessment
       if (intakeData?.diagnoses && intakeData.diagnoses.length > 0) {
+        console.log('Found diagnoses in intake:', intakeData.diagnoses);
+        
         const diagnoses = intakeData.diagnoses.map((icdCode: string, index: number) => {
           // Look up the diagnosis description from ICD-10 codes
           const icd10Code = icd10MentalHealthCodes.find(code => code.code === icdCode);
+          
+          console.log(`Mapping ${icdCode} to`, icd10Code);
           
           return {
             icdCode,
@@ -285,11 +372,20 @@ export default function TreatmentPlan() {
           };
         });
 
+        console.log('Setting diagnoses:', diagnoses);
+
         setFormData(prev => ({ ...prev, diagnoses }));
         
         toast({
           title: 'Diagnoses Loaded',
           description: `${diagnoses.length} diagnosis(es) imported from intake assessment`,
+        });
+      } else {
+        console.log('No diagnoses found in intake assessment');
+        toast({
+          title: 'No Diagnoses Found',
+          description: 'No diagnoses were found in the intake assessment. Please complete an intake assessment first.',
+          variant: 'destructive',
         });
       }
 
@@ -801,9 +897,11 @@ export default function TreatmentPlan() {
                   value={formData.clientId}
                   onValueChange={(value) => {
                     setFormData(prev => ({ ...prev, clientId: value }));
-                    if (!planId) {
-                      loadClientIntakeData();
-                    }
+                    // Trigger loading intake data when client changes
+                    setTimeout(() => {
+                      const event = new CustomEvent('load-intake-data', { detail: { clientId: value } });
+                      window.dispatchEvent(event);
+                    }, 100);
                   }}
                   disabled={isSigned}
                 >
