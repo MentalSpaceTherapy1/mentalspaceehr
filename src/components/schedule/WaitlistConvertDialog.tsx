@@ -106,6 +106,10 @@ export function WaitlistConvertDialog({
     }
   };
 
+  if (!entry) {
+    return null;
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -174,13 +178,13 @@ export function WaitlistConvertDialog({
           </div>
 
           <div className="bg-muted p-3 rounded-md space-y-1 text-sm">
-            <div><span className="font-medium">Type:</span> {entry.appointment_type}</div>
-            {entry.preferred_days && entry.preferred_days.length > 0 && (
+            <div><span className="font-medium">Type:</span> {entry?.appointment_type}</div>
+            {entry?.preferred_days && entry.preferred_days.length > 0 && (
               <div><span className="font-medium">Preferred Days:</span> {entry.preferred_days.map((d: string) => 
                 ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][parseInt(d)]
               ).join(', ')}</div>
             )}
-            {entry.preferred_times && entry.preferred_times.length > 0 && (
+            {entry?.preferred_times && entry.preferred_times.length > 0 && (
               <div><span className="font-medium">Preferred Times:</span> {entry.preferred_times.join(', ')}</div>
             )}
           </div>
