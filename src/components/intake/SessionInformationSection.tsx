@@ -5,9 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 interface SessionInformationProps {
   data: any;
   onChange: (data: any) => void;
+  cptCode?: string;
+  onCptCodeChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
 }
 
-export function SessionInformationSection({ data, onChange }: SessionInformationProps) {
+export function SessionInformationSection({ data, onChange, cptCode, onCptCodeChange, disabled }: SessionInformationProps) {
   const handleChange = (field: string, value: any) => {
     onChange({ ...data, [field]: value });
   };
@@ -49,24 +52,40 @@ export function SessionInformationSection({ data, onChange }: SessionInformation
         </div>
       </div>
 
-      <div>
-        <Label htmlFor="sessionLocation">Session Location *</Label>
-        <Select
-          value={data.sessionLocation || 'Office'}
-          onValueChange={(value) => handleChange('sessionLocation', value)}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Office">Office</SelectItem>
-            <SelectItem value="Telehealth">Telehealth</SelectItem>
-            <SelectItem value="Home">Home</SelectItem>
-            <SelectItem value="School">School</SelectItem>
-            <SelectItem value="Hospital">Hospital</SelectItem>
-            <SelectItem value="Other">Other</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="cptCode">CPT Code</Label>
+          <Input
+            id="cptCode"
+            value={cptCode || ''}
+            onChange={onCptCodeChange}
+            placeholder="e.g., 90791 (Psychiatric Diagnostic Evaluation)"
+            disabled={disabled}
+          />
+          <p className="text-xs text-muted-foreground">
+            Common codes: 90791 (Intake without medical services), 90792 (Intake with medical services)
+          </p>
+        </div>
+
+        <div>
+          <Label htmlFor="sessionLocation">Session Location *</Label>
+          <Select
+            value={data.sessionLocation || 'Office'}
+            onValueChange={(value) => handleChange('sessionLocation', value)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Office">Office</SelectItem>
+              <SelectItem value="Telehealth">Telehealth</SelectItem>
+              <SelectItem value="Home">Home</SelectItem>
+              <SelectItem value="School">School</SelectItem>
+              <SelectItem value="Hospital">Hospital</SelectItem>
+              <SelectItem value="Other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
     </div>
   );

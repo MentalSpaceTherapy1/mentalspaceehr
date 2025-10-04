@@ -984,29 +984,16 @@ export default function IntakeAssessment() {
                     <CardTitle>Session Information & Billing</CardTitle>
                     <CardDescription>Session details and billing code for this intake assessment</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="cptCode">CPT Code</Label>
-                      <Input
-                        id="cptCode"
-                        value={formData.cptCode || ''}
-                        onChange={(e) => {
-                          setFormData(prev => ({ ...prev, cptCode: e.target.value }));
-                          setHasUnsavedChanges(true);
-                        }}
-                        placeholder="e.g., 90791 (Psychiatric Diagnostic Evaluation)"
-                        disabled={metadata.signedDate !== null}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Common codes: 90791 (Intake without medical services), 90792 (Intake with medical services)
-                      </p>
-                    </div>
-                    
-                    <Separator />
-                    
+                  <CardContent>
                     <SessionInformationSection
                       data={formData}
                       onChange={(data) => updateFormData('session', data)}
+                      cptCode={formData.cptCode}
+                      onCptCodeChange={(e) => {
+                        setFormData(prev => ({ ...prev, cptCode: e.target.value }));
+                        setHasUnsavedChanges(true);
+                      }}
+                      disabled={metadata.signedDate !== null}
                     />
                   </CardContent>
                 </Card>
