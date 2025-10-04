@@ -98,25 +98,19 @@ export function WaitlistManagement() {
         return;
       }
 
-      // Call the notification edge function
-      const { error } = await supabase.functions.invoke('notify-waitlist-slots', {
+      // Send manual email via backend
+      const { data, error } = await supabase.functions.invoke('send-waitlist-email', {
         body: { waitlist_id: entry.id }
       });
 
       if (error) throw error;
 
-      toast.success('Notification sent to client');
-      
-      // Mark as notified
-      await supabase
-        .from('appointment_waitlist')
-        .update({
-          notified: true,
-          notified_date: new Date().toISOString()
-        })
-        .eq('id', entry.id);
-      
-      refreshWaitlist();
+      if (data?.success) {
+        toast.success('Email sent to client');
+        refreshWaitlist();
+      } else {
+        toast.error(data?.message || 'Failed to send email');
+      }
     } catch (error) {
       console.error('Error sending notification:', error);
       toast.error('Failed to send notification');
