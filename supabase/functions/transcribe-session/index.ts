@@ -69,32 +69,19 @@ serve(async (req) => {
     formData.append('response_format', 'verbose_json'); // Get timestamps
 
     // Use Lovable AI if available, otherwise fallback to OpenAI
-    let transcriptionResponse;
-    
-    if (lovableApiKey) {
-      console.log('Using Lovable AI for transcription');
-      transcriptionResponse = await fetch('https://ai.gateway.lovable.dev/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${lovableApiKey}`,
-        },
-        body: formData,
-      });
-    } else {
-      console.log('Using OpenAI for transcription');
-      const openAIKey = Deno.env.get('OPENAI_API_KEY');
-      if (!openAIKey) {
-        throw new Error('No transcription API key available');
-      }
-      
-      transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIKey}`,
-        },
-        body: formData,
-      });
+    const openAIKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIKey) {
+      throw new Error('OPENAI_API_KEY is not configured');
     }
+
+    console.log('Transcribing with OpenAI Whisper');
+    const transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIKey}`,
+      },
+      body: formData,
+    });
 
     if (!transcriptionResponse.ok) {
       const errorText = await transcriptionResponse.text();
