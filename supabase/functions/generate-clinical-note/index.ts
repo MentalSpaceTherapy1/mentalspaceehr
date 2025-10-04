@@ -88,7 +88,7 @@ serve(async (req) => {
     const templateStructure = template.template_structure as any;
     const aiPrompts = template.ai_prompts as any;
 
-    // Build system prompt
+    // Build system prompt for Progress Note SOAP format
     const systemPrompt = `You are a clinical documentation assistant for mental health professionals. 
 Your role is to help generate accurate, professional clinical notes following HIPAA compliance and clinical best practices.
 
@@ -105,13 +105,127 @@ CRITICAL INSTRUCTIONS:
 3. Use appropriate terminology (e.g., "anxious" vs "anxiety disorder")
 4. Flag any safety concerns clearly
 5. Maintain clinical accuracy and avoid over-pathologizing
-6. Return a JSON object with keys matching the template sections
+6. Return ONLY a valid JSON object (no markdown, no code blocks) with the EXACT structure below
 
-Template Structure:
-${JSON.stringify(templateStructure.sections.map((s: any) => ({ key: s.key, label: s.label })), null, 2)}
+REQUIRED JSON STRUCTURE for Progress Note SOAP:
+{
+  "subjective": {
+    "presentingConcerns": "string - Main issues client reports",
+    "moodReport": "string - Client's self-reported mood",
+    "recentEvents": "string - Significant recent life events",
+    "symptomsReported": ["array of symptoms client reports"],
+    "symptomsImproved": ["array of symptoms that improved"],
+    "symptomsWorsened": ["array of symptoms that worsened"],
+    "symptomsUnchanged": ["array of symptoms that stayed the same"],
+    "medicationAdherence": "string - Good/Fair/Poor/N/A",
+    "medicationSideEffects": boolean,
+    "sideEffectDetails": "string - if medicationSideEffects is true",
+    "homeworkCompliance": "string - Completed/Partially/Not Completed/N/A",
+    "homeworkReview": "string - Review of assigned homework",
+    "lifeStressors": "string - Current stressors",
+    "copingStrategies": "string - Coping methods used",
+    "functionalImpairment": {
+      "work": "string - None/Mild/Moderate/Severe/N/A",
+      "school": "string - None/Mild/Moderate/Severe/N/A",
+      "relationships": "string - None/Mild/Moderate/Severe",
+      "selfCare": "string - None/Mild/Moderate/Severe",
+      "social": "string - None/Mild/Moderate/Severe"
+    }
+  },
+  "objective": {
+    "behavioralObservations": {
+      "appearance": "string - Physical presentation",
+      "mood": "string - Observed mood",
+      "affect": {
+        "range": "string - Constricted/Full/Blunted/Flat",
+        "appropriateness": "string - Appropriate/Inappropriate",
+        "quality": "string - Euthymic/Dysphoric/Anxious/etc"
+      },
+      "behavior": "string - Observed behavior",
+      "speech": "string - Rate, volume, tone",
+      "thoughtProcess": "string - Linear/Tangential/Circumstantial/etc",
+      "attention": "string - Intact/Impaired",
+      "cooperation": "string - Cooperative/Guarded/Hostile",
+      "insightJudgment": "string - Good/Fair/Poor"
+    },
+    "riskAssessment": {
+      "suicidalIdeation": "string - Denied/Passive/Active/Intent/Plan",
+      "suicidalDetails": "string - if not Denied",
+      "homicidalIdeation": "string - Denied/Passive/Active/Intent/Plan",
+      "homicidalDetails": "string - if not Denied",
+      "selfHarm": "string - Denied/History/Recent/Current",
+      "substanceUse": "string - Denied/Social/Problematic/Dependent",
+      "overallRiskLevel": "string - Low/Moderate/High/Imminent",
+      "interventions": "string - if risk level elevated"
+    },
+    "symptomsObserved": ["array of clinician-observed symptoms"],
+    "progressObserved": "string - Observed progress"
+  },
+  "assessment": {
+    "progressTowardGoals": {
+      "overallProgress": "string - Excellent/Good/Fair/Poor/Regression",
+      "goalProgress": [
+        {
+          "goalId": "string",
+          "goalDescription": "string",
+          "progress": "string - Met/Progress/No Progress/Regression",
+          "details": "string"
+        }
+      ]
+    },
+    "currentDiagnoses": [
+      {
+        "icdCode": "string - ICD-10 code",
+        "diagnosis": "string - Diagnosis name",
+        "status": "string - Active/Provisional/Rule Out/Resolved"
+      }
+    ],
+    "clinicalImpression": "string - Comprehensive synthesis of S+O data",
+    "changesToTreatmentPlan": boolean,
+    "changeDetails": "string - if changesToTreatmentPlan is true",
+    "medicalNecessity": "string - Justification for continued treatment"
+  },
+  "plan": {
+    "interventionsProvided": ["array of intervention types used"],
+    "interventionDetails": "string - Detailed description of interventions",
+    "therapeuticTechniques": ["array of specific techniques used"],
+    "homework": {
+      "assigned": boolean,
+      "homeworkDetails": "string - if assigned"
+    },
+    "nextSteps": "string - Action items and goals",
+    "medicationChanges": {
+      "changesMade": boolean,
+      "changeDetails": "string - if changes made",
+      "newPrescriptions": ["array if applicable"],
+      "discontinuedMedications": ["array if applicable"],
+      "doseAdjustments": ["array if applicable"]
+    },
+    "referrals": {
+      "referralMade": boolean,
+      "referralDetails": "string - if referral made",
+      "referralTo": "string - who/where",
+      "referralReason": "string"
+    },
+    "nextAppointment": {
+      "scheduled": boolean,
+      "appointmentDate": "string - if scheduled",
+      "appointmentType": "string",
+      "frequency": "string"
+    },
+    "additionalPlanning": "string - Other planning notes"
+  }
+}
 
-Section Guidelines:
-${JSON.stringify(aiPrompts, null, 2)}`;
+GENERATION GUIDELINES:
+- Subjective: Focus on what the CLIENT says, reports, describes
+- Objective: Focus on what YOU observe, measure, assess
+- Assessment: Synthesize S+O to form clinical impression and evaluate progress
+- Plan: Detail interventions used, homework assigned, and next steps
+- Be thorough but concise
+- Use clinical terminology appropriately
+- Always assess safety/risk
+- Return ONLY the JSON object, no additional text`;
 
     const userPrompt = sessionTranscript
       ? `Based on the following session transcript, generate a clinical note:\n\n${sessionTranscript}`
