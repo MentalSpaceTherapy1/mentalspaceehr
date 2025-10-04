@@ -77,6 +77,7 @@ export default function IntakeAssessment() {
   const [supervisors, setSupervisors] = useState<any[]>([]);
   const [clientData, setClientData] = useState<any>(null);
   const [generatingAI, setGeneratingAI] = useState(false);
+  const [availableClients, setAvailableClients] = useState<any[]>([]);
   const timeTracker = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   
@@ -119,6 +120,7 @@ export default function IntakeAssessment() {
   });
 
   useEffect(() => {
+    loadAvailableClients();
     if (clientId) {
       loadClientData();
     }
@@ -156,6 +158,26 @@ export default function IntakeAssessment() {
     };
   }, [noteId]);
 
+  const loadAvailableClients = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, first_name, last_name, medical_record_number, date_of_birth')
+        .eq('status', 'Active')
+        .order('last_name', { ascending: true });
+
+      if (error) throw error;
+      setAvailableClients(data || []);
+    } catch (error) {
+      console.error('Error loading clients:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load client list',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const loadClientData = async () => {
     if (!clientId) return;
     
@@ -176,6 +198,11 @@ export default function IntakeAssessment() {
         variant: 'destructive'
       });
     }
+  };
+
+  const handleClientSelect = (selectedClientId: string) => {
+    setFormData(prev => ({ ...prev, clientId: selectedClientId }));
+    navigate(`/intake-assessment?clientId=${selectedClientId}`, { replace: true });
   };
 
   const loadSupervisors = async () => {
@@ -536,8 +563,35 @@ export default function IntakeAssessment() {
           </div>
         </div>
 
-        {/* Client Demographics Header */}
-        {clientData && (
+        {/* Client Selection or Demographics */}
+        {!clientId ? (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                <CardTitle>Select Client</CardTitle>
+              </div>
+              <CardDescription>Choose a client to create an intake assessment for</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="client-select">Client *</Label>
+                <Select onValueChange={handleClientSelect} value={formData.clientId}>
+                  <SelectTrigger id="client-select">
+                    <SelectValue placeholder="Select a client..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableClients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.last_name}, {client.first_name} - MRN: {client.medical_record_number} (DOB: {new Date(client.date_of_birth).toLocaleDateString()})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        ) : clientData ? (
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -586,22 +640,11 @@ export default function IntakeAssessment() {
               </div>
             </CardContent>
           </Card>
-        )}
-
-        {!clientData && clientId && (
+        ) : (
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               Loading client information...
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {!clientId && (
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              No client selected. Please select a client from the Notes page.
             </AlertDescription>
           </Alert>
         )}
