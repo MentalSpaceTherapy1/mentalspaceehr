@@ -127,6 +127,22 @@ export default function Notes() {
                   <Target className="h-4 w-4 mr-2" />
                   Treatment Plan
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/cancellation-note')}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Cancellation Note
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/contact-note')}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Contact Note
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/consultation-note')}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Consultation Note
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/miscellaneous-note')}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Miscellaneous Note
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

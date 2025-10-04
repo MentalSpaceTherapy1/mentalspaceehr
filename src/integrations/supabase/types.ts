@@ -746,6 +746,123 @@ export type Database = {
           },
         ]
       }
+      cancellation_notes: {
+        Row: {
+          appointment_date: string
+          appointment_id: string | null
+          appointment_time: string
+          cancellation_date: string
+          cancellation_reason: string
+          cancelled_by: string
+          client_contacted: boolean | null
+          client_id: string
+          clinical_concerns: boolean | null
+          clinician_id: string
+          concern_details: string | null
+          contact_date: string | null
+          contact_method: string | null
+          contact_outcome: string | null
+          created_by: string | null
+          created_date: string | null
+          fee_amount: number | null
+          fee_assessed: boolean | null
+          fee_waived: boolean | null
+          follow_up_needed: boolean | null
+          follow_up_plan: string | null
+          id: string
+          new_appointment_date: string | null
+          notice_given: string
+          reason_details: string | null
+          rescheduled: boolean | null
+          signed_by: string | null
+          signed_date: string | null
+          status: string
+          updated_at: string | null
+          waiver_reason: string | null
+        }
+        Insert: {
+          appointment_date: string
+          appointment_id?: string | null
+          appointment_time: string
+          cancellation_date: string
+          cancellation_reason: string
+          cancelled_by: string
+          client_contacted?: boolean | null
+          client_id: string
+          clinical_concerns?: boolean | null
+          clinician_id: string
+          concern_details?: string | null
+          contact_date?: string | null
+          contact_method?: string | null
+          contact_outcome?: string | null
+          created_by?: string | null
+          created_date?: string | null
+          fee_amount?: number | null
+          fee_assessed?: boolean | null
+          fee_waived?: boolean | null
+          follow_up_needed?: boolean | null
+          follow_up_plan?: string | null
+          id?: string
+          new_appointment_date?: string | null
+          notice_given: string
+          reason_details?: string | null
+          rescheduled?: boolean | null
+          signed_by?: string | null
+          signed_date?: string | null
+          status?: string
+          updated_at?: string | null
+          waiver_reason?: string | null
+        }
+        Update: {
+          appointment_date?: string
+          appointment_id?: string | null
+          appointment_time?: string
+          cancellation_date?: string
+          cancellation_reason?: string
+          cancelled_by?: string
+          client_contacted?: boolean | null
+          client_id?: string
+          clinical_concerns?: boolean | null
+          clinician_id?: string
+          concern_details?: string | null
+          contact_date?: string | null
+          contact_method?: string | null
+          contact_outcome?: string | null
+          created_by?: string | null
+          created_date?: string | null
+          fee_amount?: number | null
+          fee_assessed?: boolean | null
+          fee_waived?: boolean | null
+          follow_up_needed?: boolean | null
+          follow_up_plan?: string | null
+          id?: string
+          new_appointment_date?: string | null
+          notice_given?: string
+          reason_details?: string | null
+          rescheduled?: boolean | null
+          signed_by?: string | null
+          signed_date?: string | null
+          status?: string
+          updated_at?: string | null
+          waiver_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_notes_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cancellation_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_insurance: {
         Row: {
           back_card_image: string | null
@@ -1360,6 +1477,187 @@ export type Database = {
           },
         ]
       }
+      consultation_notes: {
+        Row: {
+          billable: boolean | null
+          billing_code: string | null
+          changes_to_treatment: boolean | null
+          client_consent: boolean | null
+          client_id: string
+          clinical_question: string
+          clinician_id: string
+          consultation_date: string
+          consultation_reason: string
+          consultation_type: string
+          consulting_with: Json
+          created_by: string | null
+          created_date: string | null
+          follow_up_consultation: boolean | null
+          follow_up_plan: string | null
+          id: string
+          information_provided: string | null
+          information_received: string | null
+          recommendations: string | null
+          signed_by: string | null
+          signed_date: string | null
+          status: string
+          treatment_changes: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          billable?: boolean | null
+          billing_code?: string | null
+          changes_to_treatment?: boolean | null
+          client_consent?: boolean | null
+          client_id: string
+          clinical_question: string
+          clinician_id: string
+          consultation_date: string
+          consultation_reason: string
+          consultation_type: string
+          consulting_with: Json
+          created_by?: string | null
+          created_date?: string | null
+          follow_up_consultation?: boolean | null
+          follow_up_plan?: string | null
+          id?: string
+          information_provided?: string | null
+          information_received?: string | null
+          recommendations?: string | null
+          signed_by?: string | null
+          signed_date?: string | null
+          status?: string
+          treatment_changes?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          billable?: boolean | null
+          billing_code?: string | null
+          changes_to_treatment?: boolean | null
+          client_consent?: boolean | null
+          client_id?: string
+          clinical_question?: string
+          clinician_id?: string
+          consultation_date?: string
+          consultation_reason?: string
+          consultation_type?: string
+          consulting_with?: Json
+          created_by?: string | null
+          created_date?: string | null
+          follow_up_consultation?: boolean | null
+          follow_up_plan?: string | null
+          id?: string
+          information_provided?: string | null
+          information_received?: string | null
+          recommendations?: string | null
+          signed_by?: string | null
+          signed_date?: string | null
+          status?: string
+          treatment_changes?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultation_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_notes: {
+        Row: {
+          billable: boolean | null
+          billing_code: string | null
+          client_id: string
+          clinical_significance: boolean | null
+          clinician_id: string
+          collateral_contact: Json | null
+          contact_date: string
+          contact_details: string
+          contact_duration: number | null
+          contact_initiated_by: string
+          contact_purpose: string
+          contact_time: string
+          contact_type: string
+          created_by: string | null
+          created_date: string | null
+          follow_up_needed: boolean | null
+          follow_up_plan: string | null
+          id: string
+          intervention_provided: string | null
+          risk_details: string | null
+          risk_issues: boolean | null
+          signed_by: string | null
+          signed_date: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          billable?: boolean | null
+          billing_code?: string | null
+          client_id: string
+          clinical_significance?: boolean | null
+          clinician_id: string
+          collateral_contact?: Json | null
+          contact_date: string
+          contact_details: string
+          contact_duration?: number | null
+          contact_initiated_by: string
+          contact_purpose: string
+          contact_time: string
+          contact_type: string
+          created_by?: string | null
+          created_date?: string | null
+          follow_up_needed?: boolean | null
+          follow_up_plan?: string | null
+          id?: string
+          intervention_provided?: string | null
+          risk_details?: string | null
+          risk_issues?: boolean | null
+          signed_by?: string | null
+          signed_date?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          billable?: boolean | null
+          billing_code?: string | null
+          client_id?: string
+          clinical_significance?: boolean | null
+          clinician_id?: string
+          collateral_contact?: Json | null
+          contact_date?: string
+          contact_details?: string
+          contact_duration?: number | null
+          contact_initiated_by?: string
+          contact_purpose?: string
+          contact_time?: string
+          contact_type?: string
+          created_by?: string | null
+          created_date?: string | null
+          follow_up_needed?: boolean | null
+          follow_up_plan?: string | null
+          id?: string
+          intervention_provided?: string | null
+          risk_details?: string | null
+          risk_issues?: boolean | null
+          signed_by?: string | null
+          signed_date?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergency_contacts: {
         Row: {
           address: string | null
@@ -1501,6 +1799,74 @@ export type Database = {
           user_agent?: string | null
         }
         Relationships: []
+      }
+      miscellaneous_notes: {
+        Row: {
+          billable: boolean | null
+          billing_code: string | null
+          client_id: string
+          clinically_relevant: boolean | null
+          clinician_id: string
+          created_by: string | null
+          created_date: string | null
+          id: string
+          note_content: string
+          note_date: string
+          note_type: string
+          signed_by: string | null
+          signed_date: string | null
+          status: string
+          subject: string
+          tags: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          billable?: boolean | null
+          billing_code?: string | null
+          client_id: string
+          clinically_relevant?: boolean | null
+          clinician_id: string
+          created_by?: string | null
+          created_date?: string | null
+          id?: string
+          note_content: string
+          note_date: string
+          note_type: string
+          signed_by?: string | null
+          signed_date?: string | null
+          status?: string
+          subject: string
+          tags?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          billable?: boolean | null
+          billing_code?: string | null
+          client_id?: string
+          clinically_relevant?: boolean | null
+          clinician_id?: string
+          created_by?: string | null
+          created_date?: string | null
+          id?: string
+          note_content?: string
+          note_date?: string
+          note_type?: string
+          signed_by?: string | null
+          signed_date?: string | null
+          status?: string
+          subject?: string
+          tags?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "miscellaneous_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       note_feedback: {
         Row: {

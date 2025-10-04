@@ -40,6 +40,10 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import ProgressNote from "./pages/ProgressNote";
 import TreatmentPlan from "./pages/TreatmentPlan";
+import CancellationNote from "./pages/CancellationNote";
+import ContactNote from "./pages/ContactNote";
+import ConsultationNote from "./pages/ConsultationNote";
+import MiscellaneousNote from "./pages/MiscellaneousNote";
 
 const queryClient = new QueryClient();
 
@@ -281,6 +285,38 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <TreatmentPlan />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/cancellation-note" 
+              element={
+                <ProtectedRoute>
+                  <CancellationNote />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/contact-note" 
+              element={
+                <ProtectedRoute>
+                  <ContactNote />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/consultation-note" 
+              element={
+                <ProtectedRoute>
+                  <ConsultationNote />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/miscellaneous-note" 
+              element={
+                <ProtectedRoute>
+                  <MiscellaneousNote />
                 </ProtectedRoute>
               } 
             />
