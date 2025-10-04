@@ -69,14 +69,17 @@ serve(async (req) => {
       .eq("id", clientId)
       .single();
 
-    // Get note template
-    const { data: template } = await supabase
+    // Get note template (use limit(1) in case of duplicates)
+    const { data: templates } = await supabase
       .from("note_templates")
       .select("*")
       .eq("note_type", noteType)
       .eq("note_format", noteFormat)
       .eq("is_default", true)
-      .maybeSingle();
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const template = templates?.[0];
 
     if (!template) {
       throw new Error(`No template found for ${noteType} in ${noteFormat} format`);
