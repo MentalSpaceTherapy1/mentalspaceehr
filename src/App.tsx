@@ -29,8 +29,11 @@ import ConfirmAppointment from "./pages/ConfirmAppointment";
 import ReminderSettings from "./pages/admin/ReminderSettings";
 import AppointmentNotificationSettings from "./pages/admin/AppointmentNotificationSettings";
 import AINoteSettings from "./pages/admin/AINoteSettings";
+import AIQualityMetrics from "./pages/admin/AIQualityMetrics";
+import BAAManagement from "./pages/admin/BAAManagement";
 import Notes from "./pages/Notes";
 import NoteEditor from "./pages/NoteEditor";
+import IntakeAssessment from "./pages/IntakeAssessment";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -207,6 +210,22 @@ const App = () => (
               } 
             />
             <Route 
+              path="/admin/ai-quality-metrics" 
+              element={
+                <AdminRoute>
+                  <AIQualityMetrics />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/baa-management" 
+              element={
+                <AdminRoute>
+                  <BAAManagement />
+                </AdminRoute>
+              } 
+            />
+            <Route 
               path="/notes" 
               element={
                 <ProtectedRoute>
@@ -227,6 +246,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <NoteEditor />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/intake-assessment" 
+              element={
+                <ProtectedRoute>
+                  <IntakeAssessment />
                 </ProtectedRoute>
               } 
             />

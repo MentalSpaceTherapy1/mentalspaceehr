@@ -17,6 +17,7 @@ import {
   ListOrdered,
   Mail,
   Sparkles,
+  Brain,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
@@ -65,6 +66,8 @@ export function AppSidebar() {
     { title: 'Reminder Settings', url: '/admin/reminder-settings', icon: Bell, color: 'from-blue-400 to-purple-400' },
     { title: 'Appointment Notifications', url: '/admin/appointment-notifications', icon: Mail, color: 'from-purple-400 to-pink-400' },
     { title: 'AI Clinical Notes', url: '/admin/ai-notes', icon: Sparkles, color: 'from-cyan-400 to-blue-400' },
+    { title: 'AI Quality Metrics', url: '/admin/ai-quality-metrics', icon: Brain, color: 'from-blue-400 to-cyan-400' },
+    { title: 'BAA Management', url: '/admin/baa-management', icon: Shield, color: 'from-green-400 to-emerald-400' },
   ];
 
   const settingsItems = [

@@ -14,9 +14,15 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Search, FileText, Brain, Lock, AlertTriangle } from 'lucide-react';
+import { Plus, Search, FileText, Brain, Lock, AlertTriangle, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ClinicalNote {
   id: string;
@@ -99,10 +105,27 @@ export default function Notes() {
               Manage client clinical documentation
             </p>
           </div>
-          <Button onClick={() => navigate('/notes/new')}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Note
-          </Button>
+          <div className="flex gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Note
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => navigate('/notes/new')}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Progress Note
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/intake-assessment')}>
+                  <Brain className="h-4 w-4 mr-2" />
+                  Intake Assessment
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         <Card>
