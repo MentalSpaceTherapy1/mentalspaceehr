@@ -7,13 +7,16 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, X } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { AISectionWrapper } from './AISectionWrapper';
 
 interface PresentingProblemProps {
   data: any;
   onChange: (data: any) => void;
+  clientId?: string;
+  fullContext?: any;
 }
 
-export function PresentingProblemSection({ data, onChange }: PresentingProblemProps) {
+export function PresentingProblemSection({ data, onChange, clientId, fullContext }: PresentingProblemProps) {
   const handleChange = (field: string, value: any) => {
     onChange({ ...data, [field]: value });
   };
@@ -173,7 +176,41 @@ export function PresentingProblemSection({ data, onChange }: PresentingProblemPr
   };
 
   return (
-    <div className="space-y-4">
+    <AISectionWrapper
+      sectionType="presenting"
+      clientId={clientId}
+      context={JSON.stringify(fullContext || {})}
+      existingData={data}
+      onAccept={(aiContent) => onChange({ ...data, ...aiContent })}
+      renderSuggestion={(aiContent, isEditing, onEdit) => (
+        <div className="space-y-2 text-sm">
+          {isEditing ? (
+            <div className="space-y-2">
+              <Textarea 
+                value={aiContent.chiefComplaint}
+                onChange={(e) => onEdit({ ...aiContent, chiefComplaint: e.target.value })}
+                placeholder="Chief Complaint"
+                rows={2}
+              />
+              <Textarea 
+                value={aiContent.historyOfPresentingProblem}
+                onChange={(e) => onEdit({ ...aiContent, historyOfPresentingProblem: e.target.value })}
+                placeholder="History"
+                rows={4}
+              />
+            </div>
+          ) : (
+            <div>
+              <p><strong>Chief Complaint:</strong> {aiContent.chiefComplaint}</p>
+              <p className="mt-2"><strong>History:</strong> {aiContent.historyOfPresentingProblem}</p>
+              {aiContent.symptomOnset && <p className="mt-1"><strong>Onset:</strong> {aiContent.symptomOnset}</p>}
+              {aiContent.symptomDuration && <p className="mt-1"><strong>Duration:</strong> {aiContent.symptomDuration}</p>}
+            </div>
+          )}
+        </div>
+      )}
+    >
+      <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle>Chief Complaint</CardTitle>
@@ -678,6 +715,7 @@ export function PresentingProblemSection({ data, onChange }: PresentingProblemPr
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </AISectionWrapper>
   );
 }
