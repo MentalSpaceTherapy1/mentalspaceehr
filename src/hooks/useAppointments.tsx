@@ -165,17 +165,27 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
 
         // Insert remaining appointments with parent reference
         if (series.length > 1) {
-          const childAppointments = series.slice(1).map(apt => ({
-            ...apt,
-            is_recurring: true,
-            recurrence_pattern: appointment.recurrence_pattern,
-            parent_recurrence_id: parentData.id,
-            is_group_session: appointment.is_group_session || false,
-            max_participants: appointment.max_participants,
-            current_participants: appointment.current_participants || 1,
-            created_by: user?.id,
-            last_modified_by: user?.id,
-          }));
+          const childAppointments = series.slice(1).map(apt => {
+            // Generate unique telehealth link for each occurrence
+            let aptTelehealthLink = null;
+            if (appointment.service_location === 'Telehealth' && appointment.telehealth_platform === 'Internal') {
+              const uniqueSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              aptTelehealthLink = `/telehealth/session/${uniqueSessionId}`;
+            }
+            
+            return {
+              ...apt,
+              telehealth_link: aptTelehealthLink,
+              is_recurring: true,
+              recurrence_pattern: appointment.recurrence_pattern,
+              parent_recurrence_id: parentData.id,
+              is_group_session: appointment.is_group_session || false,
+              max_participants: appointment.max_participants,
+              current_participants: appointment.current_participants || 1,
+              created_by: user?.id,
+              last_modified_by: user?.id,
+            };
+          });
 
           const { data: childData, error: childError } = await supabase
             .from('appointments')
@@ -189,7 +199,7 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
             const sessions = childData.map(apt => ({
               appointment_id: apt.id,
               host_id: apt.clinician_id,
-              session_id: telehealthLink.split('/').pop(),
+              session_id: apt.telehealth_link!.split('/').pop()!,
               status: 'waiting'
             }));
             

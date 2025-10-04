@@ -494,14 +494,11 @@ export function AppointmentDialog({
                         <Select 
                           onValueChange={(value) => {
                             field.onChange(value);
-                            // Auto-generate link for Internal platform
-                            if (value === 'Internal' && !appointment) {
-                              const sessionId = crypto.randomUUID();
-                              form.setValue('telehealth_link', `/telehealth/session/${sessionId}`);
-                            } else if (value !== 'Internal') {
+                            // Clear link if not Internal - let useAppointments handle generation
+                            if (value !== 'Internal') {
                               form.setValue('telehealth_link', '');
                             }
-                          }} 
+                          }}
                           value={field.value}
                         >
                           <FormControl>
