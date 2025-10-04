@@ -27,6 +27,7 @@ import Waitlist from "./pages/Waitlist";
 import TelehealthSession from "./pages/TelehealthSession";
 import ConfirmAppointment from "./pages/ConfirmAppointment";
 import ReminderSettings from "./pages/admin/ReminderSettings";
+import AppointmentNotificationSettings from "./pages/admin/AppointmentNotificationSettings";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -183,6 +184,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <ReminderSettings />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/appointment-notifications" 
+              element={
+                <AdminRoute>
+                  <AppointmentNotificationSettings />
                 </AdminRoute>
               } 
             />

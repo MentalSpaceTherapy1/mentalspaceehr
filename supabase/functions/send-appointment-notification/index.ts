@@ -29,6 +29,31 @@ serve(async (req) => {
 
     console.log(`Processing ${notificationType} notification for appointment ${appointmentId}`);
 
+    // Check notification settings
+    const { data: notificationSettings, error: settingsError } = await supabase
+      .from("appointment_notification_settings")
+      .select("*")
+      .maybeSingle();
+
+    if (settingsError) {
+      console.error("Error fetching notification settings:", settingsError);
+    }
+
+    // Check if this notification type is enabled
+    const isEnabled = notificationSettings 
+      ? (notificationType === 'created' && notificationSettings.send_on_create) ||
+        (notificationType === 'updated' && notificationSettings.send_on_update) ||
+        (notificationType === 'cancelled' && notificationSettings.send_on_cancel)
+      : true; // Default to enabled if no settings found
+
+    if (!isEnabled) {
+      console.log(`Notifications for ${notificationType} are disabled`);
+      return new Response(
+        JSON.stringify({ message: `Notifications for ${notificationType} are disabled` }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
     // Fetch appointment details with related data
     const { data: appointment, error: appointmentError } = await supabase
       .from("appointments")
@@ -60,14 +85,17 @@ serve(async (req) => {
       throw new Error(`Failed to fetch appointment: ${appointmentError?.message}`);
     }
 
-    // Check if client has opted in for appointment reminders
-    const clientConsents = appointment.client?.consents as any;
-    if (!clientConsents?.appointmentReminders) {
-      console.log("Client has not opted in for appointment notifications");
-      return new Response(
-        JSON.stringify({ message: "Client has not opted in for notifications" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-      );
+    // Check if client has opted in for appointment reminders (if respect_client_preferences is enabled)
+    const respectPreferences = notificationSettings?.respect_client_preferences !== false;
+    if (respectPreferences) {
+      const clientConsents = appointment.client?.consents as any;
+      if (!clientConsents?.appointmentReminders) {
+        console.log("Client has not opted in for appointment notifications");
+        return new Response(
+          JSON.stringify({ message: "Client has not opted in for notifications" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
+      }
     }
 
     const clientEmail = appointment.client?.email;
@@ -98,14 +126,51 @@ serve(async (req) => {
       }
     }
 
-    // Generate email content based on notification type
+    // Use custom templates if available
+    const useCustomTemplate = notificationSettings !== null;
     let subject = "";
     let htmlContent = "";
 
-    switch (notificationType) {
-      case "created":
-        subject = `Appointment Scheduled - ${formattedDate}`;
-        htmlContent = `
+    if (useCustomTemplate && notificationSettings) {
+      // Replace template variables
+      const replaceVars = (template: string) => {
+        return template
+          .replace(/{client_name}/g, clientName)
+          .replace(/{clinician_name}/g, clinicianName)
+          .replace(/{date}/g, formattedDate)
+          .replace(/{time}/g, formattedTime)
+          .replace(/{location}/g, locationInfo.replace(/\n/g, '<br/>'))
+          .replace(/{appointment_type}/g, appointment.appointment_type)
+          .replace(/{telehealth_link}/g, appointment.telehealth_link || '')
+          .replace(/{cancellation_reason}/g, appointment.cancellation_reason || '');
+      };
+
+      switch (notificationType) {
+        case "created":
+          subject = replaceVars(notificationSettings.created_subject);
+          htmlContent = `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            ${replaceVars(notificationSettings.created_template).replace(/\n/g, '<br/>')}
+          </div>`;
+          break;
+        case "updated":
+          subject = replaceVars(notificationSettings.updated_subject);
+          htmlContent = `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            ${replaceVars(notificationSettings.updated_template).replace(/\n/g, '<br/>')}
+          </div>`;
+          break;
+        case "cancelled":
+          subject = replaceVars(notificationSettings.cancelled_subject);
+          htmlContent = `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            ${replaceVars(notificationSettings.cancelled_template).replace(/\n/g, '<br/>')}
+          </div>`;
+          break;
+      }
+    } else {
+      // Default templates
+      switch (notificationType) {
+        case "created":
+          subject = `Appointment Scheduled - ${formattedDate}`;
+          htmlContent = `
           <h2>Your Appointment Has Been Scheduled</h2>
           <p>Dear ${clientName},</p>
           <p>Your appointment has been successfully scheduled.</p>
@@ -144,18 +209,19 @@ serve(async (req) => {
         `;
         break;
 
-      case "cancelled":
-        subject = `Appointment Cancelled - ${formattedDate}`;
-        htmlContent = `
-          <h2>Your Appointment Has Been Cancelled</h2>
-          <p>Dear ${clientName},</p>
-          <p>Your appointment scheduled for <strong>${formattedDate}</strong> at <strong>${formattedTime}</strong> with ${clinicianName} has been cancelled.</p>
-          
-          ${appointment.cancellation_reason ? `<p><strong>Reason:</strong> ${appointment.cancellation_reason}</p>` : ""}
-          
-          <p>If you would like to reschedule, please contact our office.</p>
-        `;
-        break;
+        case "cancelled":
+          subject = `Appointment Cancelled - ${formattedDate}`;
+          htmlContent = `
+            <h2>Your Appointment Has Been Cancelled</h2>
+            <p>Dear ${clientName},</p>
+            <p>Your appointment scheduled for <strong>${formattedDate}</strong> at <strong>${formattedTime}</strong> with ${clinicianName} has been cancelled.</p>
+            
+            ${appointment.cancellation_reason ? `<p><strong>Reason:</strong> ${appointment.cancellation_reason}</p>` : ""}
+            
+            <p>If you would like to reschedule, please contact our office.</p>
+          `;
+          break;
+      }
     }
 
     // Log notification attempt

@@ -14,7 +14,8 @@ import {
   LogOut,
   CheckSquare,
   Bell,
-  ListOrdered
+  ListOrdered,
+  Mail
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
@@ -61,6 +62,7 @@ export function AppSidebar() {
     { title: 'Practice Settings', url: '/admin/practice-settings', icon: Building2, color: 'from-primary to-success' },
     { title: 'Locations', url: '/admin/locations', icon: MapPin, color: 'from-accent to-secondary' },
     { title: 'Reminder Settings', url: '/admin/reminder-settings', icon: Bell, color: 'from-blue-400 to-purple-400' },
+    { title: 'Appointment Notifications', url: '/admin/appointment-notifications', icon: Mail, color: 'from-purple-400 to-pink-400' },
   ];
 
   const settingsItems = [

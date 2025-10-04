@@ -55,6 +55,60 @@ export type Database = {
           },
         ]
       }
+      appointment_notification_settings: {
+        Row: {
+          cancelled_subject: string
+          cancelled_template: string
+          created_at: string
+          created_subject: string
+          created_template: string
+          id: string
+          notify_recipients: Json
+          practice_id: string | null
+          respect_client_preferences: boolean
+          send_on_cancel: boolean
+          send_on_create: boolean
+          send_on_update: boolean
+          updated_at: string
+          updated_subject: string
+          updated_template: string
+        }
+        Insert: {
+          cancelled_subject?: string
+          cancelled_template?: string
+          created_at?: string
+          created_subject?: string
+          created_template?: string
+          id?: string
+          notify_recipients?: Json
+          practice_id?: string | null
+          respect_client_preferences?: boolean
+          send_on_cancel?: boolean
+          send_on_create?: boolean
+          send_on_update?: boolean
+          updated_at?: string
+          updated_subject?: string
+          updated_template?: string
+        }
+        Update: {
+          cancelled_subject?: string
+          cancelled_template?: string
+          created_at?: string
+          created_subject?: string
+          created_template?: string
+          id?: string
+          notify_recipients?: Json
+          practice_id?: string | null
+          respect_client_preferences?: boolean
+          send_on_cancel?: boolean
+          send_on_create?: boolean
+          send_on_update?: boolean
+          updated_at?: string
+          updated_subject?: string
+          updated_template?: string
+        }
+        Relationships: []
+      }
       appointment_notifications: {
         Row: {
           appointment_id: string
