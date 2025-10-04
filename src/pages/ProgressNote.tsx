@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, FileSignature, Clock, AlertTriangle, Brain, Sparkles } from 'lucide-react';
+import { Save, ArrowLeft, FileSignature, Clock, AlertTriangle, Brain, Sparkles, Edit, Check, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { SubjectiveSection } from '@/components/progress-note/SubjectiveSection';
@@ -19,6 +19,7 @@ import { PlanSection } from '@/components/progress-note/PlanSection';
 import { BillingSection } from '@/components/progress-note/BillingSection';
 import { SessionInformationSection } from '@/components/intake/SessionInformationSection';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export interface ProgressNoteData {
   noteId?: string;
@@ -170,6 +171,8 @@ export default function ProgressNote() {
   const startTimeRef = useRef<number>(Date.now());
   const [generatingAI, setGeneratingAI] = useState(false);
   const [aiInput, setAiInput] = useState('');
+  const [aiSuggestion, setAiSuggestion] = useState<any>(null);
+  const [isEditingAiSuggestion, setIsEditingAiSuggestion] = useState(false);
 
   const [formData, setFormData] = useState<ProgressNoteData>({
     clientId: '',
@@ -583,18 +586,12 @@ export default function ProgressNote() {
       if (error) throw error;
 
       if (data?.content) {
-        // Update form with AI-generated content
-        setFormData(prev => ({
-          ...prev,
-          subjective: data.content.subjective || prev.subjective,
-          objective: data.content.objective || prev.objective,
-          assessment: data.content.assessment || prev.assessment,
-          plan: data.content.plan || prev.plan,
-        }));
+        // Store AI suggestion for review
+        setAiSuggestion(data.content);
 
         toast({
           title: 'Note Generated',
-          description: 'AI has generated the progress note. Please review and edit as needed.',
+          description: 'AI has generated the progress note. Please review and accept or reject the suggestions.',
         });
 
         setAiInput('');
@@ -609,6 +606,36 @@ export default function ProgressNote() {
     } finally {
       setGeneratingAI(false);
     }
+  };
+
+  const acceptAiSuggestion = () => {
+    if (!aiSuggestion) return;
+
+    setFormData(prev => ({
+      ...prev,
+      subjective: aiSuggestion.subjective || prev.subjective,
+      objective: aiSuggestion.objective || prev.objective,
+      assessment: aiSuggestion.assessment || prev.assessment,
+      plan: aiSuggestion.plan || prev.plan,
+    }));
+
+    setAiSuggestion(null);
+    setIsEditingAiSuggestion(false);
+    setHasUnsavedChanges(true);
+
+    toast({
+      title: 'Suggestion Accepted',
+      description: 'AI-generated content has been added to the note',
+    });
+  };
+
+  const rejectAiSuggestion = () => {
+    setAiSuggestion(null);
+    setIsEditingAiSuggestion(false);
+    toast({
+      title: 'Suggestion Rejected',
+      description: 'AI-generated content was discarded',
+    });
   };
 
   return (
@@ -851,6 +878,150 @@ export default function ProgressNote() {
             )}
           </CardContent>
         </Card>
+
+        {aiSuggestion && (
+          <Alert className="border-primary/50 bg-primary/5">
+            <div className="flex items-start justify-between w-full">
+              <div className="flex-1">
+                <AlertDescription>
+                  <div className="font-semibold mb-4 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    AI-Generated Progress Note
+                  </div>
+                  
+                  {isEditingAiSuggestion ? (
+                    <div className="space-y-4 text-sm">
+                      <div>
+                        <div className="font-medium mb-2">Subjective:</div>
+                        <Textarea
+                          value={JSON.stringify(aiSuggestion.subjective, null, 2)}
+                          onChange={(e) => {
+                            try {
+                              setAiSuggestion({ ...aiSuggestion, subjective: JSON.parse(e.target.value) });
+                            } catch (err) {
+                              // Invalid JSON, keep editing
+                            }
+                          }}
+                          rows={6}
+                          className="font-mono text-xs"
+                        />
+                      </div>
+                      <div>
+                        <div className="font-medium mb-2">Objective:</div>
+                        <Textarea
+                          value={JSON.stringify(aiSuggestion.objective, null, 2)}
+                          onChange={(e) => {
+                            try {
+                              setAiSuggestion({ ...aiSuggestion, objective: JSON.parse(e.target.value) });
+                            } catch (err) {
+                              // Invalid JSON, keep editing
+                            }
+                          }}
+                          rows={6}
+                          className="font-mono text-xs"
+                        />
+                      </div>
+                      <div>
+                        <div className="font-medium mb-2">Assessment:</div>
+                        <Textarea
+                          value={JSON.stringify(aiSuggestion.assessment, null, 2)}
+                          onChange={(e) => {
+                            try {
+                              setAiSuggestion({ ...aiSuggestion, assessment: JSON.parse(e.target.value) });
+                            } catch (err) {
+                              // Invalid JSON, keep editing
+                            }
+                          }}
+                          rows={6}
+                          className="font-mono text-xs"
+                        />
+                      </div>
+                      <div>
+                        <div className="font-medium mb-2">Plan:</div>
+                        <Textarea
+                          value={JSON.stringify(aiSuggestion.plan, null, 2)}
+                          onChange={(e) => {
+                            try {
+                              setAiSuggestion({ ...aiSuggestion, plan: JSON.parse(e.target.value) });
+                            } catch (err) {
+                              // Invalid JSON, keep editing
+                            }
+                          }}
+                          rows={6}
+                          className="font-mono text-xs"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 text-sm">
+                      {aiSuggestion.subjective && (
+                        <div>
+                          <div className="font-medium">Subjective:</div>
+                          <div className="text-muted-foreground whitespace-pre-wrap">
+                            {aiSuggestion.subjective.presentingConcerns && `• ${aiSuggestion.subjective.presentingConcerns}\n`}
+                            {aiSuggestion.subjective.moodReport && `• Mood: ${aiSuggestion.subjective.moodReport}\n`}
+                          </div>
+                        </div>
+                      )}
+                      {aiSuggestion.objective && (
+                        <div>
+                          <div className="font-medium">Objective:</div>
+                          <div className="text-muted-foreground">
+                            {aiSuggestion.objective.behavioralObservations?.appearance && `• ${aiSuggestion.objective.behavioralObservations.appearance}\n`}
+                          </div>
+                        </div>
+                      )}
+                      {aiSuggestion.assessment && (
+                        <div>
+                          <div className="font-medium">Assessment:</div>
+                          <div className="text-muted-foreground">
+                            {aiSuggestion.assessment.clinicalImpression && `• ${aiSuggestion.assessment.clinicalImpression.substring(0, 150)}...\n`}
+                          </div>
+                        </div>
+                      )}
+                      {aiSuggestion.plan && (
+                        <div>
+                          <div className="font-medium">Plan:</div>
+                          <div className="text-muted-foreground">
+                            {aiSuggestion.plan.interventionDetails && `• ${aiSuggestion.plan.interventionDetails.substring(0, 150)}...\n`}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </AlertDescription>
+              </div>
+              <div className="flex gap-2 ml-4">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsEditingAiSuggestion(!isEditingAiSuggestion)}
+                  title={isEditingAiSuggestion ? "View mode" : "Edit suggestion"}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                  onClick={acceptAiSuggestion}
+                >
+                  <Check className="h-4 w-4 mr-1" />
+                  Accept
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={rejectAiSuggestion}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Reject
+                </Button>
+              </div>
+            </div>
+          </Alert>
+        )}
 
         <Tabs defaultValue="subjective" className="space-y-4">
           <TabsList className="grid w-full grid-cols-5">
