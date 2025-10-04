@@ -55,7 +55,7 @@ export function WaitlistManagement() {
     if (clientIds.length > 0) {
       const { data: clientData } = await supabase
         .from('clients')
-        .select('id, first_name, last_name, medical_record_number')
+        .select('id, first_name, last_name, medical_record_number, email')
         .in('id', clientIds);
       
       if (clientData) {
