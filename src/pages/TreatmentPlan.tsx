@@ -27,6 +27,7 @@ import { MedicationPlanSection } from '@/components/treatment-plan/MedicationPla
 import { PsychoeducationSection } from '@/components/treatment-plan/PsychoeducationSection';
 import { ProgressReviewSection } from '@/components/treatment-plan/ProgressReviewSection';
 import { Checkbox } from '@/components/ui/checkbox';
+import { icd10MentalHealthCodes } from '@/lib/icd10Codes';
 
 export interface TreatmentPlanData {
   planId?: string;
@@ -270,16 +271,26 @@ export default function TreatmentPlan() {
 
       if (clientError) throw clientError;
 
-      // Pre-populate diagnoses from intake
+      // Pre-populate diagnoses from intake assessment
       if (intakeData?.diagnoses && intakeData.diagnoses.length > 0) {
-        const diagnoses = intakeData.diagnoses.map((icdCode: string, index: number) => ({
-          icdCode,
-          diagnosis: '', // Will need to look up from ICD-10 codes
-          severity: 'Moderate' as 'Mild' | 'Moderate' | 'Severe',
-          type: (index === 0 ? 'Principal' : 'Secondary') as 'Principal' | 'Secondary',
-        }));
+        const diagnoses = intakeData.diagnoses.map((icdCode: string, index: number) => {
+          // Look up the diagnosis description from ICD-10 codes
+          const icd10Code = icd10MentalHealthCodes.find(code => code.code === icdCode);
+          
+          return {
+            icdCode,
+            diagnosis: icd10Code?.description || icdCode, // Use description if found, otherwise use the code
+            severity: 'Moderate' as 'Mild' | 'Moderate' | 'Severe',
+            type: (index === 0 ? 'Principal' : 'Secondary') as 'Principal' | 'Secondary',
+          };
+        });
 
         setFormData(prev => ({ ...prev, diagnoses }));
+        
+        toast({
+          title: 'Diagnoses Loaded',
+          description: `${diagnoses.length} diagnosis(es) imported from intake assessment`,
+        });
       }
 
       // Pre-populate some client strengths/resources based on demographics
