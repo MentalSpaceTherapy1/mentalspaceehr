@@ -91,10 +91,14 @@ export function TreatmentRecommendationsSection({
           <div>
             <Label>Therapeutic Approaches</Label>
             <Textarea
-              value={data.therapeuticApproach?.join(', ') || ''}
+              value={
+                Array.isArray(data.therapeuticApproach)
+                  ? data.therapeuticApproach.join(', ')
+                  : data.therapeuticApproach || ''
+              }
               onChange={(e) => onRecommendationsChange({
                 ...data,
-                therapeuticApproach: e.target.value.split(',').map(s => s.trim())
+                therapeuticApproach: e.target.value.split(',').map(s => s.trim()).filter(s => s)
               })}
               placeholder="CBT, DBT, Psychodynamic, EMDR, etc. (comma-separated)"
               rows={2}
@@ -162,10 +166,14 @@ export function TreatmentRecommendationsSection({
           <div>
             <Label>Additional Recommendations</Label>
             <Textarea
-              value={data.additionalRecommendations?.join('\n') || ''}
+              value={
+                Array.isArray(data.additionalRecommendations)
+                  ? data.additionalRecommendations.join('\n')
+                  : data.additionalRecommendations || ''
+              }
               onChange={(e) => onRecommendationsChange({
                 ...data,
-                additionalRecommendations: e.target.value.split('\n')
+                additionalRecommendations: e.target.value.split('\n').filter(s => s.trim())
               })}
               placeholder="Support groups, lifestyle changes, additional services... (one per line)"
               rows={4}
