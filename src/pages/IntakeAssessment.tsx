@@ -532,57 +532,53 @@ export default function IntakeAssessment() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Modern header with gradient */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-primary p-8 text-white shadow-elegant">
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => navigate('/notes')}
-                className="text-white hover:bg-white/20"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold">Intake Assessment</h1>
-                <p className="text-white/90 mt-1">
-                  Comprehensive initial evaluation
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {metadata.wasAIAssisted && (
-                <Badge variant="secondary" className="gap-1 bg-white/20 text-white border-white/30">
-                  <Sparkles className="h-3 w-3" />
-                  AI Assisted
-                </Badge>
-              )}
-              {metadata.signedDate && (
-                <Badge variant="outline" className="gap-1 bg-white/10 text-white border-white/30">
-                  <FileSignature className="h-3 w-3" />
-                  Signed
-                </Badge>
-              )}
-              {documentationTime > 0 && (
-                <Badge variant="secondary" className="gap-1 bg-white/20 text-white border-white/30">
-                  <Clock className="h-3 w-3" />
-                  {documentationTime} min
-                </Badge>
-              )}
+        {/* Compact header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate('/notes')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Intake Assessment
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Comprehensive initial evaluation
+              </p>
             </div>
           </div>
-          {/* Decorative gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-subtle opacity-30"></div>
+          <div className="flex items-center gap-2">
+            {metadata.wasAIAssisted && (
+              <Badge variant="secondary" className="gap-1">
+                <Sparkles className="h-3 w-3" />
+                AI Assisted
+              </Badge>
+            )}
+            {metadata.signedDate && (
+              <Badge variant="outline" className="gap-1">
+                <FileSignature className="h-3 w-3" />
+                Signed
+              </Badge>
+            )}
+            {documentationTime > 0 && (
+              <Badge variant="secondary" className="gap-1">
+                <Clock className="h-3 w-3" />
+                {documentationTime} min
+              </Badge>
+            )}
+          </div>
         </div>
 
         {/* Action buttons */}
         <div className="flex items-center justify-end gap-2">
           <Button
-            variant="outline"
             onClick={handleAIGenerate}
             disabled={generatingAI || !clientId || metadata.signedDate !== null}
-            className="gap-2"
+            className="gap-2 bg-gradient-success text-white shadow-colored hover:opacity-90 border-0"
           >
             {generatingAI ? (
               <>
@@ -628,7 +624,7 @@ export default function IntakeAssessment() {
               setSignatureDialogOpen(true);
             }}
             disabled={saving || metadata.signedDate !== null || !isFormComplete()}
-            className="gap-2 bg-gradient-primary text-white shadow-colored hover:opacity-90"
+            className="gap-2 bg-gradient-primary text-white shadow-colored hover:opacity-90 border-0"
           >
             <FileSignature className="h-4 w-4" />
             {metadata.signedDate ? 'Signed' : 'Sign & Lock'}
