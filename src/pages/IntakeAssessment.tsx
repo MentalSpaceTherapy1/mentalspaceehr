@@ -210,20 +210,36 @@ export default function IntakeAssessment() {
 
   const loadUserProfileAndRoles = async () => {
     try {
-      // Get user profile with supervisor info
+      // Get user profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          supervisor:profiles!profiles_supervisor_id_fkey (
-            id,
-            first_name,
-            last_name,
-            email
-          )
-        `)
+        .select('*')
         .eq('id', user?.id)
         .single();
+
+      if (profileError) throw profileError;
+
+      // Get supervisor info separately if supervisor_id exists
+      let supervisorData = null;
+      if (profile?.supervisor_id) {
+        const { data: supervisor, error: supervisorError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email')
+          .eq('id', profile.supervisor_id)
+          .single();
+        
+        if (!supervisorError) {
+          supervisorData = supervisor;
+        }
+      }
+
+      // Attach supervisor to profile
+      const profileWithSupervisor = {
+        ...profile,
+        supervisor: supervisorData
+      };
+
+      setUserProfile(profileWithSupervisor);
 
       if (profileError) throw profileError;
       setUserProfile(profile);
