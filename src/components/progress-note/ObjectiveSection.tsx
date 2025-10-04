@@ -18,7 +18,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
       objective: {
         ...data.objective,
         behavioralObservations: {
-          ...data.objective.behavioralObservations,
+          ...(data.objective.behavioralObservations || {}),
           [field]: value,
         },
       },
@@ -31,9 +31,9 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
       objective: {
         ...data.objective,
         behavioralObservations: {
-          ...data.objective.behavioralObservations,
+          ...(data.objective.behavioralObservations || {}),
           affect: {
-            ...data.objective.behavioralObservations.affect,
+            ...(data.objective.behavioralObservations?.affect || {}),
             [field]: value,
           },
         },
@@ -47,7 +47,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
       objective: {
         ...data.objective,
         riskAssessment: {
-          ...data.objective.riskAssessment,
+          ...(data.objective.riskAssessment || {}),
           [field]: value,
         },
       },
@@ -65,11 +65,11 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
   };
 
   const showRiskAlert = 
-    data.objective.riskAssessment.suicidalIdeation !== 'Denied' ||
-    data.objective.riskAssessment.homicidalIdeation !== 'Denied' ||
-    data.objective.riskAssessment.selfHarm !== 'Denied' ||
-    data.objective.riskAssessment.overallRiskLevel === 'High' ||
-    data.objective.riskAssessment.overallRiskLevel === 'Moderate';
+    data.objective.riskAssessment?.suicidalIdeation !== 'Denied' ||
+    data.objective.riskAssessment?.homicidalIdeation !== 'Denied' ||
+    data.objective.riskAssessment?.selfHarm !== 'Denied' ||
+    data.objective.riskAssessment?.overallRiskLevel === 'High' ||
+    data.objective.riskAssessment?.overallRiskLevel === 'Moderate';
 
   return (
     <div className="space-y-6">
@@ -91,7 +91,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             <div>
               <Label>Appearance</Label>
               <Textarea
-                value={data.objective.behavioralObservations.appearance}
+                value={data.objective.behavioralObservations?.appearance || ''}
                 onChange={(e) => updateBehavioralObservations('appearance', e.target.value)}
                 placeholder="Well-groomed, appropriate dress for weather..."
                 rows={2}
@@ -102,7 +102,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             <div>
               <Label>Observed Mood</Label>
               <Textarea
-                value={data.objective.behavioralObservations.mood}
+                value={data.objective.behavioralObservations?.mood || ''}
                 onChange={(e) => updateBehavioralObservations('mood', e.target.value)}
                 placeholder="Clinician's observation of mood..."
                 rows={2}
@@ -117,7 +117,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
               <div>
                 <Label className="text-sm">Range</Label>
                 <Select
-                  value={data.objective.behavioralObservations.affect.range}
+                  value={data.objective.behavioralObservations?.affect?.range || 'Full'}
                   onValueChange={(value) => updateAffect('range', value)}
                   disabled={disabled}
                 >
@@ -136,7 +136,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
               <div>
                 <Label className="text-sm">Appropriateness</Label>
                 <Select
-                  value={data.objective.behavioralObservations.affect.appropriateness}
+                  value={data.objective.behavioralObservations?.affect?.appropriateness || 'Appropriate'}
                   onValueChange={(value) => updateAffect('appropriateness', value)}
                   disabled={disabled}
                 >
@@ -153,7 +153,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
               <div>
                 <Label className="text-sm">Quality</Label>
                 <Textarea
-                  value={data.objective.behavioralObservations.affect.quality}
+                  value={data.objective.behavioralObservations?.affect?.quality || ''}
                   onChange={(e) => updateAffect('quality', e.target.value)}
                   placeholder="Labile, congruent..."
                   rows={1}
@@ -167,7 +167,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             <div>
               <Label>Behavior</Label>
               <Textarea
-                value={data.objective.behavioralObservations.behavior}
+                value={data.objective.behavioralObservations?.behavior || ''}
                 onChange={(e) => updateBehavioralObservations('behavior', e.target.value)}
                 placeholder="Eye contact, motor activity, mannerisms..."
                 rows={2}
@@ -178,7 +178,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             <div>
               <Label>Speech</Label>
               <Textarea
-                value={data.objective.behavioralObservations.speech}
+                value={data.objective.behavioralObservations?.speech || ''}
                 onChange={(e) => updateBehavioralObservations('speech', e.target.value)}
                 placeholder="Rate, tone, volume, coherence..."
                 rows={2}
@@ -191,7 +191,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             <div>
               <Label>Thought Process</Label>
               <Textarea
-                value={data.objective.behavioralObservations.thoughtProcess}
+                value={data.objective.behavioralObservations?.thoughtProcess || ''}
                 onChange={(e) => updateBehavioralObservations('thoughtProcess', e.target.value)}
                 placeholder="Linear, tangential, circumstantial, logical..."
                 rows={2}
@@ -202,7 +202,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             <div>
               <Label>Insight & Judgment</Label>
               <Textarea
-                value={data.objective.behavioralObservations.insightJudgment}
+                value={data.objective.behavioralObservations?.insightJudgment || ''}
                 onChange={(e) => updateBehavioralObservations('insightJudgment', e.target.value)}
                 placeholder="Level of insight into condition, judgment regarding decisions..."
                 rows={2}
@@ -215,7 +215,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             <div>
               <Label>Attention</Label>
               <Select
-                value={data.objective.behavioralObservations.attention}
+                value={data.objective.behavioralObservations?.attention || 'Intact'}
                 onValueChange={(value) => updateBehavioralObservations('attention', value)}
                 disabled={disabled}
               >
@@ -233,7 +233,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             <div>
               <Label>Cooperation</Label>
               <Select
-                value={data.objective.behavioralObservations.cooperation}
+                value={data.objective.behavioralObservations?.cooperation || 'Cooperative'}
                 onValueChange={(value) => updateBehavioralObservations('cooperation', value)}
                 disabled={disabled}
               >
@@ -261,7 +261,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             <div>
               <Label>Suicidal Ideation</Label>
               <Select
-                value={data.objective.riskAssessment.suicidalIdeation}
+                value={data.objective.riskAssessment?.suicidalIdeation || 'Denied'}
                 onValueChange={(value) => updateRiskAssessment('suicidalIdeation', value)}
                 disabled={disabled}
               >
@@ -281,7 +281,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             <div>
               <Label>Homicidal Ideation</Label>
               <Select
-                value={data.objective.riskAssessment.homicidalIdeation}
+                value={data.objective.riskAssessment?.homicidalIdeation || 'Denied'}
                 onValueChange={(value) => updateRiskAssessment('homicidalIdeation', value)}
                 disabled={disabled}
               >
@@ -296,11 +296,11 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             </div>
           </div>
 
-          {data.objective.riskAssessment.suicidalIdeation !== 'Denied' && (
+          {data.objective.riskAssessment?.suicidalIdeation !== 'Denied' && (
             <div>
               <Label>Suicidal Ideation Details *</Label>
               <Textarea
-                value={data.objective.riskAssessment.suicidalDetails || ''}
+                value={data.objective.riskAssessment?.suicidalDetails || ''}
                 onChange={(e) => updateRiskAssessment('suicidalDetails', e.target.value)}
                 placeholder="Describe thoughts, plan, intent, protective factors..."
                 rows={3}
@@ -309,11 +309,11 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             </div>
           )}
 
-          {data.objective.riskAssessment.homicidalIdeation !== 'Denied' && (
+          {data.objective.riskAssessment?.homicidalIdeation !== 'Denied' && (
             <div>
               <Label>Homicidal Ideation Details *</Label>
               <Textarea
-                value={data.objective.riskAssessment.homicidalDetails || ''}
+                value={data.objective.riskAssessment?.homicidalDetails || ''}
                 onChange={(e) => updateRiskAssessment('homicidalDetails', e.target.value)}
                 placeholder="Describe thoughts, target, plan, intent..."
                 rows={3}
@@ -326,7 +326,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             <div>
               <Label>Self-Harm</Label>
               <Select
-                value={data.objective.riskAssessment.selfHarm}
+                value={data.objective.riskAssessment?.selfHarm || 'Denied'}
                 onValueChange={(value) => updateRiskAssessment('selfHarm', value)}
                 disabled={disabled}
               >
@@ -343,7 +343,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             <div>
               <Label>Substance Use</Label>
               <Select
-                value={data.objective.riskAssessment.substanceUse}
+                value={data.objective.riskAssessment?.substanceUse || 'Denied'}
                 onValueChange={(value) => updateRiskAssessment('substanceUse', value)}
                 disabled={disabled}
               >
@@ -360,7 +360,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             <div>
               <Label>Overall Risk Level</Label>
               <Select
-                value={data.objective.riskAssessment.overallRiskLevel}
+                value={data.objective.riskAssessment?.overallRiskLevel || 'Low'}
                 onValueChange={(value) => updateRiskAssessment('overallRiskLevel', value)}
                 disabled={disabled}
               >
@@ -376,12 +376,12 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
             </div>
           </div>
 
-          {(data.objective.riskAssessment.overallRiskLevel === 'Moderate' || 
-            data.objective.riskAssessment.overallRiskLevel === 'High') && (
+          {(data.objective.riskAssessment?.overallRiskLevel === 'Moderate' || 
+            data.objective.riskAssessment?.overallRiskLevel === 'High') && (
             <div>
               <Label>Risk Interventions *</Label>
               <Textarea
-                value={data.objective.riskAssessment.interventions || ''}
+                value={data.objective.riskAssessment?.interventions || ''}
                 onChange={(e) => updateRiskAssessment('interventions', e.target.value)}
                 placeholder="Safety plan, crisis resources provided, family contacted, emergency services..."
                 rows={3}
@@ -400,7 +400,7 @@ export function ObjectiveSection({ data, onChange, disabled }: ObjectiveSectionP
           <div>
             <Label>Progress Observed</Label>
             <Textarea
-              value={data.objective.progressObserved}
+              value={data.objective.progressObserved || ''}
               onChange={(e) => updateObjective('progressObserved', e.target.value)}
               placeholder="Overall clinical observations about client's progress and functioning..."
               rows={4}
