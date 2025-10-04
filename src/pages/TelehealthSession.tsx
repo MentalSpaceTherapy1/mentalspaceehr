@@ -55,10 +55,14 @@ export default function TelehealthSession() {
       console.log('Current user:', user?.id);
       
       // Fetch session
+      const rawId = sessionId || '';
+      const normalizedId = rawId.replace(/^:/, '');
+      console.log('Normalized session id:', normalizedId);
+
       const { data: sessionData, error: sessionError } = await supabase
         .from('telehealth_sessions')
         .select('*')
-        .eq('session_id', sessionId)
+        .eq('session_id', normalizedId)
         .maybeSingle();
 
       console.log('Session data:', sessionData);

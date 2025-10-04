@@ -290,16 +290,54 @@ export function ClientAppointments({ clientId }: ClientAppointmentsProps) {
                       {canJoinSession(appointment) && (
                         <div className="pt-3 border-t space-y-2">
                           <Button
-                            onClick={() => {
-                              const link = appointment.telehealth_link!;
-                              const fixed = link.includes('/telehealth/session/')
-                                ? link
-                                : link.includes('/telehealth/session_')
-                                  ? link.replace('/telehealth/session_', '/telehealth/session/')
-                                  : link.includes('/telehealth/')
-                                    ? link.replace('/telehealth/', '/telehealth/session/')
-                                    : `/telehealth/session/${link}`;
-                              navigate(fixed);
+                            onClick={async () => {
+                              try {
+                                let link = appointment.telehealth_link || '';
+
+                                // If placeholder or missing, ensure a real session exists
+                                if (!link || link.includes(':sessionId')) {
+                                  const { data: existing } = await supabase
+                                    .from('telehealth_sessions')
+                                    .select('session_id')
+                                    .eq('appointment_id', appointment.id)
+                                    .maybeSingle();
+
+                                  let sid = existing?.session_id as string | undefined;
+                                  if (!sid) {
+                                    sid = `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+                                    await supabase.from('telehealth_sessions').insert({
+                                      appointment_id: appointment.id,
+                                      host_id: appointment.clinician_id,
+                                      session_id: sid,
+                                      status: 'waiting'
+                                    });
+                                  }
+
+                                  link = `/telehealth/session/${sid}`;
+                                  await supabase
+                                    .from('appointments')
+                                    .update({ telehealth_link: link, last_modified: new Date().toISOString() })
+                                    .eq('id', appointment.id);
+                                }
+
+                                // Normalize legacy links
+                                const fixed = link.includes('/telehealth/session/')
+                                  ? link
+                                  : link.includes('/telehealth/session_')
+                                    ? link.replace('/telehealth/session_', '/telehealth/session/')
+                                    : link.includes('/telehealth/')
+                                      ? link.replace('/telehealth/', '/telehealth/session/')
+                                      : `/telehealth/session/${link}`;
+
+                                navigate(fixed);
+                              } catch (e) {
+                                console.error('Failed to prepare telehealth session', e);
+                                toast({
+                                  title: 'Error',
+                                  description: 'Unable to join telehealth session.',
+                                  variant: 'destructive'
+                                });
+                              }
                             }}
                             className="w-full bg-primary hover:bg-primary/90"
                             size="sm"
