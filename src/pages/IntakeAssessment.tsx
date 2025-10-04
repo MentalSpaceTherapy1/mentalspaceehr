@@ -82,6 +82,8 @@ export default function IntakeAssessment() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [freeTextInput, setFreeTextInput] = useState('');
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState('');
   const timeTracker = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   
@@ -163,8 +165,11 @@ export default function IntakeAssessment() {
   useEffect(() => {
     if (clientId) {
       loadClientData();
+      loadClientAppointments();
     } else {
       setClientData(null);
+      setAppointments([]);
+      setSelectedAppointmentId('');
     }
   }, [clientId]);
 
@@ -205,6 +210,63 @@ export default function IntakeAssessment() {
       toast({
         title: 'Error',
         description: 'Failed to load client information',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const loadClientAppointments = async () => {
+    if (!clientId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('client_id', clientId)
+        .in('status', ['Scheduled', 'Completed', 'Checked In'])
+        .order('appointment_date', { ascending: false })
+        .order('start_time', { ascending: false });
+      
+      if (error) throw error;
+      setAppointments(data || []);
+    } catch (error) {
+      console.error('Error loading appointments:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load appointments',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const loadAppointmentDetails = async (appointmentId: string) => {
+    if (!appointmentId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('id', appointmentId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        // Auto-populate session information from appointment
+        setFormData(prev => ({
+          ...prev,
+          sessionDate: data.appointment_date,
+          sessionStartTime: data.start_time,
+          sessionEndTime: data.end_time,
+          sessionLocation: data.service_location,
+          cptCode: data.cpt_code || ''
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading appointment details:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load appointment details',
         variant: 'destructive'
       });
     }
@@ -321,6 +383,11 @@ export default function IntakeAssessment() {
           sessionDate: data.date_of_service,
           ...content
         });
+
+        // Load appointment ID if exists
+        if (data.appointment_id) {
+          setSelectedAppointmentId(data.appointment_id);
+        }
 
         // Load metadata
         setMetadata({
@@ -471,6 +538,15 @@ export default function IntakeAssessment() {
       return;
     }
 
+    if (!selectedAppointmentId) {
+      toast({
+        title: 'Appointment Required',
+        description: 'An intake assessment must be linked to a scheduled appointment',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     // If signing but requires supervisor cosign and not yet cosigned, don't allow
     if (status === 'Signed' && metadata.requiresSupervisorCosign && !metadata.supervisorCosigned) {
       toast({
@@ -487,6 +563,7 @@ export default function IntakeAssessment() {
       const noteData = {
         client_id: formData.clientId,
         clinician_id: user?.id,
+        appointment_id: selectedAppointmentId,
         note_type: 'intake_assessment' as any,
         note_format: 'SOAP' as any,
         date_of_service: formData.sessionDate,
@@ -585,6 +662,7 @@ export default function IntakeAssessment() {
     const errors: string[] = [];
 
     if (!formData.clientId) errors.push('Client must be selected');
+    if (!selectedAppointmentId) errors.push('Appointment must be selected');
     if (!formData.sessionDate) errors.push('Session date is required');
     if (!formData.sessionStartTime) errors.push('Session start time is required');
     if (!formData.sessionEndTime) errors.push('Session end time is required');
@@ -653,8 +731,64 @@ export default function IntakeAssessment() {
           </div>
         </div>
 
+        {/* Appointment Selection - Required for Intake */}
+        {clientId && !selectedAppointmentId && (
+          <Alert className="border-l-4 border-l-warning">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Appointment Required:</strong> An intake assessment must be linked to a scheduled appointment. Please select an appointment below.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {clientId && (
+          <Card className="border-l-4 border-l-accent shadow-lg">
+            <CardHeader className="bg-gradient-subtle">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-accent/10">
+                  <Clock className="h-5 w-5 text-accent" />
+                </div>
+                <div>
+                  <CardTitle>Appointment Selection</CardTitle>
+                  <CardDescription>Select the appointment this intake assessment is for</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="space-y-2">
+                <Label htmlFor="appointment-select" className="text-sm font-medium">Appointment *</Label>
+                <Select 
+                  value={selectedAppointmentId} 
+                  onValueChange={(value) => {
+                    setSelectedAppointmentId(value);
+                    loadAppointmentDetails(value);
+                  }}
+                  disabled={metadata.signedDate !== null}
+                >
+                  <SelectTrigger id="appointment-select" className="h-12">
+                    <SelectValue placeholder="Select an appointment..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {appointments.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-muted-foreground">
+                        No appointments found for this client
+                      </div>
+                    ) : (
+                      appointments.map((apt) => (
+                        <SelectItem key={apt.id} value={apt.id}>
+                          {new Date(apt.appointment_date).toLocaleDateString()} at {apt.start_time} - {apt.appointment_type} ({apt.status})
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* AI-Assisted Generation */}
-        {!metadata.signedDate && clientId && (
+        {!metadata.signedDate && clientId && selectedAppointmentId && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
