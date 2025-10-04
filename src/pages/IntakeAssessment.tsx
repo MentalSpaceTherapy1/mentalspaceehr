@@ -182,7 +182,7 @@ export default function IntakeAssessment() {
     try {
       const { data, error } = await supabase
         .from('user_roles')
-        .select('user_id, profiles(first_name, last_name)')
+        .select('user_id, profiles!user_roles_user_id_fkey(first_name, last_name)')
         .eq('role', 'supervisor');
 
       if (error) throw error;
@@ -586,6 +586,24 @@ export default function IntakeAssessment() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {!clientData && clientId && (
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Loading client information...
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {!clientId && (
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              No client selected. Please select a client from the Notes page.
+            </AlertDescription>
+          </Alert>
         )}
 
         {metadata.signedDate && (
