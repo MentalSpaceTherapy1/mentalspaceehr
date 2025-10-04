@@ -334,6 +334,26 @@ export default function ProgressNote() {
     }
   };
 
+  const inferCptCode = (type?: string, duration?: number) => {
+    if (!type) return '';
+    switch (type) {
+      case 'Initial Evaluation':
+        return '90791';
+      case 'Individual Therapy':
+        if (!duration) return '';
+        if (duration >= 60) return '90837';
+        if (duration >= 45) return '90834';
+        if (duration >= 30) return '90832';
+        return '90834';
+      case 'Family Therapy':
+        return '90847';
+      case 'Group Therapy':
+        return '90853';
+      default:
+        return '';
+    }
+  };
+
   const loadAppointmentData = async () => {
     if (!appointmentId) return;
 
@@ -347,23 +367,24 @@ export default function ProgressNote() {
       if (error) throw error;
 
       if (data) {
-        setFormData(prev => ({
-          ...prev,
-          clientId: data.client_id,
-          appointmentId: data.id,
-          sessionDate: data.appointment_date,
-          sessionStartTime: data.start_time,
-          sessionEndTime: data.end_time,
-          sessionDuration: data.duration || 0,
-          sessionType: data.appointment_type,
-          sessionModality: data.service_location === 'Telehealth' ? 'Telehealth' : 'In-Person',
-          sessionLocation: data.service_location,
-          billing: {
-            ...prev.billing,
-            cptCode: data.cpt_code || '',
-            diagnosisCodes: data.icd_codes || [],
-          },
-        }));
+          setFormData(prev => ({
+            ...prev,
+            clientId: data.client_id,
+            appointmentId: data.id,
+            sessionDate: data.appointment_date,
+            sessionStartTime: data.start_time,
+            sessionEndTime: data.end_time,
+            sessionDuration: data.duration || 0,
+            sessionType: data.appointment_type,
+            sessionModality: data.service_location === 'Telehealth' ? 'Telehealth' : 'In-Person',
+            sessionLocation: data.service_location,
+            billing: {
+              ...prev.billing,
+              cptCode: data.cpt_code || inferCptCode(data.appointment_type, data.duration) || '',
+              diagnosisCodes: data.icd_codes || [],
+              placeOfService: data.service_location === 'Telehealth' ? '02' : '11',
+            },
+          }));
       }
     } catch (error) {
       console.error('Error loading appointment:', error);
@@ -670,8 +691,9 @@ export default function ProgressNote() {
                         sessionLocation: appt.service_location,
                         billing: {
                           ...prev.billing,
-                          cptCode: appt.cpt_code || prev.billing.cptCode,
+                          cptCode: appt.cpt_code || inferCptCode(appt.appointment_type, appt.duration) || prev.billing.cptCode,
                           diagnosisCodes: appt.icd_codes || prev.billing.diagnosisCodes,
+                          placeOfService: appt.service_location === 'Telehealth' ? '02' : '11',
                         },
                       }));
                     }
