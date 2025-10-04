@@ -1859,6 +1859,7 @@ export type Database = {
           supervision_end_date: string | null
           supervision_licenses: string[] | null
           supervision_start_date: string | null
+          supervisor_id: string | null
           tax_id: string | null
           taxonomy_code: string | null
           title: string | null
@@ -1907,6 +1908,7 @@ export type Database = {
           supervision_end_date?: string | null
           supervision_licenses?: string[] | null
           supervision_start_date?: string | null
+          supervisor_id?: string | null
           tax_id?: string | null
           taxonomy_code?: string | null
           title?: string | null
@@ -1955,12 +1957,21 @@ export type Database = {
           supervision_end_date?: string | null
           supervision_licenses?: string[] | null
           supervision_start_date?: string | null
+          supervisor_id?: string | null
           tax_id?: string | null
           taxonomy_code?: string | null
           title?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       recently_viewed_clients: {
         Row: {

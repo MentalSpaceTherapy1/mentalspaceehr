@@ -78,6 +78,8 @@ export default function IntakeAssessment() {
   const [clientData, setClientData] = useState<any>(null);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [availableClients, setAvailableClients] = useState<any[]>([]);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   const timeTracker = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   
@@ -121,10 +123,10 @@ export default function IntakeAssessment() {
 
   useEffect(() => {
     loadAvailableClients();
+    loadUserProfileAndRoles();
     if (noteId) {
       loadExistingNote();
     }
-    loadSupervisors();
     
     // Start time tracking
     startTimeRef.current = Date.now();
@@ -206,24 +208,77 @@ export default function IntakeAssessment() {
     }
   };
 
+  const loadUserProfileAndRoles = async () => {
+    try {
+      // Get user profile with supervisor info
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          supervisor:profiles!profiles_supervisor_id_fkey (
+            id,
+            first_name,
+            last_name,
+            email
+          )
+        `)
+        .eq('id', user?.id)
+        .single();
+
+      if (profileError) throw profileError;
+      setUserProfile(profile);
+
+      // Get user roles
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user?.id);
+
+      if (rolesError) throw rolesError;
+      
+      const userRoleList = roles?.map(r => r.role) || [];
+      setUserRoles(userRoleList);
+
+      // Automatically set supervisor co-sign requirement for associate_trainee
+      const requiresSupervisor = userRoleList.includes('associate_trainee');
+      
+      if (requiresSupervisor && profile?.supervisor_id) {
+        setMetadata(prev => ({
+          ...prev,
+          requiresSupervisorCosign: true,
+          supervisorId: profile.supervisor_id
+        }));
+      }
+
+      // Load all supervisors for display purposes
+      const { data: supervisorsList, error: supervisorsError } = await supabase
+        .from('user_roles')
+        .select(`
+          user_id,
+          profiles!user_roles_user_id_fkey (
+            id,
+            first_name,
+            last_name,
+            email
+          )
+        `)
+        .eq('role', 'supervisor');
+
+      if (supervisorsError) throw supervisorsError;
+      setSupervisors(supervisorsList || []);
+    } catch (error) {
+      console.error('Error loading user profile and roles:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load user profile information',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const handleClientSelect = (selectedClientId: string) => {
     setFormData(prev => ({ ...prev, clientId: selectedClientId }));
     navigate(`/intake-assessment?clientId=${selectedClientId}`, { replace: true });
-  };
-
-  const loadSupervisors = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('user_id, profiles!user_roles_user_id_fkey(first_name, last_name)')
-        .eq('role', 'supervisor');
-
-      if (error) throw error;
-      
-      setSupervisors(data || []);
-    } catch (error) {
-      console.error('Error loading supervisors:', error);
-    }
   };
 
   const loadExistingNote = async () => {
@@ -745,110 +800,100 @@ export default function IntakeAssessment() {
           </Alert>
         )}
 
-        {/* Supervisor Cosign Section - Always show for trainee/associate roles */}
-        <Card className="border-l-4 border-l-secondary shadow-lg">
-          <CardHeader className="bg-gradient-subtle">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-secondary/10">
-                <FileSignature className="h-5 w-5 text-secondary" />
-              </div>
-              <div>
-                <CardTitle>Supervisor Review & Co-Sign</CardTitle>
-                <CardDescription>
-                  {metadata.supervisorCosigned 
-                    ? 'This note has been reviewed and co-signed' 
-                    : 'Configure supervisor review requirements'}
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-              <div>
-                <Label className="text-sm font-medium">Requires Supervisor Co-Sign</Label>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Required for associate/trainee clinicians and incident-to-billing
-                </p>
-              </div>
-              <Checkbox
-                checked={metadata.requiresSupervisorCosign}
-                onCheckedChange={(checked) => setMetadata(prev => ({
-                  ...prev,
-                  requiresSupervisorCosign: checked as boolean
-                }))}
-                disabled={metadata.signedDate !== null}
-              />
-            </div>
-
-            {metadata.requiresSupervisorCosign && !metadata.supervisorCosigned && (
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Select Supervisor *</Label>
-                  <Select
-                    value={metadata.supervisorId || ''}
-                    onValueChange={(value) => setMetadata(prev => ({
-                      ...prev,
-                      supervisorId: value
-                    }))}
-                    disabled={metadata.signedDate !== null}
-                  >
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Select supervisor..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {supervisors.map((sup) => (
-                        <SelectItem key={sup.user_id} value={sup.user_id}>
-                          {sup.profiles?.first_name} {sup.profiles?.last_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+        {/* Supervisor Cosign Section - Automatic for associate/trainee roles */}
+        {(metadata.requiresSupervisorCosign || metadata.supervisorCosigned) && (
+          <Card className="border-l-4 border-l-secondary shadow-lg">
+            <CardHeader className="bg-gradient-subtle">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-secondary/10">
+                  <FileSignature className="h-5 w-5 text-secondary" />
                 </div>
-
-                {metadata.signedDate && metadata.supervisorId && (
-                  <Alert className="border-accent bg-accent/5">
-                    <AlertTriangle className="h-4 w-4 text-accent" />
-                    <AlertDescription>
-                      <strong>Action Required:</strong> This note must be co-signed by the supervisor before it can be used for billing purposes.
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                {metadata.signedDate && metadata.supervisorId && (
-                  <Button
-                    className="w-full gap-2 bg-gradient-secondary text-white shadow-md hover:opacity-90"
-                    onClick={() => setSupervisorDialogOpen(true)}
-                  >
-                    <FileSignature className="h-4 w-4" />
-                    Supervisor Co-Sign Now
-                  </Button>
-                )}
+                <div>
+                  <CardTitle>Supervisor Review & Co-Sign</CardTitle>
+                  <CardDescription>
+                    {metadata.supervisorCosigned 
+                      ? 'This note has been reviewed and co-signed' 
+                      : userRoles.includes('associate_trainee')
+                        ? 'Required for associate/trainee clinicians'
+                        : 'Required for incident-to-billing'}
+                  </CardDescription>
+                </div>
               </div>
-            )}
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!metadata.supervisorCosigned && (
+                <div className="space-y-3">
+                  {userProfile?.supervisor ? (
+                    <div className="p-4 rounded-lg bg-muted/50 border-2 border-primary/20">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <Label className="text-sm font-medium">Assigned Supervisor</Label>
+                          <p className="text-base font-semibold mt-1">
+                            {userProfile.supervisor.first_name} {userProfile.supervisor.last_name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {userProfile.supervisor.email}
+                          </p>
+                        </div>
+                        <Badge variant="secondary" className="gap-1">
+                          Auto-Assigned
+                        </Badge>
+                      </div>
+                    </div>
+                  ) : (
+                    <Alert className="border-destructive bg-destructive/5">
+                      <AlertTriangle className="h-4 w-4 text-destructive" />
+                      <AlertDescription>
+                        <strong>No Supervisor Assigned:</strong> Please contact your administrator to assign a supervisor to your account before signing intake assessments.
+                      </AlertDescription>
+                    </Alert>
+                  )}
 
-            {metadata.supervisorCosigned && (
-              <div className="space-y-3 p-4 rounded-lg bg-success/5 border border-success/20">
-                <div className="flex items-center gap-2">
-                  <Badge className="gap-1 bg-success text-white">
-                    <FileSignature className="h-3 w-3" />
-                    Co-Signed
-                  </Badge>
-                  {metadata.supervisorCosignDate && (
-                    <span className="text-sm text-muted-foreground">
-                      on {new Date(metadata.supervisorCosignDate).toLocaleDateString()} at {new Date(metadata.supervisorCosignDate).toLocaleTimeString()}
-                    </span>
+                  {metadata.signedDate && metadata.supervisorId && (
+                    <>
+                      <Alert className="border-accent bg-accent/5">
+                        <AlertTriangle className="h-4 w-4 text-accent" />
+                        <AlertDescription>
+                          <strong>Action Required:</strong> This note must be co-signed by the supervisor before it can be used for billing purposes.
+                        </AlertDescription>
+                      </Alert>
+
+                      <Button
+                        className="w-full gap-2 bg-gradient-secondary text-white shadow-md hover:opacity-90 border-0"
+                        onClick={() => setSupervisorDialogOpen(true)}
+                      >
+                        <FileSignature className="h-4 w-4" />
+                        Supervisor Co-Sign Now
+                      </Button>
+                    </>
                   )}
                 </div>
-                {metadata.supervisorComments && (
-                  <div className="space-y-1">
-                    <Label className="text-sm font-medium">Supervisor Comments:</Label>
-                    <p className="text-sm p-3 rounded-md bg-background border">{metadata.supervisorComments}</p>
+              )}
+
+              {metadata.supervisorCosigned && (
+                <div className="space-y-3 p-4 rounded-lg bg-success/5 border border-success/20">
+                  <div className="flex items-center gap-2">
+                    <Badge className="gap-1 bg-success text-white border-0">
+                      <FileSignature className="h-3 w-3" />
+                      Co-Signed
+                    </Badge>
+                    {metadata.supervisorCosignDate && (
+                      <span className="text-sm text-muted-foreground">
+                        on {new Date(metadata.supervisorCosignDate).toLocaleDateString()} at {new Date(metadata.supervisorCosignDate).toLocaleTimeString()}
+                      </span>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  {metadata.supervisorComments && (
+                    <div className="space-y-1">
+                      <Label className="text-sm font-medium">Supervisor Comments:</Label>
+                      <p className="text-sm p-3 rounded-md bg-background border">{metadata.supervisorComments}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="shadow-elegant overflow-hidden">
           <CardContent className="pt-6">
