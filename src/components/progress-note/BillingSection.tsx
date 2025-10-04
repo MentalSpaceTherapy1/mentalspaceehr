@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { X, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BillingSectionProps {
   data: any;
@@ -16,6 +17,27 @@ interface BillingSectionProps {
 export function BillingSection({ data, onChange, disabled }: BillingSectionProps) {
   const [newDiagnosisCode, setNewDiagnosisCode] = useState('');
   const [newModifier, setNewModifier] = useState('');
+  const [serviceCodes, setServiceCodes] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchServiceCodes();
+  }, []);
+
+  const fetchServiceCodes = async () => {
+    try {
+      const { data: codes, error } = await supabase
+        .from('service_codes')
+        .select('*')
+        .eq('is_active', true)
+        .order('service_type')
+        .order('code');
+
+      if (error) throw error;
+      setServiceCodes(codes || []);
+    } catch (error) {
+      console.error('Error fetching service codes:', error);
+    }
+  };
 
   const updateBilling = (field: string, value: any) => {
     onChange({
@@ -51,19 +73,6 @@ export function BillingSection({ data, onChange, disabled }: BillingSectionProps
     updateBilling('modifiers', current.filter((_: any, i: number) => i !== index));
   };
 
-  // Common CPT codes for mental health
-  const commonCPTCodes = [
-    { code: '90791', description: 'Psychiatric diagnostic evaluation' },
-    { code: '90792', description: 'Psychiatric diagnostic evaluation with medical services' },
-    { code: '90832', description: 'Psychotherapy, 30 minutes' },
-    { code: '90834', description: 'Psychotherapy, 45 minutes' },
-    { code: '90837', description: 'Psychotherapy, 60 minutes' },
-    { code: '90846', description: 'Family psychotherapy without patient' },
-    { code: '90847', description: 'Family psychotherapy with patient' },
-    { code: '90853', description: 'Group psychotherapy' },
-    { code: '99214', description: 'Office visit, established patient, moderate' },
-    { code: '99215', description: 'Office visit, established patient, high complexity' },
-  ];
 
   return (
     <div className="space-y-6">
@@ -73,23 +82,26 @@ export function BillingSection({ data, onChange, disabled }: BillingSectionProps
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>CPT Code *</Label>
+            <Label>Service Code (CPT) *</Label>
             <Select
               value={data.billing.cptCode}
               onValueChange={(value) => updateBilling('cptCode', value)}
               disabled={disabled}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select CPT code" />
+                <SelectValue placeholder="Select service code" />
               </SelectTrigger>
               <SelectContent>
-                {commonCPTCodes.map((cpt) => (
-                  <SelectItem key={cpt.code} value={cpt.code}>
-                    {cpt.code} - {cpt.description}
+                {serviceCodes.map((service) => (
+                  <SelectItem key={service.id} value={service.code}>
+                    {service.code} - {service.description}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              Service codes are pulled from your practice's Service Codes settings
+            </p>
           </div>
 
           <div>
