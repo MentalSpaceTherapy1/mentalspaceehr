@@ -2849,7 +2849,7 @@ export type Database = {
         | "billing_staff"
         | "front_desk"
         | "associate_trainee"
-      note_format: "SOAP" | "DAP" | "BIRP" | "GIRP" | "narrative"
+      note_format: "SOAP" | "DAP" | "BIRP" | "GIRP" | "narrative" | "Narrative"
       note_type:
         | "intake_assessment"
         | "progress_note"
@@ -3001,7 +3001,7 @@ export const Constants = {
         "front_desk",
         "associate_trainee",
       ],
-      note_format: ["SOAP", "DAP", "BIRP", "GIRP", "narrative"],
+      note_format: ["SOAP", "DAP", "BIRP", "GIRP", "narrative", "Narrative"],
       note_type: [
         "intake_assessment",
         "progress_note",
