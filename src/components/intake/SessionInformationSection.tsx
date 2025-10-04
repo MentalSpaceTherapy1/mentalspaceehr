@@ -76,7 +76,7 @@ export function SessionInformationSection({ data, onChange, cptCode, onCptCodeCh
         <div>
           <Label htmlFor="cptCode">CPT Code</Label>
           <Select
-            value={cptCode || ''}
+            value={cptCode || undefined}
             onValueChange={(value) => onCptCodeChange?.({ target: { value } } as any)}
             disabled={disabled}
           >
@@ -84,7 +84,6 @@ export function SessionInformationSection({ data, onChange, cptCode, onCptCodeCh
               <SelectValue placeholder="Select service code" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
               {serviceCodes.map((service) => (
                 <SelectItem key={service.id} value={service.code}>
                   {service.code} - {service.description}
