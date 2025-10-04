@@ -53,7 +53,7 @@ export function SessionInformationSection({ data, onChange, cptCode, onCptCodeCh
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
+        <div>
           <Label htmlFor="cptCode">CPT Code</Label>
           <Input
             id="cptCode"
@@ -62,9 +62,6 @@ export function SessionInformationSection({ data, onChange, cptCode, onCptCodeCh
             placeholder="e.g., 90791 (Psychiatric Diagnostic Evaluation)"
             disabled={disabled}
           />
-          <p className="text-xs text-muted-foreground">
-            Common codes: 90791 (Intake without medical services), 90792 (Intake with medical services)
-          </p>
         </div>
 
         <div>

@@ -982,7 +982,6 @@ export default function IntakeAssessment() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Session Information & Billing</CardTitle>
-                    <CardDescription>Session details and billing code for this intake assessment</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <SessionInformationSection
