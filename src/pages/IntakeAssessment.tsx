@@ -500,90 +500,160 @@ export default function IntakeAssessment() {
     );
   }
 
+  // Validation function to check if form is complete
+  const validateForm = () => {
+    const errors: string[] = [];
+
+    if (!formData.clientId) errors.push('Client must be selected');
+    if (!formData.sessionDate) errors.push('Session date is required');
+    if (!formData.sessionStartTime) errors.push('Session start time is required');
+    if (!formData.sessionEndTime) errors.push('Session end time is required');
+    if (!formData.chiefComplaint?.trim()) errors.push('Chief complaint is required');
+    if (!formData.historyOfPresentingProblem?.trim()) errors.push('History of presenting problem is required');
+    if (!formData.clinicianImpression?.trim()) errors.push('Clinician impression is required');
+
+    // Check if at least one diagnosis is provided
+    if (!formData.diagnosticFormulation?.primaryDiagnosis?.trim()) {
+      errors.push('Primary diagnosis is required');
+    }
+
+    // Check if treatment recommendations exist
+    if (!formData.treatmentRecommendations?.recommendedServices?.length) {
+      errors.push('Treatment recommendations are required');
+    }
+
+    return errors;
+  };
+
+  const isFormComplete = () => {
+    return validateForm().length === 0;
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/notes')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Intake Assessment</h1>
-              <p className="text-muted-foreground mt-1">
-                Comprehensive initial evaluation
-              </p>
+        {/* Modern header with gradient */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-primary p-8 text-white shadow-elegant">
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate('/notes')}
+                className="text-white hover:bg-white/20"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold">Intake Assessment</h1>
+                <p className="text-white/90 mt-1">
+                  Comprehensive initial evaluation
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {metadata.wasAIAssisted && (
+                <Badge variant="secondary" className="gap-1 bg-white/20 text-white border-white/30">
+                  <Sparkles className="h-3 w-3" />
+                  AI Assisted
+                </Badge>
+              )}
+              {metadata.signedDate && (
+                <Badge variant="outline" className="gap-1 bg-white/10 text-white border-white/30">
+                  <FileSignature className="h-3 w-3" />
+                  Signed
+                </Badge>
+              )}
+              {documentationTime > 0 && (
+                <Badge variant="secondary" className="gap-1 bg-white/20 text-white border-white/30">
+                  <Clock className="h-3 w-3" />
+                  {documentationTime} min
+                </Badge>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {metadata.wasAIAssisted && (
-              <Badge variant="secondary" className="gap-1">
-                <Sparkles className="h-3 w-3" />
-                AI Assisted
-              </Badge>
+          {/* Decorative gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-subtle opacity-30"></div>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            variant="outline"
+            onClick={handleAIGenerate}
+            disabled={generatingAI || !clientId || metadata.signedDate !== null}
+            className="gap-2"
+          >
+            {generatingAI ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                AI Assist
+              </>
             )}
-            {metadata.signedDate && (
-              <Badge variant="outline" className="gap-1">
-                <FileSignature className="h-3 w-3" />
-                Signed
-              </Badge>
-            )}
-            {documentationTime > 0 && (
-              <Badge variant="secondary" className="gap-1">
-                <Clock className="h-3 w-3" />
-                {documentationTime} min
-              </Badge>
-            )}
-            <Button
-              variant="outline"
-              onClick={handleAIGenerate}
-              disabled={generatingAI || !clientId || metadata.signedDate !== null}
-            >
-              {generatingAI ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  AI Assist
-                </>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => saveIntakeAssessment('Draft')}
-              disabled={saving || metadata.signedDate !== null}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Save Draft
-            </Button>
-            <Button
-              onClick={() => setSignatureDialogOpen(true)}
-              disabled={saving || metadata.signedDate !== null}
-            >
-              <FileSignature className="h-4 w-4 mr-2" />
-              {metadata.signedDate ? 'Signed' : 'Sign'}
-            </Button>
-          </div>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => saveIntakeAssessment('Draft')}
+            disabled={saving || metadata.signedDate !== null}
+            className="gap-2"
+          >
+            <Save className="h-4 w-4" />
+            Save Draft
+          </Button>
+          <Button
+            onClick={() => {
+              const errors = validateForm();
+              if (errors.length > 0) {
+                toast({
+                  title: 'Form Incomplete',
+                  description: (
+                    <div className="space-y-1">
+                      <p className="font-medium">Please complete the following:</p>
+                      <ul className="list-disc list-inside text-sm">
+                        {errors.map((error, idx) => (
+                          <li key={idx}>{error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ),
+                  variant: 'destructive'
+                });
+                return;
+              }
+              setSignatureDialogOpen(true);
+            }}
+            disabled={saving || metadata.signedDate !== null || !isFormComplete()}
+            className="gap-2 bg-gradient-primary text-white shadow-colored hover:opacity-90"
+          >
+            <FileSignature className="h-4 w-4" />
+            {metadata.signedDate ? 'Signed' : 'Sign & Lock'}
+          </Button>
         </div>
 
         {/* Client Selection or Demographics */}
         {!clientId ? (
-          <Card>
-            <CardHeader>
+          <Card className="border-2 border-dashed border-primary/30 shadow-lg">
+            <CardHeader className="bg-gradient-subtle">
               <div className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                <CardTitle>Select Client</CardTitle>
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Select Client</CardTitle>
+                  <CardDescription>Choose a client to create an intake assessment for</CardDescription>
+                </div>
               </div>
-              <CardDescription>Choose a client to create an intake assessment for</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <div className="space-y-2">
-                <Label htmlFor="client-select">Client *</Label>
+                <Label htmlFor="client-select" className="text-sm font-medium">Client *</Label>
                 <Select onValueChange={handleClientSelect} value={formData.clientId}>
-                  <SelectTrigger id="client-select">
+                  <SelectTrigger id="client-select" className="h-12">
                     <SelectValue placeholder="Select a client..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -598,48 +668,54 @@ export default function IntakeAssessment() {
             </CardContent>
           </Card>
         ) : clientData ? (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                <CardTitle>Client Information</CardTitle>
+          <Card className="border-l-4 border-l-primary shadow-lg overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-subtle opacity-5 pointer-events-none"></div>
+            <CardHeader className="relative">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl bg-gradient-primary text-white shadow-colored">
+                  <User className="h-6 w-6" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Client Information</CardTitle>
+                  <CardDescription>Demographics and contact details</CardDescription>
+                </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <Label className="text-xs text-muted-foreground">Name</Label>
-                  <p className="font-medium">{clientData.first_name} {clientData.last_name}</p>
+            <CardContent className="relative">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Name</Label>
+                  <p className="font-semibold text-lg">{clientData.first_name} {clientData.last_name}</p>
                 </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">MRN</Label>
-                  <p className="font-medium">{clientData.medical_record_number}</p>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">MRN</Label>
+                  <p className="font-semibold">{clientData.medical_record_number}</p>
                 </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">Date of Birth</Label>
-                  <p className="font-medium">{new Date(clientData.date_of_birth).toLocaleDateString()}</p>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Date of Birth</Label>
+                  <p className="font-semibold">{new Date(clientData.date_of_birth).toLocaleDateString()}</p>
                 </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">Age</Label>
-                  <p className="font-medium">
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Age</Label>
+                  <p className="font-semibold">
                     {new Date().getFullYear() - new Date(clientData.date_of_birth).getFullYear()} years
                   </p>
                 </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">Gender</Label>
-                  <p className="font-medium">{clientData.gender || 'Not specified'}</p>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Gender</Label>
+                  <p className="font-semibold">{clientData.gender || 'Not specified'}</p>
                 </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">Phone</Label>
-                  <p className="font-medium">{clientData.primary_phone}</p>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Phone</Label>
+                  <p className="font-semibold">{clientData.primary_phone}</p>
                 </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">Email</Label>
-                  <p className="font-medium">{clientData.email || 'Not provided'}</p>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</Label>
+                  <p className="font-semibold">{clientData.email || 'Not provided'}</p>
                 </div>
-                <div>
-                  <Label className="text-xs text-muted-foreground">Status</Label>
-                  <Badge variant={clientData.status === 'Active' ? 'default' : 'secondary'}>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</Label>
+                  <Badge variant={clientData.status === 'Active' ? 'default' : 'secondary'} className="w-fit">
                     {clientData.status}
                   </Badge>
                 </div>
@@ -647,7 +723,7 @@ export default function IntakeAssessment() {
             </CardContent>
           </Card>
         ) : (
-          <Alert>
+          <Alert className="border-l-4 border-l-warning">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               Loading client information...
@@ -673,28 +749,45 @@ export default function IntakeAssessment() {
           </Alert>
         )}
 
-        {/* Supervisor Cosign Section */}
-        {(metadata.requiresSupervisorCosign || metadata.supervisorCosigned) && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Supervisor Review</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>Requires Supervisor Co-Sign</Label>
-                <Checkbox
-                  checked={metadata.requiresSupervisorCosign}
-                  onCheckedChange={(checked) => setMetadata(prev => ({
-                    ...prev,
-                    requiresSupervisorCosign: checked as boolean
-                  }))}
-                  disabled={metadata.signedDate !== null}
-                />
+        {/* Supervisor Cosign Section - Always show for trainee/associate roles */}
+        <Card className="border-l-4 border-l-secondary shadow-lg">
+          <CardHeader className="bg-gradient-subtle">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-secondary/10">
+                <FileSignature className="h-5 w-5 text-secondary" />
               </div>
+              <div>
+                <CardTitle>Supervisor Review & Co-Sign</CardTitle>
+                <CardDescription>
+                  {metadata.supervisorCosigned 
+                    ? 'This note has been reviewed and co-signed' 
+                    : 'Configure supervisor review requirements'}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+              <div>
+                <Label className="text-sm font-medium">Requires Supervisor Co-Sign</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Required for associate/trainee clinicians and incident-to-billing
+                </p>
+              </div>
+              <Checkbox
+                checked={metadata.requiresSupervisorCosign}
+                onCheckedChange={(checked) => setMetadata(prev => ({
+                  ...prev,
+                  requiresSupervisorCosign: checked as boolean
+                }))}
+                disabled={metadata.signedDate !== null}
+              />
+            </div>
 
-              {metadata.requiresSupervisorCosign && !metadata.supervisorCosigned && (
-                <div>
-                  <Label>Select Supervisor</Label>
+            {metadata.requiresSupervisorCosign && !metadata.supervisorCosigned && (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Select Supervisor *</Label>
                   <Select
                     value={metadata.supervisorId || ''}
                     onValueChange={(value) => setMetadata(prev => ({
@@ -703,7 +796,7 @@ export default function IntakeAssessment() {
                     }))}
                     disabled={metadata.signedDate !== null}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11">
                       <SelectValue placeholder="Select supervisor..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -715,50 +808,80 @@ export default function IntakeAssessment() {
                     </SelectContent>
                   </Select>
                 </div>
-              )}
 
-              {metadata.supervisorCosigned && (
-                <div className="space-y-2">
-                  <Badge variant="outline" className="gap-1">
+                {metadata.signedDate && metadata.supervisorId && (
+                  <Alert className="border-accent bg-accent/5">
+                    <AlertTriangle className="h-4 w-4 text-accent" />
+                    <AlertDescription>
+                      <strong>Action Required:</strong> This note must be co-signed by the supervisor before it can be used for billing purposes.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {metadata.signedDate && metadata.supervisorId && (
+                  <Button
+                    className="w-full gap-2 bg-gradient-secondary text-white shadow-md hover:opacity-90"
+                    onClick={() => setSupervisorDialogOpen(true)}
+                  >
+                    <FileSignature className="h-4 w-4" />
+                    Supervisor Co-Sign Now
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {metadata.supervisorCosigned && (
+              <div className="space-y-3 p-4 rounded-lg bg-success/5 border border-success/20">
+                <div className="flex items-center gap-2">
+                  <Badge className="gap-1 bg-success text-white">
                     <FileSignature className="h-3 w-3" />
-                    Co-Signed {metadata.supervisorCosignDate && `on ${new Date(metadata.supervisorCosignDate).toLocaleDateString()}`}
+                    Co-Signed
                   </Badge>
-                  {metadata.supervisorComments && (
-                    <div>
-                      <Label className="text-sm font-medium">Supervisor Comments:</Label>
-                      <p className="text-sm text-muted-foreground mt-1">{metadata.supervisorComments}</p>
-                    </div>
+                  {metadata.supervisorCosignDate && (
+                    <span className="text-sm text-muted-foreground">
+                      on {new Date(metadata.supervisorCosignDate).toLocaleDateString()} at {new Date(metadata.supervisorCosignDate).toLocaleTimeString()}
+                    </span>
                   )}
                 </div>
-              )}
+                {metadata.supervisorComments && (
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium">Supervisor Comments:</Label>
+                    <p className="text-sm p-3 rounded-md bg-background border">{metadata.supervisorComments}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-              {metadata.requiresSupervisorCosign && !metadata.supervisorCosigned && metadata.supervisorId && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSupervisorDialogOpen(true)}
-                  disabled={!metadata.signedDate}
-                >
-                  <FileSignature className="h-4 w-4 mr-2" />
-                  Supervisor Co-Sign
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        <Card>
+        <Card className="shadow-elegant overflow-hidden">
           <CardContent className="pt-6">
             <Tabs defaultValue="session" className="space-y-6">
-              <TabsList className="grid grid-cols-4 lg:grid-cols-8 w-full">
-                <TabsTrigger value="session">Session</TabsTrigger>
-                <TabsTrigger value="presenting">Presenting</TabsTrigger>
-                <TabsTrigger value="symptoms">Symptoms</TabsTrigger>
-                <TabsTrigger value="mse">MSE</TabsTrigger>
-                <TabsTrigger value="safety">Safety</TabsTrigger>
-                <TabsTrigger value="history">History</TabsTrigger>
-                <TabsTrigger value="diagnosis">Diagnosis</TabsTrigger>
-                <TabsTrigger value="treatment">Treatment</TabsTrigger>
+              <TabsList className="grid grid-cols-4 lg:grid-cols-8 w-full h-auto p-1 bg-gradient-subtle">
+                <TabsTrigger value="session" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md">
+                  Session
+                </TabsTrigger>
+                <TabsTrigger value="presenting" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md">
+                  Presenting
+                </TabsTrigger>
+                <TabsTrigger value="symptoms" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md">
+                  Symptoms
+                </TabsTrigger>
+                <TabsTrigger value="mse" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md">
+                  MSE
+                </TabsTrigger>
+                <TabsTrigger value="safety" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md">
+                  Safety
+                </TabsTrigger>
+                <TabsTrigger value="history" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md">
+                  History
+                </TabsTrigger>
+                <TabsTrigger value="diagnosis" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md">
+                  Diagnosis
+                </TabsTrigger>
+                <TabsTrigger value="treatment" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md">
+                  Treatment
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="session" className="space-y-4">
@@ -863,23 +986,36 @@ export default function IntakeAssessment() {
           </CardContent>
         </Card>
 
-        {/* Footer with time tracking */}
-        <Card>
+        {/* Footer with time tracking and completion status */}
+        <Card className="bg-gradient-subtle shadow-lg">
           <CardContent className="py-4">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span>Documentation Time: {documentationTime} minutes</span>
+                  <Clock className="h-4 w-4 text-primary" />
+                  <span className="font-medium">Documentation Time: {documentationTime} minutes</span>
                 </div>
                 {metadata.signedDate && (
                   <div className="flex items-center gap-2">
-                    <FileSignature className="h-4 w-4" />
-                    <span>Signed: {new Date(metadata.signedDate).toLocaleString()}</span>
+                    <FileSignature className="h-4 w-4 text-success" />
+                    <span className="font-medium text-success">
+                      Signed: {new Date(metadata.signedDate).toLocaleString()}
+                    </span>
                   </div>
                 )}
+                {!isFormComplete() && (
+                  <Badge variant="destructive" className="gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Incomplete ({validateForm().length} items)
+                  </Badge>
+                )}
+                {isFormComplete() && !metadata.signedDate && (
+                  <Badge variant="default" className="gap-1 bg-success">
+                    ✓ Ready to Sign
+                  </Badge>
+                )}
               </div>
-              <div className="text-xs">
+              <div className="text-xs text-muted-foreground">
                 Last saved: {hasUnsavedChanges ? 'Unsaved changes' : 'All changes saved'}
               </div>
             </div>
