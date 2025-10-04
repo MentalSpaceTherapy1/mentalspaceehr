@@ -15,7 +15,7 @@ import {
   CheckSquare,
   Bell,
   ListOrdered,
-  Mail
+  Mail,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
