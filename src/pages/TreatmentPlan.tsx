@@ -1,20 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, FileSignature, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Save, ArrowLeft, FileSignature, AlertTriangle, CheckCircle2, Brain, Sparkles, Check, X } from 'lucide-react';
 import { SignatureDialog } from '@/components/intake/SignatureDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DiagnosesSection } from '@/components/treatment-plan/DiagnosesSection';
+import { ProblemsSection } from '@/components/treatment-plan/ProblemsSection';
+import { GoalsSection } from '@/components/treatment-plan/GoalsSection';
+import { TreatmentModalitiesSection } from '@/components/treatment-plan/TreatmentModalitiesSection';
+import { StrengthsBarriersSection } from '@/components/treatment-plan/StrengthsBarriersSection';
+import { DischargeSection } from '@/components/treatment-plan/DischargeSection';
 
 export interface TreatmentPlanData {
   planId?: string;
@@ -135,6 +142,10 @@ export default function TreatmentPlan() {
   const [availableClients, setAvailableClients] = useState<any[]>([]);
   const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
   const [clinicianName, setClinicianName] = useState('');
+  const [generatingAI, setGeneratingAI] = useState(false);
+  const [aiInput, setAiInput] = useState('');
+  const [aiSuggestion, setAiSuggestion] = useState<any>(null);
+  const startTimeRef = useRef<number>(Date.now());
 
   const [formData, setFormData] = useState<TreatmentPlanData>({
     clientId: clientIdParam || '',
@@ -220,7 +231,8 @@ export default function TreatmentPlan() {
     if (!clientIdParam) return;
 
     try {
-      const { data, error } = await supabase
+      // Load intake assessment
+      const { data: intakeData, error: intakeError } = await supabase
         .from('clinical_notes')
         .select('*')
         .eq('client_id', clientIdParam)
@@ -230,10 +242,20 @@ export default function TreatmentPlan() {
         .limit(1)
         .maybeSingle();
 
-      if (error) throw error;
+      if (intakeError) throw intakeError;
 
-      if (data?.diagnoses && data.diagnoses.length > 0) {
-        const diagnoses = data.diagnoses.map((icdCode: string, index: number) => ({
+      // Load client demographics
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('id', clientIdParam)
+        .single();
+
+      if (clientError) throw clientError;
+
+      // Pre-populate diagnoses from intake
+      if (intakeData?.diagnoses && intakeData.diagnoses.length > 0) {
+        const diagnoses = intakeData.diagnoses.map((icdCode: string, index: number) => ({
           icdCode,
           diagnosis: '', // Will need to look up from ICD-10 codes
           severity: 'Moderate' as 'Mild' | 'Moderate' | 'Severe',
@@ -241,6 +263,27 @@ export default function TreatmentPlan() {
         }));
 
         setFormData(prev => ({ ...prev, diagnoses }));
+      }
+
+      // Pre-populate some client strengths/resources based on demographics
+      const strengths: string[] = [];
+      const supports: string[] = [];
+
+      if (clientData) {
+        if (clientData.primary_care_provider) {
+          supports.push(`Primary Care Provider: ${clientData.primary_care_provider}`);
+        }
+        if (clientData.referring_provider) {
+          supports.push(`Referring Provider: ${clientData.referring_provider}`);
+        }
+      }
+
+      if (strengths.length > 0 || supports.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          clientStrengths: [...prev.clientStrengths, ...strengths],
+          supportSystems: [...prev.supportSystems, ...supports],
+        }));
       }
     } catch (error) {
       console.error('Error loading intake data:', error);
@@ -455,6 +498,92 @@ export default function TreatmentPlan() {
     }
   };
 
+  const generateWithAI = async () => {
+    if (!aiInput.trim()) {
+      toast({
+        title: 'Input Required',
+        description: 'Please provide client information or clinical notes for AI to process',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!formData.clientId) {
+      toast({
+        title: 'Client Required',
+        description: 'Please select a client first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setGeneratingAI(true);
+
+      const { data, error } = await supabase.functions.invoke('generate-treatment-plan', {
+        body: {
+          freeTextInput: aiInput,
+          clientId: formData.clientId,
+          currentDiagnoses: formData.diagnoses,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.treatmentPlan) {
+        setAiSuggestion(data.treatmentPlan);
+
+        toast({
+          title: 'Treatment Plan Generated',
+          description: 'AI has generated treatment plan suggestions. Please review and accept or reject.',
+        });
+
+        setAiInput('');
+      }
+    } catch (error: any) {
+      console.error('Error generating treatment plan:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to generate treatment plan with AI',
+        variant: 'destructive',
+      });
+    } finally {
+      setGeneratingAI(false);
+    }
+  };
+
+  const acceptAiSuggestion = () => {
+    if (!aiSuggestion) return;
+
+    setFormData(prev => ({
+      ...prev,
+      problems: aiSuggestion.problems || prev.problems,
+      goals: aiSuggestion.goals || prev.goals,
+      treatmentModalities: {
+        ...prev.treatmentModalities,
+        ...(aiSuggestion.treatmentModalities || {}),
+      },
+      psychoeducationTopics: aiSuggestion.psychoeducationTopics || prev.psychoeducationTopics,
+      dischargeCriteria: aiSuggestion.dischargeCriteria || prev.dischargeCriteria,
+      clientStrengths: aiSuggestion.clientStrengths || prev.clientStrengths,
+    }));
+
+    setAiSuggestion(null);
+
+    toast({
+      title: 'Suggestion Accepted',
+      description: 'AI-generated content has been added to the treatment plan',
+    });
+  };
+
+  const rejectAiSuggestion = () => {
+    setAiSuggestion(null);
+    toast({
+      title: 'Suggestion Rejected',
+      description: 'AI-generated content was discarded',
+    });
+  };
+
   const isSigned = Boolean(formData.signedDate && formData.signedBy);
 
   return (
@@ -575,15 +704,169 @@ export default function TreatmentPlan() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Coming Soon</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5" />
+              AI-Assisted Generation
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              The full treatment plan interface with goals, objectives, and interventions is being developed.
-              You can save basic information for now.
-            </p>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Client Information & Clinical Notes</Label>
+              <Textarea
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+                placeholder="Describe the client's presenting concerns, current functioning, treatment needs, and any relevant background information. The AI will help generate treatment goals, objectives, and interventions..."
+                rows={6}
+                disabled={generatingAI || !formData.clientId}
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                Provide detailed clinical information to help generate appropriate treatment goals and objectives.
+              </p>
+            </div>
+
+            <Button
+              onClick={generateWithAI}
+              disabled={generatingAI || !aiInput.trim() || !formData.clientId}
+              className="w-full"
+            >
+              {generatingAI ? (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2 animate-pulse" />
+                  Generating Treatment Plan...
+                </>
+              ) : (
+                <>
+                  <Brain className="h-4 w-4 mr-2" />
+                  Generate Treatment Plan with AI
+                </>
+              )}
+            </Button>
+
+            {!formData.clientId && (
+              <p className="text-sm text-warning">Please select a client first</p>
+            )}
           </CardContent>
         </Card>
+
+        {aiSuggestion && (
+          <Card className="border-primary/50 bg-primary/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  AI-Generated Treatment Plan Suggestions
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={acceptAiSuggestion}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Check className="h-4 w-4 mr-1" />
+                    Accept All
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={rejectAiSuggestion}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Reject
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Review the AI-generated suggestions below and accept to add them to your treatment plan.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        <Tabs defaultValue="diagnoses" className="w-full">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="diagnoses">Diagnoses</TabsTrigger>
+            <TabsTrigger value="problems">Problems</TabsTrigger>
+            <TabsTrigger value="goals">Goals</TabsTrigger>
+            <TabsTrigger value="modalities">Modalities</TabsTrigger>
+            <TabsTrigger value="strengths">Strengths</TabsTrigger>
+            <TabsTrigger value="discharge">Discharge</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="diagnoses" className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <DiagnosesSection
+                  data={formData}
+                  onChange={setFormData}
+                  disabled={isSigned}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="problems" className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <ProblemsSection
+                  data={formData}
+                  onChange={setFormData}
+                  disabled={isSigned}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="goals" className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <GoalsSection
+                  data={formData}
+                  onChange={setFormData}
+                  disabled={isSigned}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="modalities" className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <TreatmentModalitiesSection
+                  data={formData}
+                  onChange={setFormData}
+                  disabled={isSigned}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="strengths" className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <StrengthsBarriersSection
+                  data={formData}
+                  onChange={setFormData}
+                  disabled={isSigned}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="discharge" className="space-y-4">
+            <Card>
+              <CardContent className="pt-6">
+                <DischargeSection
+                  data={formData}
+                  onChange={setFormData}
+                  disabled={isSigned}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         <SignatureDialog
           open={signatureDialogOpen}
