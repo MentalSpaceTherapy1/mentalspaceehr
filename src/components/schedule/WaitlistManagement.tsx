@@ -6,12 +6,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Phone, Bell, XCircle, Plus, AlertCircle } from 'lucide-react';
+import { Phone, Bell, XCircle, Plus, AlertCircle, Edit, Calendar, Mail } from 'lucide-react';
 import { useWaitlist } from '@/hooks/useWaitlist';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import { WaitlistAddDialog } from './WaitlistAddDialog';
+import { WaitlistEditDialog } from './WaitlistEditDialog';
+import { WaitlistConvertDialog } from './WaitlistConvertDialog';
 
 const APPOINTMENT_TYPES = [
   'Initial Evaluation',
@@ -33,6 +36,8 @@ export function WaitlistManagement() {
   const { user } = useAuth();
   const { waitlist, loading, markContacted, removeFromWaitlist, refreshWaitlist } = useWaitlist();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [convertDialogOpen, setConvertDialogOpen] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const [removeReason, setRemoveReason] = useState('');
@@ -83,6 +88,39 @@ export function WaitlistManagement() {
     setRemoveDialogOpen(false);
     setSelectedEntry(null);
     setRemoveReason('');
+  };
+
+  const handleNotify = async (entry: any) => {
+    try {
+      const client = clients[entry.client_id];
+      if (!client?.email) {
+        toast.error('Client does not have an email address');
+        return;
+      }
+
+      // Call the notification edge function
+      const { error } = await supabase.functions.invoke('notify-waitlist-slots', {
+        body: { waitlist_id: entry.id }
+      });
+
+      if (error) throw error;
+
+      toast.success('Notification sent to client');
+      
+      // Mark as notified
+      await supabase
+        .from('appointment_waitlist')
+        .update({
+          notified: true,
+          notified_date: new Date().toISOString()
+        })
+        .eq('id', entry.id);
+      
+      refreshWaitlist();
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      toast.error('Failed to send notification');
+    }
   };
 
   const getPriorityColor = (priority: string) => {
@@ -214,7 +252,18 @@ export function WaitlistManagement() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedEntry(entry);
+                              setEditDialogOpen(true);
+                            }}
+                            title="Edit entry"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
@@ -222,6 +271,25 @@ export function WaitlistManagement() {
                             title="Mark as contacted"
                           >
                             <Phone className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleNotify(entry)}
+                            title="Send notification"
+                          >
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => {
+                              setSelectedEntry(entry);
+                              setConvertDialogOpen(true);
+                            }}
+                            title="Convert to appointment"
+                          >
+                            <Calendar className="h-4 w-4" />
                           </Button>
                           <Button
                             size="sm"
@@ -248,6 +316,22 @@ export function WaitlistManagement() {
       <WaitlistAddDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
+        onSuccess={refreshWaitlist}
+      />
+
+      <WaitlistEditDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        entry={selectedEntry}
+        onSuccess={refreshWaitlist}
+      />
+
+      <WaitlistConvertDialog
+        open={convertDialogOpen}
+        onOpenChange={setConvertDialogOpen}
+        entry={selectedEntry}
+        clientInfo={selectedEntry ? clients[selectedEntry.client_id] : null}
+        clinicianInfo={selectedEntry ? clinicians[selectedEntry.clinician_id] : null}
         onSuccess={refreshWaitlist}
       />
 
