@@ -1,6 +1,8 @@
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SessionInformationProps {
   data: any;
@@ -11,9 +13,24 @@ interface SessionInformationProps {
 }
 
 export function SessionInformationSection({ data, onChange, cptCode, onCptCodeChange, disabled }: SessionInformationProps) {
+  const [serviceCodes, setServiceCodes] = useState<any[]>([]);
+
   const handleChange = (field: string, value: any) => {
     onChange({ ...data, [field]: value });
   };
+
+  useEffect(() => {
+    const fetchServiceCodes = async () => {
+      const { data: codes, error } = await supabase
+        .from('service_codes')
+        .select('*')
+        .eq('is_active', true)
+        .order('service_type')
+        .order('code');
+      if (!error && codes) setServiceCodes(codes);
+    };
+    fetchServiceCodes();
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -58,13 +75,23 @@ export function SessionInformationSection({ data, onChange, cptCode, onCptCodeCh
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="cptCode">CPT Code</Label>
-          <Input
-            id="cptCode"
+          <Select
             value={cptCode || ''}
-            onChange={onCptCodeChange}
-            placeholder="e.g., 90791 (Psychiatric Diagnostic Evaluation)"
+            onValueChange={(value) => onCptCodeChange?.({ target: { value } } as any)}
             disabled={disabled}
-          />
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select service code" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">None</SelectItem>
+              {serviceCodes.map((service) => (
+                <SelectItem key={service.id} value={service.code}>
+                  {service.code} - {service.description}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
