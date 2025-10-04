@@ -12,6 +12,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Save, ArrowLeft, FileSignature, Clock, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
+import { SubjectiveSection } from '@/components/progress-note/SubjectiveSection';
+import { ObjectiveSection } from '@/components/progress-note/ObjectiveSection';
+import { AssessmentSection } from '@/components/progress-note/AssessmentSection';
+import { PlanSection } from '@/components/progress-note/PlanSection';
+import { BillingSection } from '@/components/progress-note/BillingSection';
 
 export interface ProgressNoteData {
   noteId?: string;
@@ -411,6 +416,59 @@ export default function ProgressNote() {
       return;
     }
 
+    // Validate required subjective fields
+    if (!formData.subjective.presentingConcerns) {
+      toast({
+        title: 'Required Field Missing',
+        description: 'Please complete the Presenting Concerns in the Subjective section',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate risk assessment details if risk is present
+    if (
+      formData.objective.riskAssessment.suicidalIdeation !== 'Denied' &&
+      !formData.objective.riskAssessment.suicidalDetails
+    ) {
+      toast({
+        title: 'Required Field Missing',
+        description: 'Please provide details for suicidal ideation',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate assessment fields
+    if (!formData.assessment.clinicalImpression || !formData.assessment.medicalNecessity) {
+      toast({
+        title: 'Required Fields Missing',
+        description: 'Please complete Clinical Impression and Medical Necessity in the Assessment section',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate plan fields
+    if (!formData.plan.interventionDetails) {
+      toast({
+        title: 'Required Field Missing',
+        description: 'Please complete Intervention Details in the Plan section',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate billing
+    if (!formData.billing.cptCode || formData.billing.diagnosisCodes.length === 0) {
+      toast({
+        title: 'Billing Information Required',
+        description: 'Please complete CPT code and at least one diagnosis code',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       setSaving(true);
       const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000 / 60);
@@ -640,68 +698,59 @@ export default function ProgressNote() {
           </TabsList>
 
           <TabsContent value="subjective">
-            <Card>
-              <CardHeader>
-                <CardTitle>Subjective - Client's Report</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Subjective section components will be added in the next step
-                </p>
-              </CardContent>
-            </Card>
+            <SubjectiveSection
+              data={formData}
+              onChange={(data) => {
+                setFormData(data);
+                setHasUnsavedChanges(true);
+              }}
+              disabled={formData.status === 'Locked'}
+            />
           </TabsContent>
 
           <TabsContent value="objective">
-            <Card>
-              <CardHeader>
-                <CardTitle>Objective - Clinical Observations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Objective section components will be added in the next step
-                </p>
-              </CardContent>
-            </Card>
+            <ObjectiveSection
+              data={formData}
+              onChange={(data) => {
+                setFormData(data);
+                setHasUnsavedChanges(true);
+              }}
+              disabled={formData.status === 'Locked'}
+            />
           </TabsContent>
 
           <TabsContent value="assessment">
-            <Card>
-              <CardHeader>
-                <CardTitle>Assessment - Clinical Impression</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Assessment section components will be added in the next step
-                </p>
-              </CardContent>
-            </Card>
+            <AssessmentSection
+              data={formData}
+              onChange={(data) => {
+                setFormData(data);
+                setHasUnsavedChanges(true);
+              }}
+              disabled={formData.status === 'Locked'}
+              clientGoals={clientGoals}
+            />
           </TabsContent>
 
           <TabsContent value="plan">
-            <Card>
-              <CardHeader>
-                <CardTitle>Plan - Treatment & Next Steps</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Plan section components will be added in the next step
-                </p>
-              </CardContent>
-            </Card>
+            <PlanSection
+              data={formData}
+              onChange={(data) => {
+                setFormData(data);
+                setHasUnsavedChanges(true);
+              }}
+              disabled={formData.status === 'Locked'}
+            />
           </TabsContent>
 
           <TabsContent value="billing">
-            <Card>
-              <CardHeader>
-                <CardTitle>Billing Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Billing section components will be added in the next step
-                </p>
-              </CardContent>
-            </Card>
+            <BillingSection
+              data={formData}
+              onChange={(data) => {
+                setFormData(data);
+                setHasUnsavedChanges(true);
+              }}
+              disabled={formData.status === 'Locked'}
+            />
           </TabsContent>
         </Tabs>
       </div>
