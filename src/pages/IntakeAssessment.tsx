@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -13,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, AlertTriangle, FileSignature, Clock, Sparkles, User, Loader2 } from 'lucide-react';
+import { Save, ArrowLeft, AlertTriangle, FileSignature, Clock, Sparkles, User, Loader2, Brain } from 'lucide-react';
 import { SessionInformationSection } from '@/components/intake/SessionInformationSection';
 import { PresentingProblemSection } from '@/components/intake/PresentingProblemSection';
 import { CurrentSymptomsSection } from '@/components/intake/CurrentSymptomsSection';
@@ -80,6 +81,7 @@ export default function IntakeAssessment() {
   const [availableClients, setAvailableClients] = useState<any[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [freeTextInput, setFreeTextInput] = useState('');
   const timeTracker = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   
@@ -360,40 +362,47 @@ export default function IntakeAssessment() {
       return;
     }
 
+    if (!freeTextInput.trim()) {
+      toast({
+        title: 'Input Required',
+        description: 'Please provide text for AI to generate the intake assessment',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     try {
       setGeneratingAI(true);
       const { data, error } = await supabase.functions.invoke('generate-intake-note', {
         body: { 
           clientId,
-          existingData: {
-            chiefComplaint: formData.chiefComplaint,
-            historyOfPresentingProblem: formData.historyOfPresentingProblem
-          }
+          freeTextInput: freeTextInput.trim(),
+          existingData: formData
         }
       });
 
       if (error) throw error;
 
-      if (data?.suggestions) {
-        toast({
-          title: 'AI Suggestions Generated',
-          description: 'Review the AI-generated suggestions and incorporate them as needed.',
-        });
+      if (data?.content) {
+        // Populate form fields with AI-generated content
+        setFormData(prev => ({
+          ...prev,
+          ...data.content
+        }));
         
         // Mark as AI assisted
         setMetadata(prev => ({ ...prev, wasAIAssisted: true }));
         
-        // Show suggestions in a dialog or alert
         toast({
-          title: 'AI Clinical Suggestions',
-          description: data.suggestions.substring(0, 200) + '...',
+          title: 'Assessment Generated',
+          description: 'AI has generated the intake assessment content. Please review and edit as needed.',
         });
       }
     } catch (error: any) {
       console.error('Error generating AI content:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to generate AI suggestions',
+        description: error.message || 'Failed to generate AI assessment',
         variant: 'destructive'
       });
     } finally {
@@ -644,25 +653,53 @@ export default function IntakeAssessment() {
           </div>
         </div>
 
+        {/* AI-Assisted Generation */}
+        {!metadata.signedDate && clientId && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                AI-Assisted Generation
+              </CardTitle>
+              <CardDescription>
+                Describe the session/assessment in your own words, and AI will structure it into an intake assessment
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="free-text">Session Summary or Clinical Information</Label>
+                <Textarea
+                  id="free-text"
+                  value={freeTextInput}
+                  onChange={(e) => setFreeTextInput(e.target.value)}
+                  rows={6}
+                  placeholder="Example: New client presenting for initial evaluation. Reports 3-month history of depressed mood, anhedonia, difficulty sleeping. Previous therapy 5 years ago was helpful. Currently employed, supportive family. Denies SI/HI. Appears motivated for treatment..."
+                  className="mt-2"
+                />
+              </div>
+              <Button 
+                onClick={handleAIGenerate} 
+                disabled={generatingAI || !freeTextInput.trim()}
+                className="gap-2 bg-gradient-success text-white shadow-colored hover:opacity-90 border-0"
+              >
+                {generatingAI ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Generate Assessment with AI
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Action buttons */}
         <div className="flex items-center justify-end gap-2">
-          <Button
-            onClick={handleAIGenerate}
-            disabled={generatingAI || !clientId || metadata.signedDate !== null}
-            className="gap-2 bg-gradient-success text-white shadow-colored hover:opacity-90 border-0"
-          >
-            {generatingAI ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4" />
-                AI Assist
-              </>
-            )}
-          </Button>
           <Button
             variant="outline"
             onClick={() => saveIntakeAssessment('Draft')}

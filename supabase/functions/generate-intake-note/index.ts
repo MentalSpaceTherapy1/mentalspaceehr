@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { clientId, existingData } = await req.json();
+    const { clientId, freeTextInput, existingData } = await req.json();
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -41,17 +41,53 @@ Client Information:
 - Name: ${client.first_name} ${client.last_name}
 - Age: ${new Date().getFullYear() - new Date(client.date_of_birth).getFullYear()}
 - Gender: ${client.gender || 'Not specified'}
-${existingData?.chiefComplaint ? `- Chief Complaint: ${existingData.chiefComplaint}` : ''}
-${existingData?.historyOfPresentingProblem ? `- History: ${existingData.historyOfPresentingProblem}` : ''}
+- DOB: ${client.date_of_birth}
 `;
 
     const systemPrompt = `You are an expert clinical psychologist helping to draft a comprehensive intake assessment. Generate detailed, professional clinical content based on the provided information.
 
-Your response should be structured and comprehensive, covering key areas of an intake assessment. Use clinical language appropriate for mental health documentation.`;
+Your response MUST be valid JSON with the following structure:
+{
+  "chiefComplaint": "string",
+  "historyOfPresentingProblem": "string", 
+  "currentSymptoms": {},
+  "mentalStatusExam": {
+    "appearance": "string",
+    "behavior": "string",
+    "speech": "string",
+    "mood": "string",
+    "affect": "string",
+    "thoughtProcess": "string",
+    "thoughtContent": "string",
+    "perceptions": "string",
+    "cognition": "string",
+    "insight": "string",
+    "judgment": "string"
+  },
+  "safetyAssessment": {
+    "suicidalIdeation": "string",
+    "homicidalIdeation": "string",
+    "selfHarmBehaviors": "string",
+    "riskLevel": "Low/Medium/High",
+    "protectiveFactors": "string"
+  },
+  "diagnosticFormulation": {
+    "preliminaryDiagnoses": "string",
+    "differentialDiagnoses": "string",
+    "diagnosticRationale": "string"
+  },
+  "treatmentRecommendations": {
+    "recommendedTreatmentModality": "string",
+    "frequency": "string",
+    "goals": "string",
+    "interventions": "string"
+  },
+  "clinicianImpression": "string"
+}
 
-    const userPrompt = existingData?.chiefComplaint || existingData?.historyOfPresentingProblem
-      ? `Based on the following client information and initial data, generate suggestions for completing the intake assessment:\n\n${clientContext}\n\nProvide clinical suggestions for:\n1. Mental Status Exam findings\n2. Safety assessment considerations\n3. Relevant history to explore\n4. Potential diagnostic considerations\n5. Initial treatment recommendations`
-      : `Generate a template structure for a comprehensive intake assessment for this client:\n\n${clientContext}`;
+Use clinical language appropriate for mental health documentation.`;
+
+    const userPrompt = `Based on the following information, generate a complete intake assessment:\n\n${clientContext}\n\nClinician's Notes:\n${freeTextInput}\n\nGenerate comprehensive clinical content for all sections of the intake assessment. Return ONLY valid JSON, no other text.`;
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -92,10 +128,25 @@ Your response should be structured and comprehensive, covering key areas of an i
     }
 
     const data = await response.json();
-    const suggestions = data.choices[0].message.content;
+    const aiResponse = data.choices[0].message.content;
+    
+    // Parse JSON response
+    let content;
+    try {
+      // Try to extract JSON from response
+      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        content = JSON.parse(jsonMatch[0]);
+      } else {
+        content = JSON.parse(aiResponse);
+      }
+    } catch (parseError) {
+      console.error('Failed to parse AI response as JSON:', parseError);
+      throw new Error('AI returned invalid format. Please try again.');
+    }
 
     return new Response(
-      JSON.stringify({ suggestions }),
+      JSON.stringify({ content }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
