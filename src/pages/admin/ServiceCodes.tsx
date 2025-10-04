@@ -168,7 +168,7 @@ export default function ServiceCodes() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/30">
+                    <TableRow className="bg-muted/50 hover:bg-muted/50">
                       <TableHead>Service Type</TableHead>
                       <TableHead>Code</TableHead>
                       <TableHead>Default Modifiers</TableHead>

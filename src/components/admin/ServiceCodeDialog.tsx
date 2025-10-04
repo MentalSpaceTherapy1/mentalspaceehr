@@ -189,8 +189,8 @@ export function ServiceCodeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-card">
+        <DialogHeader className="bg-white dark:bg-card">
           <DialogTitle>
             {serviceCode ? 'Edit Service Code' : 'Add a New Service Code'}
           </DialogTitle>
