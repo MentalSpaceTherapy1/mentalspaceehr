@@ -75,10 +75,10 @@ serve(async (req) => {
     let userPrompt = '';
 
     if (suggestionType === 'diagnoses' || suggestionType === 'both') {
-      systemPrompt += `You are a clinical assistant helping with DSM-5-TR diagnosis suggestions. ${clientContext}\n\n`;
-      systemPrompt += `Based on the clinical content provided, suggest 3-5 relevant DSM-5-TR diagnoses with their codes. Consider symptom patterns, duration, severity, and functional impairment. Provide rationale for each suggestion.\n\n`;
+      systemPrompt += `You are a clinical assistant helping with ICD-10 diagnosis suggestions based on DSM-5-TR criteria. ${clientContext}\n\n`;
+      systemPrompt += `Based on the clinical content provided, suggest 3-5 relevant ICD-10 diagnoses that align with DSM-5-TR criteria. Consider symptom patterns, duration, severity, and functional impairment. Provide both the ICD-10 code (e.g., F41.1) and the full diagnosis name. Provide clinical rationale for each suggestion.\n\n`;
       
-      userPrompt += `Clinical Content:\n${content}\n\nSuggest appropriate DSM-5-TR diagnoses.`;
+      userPrompt += `Clinical Content:\n${content}\n\nSuggest appropriate ICD-10 diagnoses.`;
     }
 
     if (suggestionType === 'interventions' || suggestionType === 'both') {
@@ -96,7 +96,7 @@ serve(async (req) => {
         type: "function",
         function: {
           name: "suggest_diagnoses",
-          description: "Return DSM-5-TR diagnosis suggestions",
+          description: "Return ICD-10 diagnosis suggestions based on DSM-5-TR criteria",
           parameters: {
             type: "object",
             properties: {
@@ -105,12 +105,14 @@ serve(async (req) => {
                 items: {
                   type: "object",
                   properties: {
-                    code: { type: "string", description: "DSM-5-TR code (e.g., F41.1)" },
-                    name: { type: "string", description: "Full diagnosis name" },
-                    rationale: { type: "string", description: "Clinical rationale for suggestion" },
+                    code: { type: "string", description: "ICD-10 code (e.g., F41.1, F32.1)" },
+                    description: { type: "string", description: "Full diagnosis description" },
+                    type: { type: "string", description: "Diagnosis type", enum: ["Principal", "Secondary", "Rule Out", "Provisional"] },
+                    specifiers: { type: "string", description: "Any relevant specifiers (e.g., 'Moderate', 'With anxious distress')" },
+                    rationale: { type: "string", description: "Clinical rationale for this diagnosis suggestion" },
                     confidence: { type: "string", enum: ["high", "medium", "low"] }
                   },
-                  required: ["code", "name", "rationale", "confidence"],
+                  required: ["code", "description", "type", "rationale", "confidence"],
                   additionalProperties: false
                 }
               }

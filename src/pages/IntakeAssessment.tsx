@@ -1051,6 +1051,8 @@ export default function IntakeAssessment() {
                   onDiagnosisChange={(data) => updateFormData('diagnosticFormulation', data)}
                   onImpressionChange={(data) => updateFormData('clinicianImpression', data)}
                   onStrengthsChange={(data) => updateFormData('strengthsAndResources', data)}
+                  intakeData={formData}
+                  clientId={formData.clientId}
                 />
               </TabsContent>
 
