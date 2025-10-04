@@ -981,35 +981,35 @@ export default function IntakeAssessment() {
               <TabsContent value="session" className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>CPT Code</CardTitle>
-                    <CardDescription>Billing code for this intake session</CardDescription>
+                    <CardTitle>Session Information & Billing</CardTitle>
+                    <CardDescription>Session details and billing code for this intake assessment</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="cptCode">CPT Code</Label>
-                        <Input
-                          id="cptCode"
-                          value={formData.cptCode || ''}
-                          onChange={(e) => {
-                            setFormData(prev => ({ ...prev, cptCode: e.target.value }));
-                            setHasUnsavedChanges(true);
-                          }}
-                          placeholder="e.g., 90791 (Psychiatric Diagnostic Evaluation)"
-                          disabled={metadata.signedDate !== null}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Common codes: 90791 (Intake without medical services), 90792 (Intake with medical services)
-                        </p>
-                      </div>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="cptCode">CPT Code</Label>
+                      <Input
+                        id="cptCode"
+                        value={formData.cptCode || ''}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, cptCode: e.target.value }));
+                          setHasUnsavedChanges(true);
+                        }}
+                        placeholder="e.g., 90791 (Psychiatric Diagnostic Evaluation)"
+                        disabled={metadata.signedDate !== null}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Common codes: 90791 (Intake without medical services), 90792 (Intake with medical services)
+                      </p>
                     </div>
+                    
+                    <Separator />
+                    
+                    <SessionInformationSection
+                      data={formData}
+                      onChange={(data) => updateFormData('session', data)}
+                    />
                   </CardContent>
                 </Card>
-                
-                <SessionInformationSection
-                  data={formData}
-                  onChange={(data) => updateFormData('session', data)}
-                />
               </TabsContent>
 
               <TabsContent value="presenting" className="space-y-4">
