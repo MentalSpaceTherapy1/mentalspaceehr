@@ -489,6 +489,20 @@ export default function ProgressNote() {
     }
   };
 
+  const saveDraft = async () => {
+    // Minimal validation for draft - just need client and appointment
+    if (!formData.clientId || !formData.appointmentId) {
+      toast({
+        title: 'Required Fields Missing',
+        description: 'Please select both a client and an appointment',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    return performSave(true);
+  };
+
   const saveNote = async () => {
     // Check if intake exists and is signed
     if (!intakeNote) {
@@ -552,6 +566,10 @@ export default function ProgressNote() {
       return;
     }
 
+    return performSave(false);
+  };
+
+  const performSave = async (isDraft: boolean): Promise<string | null> => {
     try {
       setSaving(true);
       const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000 / 60);
@@ -575,6 +593,8 @@ export default function ProgressNote() {
         updated_by: user?.id,
       };
 
+      let savedNoteId = noteId;
+
       if (noteId) {
         const { error } = await supabase
           .from('clinical_notes')
@@ -591,16 +611,21 @@ export default function ProgressNote() {
 
         if (error) throw error;
         if (data?.id) {
+          savedNoteId = data.id;
           setFormData(prev => ({ ...prev, noteId: data.id }));
         }
       }
 
       toast({
         title: 'Success',
-        description: 'Progress note saved successfully',
+        description: isDraft ? 'Draft saved successfully' : 'Progress note saved successfully',
       });
 
-      navigate('/notes');
+      if (!isDraft) {
+        navigate('/notes');
+      }
+
+      return savedNoteId || null;
     } catch (error) {
       console.error('Error saving note:', error);
       toast({
@@ -608,6 +633,7 @@ export default function ProgressNote() {
         description: 'Failed to save progress note',
         variant: 'destructive',
       });
+      return null;
     } finally {
       setSaving(false);
     }
@@ -704,23 +730,24 @@ export default function ProgressNote() {
     try {
       setSaving(true);
       
+      // Get the latest note ID
+      let currentNoteId = noteId || formData.noteId;
+      
       // If note hasn't been saved yet, save it first
-      if (!noteId) {
-        await saveNote();
+      if (!currentNoteId) {
+        // Save the note and get the ID
+        const savedNoteId = await performSave(false);
+        if (!savedNoteId) {
+          toast({
+            title: 'Error',
+            description: 'Failed to save note before signing',
+            variant: 'destructive',
+          });
+          return;
+        }
+        currentNoteId = savedNoteId;
         // Wait a moment for the save to complete
         await new Promise(resolve => setTimeout(resolve, 500));
-      }
-      
-      // Get the latest note ID if it was just created
-      const currentNoteId = noteId || formData.noteId;
-      
-      if (!currentNoteId) {
-        toast({
-          title: 'Error',
-          description: 'Please save the note before signing',
-          variant: 'destructive',
-        });
-        return;
       }
       
       const { error } = await supabase
@@ -781,6 +808,14 @@ export default function ProgressNote() {
                 Sign Note
               </Button>
             )}
+            <Button 
+              onClick={saveDraft} 
+              disabled={saving || loading || formData.status === 'Locked'}
+              variant="outline"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Saving...' : 'Save Draft'}
+            </Button>
             <Button onClick={saveNote} disabled={saving || loading || formData.status === 'Locked'}>
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Saving...' : 'Save Note'}
