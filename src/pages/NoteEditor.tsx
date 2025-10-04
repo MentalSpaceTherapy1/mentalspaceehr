@@ -47,7 +47,16 @@ export default function NoteEditor() {
   });
 
   const [clients, setClients] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<any[]>([]);
   const [aiSettings, setAiSettings] = useState<any>(null);
+  const [sessionInfo, setSessionInfo] = useState({
+    sessionDate: '',
+    sessionStartTime: '',
+    sessionEndTime: '',
+    sessionDuration: '',
+    cptCode: '',
+    sessionLocation: '',
+  });
 
   useEffect(() => {
     loadClients();
@@ -64,8 +73,18 @@ export default function NoteEditor() {
     }
     if (appointmentIdParam) {
       setAppointmentId(appointmentIdParam);
+      loadAppointmentDetails(appointmentIdParam);
     }
   }, [id, sessionId, clientIdParam, appointmentIdParam]);
+
+  useEffect(() => {
+    if (selectedClient) {
+      loadClientAppointments();
+    } else {
+      setAppointments([]);
+      setAppointmentId('');
+    }
+  }, [selectedClient]);
 
   const loadClients = async () => {
     const { data } = await supabase
@@ -74,6 +93,53 @@ export default function NoteEditor() {
       .eq('status', 'Active')
       .order('last_name');
     if (data) setClients(data);
+  };
+
+  const loadClientAppointments = async () => {
+    if (!selectedClient) return;
+    
+    const { data } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('client_id', selectedClient)
+      .in('status', ['Scheduled', 'Completed', 'Checked In'])
+      .order('appointment_date', { ascending: false })
+      .order('start_time', { ascending: false });
+    
+    if (data) setAppointments(data);
+  };
+
+  const loadAppointmentDetails = async (apptId: string) => {
+    if (!apptId) return;
+    
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('id', apptId)
+      .single();
+    
+    if (error) {
+      console.error('Error loading appointment:', error);
+      return;
+    }
+    
+    if (data) {
+      // Calculate duration from start and end times
+      const startTime = data.start_time;
+      const endTime = data.end_time;
+      const duration = data.duration || '';
+      
+      setSessionInfo({
+        sessionDate: data.appointment_date,
+        sessionStartTime: startTime,
+        sessionEndTime: endTime,
+        sessionDuration: duration.toString(),
+        cptCode: data.cpt_code || '',
+        sessionLocation: data.service_location || '',
+      });
+      setDateOfService(data.appointment_date);
+      setSelectedClient(data.client_id);
+    }
   };
 
   const loadAISettings = async () => {
@@ -103,6 +169,11 @@ export default function NoteEditor() {
         setSelectedNoteType(data.note_type);
         setSelectedFormat(data.note_format);
         setDateOfService(data.date_of_service);
+        
+        if (data.appointment_id) {
+          setAppointmentId(data.appointment_id);
+          loadAppointmentDetails(data.appointment_id);
+        }
       }
     } catch (error) {
       toast({
@@ -257,6 +328,18 @@ export default function NoteEditor() {
       return;
     }
 
+    // Check if appointment is required for this note type
+    const requiresAppointment = ['intake_assessment', 'progress_note', 'cancellation_note'].includes(selectedNoteType);
+    
+    if (requiresAppointment && !appointmentId) {
+      toast({
+        title: 'Appointment Required',
+        description: `An appointment must be selected for ${selectedNoteType.replace('_', ' ')} notes`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
     try {
       setSaving(true);
 
@@ -270,6 +353,9 @@ export default function NoteEditor() {
         ai_generated: generating || note?.ai_generated || false,
         version: note ? note.version + 1 : 1,
         updated_by: user?.id,
+        appointment_id: appointmentId || null,
+        session_duration_minutes: sessionInfo.sessionDuration ? parseInt(sessionInfo.sessionDuration) : null,
+        cpt_codes: sessionInfo.cptCode ? [sessionInfo.cptCode] : null,
       };
 
       if (id) {
@@ -363,6 +449,7 @@ export default function NoteEditor() {
               <SelectContent>
                 <SelectItem value="progress_note">Progress Note</SelectItem>
                 <SelectItem value="intake_assessment">Intake Assessment</SelectItem>
+                <SelectItem value="cancellation_note">Cancellation Note</SelectItem>
                 <SelectItem value="psychotherapy_note">Psychotherapy Note</SelectItem>
                 <SelectItem value="psychiatric_evaluation">Psychiatric Evaluation</SelectItem>
                 <SelectItem value="crisis_assessment">Crisis Assessment</SelectItem>
@@ -389,15 +476,105 @@ export default function NoteEditor() {
           </div>
         </div>
 
-        <div className="max-w-xs">
-          <Label>Date of Service *</Label>
-          <Input
-            type="date"
-            value={dateOfService}
-            onChange={(e) => setDateOfService(e.target.value)}
-            disabled={note?.locked}
-          />
-        </div>
+        {['intake_assessment', 'progress_note', 'cancellation_note'].includes(selectedNoteType) && (
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              This note type requires a scheduled appointment to be selected.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {selectedClient && ['intake_assessment', 'progress_note', 'cancellation_note'].includes(selectedNoteType) && (
+          <div>
+            <Label>Appointment *</Label>
+            <Select 
+              value={appointmentId} 
+              onValueChange={(value) => {
+                setAppointmentId(value);
+                loadAppointmentDetails(value);
+              }} 
+              disabled={note?.locked}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select appointment" />
+              </SelectTrigger>
+              <SelectContent>
+                {appointments.map((apt) => (
+                  <SelectItem key={apt.id} value={apt.id}>
+                    {new Date(apt.appointment_date).toLocaleDateString()} at {apt.start_time} - {apt.appointment_type} ({apt.status})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {appointmentId && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Session Information & Billing</CardTitle>
+              <CardDescription>Auto-populated from selected appointment</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label>Session Date</Label>
+                  <Input
+                    type="date"
+                    value={sessionInfo.sessionDate}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+                <div>
+                  <Label>Start Time</Label>
+                  <Input
+                    type="time"
+                    value={sessionInfo.sessionStartTime}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+                <div>
+                  <Label>End Time</Label>
+                  <Input
+                    type="time"
+                    value={sessionInfo.sessionEndTime}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div>
+                  <Label>Duration (minutes)</Label>
+                  <Input
+                    value={sessionInfo.sessionDuration}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+                <div>
+                  <Label>CPT Code</Label>
+                  <Input
+                    value={sessionInfo.cptCode}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+                <div>
+                  <Label>Location</Label>
+                  <Input
+                    value={sessionInfo.sessionLocation}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {aiSettings?.enabled && !note?.locked && (
           <Card>
