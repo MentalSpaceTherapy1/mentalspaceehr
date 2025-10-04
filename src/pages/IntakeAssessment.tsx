@@ -1,13 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { Save, ArrowLeft, AlertTriangle, FileSignature, Clock, Sparkles } from 'lucide-react';
 import { SessionInformationSection } from '@/components/intake/SessionInformationSection';
 import { PresentingProblemSection } from '@/components/intake/PresentingProblemSection';
 import { CurrentSymptomsSection } from '@/components/intake/CurrentSymptomsSection';
@@ -16,6 +21,8 @@ import { SafetyAssessmentSection } from '@/components/intake/SafetyAssessmentSec
 import { HistorySection } from '@/components/intake/HistorySection';
 import { DiagnosticFormulationSection } from '@/components/intake/DiagnosticFormulationSection';
 import { TreatmentRecommendationsSection } from '@/components/intake/TreatmentRecommendationsSection';
+import { SignatureDialog } from '@/components/intake/SignatureDialog';
+import { SupervisorCosignDialog } from '@/components/intake/SupervisorCosignDialog';
 import { useAuth } from '@/hooks/useAuth';
 
 export interface IntakeAssessmentData {
@@ -28,6 +35,12 @@ export interface IntakeAssessmentData {
   sessionLocation: string;
   chiefComplaint: string;
   historyOfPresentingProblem: string;
+  symptomOnset?: string;
+  symptomDuration?: string;
+  precipitatingFactors?: string;
+  exacerbatingFactors?: string[];
+  alleviatingFactors?: string[];
+  previousTreatmentAttempts?: any;
   currentSymptoms: any;
   mentalStatusExam: any;
   safetyAssessment: any;
@@ -56,6 +69,13 @@ export default function IntakeAssessment() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
+  const [supervisorDialogOpen, setSupervisorDialogOpen] = useState(false);
+  const [documentationTime, setDocumentationTime] = useState(0);
+  const [supervisors, setSupervisors] = useState<any[]>([]);
+  const timeTracker = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number>(Date.now());
+  
   const [formData, setFormData] = useState<IntakeAssessmentData>({
     clientId: clientId || '',
     clinicianId: user?.id || '',
@@ -82,11 +102,67 @@ export default function IntakeAssessment() {
     status: 'Draft'
   });
 
+  const [metadata, setMetadata] = useState({
+    signedDate: null as string | null,
+    signedBy: null as string | null,
+    requiresSupervisorCosign: false,
+    supervisorCosigned: false,
+    supervisorCosignDate: null as string | null,
+    supervisorId: null as string | null,
+    supervisorComments: '',
+    timeSpentDocumenting: 0,
+    wasAIAssisted: false
+  });
+
   useEffect(() => {
     if (noteId) {
       loadExistingNote();
     }
+    loadSupervisors();
+    
+    // Start time tracking
+    startTimeRef.current = Date.now();
+    timeTracker.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000 / 60); // minutes
+      setDocumentationTime(elapsed);
+    }, 60000); // Update every minute
+
+    // Pause tracking when user leaves page
+    const handleVisibilityChange = () => {
+      if (document.hidden && timeTracker.current) {
+        clearInterval(timeTracker.current);
+      } else if (!document.hidden) {
+        startTimeRef.current = Date.now();
+        timeTracker.current = setInterval(() => {
+          const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000 / 60);
+          setDocumentationTime(prev => prev + elapsed);
+          startTimeRef.current = Date.now();
+        }, 60000);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      if (timeTracker.current) clearInterval(timeTracker.current);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [noteId]);
+
+  const loadSupervisors = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('user_id, profiles(first_name, last_name)')
+        .eq('role', 'supervisor');
+
+      if (error) throw error;
+      
+      setSupervisors(data || []);
+    } catch (error) {
+      console.error('Error loading supervisors:', error);
+    }
+  };
 
   const loadExistingNote = async () => {
     if (!noteId) return;
@@ -102,13 +178,32 @@ export default function IntakeAssessment() {
       if (error) throw error;
       
       if (data) {
+        const content = data.content as any;
         setFormData({
           noteId: data.id,
           clientId: data.client_id,
           clinicianId: data.clinician_id,
           sessionDate: data.date_of_service,
-          ...data.content as any
+          ...content
         });
+
+        // Load metadata
+        setMetadata({
+          signedDate: content.signedDate || null,
+          signedBy: content.signedBy || null,
+          requiresSupervisorCosign: content.requiresSupervisorCosign || false,
+          supervisorCosigned: content.supervisorCosigned || false,
+          supervisorCosignDate: content.supervisorCosignDate || null,
+          supervisorId: content.supervisorId || null,
+          supervisorComments: content.supervisorComments || '',
+          timeSpentDocumenting: content.timeSpentDocumenting || 0,
+          wasAIAssisted: content.wasAIAssisted || false
+        });
+
+        // Set initial documentation time if exists
+        if (content.timeSpentDocumenting) {
+          setDocumentationTime(content.timeSpentDocumenting);
+        }
       }
     } catch (error) {
       console.error('Error loading note:', error);
@@ -139,11 +234,55 @@ export default function IntakeAssessment() {
     return 0;
   };
 
+  const handleSign = async () => {
+    const now = new Date().toISOString();
+    setMetadata(prev => ({
+      ...prev,
+      signedDate: now,
+      signedBy: user?.id || null,
+      timeSpentDocumenting: documentationTime
+    }));
+    
+    await saveIntakeAssessment('Signed');
+    
+    toast({
+      title: 'Success',
+      description: 'Intake assessment signed successfully'
+    });
+  };
+
+  const handleSupervisorCosign = async (comments: string) => {
+    const now = new Date().toISOString();
+    setMetadata(prev => ({
+      ...prev,
+      supervisorCosigned: true,
+      supervisorCosignDate: now,
+      supervisorComments: comments
+    }));
+    
+    await saveIntakeAssessment('Signed');
+    
+    toast({
+      title: 'Success',
+      description: 'Supervisor co-sign completed'
+    });
+  };
+
   const saveIntakeAssessment = async (status: 'Draft' | 'Pending Signature' | 'Signed' = 'Draft') => {
     if (!formData.clientId) {
       toast({
         title: 'Error',
         description: 'Please select a client',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // If signing but requires supervisor cosign and not yet cosigned, don't allow
+    if (status === 'Signed' && metadata.requiresSupervisorCosign && !metadata.supervisorCosigned) {
+      toast({
+        title: 'Error',
+        description: 'This note requires supervisor co-signature before it can be signed',
         variant: 'destructive'
       });
       return;
@@ -159,12 +298,19 @@ export default function IntakeAssessment() {
         note_format: 'SOAP' as any,
         date_of_service: formData.sessionDate,
         session_duration_minutes: calculateDuration(),
+        locked: status === 'Signed',
         content: {
           sessionStartTime: formData.sessionStartTime,
           sessionEndTime: formData.sessionEndTime,
           sessionLocation: formData.sessionLocation,
           chiefComplaint: formData.chiefComplaint,
           historyOfPresentingProblem: formData.historyOfPresentingProblem,
+          symptomOnset: formData.symptomOnset,
+          symptomDuration: formData.symptomDuration,
+          precipitatingFactors: formData.precipitatingFactors,
+          exacerbatingFactors: formData.exacerbatingFactors,
+          alleviatingFactors: formData.alleviatingFactors,
+          previousTreatmentAttempts: formData.previousTreatmentAttempts,
           currentSymptoms: formData.currentSymptoms,
           mentalStatusExam: formData.mentalStatusExam,
           safetyAssessment: formData.safetyAssessment,
@@ -178,9 +324,12 @@ export default function IntakeAssessment() {
           diagnosticFormulation: formData.diagnosticFormulation,
           treatmentRecommendations: formData.treatmentRecommendations,
           clinicianImpression: formData.clinicianImpression,
-          initialGoals: formData.initialGoals
+          initialGoals: formData.initialGoals,
+          status,
+          ...metadata,
+          timeSpentDocumenting: documentationTime
         },
-        ai_generated: false,
+        ai_generated: metadata.wasAIAssisted,
         created_by: user?.id
       };
 
@@ -251,31 +400,133 @@ export default function IntakeAssessment() {
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            {metadata.wasAIAssisted && (
+              <Badge variant="secondary" className="gap-1">
+                <Sparkles className="h-3 w-3" />
+                AI Assisted
+              </Badge>
+            )}
+            {metadata.signedDate && (
+              <Badge variant="outline" className="gap-1">
+                <FileSignature className="h-3 w-3" />
+                Signed
+              </Badge>
+            )}
+            {documentationTime > 0 && (
+              <Badge variant="secondary" className="gap-1">
+                <Clock className="h-3 w-3" />
+                {documentationTime} min
+              </Badge>
+            )}
             <Button
               variant="outline"
               onClick={() => saveIntakeAssessment('Draft')}
-              disabled={saving}
+              disabled={saving || metadata.signedDate !== null}
             >
               <Save className="h-4 w-4 mr-2" />
               Save Draft
             </Button>
             <Button
-              onClick={() => saveIntakeAssessment('Pending Signature')}
-              disabled={saving}
+              onClick={() => setSignatureDialogOpen(true)}
+              disabled={saving || metadata.signedDate !== null}
             >
-              {saving ? 'Saving...' : 'Save & Sign'}
+              <FileSignature className="h-4 w-4 mr-2" />
+              {metadata.signedDate ? 'Signed' : 'Sign'}
             </Button>
           </div>
         </div>
 
-        {hasUnsavedChanges && (
+        {metadata.signedDate && (
+          <Alert>
+            <FileSignature className="h-4 w-4" />
+            <AlertDescription>
+              This note has been signed and locked. It cannot be edited. You can create an amendment if changes are needed.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {hasUnsavedChanges && !metadata.signedDate && (
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               You have unsaved changes. Make sure to save before leaving this page.
             </AlertDescription>
           </Alert>
+        )}
+
+        {/* Supervisor Cosign Section */}
+        {(metadata.requiresSupervisorCosign || metadata.supervisorCosigned) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Supervisor Review</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Requires Supervisor Co-Sign</Label>
+                <Checkbox
+                  checked={metadata.requiresSupervisorCosign}
+                  onCheckedChange={(checked) => setMetadata(prev => ({
+                    ...prev,
+                    requiresSupervisorCosign: checked as boolean
+                  }))}
+                  disabled={metadata.signedDate !== null}
+                />
+              </div>
+
+              {metadata.requiresSupervisorCosign && !metadata.supervisorCosigned && (
+                <div>
+                  <Label>Select Supervisor</Label>
+                  <Select
+                    value={metadata.supervisorId || ''}
+                    onValueChange={(value) => setMetadata(prev => ({
+                      ...prev,
+                      supervisorId: value
+                    }))}
+                    disabled={metadata.signedDate !== null}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select supervisor..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {supervisors.map((sup) => (
+                        <SelectItem key={sup.user_id} value={sup.user_id}>
+                          {sup.profiles?.first_name} {sup.profiles?.last_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {metadata.supervisorCosigned && (
+                <div className="space-y-2">
+                  <Badge variant="outline" className="gap-1">
+                    <FileSignature className="h-3 w-3" />
+                    Co-Signed {metadata.supervisorCosignDate && `on ${new Date(metadata.supervisorCosignDate).toLocaleDateString()}`}
+                  </Badge>
+                  {metadata.supervisorComments && (
+                    <div>
+                      <Label className="text-sm font-medium">Supervisor Comments:</Label>
+                      <p className="text-sm text-muted-foreground mt-1">{metadata.supervisorComments}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {metadata.requiresSupervisorCosign && !metadata.supervisorCosigned && metadata.supervisorId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSupervisorDialogOpen(true)}
+                  disabled={!metadata.signedDate}
+                >
+                  <FileSignature className="h-4 w-4 mr-2" />
+                  Supervisor Co-Sign
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         <Card>
@@ -366,7 +617,44 @@ export default function IntakeAssessment() {
             </Tabs>
           </CardContent>
         </Card>
+
+        {/* Footer with time tracking */}
+        <Card>
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <span>Documentation Time: {documentationTime} minutes</span>
+                </div>
+                {metadata.signedDate && (
+                  <div className="flex items-center gap-2">
+                    <FileSignature className="h-4 w-4" />
+                    <span>Signed: {new Date(metadata.signedDate).toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
+              <div className="text-xs">
+                Last saved: {hasUnsavedChanges ? 'Unsaved changes' : 'All changes saved'}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      <SignatureDialog
+        open={signatureDialogOpen}
+        onOpenChange={setSignatureDialogOpen}
+        onSign={handleSign}
+        clinicianName={`${user?.user_metadata?.first_name || ''} ${user?.user_metadata?.last_name || ''}`}
+      />
+
+      <SupervisorCosignDialog
+        open={supervisorDialogOpen}
+        onOpenChange={setSupervisorDialogOpen}
+        onCosign={handleSupervisorCosign}
+        supervisorName={supervisors.find(s => s.user_id === metadata.supervisorId)?.profiles?.first_name || 'Supervisor'}
+      />
     </DashboardLayout>
   );
 }

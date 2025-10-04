@@ -3,8 +3,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Plus, X } from 'lucide-react';
 
 interface TreatmentRecommendationsProps {
@@ -99,6 +101,64 @@ export function TreatmentRecommendationsSection({
             />
           </div>
 
+          <Separator />
+
+          <div>
+            <Label className="text-base font-semibold">Medication Recommendation</Label>
+            <div className="mt-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Medication Recommended</Label>
+                <Switch
+                  checked={data.medicationRecommendation?.recommended || false}
+                  onCheckedChange={(v) => onRecommendationsChange({
+                    ...data,
+                    medicationRecommendation: {
+                      ...(data.medicationRecommendation || {}),
+                      recommended: v
+                    }
+                  })}
+                />
+              </div>
+
+              {data.medicationRecommendation?.recommended && (
+                <div className="ml-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Referral Made</Label>
+                    <Switch
+                      checked={data.medicationRecommendation?.referralMade || false}
+                      onCheckedChange={(v) => onRecommendationsChange({
+                        ...data,
+                        medicationRecommendation: {
+                          ...(data.medicationRecommendation || {}),
+                          referralMade: v
+                        }
+                      })}
+                    />
+                  </div>
+
+                  {data.medicationRecommendation?.referralMade && (
+                    <div>
+                      <Label>Referral To</Label>
+                      <Input
+                        value={data.medicationRecommendation?.referralTo || ''}
+                        onChange={(e) => onRecommendationsChange({
+                          ...data,
+                          medicationRecommendation: {
+                            ...(data.medicationRecommendation || {}),
+                            referralTo: e.target.value
+                          }
+                        })}
+                        placeholder="Psychiatrist name or practice"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
           <div>
             <Label>Additional Recommendations</Label>
             <Textarea
@@ -107,7 +167,7 @@ export function TreatmentRecommendationsSection({
                 ...data,
                 additionalRecommendations: e.target.value.split('\n')
               })}
-              placeholder="Medication evaluation, support groups, lifestyle changes... (one per line)"
+              placeholder="Support groups, lifestyle changes, additional services... (one per line)"
               rows={4}
             />
           </div>
