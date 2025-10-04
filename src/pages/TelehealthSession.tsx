@@ -51,35 +51,104 @@ export default function TelehealthSession() {
 
   const loadSession = async () => {
     try {
-      console.log('Loading session:', sessionId);
-      console.log('Current user:', user?.id);
-      
-      // Fetch session
-      const rawId = sessionId || '';
-      const normalizedId = rawId.replace(/^:/, '');
-      console.log('Normalized session id:', normalizedId);
+      setLoading(true);
+      console.log('[Telehealth] Loading session for route param:', sessionId);
+      console.log('[Telehealth] Current user:', user?.id);
 
-      const { data: sessionData, error: sessionError } = await supabase
+      // Build tolerant candidates for session_id matching
+      const raw = (sessionId || '').trim();
+      const noColon = raw.replace(/^:/, '');
+      const withoutPrefix = noColon.replace(/^session_/, '');
+      const withPrefix = withoutPrefix.startsWith('session_') ? withoutPrefix : `session_${withoutPrefix}`;
+
+      // unique candidates in priority order
+      const candidates = Array.from(new Set([noColon, withPrefix, withoutPrefix]));
+      console.log('[Telehealth] Session ID candidates:', candidates);
+
+      // 1) Try to fetch existing session by any candidate
+      const { data: foundSessions, error: findErr } = await supabase
         .from('telehealth_sessions')
         .select('*')
-        .eq('session_id', normalizedId)
-        .maybeSingle();
+        .in('session_id', candidates);
 
-      console.log('Session data:', sessionData);
-      console.log('Session error:', sessionError);
+      if (findErr) throw findErr;
 
-      if (sessionError) throw sessionError;
+      // Prefer the one matching withPrefix if multiple
+      let sessionData = (foundSessions || []).sort((a: any, b: any) => {
+        const aScore = a.session_id === withPrefix ? 2 : candidates.includes(a.session_id) ? 1 : 0;
+        const bScore = b.session_id === withPrefix ? 2 : candidates.includes(b.session_id) ? 1 : 0;
+        return bScore - aScore;
+      })[0] || null;
+
+      // 2) If not found, allow the host to auto-bootstrap a session
       if (!sessionData) {
-        console.error('No session data found for:', sessionId);
-        setError('Session not found or access denied');
-        setLoading(false);
-        return;
+        console.warn('[Telehealth] No session found. Attempting host bootstrap.');
+
+        // Try to find an appointment referring to any candidate in its telehealth_link
+        const orFilters = candidates.map((c) => `telehealth_link.ilike.%${c}%`).join(',');
+        const { data: appts, error: apptErr } = await supabase
+          .from('appointments')
+          .select('id, clinician_id, telehealth_link')
+          .or(orFilters);
+
+        if (apptErr) throw apptErr;
+
+        const hostAppointment = (appts || []).find((a: any) => a.clinician_id === user?.id);
+        if (hostAppointment && user?.id) {
+          const canonicalId = withPrefix; // enforce canonical prefix
+          console.log('[Telehealth] Bootstrapping session with id:', canonicalId);
+
+          const { data: created, error: insertErr } = await supabase
+            .from('telehealth_sessions')
+            .insert({
+              session_id: canonicalId,
+              host_id: user.id,
+              status: 'waiting'
+            })
+            .select('*')
+            .maybeSingle();
+
+          if (insertErr) throw insertErr;
+          if (!created) throw new Error('Failed to create telehealth session');
+
+          sessionData = created;
+
+          // Update appointment link to canonical path (best-effort)
+          const canonicalLink = `/telehealth/session/${canonicalId}`;
+          if (hostAppointment.telehealth_link !== canonicalLink) {
+            await supabase
+              .from('appointments')
+              .update({ telehealth_link: canonicalLink })
+              .eq('id', hostAppointment.id);
+          }
+
+          // Redirect to canonical route if needed
+          if (noColon !== canonicalId) {
+            console.log('[Telehealth] Redirecting to canonical route:', canonicalLink);
+            navigate(canonicalLink, { replace: true });
+          }
+
+          toast({ title: 'Session initialized', description: 'A new session was created for this link.' });
+        } else {
+          console.error('[Telehealth] Session not found and user is not the host of a matching appointment.');
+          setError('Session not found or access denied');
+          setLoading(false);
+          return;
+        }
+      } else {
+        // If we found a session and its session_id differs from the URL, normalize the route
+        if (sessionData.session_id !== noColon) {
+          const canonicalLink = `/telehealth/session/${sessionData.session_id}`;
+          console.log('[Telehealth] Normalizing route to:', canonicalLink);
+          navigate(canonicalLink, { replace: true });
+        }
       }
 
       setSession(sessionData);
-      setIsHost(sessionData.host_id === user?.id);
+      const isUserHost = sessionData.host_id === user?.id;
+      setIsHost(isUserHost);
 
-      // Fetch user profile
+      // Fetch user profile (best-effort)
       const { data: profileData } = await supabase
         .from('profiles')
         .select('first_name, last_name')
@@ -92,19 +161,23 @@ export default function TelehealthSession() {
       await initializeMedia();
       setMediaReady(true);
 
-      // Create participant record
-      await supabase.from('session_participants').insert({
-        session_id: sessionData.id,
-        user_id: user?.id,
-        participant_name: `${profileData?.first_name} ${profileData?.last_name}`,
-        participant_role: sessionData.host_id === user?.id ? 'host' : 'client',
-        device_fingerprint: '', // Would implement
-        ip_address: '', // Would need service
-        user_agent: navigator.userAgent
-      });
+      // Create participant record (ignore error if already exists)
+      try {
+        await supabase.from('session_participants').insert({
+          session_id: sessionData.id,
+          user_id: user?.id,
+          participant_name: profileData ? `${profileData.first_name} ${profileData.last_name}` : 'Guest',
+          participant_role: isUserHost ? 'host' : 'client',
+          device_fingerprint: '',
+          ip_address: '',
+          user_agent: navigator.userAgent
+        });
+      } catch (e) {
+        console.warn('[Telehealth] Participant insert warning (possibly duplicate):', e);
+      }
 
-      // Update session status
-      if (sessionData.status === 'waiting') {
+      // If session is waiting and host joins, mark active
+      if (sessionData.status === 'waiting' && isUserHost) {
         await supabase
           .from('telehealth_sessions')
           .update({
@@ -116,7 +189,7 @@ export default function TelehealthSession() {
 
       setLoading(false);
     } catch (err) {
-      console.error('Error loading session:', err);
+      console.error('[Telehealth] Error loading session:', err);
       setError(err instanceof Error ? err.message : 'Failed to load session');
       setLoading(false);
     }
