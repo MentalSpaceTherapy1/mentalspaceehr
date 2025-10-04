@@ -656,15 +656,23 @@ export default function ProgressNote() {
                 <Select
                   value={formData.appointmentId}
                   onValueChange={(value) => {
-                    setFormData(prev => ({ ...prev, appointmentId: value }));
                     const appt = appointments.find(a => a.id === value);
                     if (appt) {
                       setFormData(prev => ({
                         ...prev,
+                        appointmentId: value,
                         sessionDate: appt.appointment_date,
                         sessionStartTime: appt.start_time,
                         sessionEndTime: appt.end_time,
                         sessionDuration: appt.duration || 0,
+                        sessionType: appt.appointment_type,
+                        sessionModality: appt.service_location === 'Telehealth' ? 'Telehealth' : 'In-Person',
+                        sessionLocation: appt.service_location,
+                        billing: {
+                          ...prev.billing,
+                          cptCode: appt.cpt_code || prev.billing.cptCode,
+                          diagnosisCodes: appt.icd_codes || prev.billing.diagnosisCodes,
+                        },
                       }));
                     }
                     setHasUnsavedChanges(true);
