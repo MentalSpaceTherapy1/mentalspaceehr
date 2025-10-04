@@ -894,7 +894,7 @@ export default function ProgressNote() {
                       <div>
                         <div className="font-medium mb-2">Subjective:</div>
                         <Textarea
-                          value={JSON.stringify(aiSuggestion.subjective, null, 2)}
+                          value={JSON.stringify(aiSuggestion.subjective ?? {}, null, 2)}
                           onChange={(e) => {
                             try {
                               setAiSuggestion({ ...aiSuggestion, subjective: JSON.parse(e.target.value) });
@@ -909,7 +909,7 @@ export default function ProgressNote() {
                       <div>
                         <div className="font-medium mb-2">Objective:</div>
                         <Textarea
-                          value={JSON.stringify(aiSuggestion.objective, null, 2)}
+                          value={JSON.stringify(aiSuggestion.objective ?? {}, null, 2)}
                           onChange={(e) => {
                             try {
                               setAiSuggestion({ ...aiSuggestion, objective: JSON.parse(e.target.value) });
@@ -924,7 +924,7 @@ export default function ProgressNote() {
                       <div>
                         <div className="font-medium mb-2">Assessment:</div>
                         <Textarea
-                          value={JSON.stringify(aiSuggestion.assessment, null, 2)}
+                          value={JSON.stringify(aiSuggestion.assessment ?? {}, null, 2)}
                           onChange={(e) => {
                             try {
                               setAiSuggestion({ ...aiSuggestion, assessment: JSON.parse(e.target.value) });
@@ -939,7 +939,7 @@ export default function ProgressNote() {
                       <div>
                         <div className="font-medium mb-2">Plan:</div>
                         <Textarea
-                          value={JSON.stringify(aiSuggestion.plan, null, 2)}
+                          value={JSON.stringify(aiSuggestion.plan ?? {}, null, 2)}
                           onChange={(e) => {
                             try {
                               setAiSuggestion({ ...aiSuggestion, plan: JSON.parse(e.target.value) });
@@ -958,34 +958,49 @@ export default function ProgressNote() {
                         <div>
                           <div className="font-medium">Subjective:</div>
                           <div className="text-muted-foreground whitespace-pre-wrap">
-                            {aiSuggestion.subjective.presentingConcerns && `• ${aiSuggestion.subjective.presentingConcerns}\n`}
-                            {aiSuggestion.subjective.moodReport && `• Mood: ${aiSuggestion.subjective.moodReport}\n`}
+                            {aiSuggestion.subjective?.presentingConcerns && `• ${aiSuggestion.subjective.presentingConcerns}\n`}
+                            {aiSuggestion.subjective?.moodReport && `• Mood: ${aiSuggestion.subjective.moodReport}\n`}
+                            {!aiSuggestion.subjective?.presentingConcerns && !aiSuggestion.subjective?.moodReport && (
+                              <pre className="text-xs font-mono whitespace-pre-wrap">{JSON.stringify(aiSuggestion.subjective, null, 2)}</pre>
+                            )}
                           </div>
                         </div>
                       )}
                       {aiSuggestion.objective && (
                         <div>
                           <div className="font-medium">Objective:</div>
-                          <div className="text-muted-foreground">
-                            {aiSuggestion.objective.behavioralObservations?.appearance && `• ${aiSuggestion.objective.behavioralObservations.appearance}\n`}
+                          <div className="text-muted-foreground whitespace-pre-wrap">
+                            {aiSuggestion.objective?.behavioralObservations?.appearance && `• ${aiSuggestion.objective.behavioralObservations.appearance}\n`}
+                            {!aiSuggestion.objective?.behavioralObservations?.appearance && (
+                              <pre className="text-xs font-mono whitespace-pre-wrap">{JSON.stringify(aiSuggestion.objective, null, 2)}</pre>
+                            )}
                           </div>
                         </div>
                       )}
                       {aiSuggestion.assessment && (
                         <div>
                           <div className="font-medium">Assessment:</div>
-                          <div className="text-muted-foreground">
-                            {aiSuggestion.assessment.clinicalImpression && `• ${aiSuggestion.assessment.clinicalImpression.substring(0, 150)}...\n`}
+                          <div className="text-muted-foreground whitespace-pre-wrap">
+                            {aiSuggestion.assessment?.clinicalImpression && `• ${aiSuggestion.assessment.clinicalImpression.substring(0, 200)}...\n`}
+                            {!aiSuggestion.assessment?.clinicalImpression && (
+                              <pre className="text-xs font-mono whitespace-pre-wrap">{JSON.stringify(aiSuggestion.assessment, null, 2)}</pre>
+                            )}
                           </div>
                         </div>
                       )}
                       {aiSuggestion.plan && (
                         <div>
                           <div className="font-medium">Plan:</div>
-                          <div className="text-muted-foreground">
-                            {aiSuggestion.plan.interventionDetails && `• ${aiSuggestion.plan.interventionDetails.substring(0, 150)}...\n`}
+                          <div className="text-muted-foreground whitespace-pre-wrap">
+                            {aiSuggestion.plan?.interventionDetails && `• ${aiSuggestion.plan.interventionDetails.substring(0, 200)}...\n`}
+                            {!aiSuggestion.plan?.interventionDetails && (
+                              <pre className="text-xs font-mono whitespace-pre-wrap">{JSON.stringify(aiSuggestion.plan, null, 2)}</pre>
+                            )}
                           </div>
                         </div>
+                      )}
+                      {!aiSuggestion.subjective && !aiSuggestion.objective && !aiSuggestion.assessment && !aiSuggestion.plan && (
+                        <pre className="text-xs font-mono whitespace-pre-wrap text-muted-foreground">{JSON.stringify(aiSuggestion, null, 2)}</pre>
                       )}
                     </div>
                   )}
