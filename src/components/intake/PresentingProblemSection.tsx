@@ -14,9 +14,10 @@ interface PresentingProblemProps {
   onChange: (data: any) => void;
   clientId?: string;
   fullContext?: any;
+  disabled?: boolean;
 }
 
-export function PresentingProblemSection({ data, onChange, clientId, fullContext }: PresentingProblemProps) {
+export function PresentingProblemSection({ data, onChange, clientId, fullContext, disabled }: PresentingProblemProps) {
   const handleChange = (field: string, value: any) => {
     onChange({ ...data, [field]: value });
   };
@@ -222,6 +223,7 @@ export function PresentingProblemSection({ data, onChange, clientId, fullContext
             onChange={(e) => handleChange('chiefComplaint', e.target.value)}
             placeholder="Client's stated reason for seeking treatment..."
             rows={3}
+            disabled={disabled}
           />
         </CardContent>
       </Card>
@@ -239,6 +241,7 @@ export function PresentingProblemSection({ data, onChange, clientId, fullContext
               onChange={(e) => handleChange('historyOfPresentingProblem', e.target.value)}
               placeholder="Include onset, duration, severity, precipitating factors, exacerbating and alleviating factors..."
               rows={8}
+              disabled={disabled}
             />
           </div>
 

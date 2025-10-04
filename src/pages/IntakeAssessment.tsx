@@ -126,6 +126,20 @@ export default function IntakeAssessment() {
     wasAIAssisted: false
   });
 
+  // Debug logging
+  useEffect(() => {
+    console.log('Intake Form State:', {
+      noteId,
+      clientId,
+      isSignedNote: metadata.signedDate !== null,
+      signedDate: metadata.signedDate,
+      loading,
+      saving,
+      signatureDialogOpen,
+      supervisorDialogOpen
+    });
+  }, [noteId, clientId, metadata.signedDate, loading, saving, signatureDialogOpen, supervisorDialogOpen]);
+
   useEffect(() => {
     loadAvailableClients();
     loadUserProfileAndRoles();
@@ -1163,6 +1177,7 @@ export default function IntakeAssessment() {
                   onChange={(data) => updateFormData('presenting', data)}
                   clientId={formData.clientId}
                   fullContext={buildFullContext()}
+                  disabled={metadata.signedDate !== null}
                 />
               </TabsContent>
 

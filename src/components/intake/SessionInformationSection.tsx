@@ -25,6 +25,7 @@ export function SessionInformationSection({ data, onChange, cptCode, onCptCodeCh
             type="date"
             value={data.sessionDate || ''}
             onChange={(e) => handleChange('sessionDate', e.target.value)}
+            disabled={disabled}
             required
           />
         </div>
@@ -36,6 +37,7 @@ export function SessionInformationSection({ data, onChange, cptCode, onCptCodeCh
             type="time"
             value={data.sessionStartTime || ''}
             onChange={(e) => handleChange('sessionStartTime', e.target.value)}
+            disabled={disabled}
             required
           />
         </div>
@@ -47,6 +49,7 @@ export function SessionInformationSection({ data, onChange, cptCode, onCptCodeCh
             type="time"
             value={data.sessionEndTime || ''}
             onChange={(e) => handleChange('sessionEndTime', e.target.value)}
+            disabled={disabled}
             required
           />
         </div>
@@ -69,6 +72,7 @@ export function SessionInformationSection({ data, onChange, cptCode, onCptCodeCh
           <Select
             value={data.sessionLocation || 'Office'}
             onValueChange={(value) => handleChange('sessionLocation', value)}
+            disabled={disabled}
           >
             <SelectTrigger>
               <SelectValue />
