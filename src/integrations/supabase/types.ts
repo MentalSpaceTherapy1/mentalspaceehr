@@ -2696,6 +2696,147 @@ export type Database = {
           },
         ]
       }
+      treatment_plans: {
+        Row: {
+          anticipated_discharge_date: string | null
+          barriers: string[] | null
+          barriers_identified: boolean | null
+          client_agreement: boolean | null
+          client_id: string
+          client_signature: string | null
+          client_signature_date: string | null
+          client_strengths: string[] | null
+          clinician_id: string
+          community_resources: string[] | null
+          created_date: string
+          diagnoses: Json
+          digital_signature: string | null
+          discharge_criteria: string[] | null
+          effective_date: string
+          goals: Json
+          id: string
+          last_modified: string
+          last_modified_by: string | null
+          medication_plan: Json | null
+          next_review_date: string | null
+          plan_date: string
+          plan_to_address_barriers: string | null
+          previous_version_id: string | null
+          problems: Json
+          progress_summary: string | null
+          psychoeducation_topics: string[] | null
+          requires_supervisor_cosign: boolean | null
+          review_date: string
+          signed_by: string | null
+          signed_date: string | null
+          status: string
+          supervisor_cosign_date: string | null
+          supervisor_cosigned: boolean | null
+          supervisor_id: string | null
+          supervisor_signature: string | null
+          support_systems: string[] | null
+          treatment_modalities: Json
+          version_number: number
+        }
+        Insert: {
+          anticipated_discharge_date?: string | null
+          barriers?: string[] | null
+          barriers_identified?: boolean | null
+          client_agreement?: boolean | null
+          client_id: string
+          client_signature?: string | null
+          client_signature_date?: string | null
+          client_strengths?: string[] | null
+          clinician_id: string
+          community_resources?: string[] | null
+          created_date?: string
+          diagnoses?: Json
+          digital_signature?: string | null
+          discharge_criteria?: string[] | null
+          effective_date: string
+          goals?: Json
+          id?: string
+          last_modified?: string
+          last_modified_by?: string | null
+          medication_plan?: Json | null
+          next_review_date?: string | null
+          plan_date: string
+          plan_to_address_barriers?: string | null
+          previous_version_id?: string | null
+          problems?: Json
+          progress_summary?: string | null
+          psychoeducation_topics?: string[] | null
+          requires_supervisor_cosign?: boolean | null
+          review_date: string
+          signed_by?: string | null
+          signed_date?: string | null
+          status?: string
+          supervisor_cosign_date?: string | null
+          supervisor_cosigned?: boolean | null
+          supervisor_id?: string | null
+          supervisor_signature?: string | null
+          support_systems?: string[] | null
+          treatment_modalities?: Json
+          version_number?: number
+        }
+        Update: {
+          anticipated_discharge_date?: string | null
+          barriers?: string[] | null
+          barriers_identified?: boolean | null
+          client_agreement?: boolean | null
+          client_id?: string
+          client_signature?: string | null
+          client_signature_date?: string | null
+          client_strengths?: string[] | null
+          clinician_id?: string
+          community_resources?: string[] | null
+          created_date?: string
+          diagnoses?: Json
+          digital_signature?: string | null
+          discharge_criteria?: string[] | null
+          effective_date?: string
+          goals?: Json
+          id?: string
+          last_modified?: string
+          last_modified_by?: string | null
+          medication_plan?: Json | null
+          next_review_date?: string | null
+          plan_date?: string
+          plan_to_address_barriers?: string | null
+          previous_version_id?: string | null
+          problems?: Json
+          progress_summary?: string | null
+          psychoeducation_topics?: string[] | null
+          requires_supervisor_cosign?: boolean | null
+          review_date?: string
+          signed_by?: string | null
+          signed_date?: string | null
+          status?: string
+          supervisor_cosign_date?: string | null
+          supervisor_cosigned?: boolean | null
+          supervisor_id?: string | null
+          supervisor_signature?: string | null
+          support_systems?: string[] | null
+          treatment_modalities?: Json
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_previous_version"
+            columns: ["previous_version_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_plans_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trusted_devices: {
         Row: {
           created_at: string | null
