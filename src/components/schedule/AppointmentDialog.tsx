@@ -194,6 +194,12 @@ export function AppointmentDialog({
     if (serviceCodesRes.data) setServiceCodes(serviceCodesRes.data);
   };
 
+  // Filter service codes based on selected appointment type
+  const selectedAppointmentType = form.watch('appointment_type');
+  const filteredServiceCodes = serviceCodes.filter(
+    (code) => code.service_type === selectedAppointmentType
+  );
+
   const onSubmit = async (data: AppointmentFormData) => {
     try {
       setSaving(true);
@@ -494,7 +500,7 @@ export function AppointmentDialog({
                     </FormControl>
                     <SelectContent className="max-h-[300px]">
                       <SelectItem value="none">None</SelectItem>
-                      {serviceCodes.map((code) => (
+                      {filteredServiceCodes.map((code) => (
                         <SelectItem key={code.id} value={code.code}>
                           <div className="flex items-center gap-2">
                             <span className="font-mono">{code.code}</span>
