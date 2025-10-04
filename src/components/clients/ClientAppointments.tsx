@@ -290,7 +290,17 @@ export function ClientAppointments({ clientId }: ClientAppointmentsProps) {
                       {canJoinSession(appointment) && (
                         <div className="pt-3 border-t space-y-2">
                           <Button
-                            onClick={() => navigate(appointment.telehealth_link!)}
+                            onClick={() => {
+                              const link = appointment.telehealth_link!;
+                              const fixed = link.includes('/telehealth/session/')
+                                ? link
+                                : link.includes('/telehealth/session_')
+                                  ? link.replace('/telehealth/session_', '/telehealth/session/')
+                                  : link.includes('/telehealth/')
+                                    ? link.replace('/telehealth/', '/telehealth/session/')
+                                    : `/telehealth/session/${link}`;
+                              navigate(fixed);
+                            }}
                             className="w-full bg-primary hover:bg-primary/90"
                             size="sm"
                           >

@@ -601,7 +601,17 @@ export function AppointmentDialog({
                 <Button
                   type="button"
                   variant="default"
-                  onClick={() => navigate(appointment.telehealth_link!)}
+                  onClick={() => {
+                    const link = appointment.telehealth_link!;
+                    const fixed = link.includes('/telehealth/session/')
+                      ? link
+                      : link.includes('/telehealth/session_')
+                        ? link.replace('/telehealth/session_', '/telehealth/session/')
+                        : link.includes('/telehealth/')
+                          ? link.replace('/telehealth/', '/telehealth/session/')
+                          : `/telehealth/session/${link}`;
+                    navigate(fixed);
+                  }}
                   className="bg-primary hover:bg-primary/90"
                 >
                   <Video className="mr-2 h-4 w-4" />

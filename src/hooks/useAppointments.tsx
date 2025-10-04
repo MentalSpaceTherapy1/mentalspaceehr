@@ -105,7 +105,7 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
       let telehealthLink = appointment.telehealth_link;
       if (appointment.service_location === 'Telehealth' && appointment.telehealth_platform === 'Internal') {
         const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        telehealthLink = `/telehealth/${sessionId}`;
+        telehealthLink = `/telehealth/session/${sessionId}`;
       }
 
       // Check if this is a recurring appointment
@@ -284,7 +284,7 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
               status: 'waiting'
             });
           
-          normalized.telehealth_link = `/telehealth/${sessionId}`;
+          normalized.telehealth_link = `/telehealth/session/${sessionId}`;
         }
       }
 
