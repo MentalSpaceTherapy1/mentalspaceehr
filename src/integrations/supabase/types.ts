@@ -2730,6 +2730,7 @@ export type Database = {
           signed_by: string | null
           signed_date: string | null
           status: string
+          supervisor_comments: string | null
           supervisor_cosign_date: string | null
           supervisor_cosigned: boolean | null
           supervisor_id: string | null
@@ -2771,6 +2772,7 @@ export type Database = {
           signed_by?: string | null
           signed_date?: string | null
           status?: string
+          supervisor_comments?: string | null
           supervisor_cosign_date?: string | null
           supervisor_cosigned?: boolean | null
           supervisor_id?: string | null
@@ -2812,6 +2814,7 @@ export type Database = {
           signed_by?: string | null
           signed_date?: string | null
           status?: string
+          supervisor_comments?: string | null
           supervisor_cosign_date?: string | null
           supervisor_cosigned?: boolean | null
           supervisor_id?: string | null
