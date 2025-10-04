@@ -104,6 +104,7 @@ export type Database = {
         Row: {
           added_by: string | null
           added_date: string | null
+          alternate_clinician_ids: string[] | null
           appointment_type: string
           client_id: string
           clinician_id: string | null
@@ -111,16 +112,20 @@ export type Database = {
           contacted_date: string | null
           id: string
           notes: string | null
+          notified: boolean | null
+          notified_date: string | null
           preferred_days: string[] | null
           preferred_times: string[] | null
           priority: string | null
           removed_date: string | null
           removed_reason: string | null
+          scheduled_appointment_id: string | null
           status: string | null
         }
         Insert: {
           added_by?: string | null
           added_date?: string | null
+          alternate_clinician_ids?: string[] | null
           appointment_type: string
           client_id: string
           clinician_id?: string | null
@@ -128,16 +133,20 @@ export type Database = {
           contacted_date?: string | null
           id?: string
           notes?: string | null
+          notified?: boolean | null
+          notified_date?: string | null
           preferred_days?: string[] | null
           preferred_times?: string[] | null
           priority?: string | null
           removed_date?: string | null
           removed_reason?: string | null
+          scheduled_appointment_id?: string | null
           status?: string | null
         }
         Update: {
           added_by?: string | null
           added_date?: string | null
+          alternate_clinician_ids?: string[] | null
           appointment_type?: string
           client_id?: string
           clinician_id?: string | null
@@ -145,11 +154,14 @@ export type Database = {
           contacted_date?: string | null
           id?: string
           notes?: string | null
+          notified?: boolean | null
+          notified_date?: string | null
           preferred_days?: string[] | null
           preferred_times?: string[] | null
           priority?: string | null
           removed_date?: string | null
           removed_reason?: string | null
+          scheduled_appointment_id?: string | null
           status?: string | null
         }
         Relationships: [
@@ -179,6 +191,13 @@ export type Database = {
             columns: ["contacted_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_waitlist_scheduled_appointment_id_fkey"
+            columns: ["scheduled_appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
             referencedColumns: ["id"]
           },
         ]
@@ -2141,6 +2160,15 @@ export type Database = {
       cleanup_expired_devices: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      find_matching_slots: {
+        Args: { _waitlist_id: string }
+        Returns: {
+          appointment_date: string
+          clinician_id: string
+          end_time: string
+          start_time: string
+        }[]
       }
       generate_confirmation_token: {
         Args: Record<PropertyKey, never>
