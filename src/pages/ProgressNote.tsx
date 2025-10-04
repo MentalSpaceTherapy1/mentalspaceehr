@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, FileSignature, Clock, AlertTriangle } from 'lucide-react';
+import { Save, ArrowLeft, FileSignature, Clock, AlertTriangle, Brain, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { SubjectiveSection } from '@/components/progress-note/SubjectiveSection';
@@ -17,6 +17,8 @@ import { ObjectiveSection } from '@/components/progress-note/ObjectiveSection';
 import { AssessmentSection } from '@/components/progress-note/AssessmentSection';
 import { PlanSection } from '@/components/progress-note/PlanSection';
 import { BillingSection } from '@/components/progress-note/BillingSection';
+import { SessionInformationSection } from '@/components/intake/SessionInformationSection';
+import { Textarea } from '@/components/ui/textarea';
 
 export interface ProgressNoteData {
   noteId?: string;
@@ -166,6 +168,8 @@ export default function ProgressNote() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [clientGoals, setClientGoals] = useState<any[]>([]);
   const startTimeRef = useRef<number>(Date.now());
+  const [generatingAI, setGeneratingAI] = useState(false);
+  const [aiInput, setAiInput] = useState('');
 
   const [formData, setFormData] = useState<ProgressNoteData>({
     clientId: '',
@@ -487,6 +491,7 @@ export default function ProgressNote() {
         billing_status: 'not_billed',
         locked: false,
         requires_supervision: false,
+        ai_generated: generatingAI,
       };
 
       if (noteId) {
@@ -519,6 +524,69 @@ export default function ProgressNote() {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const generateWithAI = async () => {
+    if (!aiInput.trim()) {
+      toast({
+        title: 'Input Required',
+        description: 'Please provide session information or clinical notes for AI to process',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!formData.clientId) {
+      toast({
+        title: 'Client Required',
+        description: 'Please select a client first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setGeneratingAI(true);
+
+      const { data, error } = await supabase.functions.invoke('generate-clinical-note', {
+        body: {
+          freeTextInput: aiInput,
+          noteType: 'progress_note',
+          noteFormat: 'SOAP',
+          clientId: formData.clientId,
+          appointmentId: formData.appointmentId,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.content) {
+        // Update form with AI-generated content
+        setFormData(prev => ({
+          ...prev,
+          subjective: data.content.subjective || prev.subjective,
+          objective: data.content.objective || prev.objective,
+          assessment: data.content.assessment || prev.assessment,
+          plan: data.content.plan || prev.plan,
+        }));
+
+        toast({
+          title: 'Note Generated',
+          description: 'AI has generated the progress note. Please review and edit as needed.',
+        });
+
+        setAiInput('');
+      }
+    } catch (error: any) {
+      console.error('Error generating note:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to generate note with AI',
+        variant: 'destructive',
+      });
+    } finally {
+      setGeneratingAI(false);
     }
   };
 
@@ -617,6 +685,23 @@ export default function ProgressNote() {
               </div>
             </div>
 
+            <SessionInformationSection
+              data={formData}
+              onChange={(data) => {
+                setFormData(data);
+                setHasUnsavedChanges(true);
+              }}
+              cptCode={formData.billing.cptCode}
+              onCptCodeChange={(e) => {
+                setFormData(prev => ({
+                  ...prev,
+                  billing: { ...prev.billing, cptCode: e.target.value }
+                }));
+                setHasUnsavedChanges(true);
+              }}
+              disabled={formData.status === 'Locked'}
+            />
+
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label>Session Type</Label>
@@ -685,6 +770,55 @@ export default function ProgressNote() {
                 </Select>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5" />
+              AI-Assisted Generation
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Session Summary or Clinical Information</Label>
+              <Textarea
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+                placeholder="Describe what happened in the session, key topics discussed, client's presentation, interventions used, etc. The AI will generate a structured SOAP note from this information."
+                rows={6}
+                disabled={generatingAI || !formData.clientId || !formData.appointmentId}
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                Provide as much detail as possible. You can write in free-form text or bullet points.
+              </p>
+            </div>
+
+            <Button
+              onClick={generateWithAI}
+              disabled={generatingAI || !aiInput.trim() || !formData.clientId || !formData.appointmentId}
+              className="w-full"
+            >
+              {generatingAI ? (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2 animate-pulse" />
+                  Generating Note...
+                </>
+              ) : (
+                <>
+                  <Brain className="h-4 w-4 mr-2" />
+                  Generate Progress Note with AI
+                </>
+              )}
+            </Button>
+
+            {!formData.clientId && (
+              <p className="text-sm text-warning">Please select a client first</p>
+            )}
+            {!formData.appointmentId && formData.clientId && (
+              <p className="text-sm text-warning">Please select an appointment first</p>
+            )}
           </CardContent>
         </Card>
 
