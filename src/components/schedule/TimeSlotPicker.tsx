@@ -11,7 +11,7 @@ interface TimeSlotPickerProps {
 export function TimeSlotPicker({ value, onChange, className }: TimeSlotPickerProps) {
   const generateTimeSlots = () => {
     const slots = [];
-    for (let hour = 6; hour < 21; hour++) {
+    for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 15) {
         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         const displayTime = new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
-import { Resend } from "npm:resend@4.0.0";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -149,7 +149,7 @@ async function sendEmailReminder(
       reminder_type: 'email',
       hours_before: hoursBefor,
       status: 'failed',
-      error_message: error.message,
+      error_message: error instanceof Error ? error.message : 'Unknown error',
       recipient: appointment.client.email
     });
     
@@ -236,7 +236,7 @@ async function processReminders(): Promise<any> {
         } catch (error) {
           console.error(`Failed to send reminder for appointment ${appointment.id}:`, error);
           results.failed++;
-          results.errors.push(`Appointment ${appointment.id}: ${error.message}`);
+          results.errors.push(`Appointment ${appointment.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
         
         results.processed++;

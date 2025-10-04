@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,7 +27,9 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const resendApiKey = Deno.env.get('RESEND_API_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const resend = new Resend(resendApiKey);
 
     console.log('Starting waitlist slot notification check...');
 
@@ -122,10 +125,41 @@ serve(async (req) => {
           continue;
         }
 
-        // TODO: Send actual notification via email/SMS
-        // For now, just log it
-        console.log(`Notification sent for client ${client?.first_name} ${client?.last_name}`);
-        console.log(`Available slot: ${matchingSlots[0].appointment_date} at ${matchingSlots[0].start_time}`);
+        // Send email notification
+        if (client?.email) {
+          try {
+            const slotDate = new Date(matchingSlots[0].appointment_date);
+            const formattedDate = slotDate.toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            });
+            
+            const emailResponse = await resend.emails.send({
+              from: 'MentalSpace <onboarding@resend.dev>',
+              to: [client.email],
+              subject: 'Appointment Slot Available',
+              html: `
+                <h2>Good news, ${client.first_name}!</h2>
+                <p>An appointment slot matching your preferences has become available.</p>
+                <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                  <p><strong>Date:</strong> ${formattedDate}</p>
+                  <p><strong>Time:</strong> ${matchingSlots[0].start_time}</p>
+                  <p><strong>With:</strong> ${clinician?.first_name} ${clinician?.last_name}</p>
+                </div>
+                <p>Please contact us to confirm this appointment.</p>
+                <p>Best regards,<br>MentalSpace Team</p>
+              `
+            });
+
+            console.log(`Email sent to ${client.email}:`, emailResponse);
+          } catch (emailError) {
+            console.error('Error sending email:', emailError);
+          }
+        } else {
+          console.log(`No email address for client ${client?.first_name} ${client?.last_name}`);
+        }
         
         notificationsCount++;
       }
@@ -148,7 +182,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in notify-waitlist-slots:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500
