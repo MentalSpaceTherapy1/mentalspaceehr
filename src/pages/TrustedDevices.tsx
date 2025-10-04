@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 interface TrustedDevice {
   id: string;
@@ -84,8 +85,8 @@ export default function TrustedDevices() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <DashboardLayout>
+      <div className="container mx-auto p-8 space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => navigate('/profile')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -164,6 +165,6 @@ export default function TrustedDevices() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

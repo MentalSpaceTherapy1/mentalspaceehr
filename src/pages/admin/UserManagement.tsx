@@ -23,6 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 interface UserWithRoles {
   id: string;
@@ -136,8 +137,8 @@ export default function UserManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <DashboardLayout>
+      <div className="container mx-auto p-8 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">User Management</h1>
@@ -254,6 +255,6 @@ export default function UserManagement() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

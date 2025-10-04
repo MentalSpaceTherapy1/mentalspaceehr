@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, Plus, Edit, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 interface Location {
   id: string;
@@ -142,8 +143,8 @@ export default function Locations() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <DashboardLayout>
+      <div className="container mx-auto p-8 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={() => navigate('/admin/practice-settings')}>
@@ -336,6 +337,6 @@ export default function Locations() {
           </DialogContent>
         </Dialog>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

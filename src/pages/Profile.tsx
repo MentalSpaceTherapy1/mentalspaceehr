@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Shield } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -75,8 +76,8 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <DashboardLayout>
+      <div className="container mx-auto p-8 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={() => navigate('/dashboard')}>
@@ -369,6 +370,6 @@ export default function Profile() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Shield, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 export default function MFASetup() {
   const { user } = useAuth();
@@ -135,8 +136,8 @@ export default function MFASetup() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <DashboardLayout>
+      <div className="container mx-auto p-8 max-w-2xl space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -228,6 +229,6 @@ export default function MFASetup() {
           )}
         </Card>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
