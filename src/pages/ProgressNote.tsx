@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, FileSignature, Clock, AlertTriangle, Brain, Sparkles, Edit, Check, X } from 'lucide-react';
+import { Save, ArrowLeft, FileSignature, Clock, AlertTriangle, Brain, Sparkles, Edit, Check, X, CheckCircle2 } from 'lucide-react';
+import { SignatureDialog } from '@/components/intake/SignatureDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { SubjectiveSection } from '@/components/progress-note/SubjectiveSection';
@@ -168,6 +169,9 @@ export default function ProgressNote() {
   const [availableClients, setAvailableClients] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [clientGoals, setClientGoals] = useState<any[]>([]);
+  const [intakeNote, setIntakeNote] = useState<any>(null);
+  const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
+  const [clinicianName, setClinicianName] = useState('');
   const startTimeRef = useRef<number>(Date.now());
   const [generatingAI, setGeneratingAI] = useState(false);
   const [aiInput, setAiInput] = useState('');
@@ -273,6 +277,7 @@ export default function ProgressNote() {
 
   useEffect(() => {
     loadClients();
+    loadClinicianName();
     if (noteId) {
       loadExistingNote();
     } else if (appointmentId) {
@@ -284,6 +289,7 @@ export default function ProgressNote() {
     if (formData.clientId) {
       loadClientAppointments();
       loadClientGoals();
+      loadIntakeNote();
     }
   }, [formData.clientId]);
 
@@ -334,6 +340,56 @@ export default function ProgressNote() {
       setClientGoals([]);
     } catch (error) {
       console.error('Error loading client goals:', error);
+    }
+  };
+
+  const loadClinicianName = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', user?.id)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        setClinicianName(`${data.first_name} ${data.last_name}`);
+      }
+    } catch (error) {
+      console.error('Error fetching clinician name:', error);
+    }
+  };
+
+  const loadIntakeNote = async () => {
+    if (!formData.clientId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('clinical_notes')
+        .select('*')
+        .eq('client_id', formData.clientId)
+        .eq('note_type', 'intake_assessment')
+        .eq('locked', true)
+        .order('date_of_service', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      setIntakeNote(data);
+      
+      // If intake exists and has diagnoses, pre-populate billing section
+      if (data?.diagnoses && data.diagnoses.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          billing: {
+            ...prev.billing,
+            diagnosisCodes: data.diagnoses,
+          },
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching intake note:', error);
     }
   };
 
@@ -435,6 +491,16 @@ export default function ProgressNote() {
   };
 
   const saveNote = async () => {
+    // Check if intake exists and is signed
+    if (!intakeNote) {
+      toast({
+        title: 'Intake Required',
+        description: 'A completed and signed Intake Assessment is required before creating a Progress Note for this client.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!formData.clientId || !formData.appointmentId) {
       toast({
         title: 'Required Fields Missing',
@@ -638,6 +704,40 @@ export default function ProgressNote() {
     });
   };
 
+  const handleSign = async () => {
+    try {
+      setSaving(true);
+      
+      const { error } = await supabase
+        .from('clinical_notes')
+        .update({
+          locked: true,
+          locked_by: user?.id,
+          locked_date: new Date().toISOString(),
+        })
+        .eq('id', noteId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Note Signed',
+        description: 'Progress note has been signed and locked',
+      });
+
+      setFormData(prev => ({ ...prev, status: 'Locked' }));
+      navigate('/notes');
+    } catch (error) {
+      console.error('Error signing note:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to sign note',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -655,12 +755,31 @@ export default function ProgressNote() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button onClick={saveNote} disabled={saving || loading}>
+            {formData.status !== 'Locked' && noteId && (
+              <Button 
+                onClick={() => setSignatureDialogOpen(true)} 
+                disabled={saving || loading}
+                variant="outline"
+              >
+                <FileSignature className="h-4 w-4 mr-2" />
+                Sign Note
+              </Button>
+            )}
+            <Button onClick={saveNote} disabled={saving || loading || formData.status === 'Locked'}>
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Saving...' : 'Save Note'}
             </Button>
           </div>
         </div>
+
+        {!intakeNote && formData.clientId && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Intake Required:</strong> A completed and signed Intake Assessment is required before creating a Progress Note for this client. Please complete the intake first.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {hasUnsavedChanges && (
           <div className="bg-warning/10 border border-warning rounded-lg p-4">
@@ -669,6 +788,15 @@ export default function ProgressNote() {
               <span className="text-sm text-warning">You have unsaved changes</span>
             </div>
           </div>
+        )}
+
+        {formData.status === 'Locked' && (
+          <Alert>
+            <CheckCircle2 className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Signed & Locked:</strong> This note has been signed and is locked. No further edits can be made.
+            </AlertDescription>
+          </Alert>
         )}
 
         <Card>
@@ -1104,6 +1232,14 @@ export default function ProgressNote() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <SignatureDialog
+        open={signatureDialogOpen}
+        onOpenChange={setSignatureDialogOpen}
+        onSign={handleSign}
+        clinicianName={clinicianName}
+        noteType="Progress Note"
+      />
     </DashboardLayout>
   );
 }

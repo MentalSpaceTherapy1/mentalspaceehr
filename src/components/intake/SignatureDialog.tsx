@@ -11,9 +11,10 @@ interface SignatureDialogProps {
   onOpenChange: (open: boolean) => void;
   onSign: () => void;
   clinicianName: string;
+  noteType?: string;
 }
 
-export function SignatureDialog({ open, onOpenChange, onSign, clinicianName }: SignatureDialogProps) {
+export function SignatureDialog({ open, onOpenChange, onSign, clinicianName, noteType = 'Intake Assessment' }: SignatureDialogProps) {
   const [agreed, setAgreed] = useState(false);
 
   const handleSign = () => {
@@ -28,7 +29,7 @@ export function SignatureDialog({ open, onOpenChange, onSign, clinicianName }: S
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Sign Intake Assessment</DialogTitle>
+          <DialogTitle>Sign {noteType}</DialogTitle>
           <DialogDescription>
             By signing this document, you certify that the information provided is accurate and complete.
           </DialogDescription>
@@ -66,7 +67,7 @@ export function SignatureDialog({ open, onOpenChange, onSign, clinicianName }: S
               onCheckedChange={(checked) => setAgreed(checked as boolean)}
             />
             <Label htmlFor="agree" className="text-sm leading-tight cursor-pointer">
-              I certify that I have completed this intake assessment to the best of my ability, and that the information contained within is accurate and complete. I understand that this note will be locked after signing and cannot be edited.
+              I certify that I have completed this {noteType.toLowerCase()} to the best of my ability, and that the information contained within is accurate and complete. I understand that this note will be locked after signing and cannot be edited.
             </Label>
           </div>
         </div>
