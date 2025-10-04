@@ -80,6 +80,93 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_provider_baa: {
+        Row: {
+          baa_document_url: string | null
+          baa_expiration_date: string | null
+          baa_signed: boolean
+          baa_signed_date: string | null
+          contact_email: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          provider_name: string
+          updated_at: string
+        }
+        Insert: {
+          baa_document_url?: string | null
+          baa_expiration_date?: string | null
+          baa_signed?: boolean
+          baa_signed_date?: string | null
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          provider_name: string
+          updated_at?: string
+        }
+        Update: {
+          baa_document_url?: string | null
+          baa_expiration_date?: string | null
+          baa_signed?: boolean
+          baa_signed_date?: string | null
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          provider_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_request_logs: {
+        Row: {
+          anonymized_input_hash: string | null
+          confidence_score: number | null
+          created_at: string
+          error_message: string | null
+          id: string
+          input_length: number | null
+          model_used: string
+          output_length: number | null
+          processing_time_ms: number | null
+          request_type: string
+          success: boolean
+          user_id: string | null
+        }
+        Insert: {
+          anonymized_input_hash?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          input_length?: number | null
+          model_used: string
+          output_length?: number | null
+          processing_time_ms?: number | null
+          request_type: string
+          success?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          anonymized_input_hash?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          input_length?: number | null
+          model_used?: string
+          output_length?: number | null
+          processing_time_ms?: number | null
+          request_type?: string
+          success?: boolean
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       appointment_change_logs: {
         Row: {
           action: string
@@ -1112,6 +1199,9 @@ export type Database = {
           note_type: Database["public"]["Enums"]["note_type"]
           requires_supervision: boolean | null
           risk_flags: Json | null
+          risk_severity: string | null
+          safety_plan_id: string | null
+          safety_plan_triggered: boolean | null
           safety_plan_updated: boolean | null
           session_duration_minutes: number | null
           session_id: string | null
@@ -1150,6 +1240,9 @@ export type Database = {
           note_type: Database["public"]["Enums"]["note_type"]
           requires_supervision?: boolean | null
           risk_flags?: Json | null
+          risk_severity?: string | null
+          safety_plan_id?: string | null
+          safety_plan_triggered?: boolean | null
           safety_plan_updated?: boolean | null
           session_duration_minutes?: number | null
           session_id?: string | null
@@ -1188,6 +1281,9 @@ export type Database = {
           note_type?: Database["public"]["Enums"]["note_type"]
           requires_supervision?: boolean | null
           risk_flags?: Json | null
+          risk_severity?: string | null
+          safety_plan_id?: string | null
+          safety_plan_triggered?: boolean | null
           safety_plan_updated?: boolean | null
           session_duration_minutes?: number | null
           session_id?: string | null
@@ -1232,6 +1328,13 @@ export type Database = {
             columns: ["locked_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_notes_safety_plan_id_fkey"
+            columns: ["safety_plan_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_notes"
             referencedColumns: ["id"]
           },
           {
@@ -1398,6 +1501,47 @@ export type Database = {
           user_agent?: string | null
         }
         Relationships: []
+      }
+      note_feedback: {
+        Row: {
+          ai_sections_kept: Json | null
+          clinician_id: string
+          created_at: string
+          edit_distance: number | null
+          feedback_text: string | null
+          id: string
+          note_id: string
+          rating: number | null
+        }
+        Insert: {
+          ai_sections_kept?: Json | null
+          clinician_id: string
+          created_at?: string
+          edit_distance?: number | null
+          feedback_text?: string | null
+          id?: string
+          note_id: string
+          rating?: number | null
+        }
+        Update: {
+          ai_sections_kept?: Json | null
+          clinician_id?: string
+          created_at?: string
+          edit_distance?: number | null
+          feedback_text?: string | null
+          id?: string
+          note_id?: string
+          rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_feedback_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_notes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       note_templates: {
         Row: {
