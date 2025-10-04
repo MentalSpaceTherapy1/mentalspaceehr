@@ -7,13 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
+import { AISectionWrapper } from './AISectionWrapper';
 
 interface SafetyAssessmentProps {
   data: any;
   onChange: (data: any) => void;
+  clientId?: string;
+  fullContext?: string;
 }
 
-export function SafetyAssessmentSection({ data, onChange }: SafetyAssessmentProps) {
+export function SafetyAssessmentSection({ data, onChange, clientId, fullContext }: SafetyAssessmentProps) {
   const handleChange = (section: string, field: string, value: any) => {
     onChange({
       ...data,
@@ -27,7 +30,24 @@ export function SafetyAssessmentSection({ data, onChange }: SafetyAssessmentProp
   const suicideRisk = data.suicideRisk || {};
   const hasRisk = suicideRisk.currentIdeation || suicideRisk.plan || suicideRisk.intent;
 
+  const renderSafetySuggestion = (content: any, isEditing: boolean, onEdit: (newContent: any) => void) => {
+    if (isEditing) {
+      return <Textarea value={JSON.stringify(content, null, 2)} onChange={(e) => {
+        try { onEdit(JSON.parse(e.target.value)); } catch {}
+      }} rows={10} />;
+    }
+    return <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(content, null, 2)}</pre>;
+  };
+
   return (
+    <AISectionWrapper
+      sectionType="safety"
+      clientId={clientId}
+      context={fullContext || ''}
+      existingData={data}
+      onAccept={(content) => onChange({ ...data, ...content })}
+      renderSuggestion={renderSafetySuggestion}
+    >
     <div className="space-y-4">
       {hasRisk && (
         <Alert variant="destructive">
@@ -373,5 +393,6 @@ export function SafetyAssessmentSection({ data, onChange }: SafetyAssessmentProp
         </CardContent>
       </Card>
     </div>
+    </AISectionWrapper>
   );
 }

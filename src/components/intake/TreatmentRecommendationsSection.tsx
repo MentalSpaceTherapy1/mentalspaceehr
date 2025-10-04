@@ -1,26 +1,30 @@
-import { useState } from 'react';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Plus, X } from 'lucide-react';
+import { AISectionWrapper } from './AISectionWrapper';
 
 interface TreatmentRecommendationsProps {
   data: any;
   initialGoals: any[];
   onRecommendationsChange: (data: any) => void;
   onGoalsChange: (goals: any[]) => void;
+  clientId?: string;
+  fullContext?: string;
 }
 
 export function TreatmentRecommendationsSection({
   data,
   initialGoals,
   onRecommendationsChange,
-  onGoalsChange
+  onGoalsChange,
+  clientId,
+  fullContext
 }: TreatmentRecommendationsProps) {
   const addGoal = () => {
     onGoalsChange([
@@ -41,7 +45,30 @@ export function TreatmentRecommendationsSection({
     onGoalsChange(goals);
   };
 
+  const renderTreatmentSuggestion = (content: any, isEditing: boolean, onEdit: (newContent: any) => void) => {
+    if (isEditing) {
+      return <Textarea value={JSON.stringify(content, null, 2)} onChange={(e) => {
+        try { onEdit(JSON.parse(e.target.value)); } catch {}
+      }} rows={10} />;
+    }
+    return <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(content, null, 2)}</pre>;
+  };
+
   return (
+    <AISectionWrapper
+      sectionType="treatment"
+      clientId={clientId}
+      context={fullContext || ''}
+      existingData={{ ...data, initialGoals }}
+      onAccept={(content) => {
+        if (content.initialGoals) {
+          onGoalsChange(content.initialGoals);
+          delete content.initialGoals;
+        }
+        onRecommendationsChange({ ...data, ...content });
+      }}
+      renderSuggestion={renderTreatmentSuggestion}
+    >
     <div className="space-y-4">
       <Card>
         <CardHeader>
@@ -235,5 +262,6 @@ export function TreatmentRecommendationsSection({
         </CardContent>
       </Card>
     </div>
+    </AISectionWrapper>
   );
 }

@@ -6,13 +6,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { AISectionWrapper } from './AISectionWrapper';
 
 interface MentalStatusExamProps {
   data: any;
   onChange: (data: any) => void;
+  clientId?: string;
+  fullContext?: string;
 }
 
-export function MentalStatusExamSection({ data, onChange }: MentalStatusExamProps) {
+export function MentalStatusExamSection({ data, onChange, clientId, fullContext }: MentalStatusExamProps) {
   const handleChange = (section: string, field: string, value: any) => {
     onChange({
       ...data,
@@ -23,7 +26,24 @@ export function MentalStatusExamSection({ data, onChange }: MentalStatusExamProp
     });
   };
 
+  const renderMSESuggestion = (content: any, isEditing: boolean, onEdit: (newContent: any) => void) => {
+    if (isEditing) {
+      return <Textarea value={JSON.stringify(content, null, 2)} onChange={(e) => {
+        try { onEdit(JSON.parse(e.target.value)); } catch {}
+      }} rows={10} />;
+    }
+    return <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(content, null, 2)}</pre>;
+  };
+
   return (
+    <AISectionWrapper
+      sectionType="mse"
+      clientId={clientId}
+      context={fullContext || ''}
+      existingData={data}
+      onAccept={(content) => onChange({ ...data, ...content })}
+      renderSuggestion={renderMSESuggestion}
+    >
     <Card>
       <CardHeader>
         <CardTitle>Mental Status Examination</CardTitle>
@@ -937,5 +957,6 @@ export function MentalStatusExamSection({ data, onChange }: MentalStatusExamProp
         </div>
       </CardContent>
     </Card>
+    </AISectionWrapper>
   );
 }

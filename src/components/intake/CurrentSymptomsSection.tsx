@@ -3,10 +3,14 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { AISectionWrapper } from './AISectionWrapper';
 
 interface CurrentSymptomsProps {
   data: any;
   onChange: (data: any) => void;
+  clientId?: string;
+  fullContext?: string;
 }
 
 const symptoms = [
@@ -19,7 +23,7 @@ const symptoms = [
   'hallucinations', 'delusions', 'disorganizedThinking', 'behavioralProblems'
 ];
 
-export function CurrentSymptomsSection({ data, onChange }: CurrentSymptomsProps) {
+export function CurrentSymptomsSection({ data, onChange, clientId, fullContext }: CurrentSymptomsProps) {
   const handleSymptomChange = (symptom: string, field: 'present' | 'severity', value: any) => {
     const updated = {
       ...data,
@@ -38,7 +42,24 @@ export function CurrentSymptomsSection({ data, onChange }: CurrentSymptomsProps)
       .join(' ');
   };
 
+  const renderSymptomsSuggestion = (content: any, isEditing: boolean, onEdit: (newContent: any) => void) => {
+    if (isEditing) {
+      return <Textarea value={JSON.stringify(content, null, 2)} onChange={(e) => {
+        try { onEdit(JSON.parse(e.target.value)); } catch {}
+      }} rows={10} />;
+    }
+    return <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(content, null, 2)}</pre>;
+  };
+
   return (
+    <AISectionWrapper
+      sectionType="current_symptoms"
+      clientId={clientId}
+      context={fullContext || ''}
+      existingData={data}
+      onAccept={(content) => onChange({ ...data, ...content })}
+      renderSuggestion={renderSymptomsSuggestion}
+    >
     <Card>
       <CardHeader>
         <CardTitle>Current Symptoms</CardTitle>
@@ -75,5 +96,6 @@ export function CurrentSymptomsSection({ data, onChange }: CurrentSymptomsProps)
         </div>
       </CardContent>
     </Card>
+    </AISectionWrapper>
   );
 }

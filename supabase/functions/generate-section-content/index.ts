@@ -292,6 +292,84 @@ function buildSectionPrompt(sectionType: string, clientContext: string) {
       toolChoice = { type: "function", function: { name: "generate_treatment" } };
       break;
 
+    case 'current_symptoms':
+      systemPrompt += `Generate current symptoms assessment based on clinical presentation.`;
+      tools = [{
+        type: "function",
+        function: {
+          name: "generate_symptoms",
+          description: "Generate current symptoms",
+          parameters: {
+            type: "object",
+            properties: {
+              depression: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] } } },
+              anxiety: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string" } } },
+              irritability: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string" } } },
+              insomnia: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string" } } },
+              concentrationDifficulty: { type: "object", properties: { present: { type: "boolean" }, severity: { type: "string" } } }
+            },
+            additionalProperties: true
+          }
+        }
+      }];
+      toolChoice = { type: "function", function: { name: "generate_symptoms" } };
+      break;
+
+    case 'history':
+      systemPrompt += `Generate comprehensive history including developmental, family, medical, substance use, and social history.`;
+      tools = [{
+        type: "function",
+        function: {
+          name: "generate_history",
+          description: "Generate comprehensive history",
+          parameters: {
+            type: "object",
+            properties: {
+              developmentalHistory: { type: "object", description: "Developmental milestones and history" },
+              familyHistory: { type: "object", description: "Family mental health and medical history" },
+              medicalHistory: { type: "object", description: "Current and past medical conditions" },
+              substanceUseHistory: { type: "object", description: "Substance use patterns" },
+              socialHistory: { type: "object", description: "Social and occupational functioning" }
+            },
+            additionalProperties: false
+          }
+        }
+      }];
+      toolChoice = { type: "function", function: { name: "generate_history" } };
+      break;
+
+    case 'diagnosis':
+      systemPrompt += `Generate diagnostic formulation with ICD-10 codes and clinical impression.`;
+      tools = [{
+        type: "function",
+        function: {
+          name: "generate_diagnosis",
+          description: "Generate diagnostic formulation",
+          parameters: {
+            type: "object",
+            properties: {
+              diagnoses: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    icdCode: { type: "string" },
+                    diagnosis: { type: "string" },
+                    type: { type: "string", enum: ["Principal", "Secondary", "Rule Out", "Provisional"] },
+                    specifiers: { type: "string" }
+                  }
+                }
+              },
+              clinicianImpression: { type: "string" },
+              strengthsAndResources: { type: "array", items: { type: "string" } }
+            },
+            additionalProperties: false
+          }
+        }
+      }];
+      toolChoice = { type: "function", function: { name: "generate_diagnosis" } };
+      break;
+
     default:
       throw new Error(`Unknown section type: ${sectionType}`);
   }

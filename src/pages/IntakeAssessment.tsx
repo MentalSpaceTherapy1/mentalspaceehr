@@ -485,6 +485,24 @@ export default function IntakeAssessment() {
     setHasUnsavedChanges(true);
   };
 
+  const buildFullContext = () => {
+    return JSON.stringify({
+      chiefComplaint: formData.chiefComplaint,
+      historyOfPresentingProblem: formData.historyOfPresentingProblem,
+      currentSymptoms: formData.currentSymptoms,
+      mentalStatusExam: formData.mentalStatusExam,
+      safetyAssessment: formData.safetyAssessment,
+      histories: {
+        developmental: formData.developmentalHistory,
+        family: formData.familyHistory,
+        medical: formData.medicalHistory,
+        substance: formData.substanceUseHistory,
+        social: formData.socialHistory
+      },
+      clinicianImpression: formData.clinicianImpression
+    });
+  };
+
   const calculateDuration = () => {
     if (formData.sessionStartTime && formData.sessionEndTime) {
       const start = new Date(`2000-01-01T${formData.sessionStartTime}`);
@@ -1136,6 +1154,8 @@ export default function IntakeAssessment() {
                 <PresentingProblemSection
                   data={formData}
                   onChange={(data) => updateFormData('presenting', data)}
+                  clientId={formData.clientId}
+                  fullContext={buildFullContext()}
                 />
               </TabsContent>
 
@@ -1143,6 +1163,8 @@ export default function IntakeAssessment() {
                 <CurrentSymptomsSection
                   data={formData.currentSymptoms}
                   onChange={(data) => updateFormData('currentSymptoms', data)}
+                  clientId={formData.clientId}
+                  fullContext={buildFullContext()}
                 />
               </TabsContent>
 
@@ -1150,6 +1172,8 @@ export default function IntakeAssessment() {
                 <MentalStatusExamSection
                   data={formData.mentalStatusExam}
                   onChange={(data) => updateFormData('mentalStatusExam', data)}
+                  clientId={formData.clientId}
+                  fullContext={buildFullContext()}
                 />
               </TabsContent>
 
@@ -1157,6 +1181,8 @@ export default function IntakeAssessment() {
                 <SafetyAssessmentSection
                   data={formData.safetyAssessment}
                   onChange={(data) => updateFormData('safetyAssessment', data)}
+                  clientId={formData.clientId}
+                  fullContext={buildFullContext()}
                 />
               </TabsContent>
 
@@ -1196,6 +1222,8 @@ export default function IntakeAssessment() {
                   initialGoals={formData.initialGoals}
                   onRecommendationsChange={(data) => updateFormData('treatmentRecommendations', data)}
                   onGoalsChange={(data) => updateFormData('initialGoals', data)}
+                  clientId={formData.clientId}
+                  fullContext={buildFullContext()}
                 />
               </TabsContent>
             </Tabs>
