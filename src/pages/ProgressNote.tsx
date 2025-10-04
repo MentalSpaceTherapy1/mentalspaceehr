@@ -566,11 +566,13 @@ export default function ProgressNote() {
         content: formData as any,
         session_duration_minutes: formData.sessionDuration,
         cpt_codes: formData.billing.cptCode ? [formData.billing.cptCode] : [],
-        diagnoses: formData.billing.diagnosisCodes,
+        diagnoses: formData.billing.diagnosisCodes || [],
         billing_status: 'not_billed',
         locked: false,
         requires_supervision: false,
         ai_generated: generatingAI,
+        created_by: user?.id,
+        updated_by: user?.id,
       };
 
       if (noteId) {
@@ -581,11 +583,16 @@ export default function ProgressNote() {
 
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('clinical_notes')
-          .insert(noteData);
+          .insert(noteData)
+          .select('id')
+          .single();
 
         if (error) throw error;
+        if (data?.id) {
+          setFormData(prev => ({ ...prev, noteId: data.id }));
+        }
       }
 
       toast({
