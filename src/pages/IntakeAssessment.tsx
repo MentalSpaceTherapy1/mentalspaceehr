@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Save, ArrowLeft, AlertTriangle, FileSignature, Clock, Sparkles, User, Loader2, Brain } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SessionInformationSection } from '@/components/intake/SessionInformationSection';
 import { PresentingProblemSection } from '@/components/intake/PresentingProblemSection';
 import { CurrentSymptomsSection } from '@/components/intake/CurrentSymptomsSection';
@@ -1248,10 +1249,33 @@ export default function IntakeAssessment() {
                   </div>
                 )}
                 {!isFormComplete() && (
-                  <Badge variant="destructive" className="gap-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    Incomplete ({validateForm().length} items)
-                  </Badge>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Badge variant="destructive" className="gap-1 cursor-pointer hover:opacity-80 transition-opacity">
+                        <AlertTriangle className="h-3 w-3" />
+                        Incomplete ({validateForm().length} items)
+                      </Badge>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80" align="start">
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-sm flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-destructive" />
+                          Required Items
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          The following items must be completed before signing:
+                        </p>
+                        <ul className="space-y-1.5 text-sm">
+                          {validateForm().map((error, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <span className="text-destructive mt-0.5">•</span>
+                              <span>{error}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 )}
                 {isFormComplete() && !metadata.signedDate && (
                   <Badge variant="default" className="gap-1 bg-success">
