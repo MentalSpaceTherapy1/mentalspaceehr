@@ -222,6 +222,9 @@ export type Database = {
           office_location_id: string | null
           parent_recurrence_id: string | null
           recurrence_pattern: Json | null
+          reminder_confirmation_token: string | null
+          reminder_confirmed: boolean | null
+          reminder_confirmed_at: string | null
           reminders_sent: Json | null
           room: string | null
           service_location: string
@@ -271,6 +274,9 @@ export type Database = {
           office_location_id?: string | null
           parent_recurrence_id?: string | null
           recurrence_pattern?: Json | null
+          reminder_confirmation_token?: string | null
+          reminder_confirmed?: boolean | null
+          reminder_confirmed_at?: string | null
           reminders_sent?: Json | null
           room?: string | null
           service_location: string
@@ -320,6 +326,9 @@ export type Database = {
           office_location_id?: string | null
           parent_recurrence_id?: string | null
           recurrence_pattern?: Json | null
+          reminder_confirmation_token?: string | null
+          reminder_confirmed?: boolean | null
+          reminder_confirmed_at?: string | null
           reminders_sent?: Json | null
           room?: string | null
           service_location?: string
@@ -1374,6 +1383,112 @@ export type Database = {
           },
         ]
       }
+      reminder_logs: {
+        Row: {
+          appointment_id: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          hours_before: number
+          id: string
+          recipient: string
+          reminder_type: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          hours_before: number
+          id?: string
+          recipient: string
+          reminder_type: string
+          sent_at?: string | null
+          status: string
+        }
+        Update: {
+          appointment_id?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          hours_before?: number
+          id?: string
+          recipient?: string
+          reminder_type?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_logs_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminder_settings: {
+        Row: {
+          created_at: string | null
+          email_enabled: boolean | null
+          email_template: string | null
+          email_timing: number[] | null
+          enabled: boolean | null
+          id: string
+          include_cancel_link: boolean | null
+          include_reschedule_link: boolean | null
+          practice_id: string | null
+          require_confirmation: boolean | null
+          sms_enabled: boolean | null
+          sms_template: string | null
+          sms_timing: number[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email_enabled?: boolean | null
+          email_template?: string | null
+          email_timing?: number[] | null
+          enabled?: boolean | null
+          id?: string
+          include_cancel_link?: boolean | null
+          include_reschedule_link?: boolean | null
+          practice_id?: string | null
+          require_confirmation?: boolean | null
+          sms_enabled?: boolean | null
+          sms_template?: string | null
+          sms_timing?: number[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email_enabled?: boolean | null
+          email_template?: string | null
+          email_timing?: number[] | null
+          enabled?: boolean | null
+          id?: string
+          include_cancel_link?: boolean | null
+          include_reschedule_link?: boolean | null
+          practice_id?: string | null
+          require_confirmation?: boolean | null
+          sms_enabled?: boolean | null
+          sms_template?: string | null
+          sms_timing?: number[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_settings_practice_id_fkey"
+            columns: ["practice_id"]
+            isOneToOne: false
+            referencedRelation: "practice_settings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_participants: {
         Row: {
           connection_quality: Json | null
@@ -2026,6 +2141,10 @@ export type Database = {
       cleanup_expired_devices: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generate_confirmation_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       generate_mrn: {
         Args: Record<PropertyKey, never>
