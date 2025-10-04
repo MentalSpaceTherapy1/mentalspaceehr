@@ -51,6 +51,9 @@ export default function TelehealthSession() {
 
   const loadSession = async () => {
     try {
+      console.log('Loading session:', sessionId);
+      console.log('Current user:', user?.id);
+      
       // Fetch session
       const { data: sessionData, error: sessionError } = await supabase
         .from('telehealth_sessions')
@@ -58,8 +61,12 @@ export default function TelehealthSession() {
         .eq('session_id', sessionId)
         .maybeSingle();
 
+      console.log('Session data:', sessionData);
+      console.log('Session error:', sessionError);
+
       if (sessionError) throw sessionError;
       if (!sessionData) {
+        console.error('No session data found for:', sessionId);
         setError('Session not found or access denied');
         setLoading(false);
         return;
