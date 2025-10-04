@@ -3,21 +3,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, X } from 'lucide-react';
-import { useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface AssessmentSectionProps {
   data: any;
   onChange: (data: any) => void;
   disabled?: boolean;
   clientGoals?: any[];
+  intakeNote?: any;
 }
 
-export function AssessmentSection({ data, onChange, disabled, clientGoals = [] }: AssessmentSectionProps) {
-  const [newDiagnosis, setNewDiagnosis] = useState({ icdCode: '', diagnosis: '', status: 'Active' });
+export function AssessmentSection({ data, onChange, disabled, clientGoals = [], intakeNote }: AssessmentSectionProps) {
 
   const updateProgressTowardGoals = (field: string, value: any) => {
     onChange({
@@ -71,20 +70,8 @@ export function AssessmentSection({ data, onChange, disabled, clientGoals = [] }
     updateProgressTowardGoals('goalProgress', goalProgress);
   };
 
-  const addDiagnosis = () => {
-    if (!newDiagnosis.icdCode || !newDiagnosis.diagnosis) return;
-
-    const currentDiagnoses = data.assessment.currentDiagnoses || [];
-    updateAssessment('currentDiagnoses', [...currentDiagnoses, newDiagnosis]);
-    setNewDiagnosis({ icdCode: '', diagnosis: '', status: 'Active' });
-  };
-
-  const removeDiagnosis = (index: number) => {
-    const currentDiagnoses = (data.assessment.currentDiagnoses || []).filter(
-      (_: any, i: number) => i !== index
-    );
-    updateAssessment('currentDiagnoses', currentDiagnoses);
-  };
+  // Get diagnoses from intake note
+  const intakeDiagnoses = intakeNote?.diagnoses || [];
 
   return (
     <div className="space-y-6">
@@ -199,57 +186,34 @@ export function AssessmentSection({ data, onChange, disabled, clientGoals = [] }
           <CardTitle>Current Diagnoses</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {!disabled && (
-            <div className="grid grid-cols-4 gap-2">
-              <Input
-                placeholder="ICD-10 Code"
-                value={newDiagnosis.icdCode}
-                onChange={(e) => setNewDiagnosis({ ...newDiagnosis, icdCode: e.target.value })}
-              />
-              <Input
-                placeholder="Diagnosis"
-                value={newDiagnosis.diagnosis}
-                onChange={(e) => setNewDiagnosis({ ...newDiagnosis, diagnosis: e.target.value })}
-                className="col-span-2"
-              />
-              <Button type="button" onClick={addDiagnosis}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add
-              </Button>
-            </div>
-          )}
+          <Alert>
+            <AlertDescription className="text-sm">
+              Diagnoses are pulled from the client's Intake Assessment and cannot be modified in Progress Notes.
+            </AlertDescription>
+          </Alert>
 
-          <div className="space-y-2">
-            {data.assessment.currentDiagnoses?.map((diagnosis: any, index: number) => (
-              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-4">
-                  <Badge variant="secondary">{diagnosis.icdCode}</Badge>
-                  <span className="font-medium">{diagnosis.diagnosis}</span>
-                  <Badge
-                    variant={
-                      diagnosis.status === 'Active'
-                        ? 'default'
-                        : diagnosis.status === 'In Remission'
-                        ? 'outline'
-                        : 'secondary'
-                    }
-                  >
-                    {diagnosis.status}
+          {intakeDiagnoses.length > 0 ? (
+            <div className="space-y-2">
+              {intakeDiagnoses.map((diagnosisCode: string, index: number) => (
+                <div key={index} className="flex items-center gap-4 p-3 border rounded-lg bg-muted/30">
+                  <Badge variant="secondary" className="font-mono">
+                    {diagnosisCode}
                   </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    {index === 0 && <Badge variant="outline" className="mr-2">Primary</Badge>}
+                    {index > 0 && <Badge variant="outline" className="mr-2">Secondary</Badge>}
+                    From Intake Assessment
+                  </span>
                 </div>
-                {!disabled && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeDiagnosis(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <Alert variant="destructive">
+              <AlertDescription>
+                No diagnoses found in Intake Assessment. Please ensure an Intake Assessment with diagnoses is completed for this client.
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 

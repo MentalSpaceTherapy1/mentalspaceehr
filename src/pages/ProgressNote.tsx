@@ -17,7 +17,6 @@ import { SubjectiveSection } from '@/components/progress-note/SubjectiveSection'
 import { ObjectiveSection } from '@/components/progress-note/ObjectiveSection';
 import { AssessmentSection } from '@/components/progress-note/AssessmentSection';
 import { PlanSection } from '@/components/progress-note/PlanSection';
-import { BillingSection } from '@/components/progress-note/BillingSection';
 import { SessionInformationSection } from '@/components/intake/SessionInformationSection';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -553,16 +552,6 @@ export default function ProgressNote() {
       return;
     }
 
-    // Validate billing
-    if (!formData.billing.cptCode || formData.billing.diagnosisCodes.length === 0) {
-      toast({
-        title: 'Billing Information Required',
-        description: 'Please complete CPT code and at least one diagnosis code',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     try {
       setSaving(true);
       const timeSpent = Math.floor((Date.now() - startTimeRef.current) / 1000 / 60);
@@ -708,6 +697,25 @@ export default function ProgressNote() {
     try {
       setSaving(true);
       
+      // If note hasn't been saved yet, save it first
+      if (!noteId) {
+        await saveNote();
+        // Wait a moment for the save to complete
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      // Get the latest note ID if it was just created
+      const currentNoteId = noteId || formData.noteId;
+      
+      if (!currentNoteId) {
+        toast({
+          title: 'Error',
+          description: 'Please save the note before signing',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
       const { error } = await supabase
         .from('clinical_notes')
         .update({
@@ -715,7 +723,7 @@ export default function ProgressNote() {
           locked_by: user?.id,
           locked_date: new Date().toISOString(),
         })
-        .eq('id', noteId);
+        .eq('id', currentNoteId);
 
       if (error) throw error;
 
@@ -735,6 +743,7 @@ export default function ProgressNote() {
       });
     } finally {
       setSaving(false);
+      setSignatureDialogOpen(false);
     }
   };
 
@@ -755,7 +764,7 @@ export default function ProgressNote() {
             </div>
           </div>
           <div className="flex gap-2">
-            {formData.status !== 'Locked' && noteId && (
+            {formData.status !== 'Locked' && (
               <Button 
                 onClick={() => setSignatureDialogOpen(true)} 
                 disabled={saving || loading}
@@ -1008,171 +1017,148 @@ export default function ProgressNote() {
         </Card>
 
         {aiSuggestion && (
-          <Alert className="border-primary/50 bg-primary/5">
-            <div className="flex items-start justify-between w-full">
-              <div className="flex-1">
-                <AlertDescription>
-                  <div className="font-semibold mb-4 flex items-center gap-2">
-                    <Sparkles className="h-4 w-4" />
-                    AI-Generated Progress Note
-                  </div>
-                  
-                  {isEditingAiSuggestion ? (
-                    <div className="space-y-4 text-sm">
-                      <div>
-                        <div className="font-medium mb-2">Subjective:</div>
-                        <Textarea
-                          value={JSON.stringify(aiSuggestion.subjective ?? {}, null, 2)}
-                          onChange={(e) => {
-                            try {
-                              setAiSuggestion({ ...aiSuggestion, subjective: JSON.parse(e.target.value) });
-                            } catch (err) {
-                              // Invalid JSON, keep editing
-                            }
-                          }}
-                          rows={6}
-                          className="font-mono text-xs"
-                        />
-                      </div>
-                      <div>
-                        <div className="font-medium mb-2">Objective:</div>
-                        <Textarea
-                          value={JSON.stringify(aiSuggestion.objective ?? {}, null, 2)}
-                          onChange={(e) => {
-                            try {
-                              setAiSuggestion({ ...aiSuggestion, objective: JSON.parse(e.target.value) });
-                            } catch (err) {
-                              // Invalid JSON, keep editing
-                            }
-                          }}
-                          rows={6}
-                          className="font-mono text-xs"
-                        />
-                      </div>
-                      <div>
-                        <div className="font-medium mb-2">Assessment:</div>
-                        <Textarea
-                          value={JSON.stringify(aiSuggestion.assessment ?? {}, null, 2)}
-                          onChange={(e) => {
-                            try {
-                              setAiSuggestion({ ...aiSuggestion, assessment: JSON.parse(e.target.value) });
-                            } catch (err) {
-                              // Invalid JSON, keep editing
-                            }
-                          }}
-                          rows={6}
-                          className="font-mono text-xs"
-                        />
-                      </div>
-                      <div>
-                        <div className="font-medium mb-2">Plan:</div>
-                        <Textarea
-                          value={JSON.stringify(aiSuggestion.plan ?? {}, null, 2)}
-                          onChange={(e) => {
-                            try {
-                              setAiSuggestion({ ...aiSuggestion, plan: JSON.parse(e.target.value) });
-                            } catch (err) {
-                              // Invalid JSON, keep editing
-                            }
-                          }}
-                          rows={6}
-                          className="font-mono text-xs"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3 text-sm">
-                      {aiSuggestion.subjective && (
-                        <div>
-                          <div className="font-medium">Subjective:</div>
-                          <div className="text-muted-foreground whitespace-pre-wrap">
-                            {aiSuggestion.subjective?.presentingConcerns && `• ${aiSuggestion.subjective.presentingConcerns}\n`}
-                            {aiSuggestion.subjective?.moodReport && `• Mood: ${aiSuggestion.subjective.moodReport}\n`}
-                            {!aiSuggestion.subjective?.presentingConcerns && !aiSuggestion.subjective?.moodReport && (
-                              <pre className="text-xs font-mono whitespace-pre-wrap">{JSON.stringify(aiSuggestion.subjective, null, 2)}</pre>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      {aiSuggestion.objective && (
-                        <div>
-                          <div className="font-medium">Objective:</div>
-                          <div className="text-muted-foreground whitespace-pre-wrap">
-                            {aiSuggestion.objective?.behavioralObservations?.appearance && `• ${aiSuggestion.objective.behavioralObservations.appearance}\n`}
-                            {!aiSuggestion.objective?.behavioralObservations?.appearance && (
-                              <pre className="text-xs font-mono whitespace-pre-wrap">{JSON.stringify(aiSuggestion.objective, null, 2)}</pre>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      {aiSuggestion.assessment && (
-                        <div>
-                          <div className="font-medium">Assessment:</div>
-                          <div className="text-muted-foreground whitespace-pre-wrap">
-                            {aiSuggestion.assessment?.clinicalImpression && `• ${aiSuggestion.assessment.clinicalImpression.substring(0, 200)}...\n`}
-                            {!aiSuggestion.assessment?.clinicalImpression && (
-                              <pre className="text-xs font-mono whitespace-pre-wrap">{JSON.stringify(aiSuggestion.assessment, null, 2)}</pre>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      {aiSuggestion.plan && (
-                        <div>
-                          <div className="font-medium">Plan:</div>
-                          <div className="text-muted-foreground whitespace-pre-wrap">
-                            {aiSuggestion.plan?.interventionDetails && `• ${aiSuggestion.plan.interventionDetails.substring(0, 200)}...\n`}
-                            {!aiSuggestion.plan?.interventionDetails && (
-                              <pre className="text-xs font-mono whitespace-pre-wrap">{JSON.stringify(aiSuggestion.plan, null, 2)}</pre>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      {!aiSuggestion.subjective && !aiSuggestion.objective && !aiSuggestion.assessment && !aiSuggestion.plan && (
-                        <pre className="text-xs font-mono whitespace-pre-wrap text-muted-foreground">{JSON.stringify(aiSuggestion, null, 2)}</pre>
-                      )}
-                    </div>
-                  )}
-                </AlertDescription>
+          <Card className="border-primary/50 bg-primary/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  AI-Generated Progress Note
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={acceptAiSuggestion}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Check className="h-4 w-4 mr-1" />
+                    Accept All
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={rejectAiSuggestion}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Reject
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2 ml-4">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setIsEditingAiSuggestion(!isEditingAiSuggestion)}
-                  title={isEditingAiSuggestion ? "View mode" : "Edit suggestion"}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                  onClick={acceptAiSuggestion}
-                >
-                  <Check className="h-4 w-4 mr-1" />
-                  Accept
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={rejectAiSuggestion}
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Reject
-                </Button>
-              </div>
-            </div>
-          </Alert>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {aiSuggestion.subjective && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Subjective</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    {aiSuggestion.subjective.presentingConcerns && (
+                      <div>
+                        <span className="font-medium">Presenting Concerns: </span>
+                        <span className="text-muted-foreground">{aiSuggestion.subjective.presentingConcerns}</span>
+                      </div>
+                    )}
+                    {aiSuggestion.subjective.moodReport && (
+                      <div>
+                        <span className="font-medium">Mood Report: </span>
+                        <span className="text-muted-foreground">{aiSuggestion.subjective.moodReport}</span>
+                      </div>
+                    )}
+                    {aiSuggestion.subjective.recentEvents && (
+                      <div>
+                        <span className="font-medium">Recent Events: </span>
+                        <span className="text-muted-foreground">{aiSuggestion.subjective.recentEvents}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {aiSuggestion.objective && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Objective</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    {aiSuggestion.objective.behavioralObservations && (
+                      <>
+                        {aiSuggestion.objective.behavioralObservations.appearance && (
+                          <div>
+                            <span className="font-medium">Appearance: </span>
+                            <span className="text-muted-foreground">{aiSuggestion.objective.behavioralObservations.appearance}</span>
+                          </div>
+                        )}
+                        {aiSuggestion.objective.behavioralObservations.mood && (
+                          <div>
+                            <span className="font-medium">Mood: </span>
+                            <span className="text-muted-foreground">{aiSuggestion.objective.behavioralObservations.mood}</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    {aiSuggestion.objective.progressObserved && (
+                      <div>
+                        <span className="font-medium">Progress Observed: </span>
+                        <span className="text-muted-foreground">{aiSuggestion.objective.progressObserved}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {aiSuggestion.assessment && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Assessment</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    {aiSuggestion.assessment.clinicalImpression && (
+                      <div>
+                        <span className="font-medium">Clinical Impression: </span>
+                        <span className="text-muted-foreground">{aiSuggestion.assessment.clinicalImpression}</span>
+                      </div>
+                    )}
+                    {aiSuggestion.assessment.medicalNecessity && (
+                      <div>
+                        <span className="font-medium">Medical Necessity: </span>
+                        <span className="text-muted-foreground">{aiSuggestion.assessment.medicalNecessity}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {aiSuggestion.plan && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Plan</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    {aiSuggestion.plan.interventionDetails && (
+                      <div>
+                        <span className="font-medium">Interventions: </span>
+                        <span className="text-muted-foreground">{aiSuggestion.plan.interventionDetails}</span>
+                      </div>
+                    )}
+                    {aiSuggestion.plan.nextSteps && (
+                      <div>
+                        <span className="font-medium">Next Steps: </span>
+                        <span className="text-muted-foreground">{aiSuggestion.plan.nextSteps}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         <Tabs defaultValue="subjective" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="subjective">Subjective</TabsTrigger>
             <TabsTrigger value="objective">Objective</TabsTrigger>
             <TabsTrigger value="assessment">Assessment</TabsTrigger>
             <TabsTrigger value="plan">Plan</TabsTrigger>
-            <TabsTrigger value="billing">Billing</TabsTrigger>
           </TabsList>
 
           <TabsContent value="subjective">
@@ -1206,22 +1192,12 @@ export default function ProgressNote() {
               }}
               disabled={formData.status === 'Locked'}
               clientGoals={clientGoals}
+              intakeNote={intakeNote}
             />
           </TabsContent>
 
           <TabsContent value="plan">
             <PlanSection
-              data={formData}
-              onChange={(data) => {
-                setFormData(data);
-                setHasUnsavedChanges(true);
-              }}
-              disabled={formData.status === 'Locked'}
-            />
-          </TabsContent>
-
-          <TabsContent value="billing">
-            <BillingSection
               data={formData}
               onChange={(data) => {
                 setFormData(data);
