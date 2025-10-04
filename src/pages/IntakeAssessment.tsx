@@ -121,9 +121,6 @@ export default function IntakeAssessment() {
 
   useEffect(() => {
     loadAvailableClients();
-    if (clientId) {
-      loadClientData();
-    }
     if (noteId) {
       loadExistingNote();
     }
@@ -157,6 +154,15 @@ export default function IntakeAssessment() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [noteId]);
+
+  // Load client data whenever the clientId changes
+  useEffect(() => {
+    if (clientId) {
+      loadClientData();
+    } else {
+      setClientData(null);
+    }
+  }, [clientId]);
 
   const loadAvailableClients = async () => {
     try {
