@@ -45,7 +45,7 @@ const appointmentSchema = z.object({
   client_id: z.string().min(1, 'Client is required'),
   clinician_id: z.string().min(1, 'Clinician is required'),
   appointment_date: z.date(),
-  start_time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format'),
+  start_time: z.string().min(1, 'Start time is required').regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format'),
   duration: z.number().min(15).max(480),
   appointment_type: z.string().min(1, 'Appointment type is required'),
   service_location: z.string().min(1, 'Service location is required'),
