@@ -38,6 +38,7 @@ import IntakeAssessment from "./pages/IntakeAssessment";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import ProgressNote from "./pages/ProgressNote";
 
 const queryClient = new QueryClient();
 
@@ -263,6 +264,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <IntakeAssessment />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/progress-note" 
+              element={
+                <ProtectedRoute>
+                  <ProgressNote />
                 </ProtectedRoute>
               } 
             />

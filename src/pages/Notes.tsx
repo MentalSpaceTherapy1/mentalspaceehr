@@ -115,7 +115,7 @@ export default function Notes() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => navigate('/notes/new')}>
+                <DropdownMenuItem onClick={() => navigate('/progress-note')}>
                   <FileText className="h-4 w-4 mr-2" />
                   Progress Note
                 </DropdownMenuItem>
@@ -210,6 +210,8 @@ export default function Notes() {
                           onClick={() => {
                             if (note.note_type === 'intake_assessment') {
                               navigate(`/intake-assessment?noteId=${note.id}`);
+                            } else if (note.note_type === 'progress_note') {
+                              navigate(`/progress-note?noteId=${note.id}`);
                             } else {
                               navigate(`/notes/${note.id}`);
                             }
