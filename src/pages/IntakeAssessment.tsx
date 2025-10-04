@@ -1251,10 +1251,12 @@ export default function IntakeAssessment() {
                 {!isFormComplete() && (
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Badge variant="destructive" className="gap-1 cursor-pointer hover:opacity-80 transition-opacity">
-                        <AlertTriangle className="h-3 w-3" />
-                        Incomplete ({validateForm().length} items)
-                      </Badge>
+                      <button className="inline-flex">
+                        <Badge variant="destructive" className="gap-1 cursor-pointer hover:opacity-80 transition-opacity">
+                          <AlertTriangle className="h-3 w-3" />
+                          Incomplete ({validateForm().length} items)
+                        </Badge>
+                      </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80" align="start">
                       <div className="space-y-2">
