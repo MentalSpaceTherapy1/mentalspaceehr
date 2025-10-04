@@ -32,11 +32,60 @@ export function SafetyAssessmentSection({ data, onChange, clientId, fullContext 
 
   const renderSafetySuggestion = (content: any, isEditing: boolean, onEdit: (newContent: any) => void) => {
     if (isEditing) {
-      return <Textarea value={JSON.stringify(content, null, 2)} onChange={(e) => {
-        try { onEdit(JSON.parse(e.target.value)); } catch {}
-      }} rows={10} />;
+      return (
+        <div className="space-y-3">
+          <Textarea
+            value={JSON.stringify(content, null, 2)}
+            onChange={(e) => {
+              try { onEdit(JSON.parse(e.target.value)); } catch {}
+            }}
+            rows={8}
+            className="font-mono text-xs"
+          />
+          <p className="text-xs text-muted-foreground">Edit the JSON structure above</p>
+        </div>
+      );
     }
-    return <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(content, null, 2)}</pre>;
+    
+    return (
+      <div className="space-y-3 text-sm">
+        {content.suicidalIdeation?.present !== undefined && (
+          <div>
+            <span className="font-semibold">Suicidal Ideation:</span> {content.suicidalIdeation.present ? 'Present' : 'Denied'}
+            {content.suicidalIdeation.present && content.suicidalIdeation.frequency && ` - ${content.suicidalIdeation.frequency}`}
+          </div>
+        )}
+        {content.suicidalIdeation?.plan && (
+          <div><span className="font-semibold">Plan:</span> {content.suicidalIdeation.plan}</div>
+        )}
+        {content.suicidalIdeation?.intent !== undefined && (
+          <div><span className="font-semibold">Intent:</span> {content.suicidalIdeation.intent ? 'Yes' : 'No'}</div>
+        )}
+        {content.homicidalIdeation?.present !== undefined && (
+          <div>
+            <span className="font-semibold">Homicidal Ideation:</span> {content.homicidalIdeation.present ? 'Present' : 'Denied'}
+          </div>
+        )}
+        {content.riskLevel && (
+          <div className="pt-2 border-t">
+            <span className="font-semibold">Risk Level:</span> <span className="uppercase font-bold">{content.riskLevel}</span>
+          </div>
+        )}
+        {content.protectiveFactors && content.protectiveFactors.length > 0 && (
+          <div>
+            <span className="font-semibold">Protective Factors:</span>
+            <ul className="list-disc list-inside mt-1">
+              {content.protectiveFactors.map((factor: string, i: number) => (
+                <li key={i}>{factor}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {content.interventions && (
+          <div><span className="font-semibold">Interventions:</span> {content.interventions}</div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -45,7 +94,62 @@ export function SafetyAssessmentSection({ data, onChange, clientId, fullContext 
       clientId={clientId}
       context={fullContext || ''}
       existingData={data}
-      onAccept={(content) => onChange({ ...data, ...content })}
+      onAccept={(content) => {
+        const updatedData = { ...data };
+        
+        // Handle suicidal ideation with nested boolean switches
+        if (content.suicidalIdeation) {
+          updatedData.suicidalIdeation = {
+            present: content.suicidalIdeation.present === true,
+            frequency: content.suicidalIdeation.frequency || '',
+            intensity: content.suicidalIdeation.intensity || '',
+            duration: content.suicidalIdeation.duration || '',
+            plan: content.suicidalIdeation.plan || '',
+            intent: content.suicidalIdeation.intent === true,
+            means: content.suicidalIdeation.means || '',
+            rehearsal: content.suicidalIdeation.rehearsal === true
+          };
+        }
+        
+        // Handle homicidal ideation
+        if (content.homicidalIdeation) {
+          updatedData.homicidalIdeation = {
+            present: content.homicidalIdeation.present === true,
+            target: content.homicidalIdeation.target || '',
+            plan: content.homicidalIdeation.plan || '',
+            intent: content.homicidalIdeation.intent === true
+          };
+        }
+        
+        // Handle self-harm history
+        if (content.selfHarmHistory) {
+          updatedData.selfHarmHistory = {
+            history: content.selfHarmHistory.history === true,
+            methods: content.selfHarmHistory.methods || '',
+            mostRecent: content.selfHarmHistory.mostRecent || '',
+            frequency: content.selfHarmHistory.frequency || ''
+          };
+        }
+        
+        // Simple fields
+        if (content.riskLevel) updatedData.riskLevel = content.riskLevel;
+        if (content.interventions) updatedData.interventions = content.interventions;
+        
+        // Handle arrays
+        if (content.protectiveFactors) {
+          updatedData.protectiveFactors = Array.isArray(content.protectiveFactors)
+            ? content.protectiveFactors
+            : [content.protectiveFactors];
+        }
+        
+        if (content.riskFactors) {
+          updatedData.riskFactors = Array.isArray(content.riskFactors)
+            ? content.riskFactors
+            : [content.riskFactors];
+        }
+        
+        onChange(updatedData);
+      }}
       renderSuggestion={renderSafetySuggestion}
     >
     <div className="space-y-4">

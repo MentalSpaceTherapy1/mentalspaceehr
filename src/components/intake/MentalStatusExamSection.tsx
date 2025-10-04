@@ -28,11 +28,61 @@ export function MentalStatusExamSection({ data, onChange, clientId, fullContext 
 
   const renderMSESuggestion = (content: any, isEditing: boolean, onEdit: (newContent: any) => void) => {
     if (isEditing) {
-      return <Textarea value={JSON.stringify(content, null, 2)} onChange={(e) => {
-        try { onEdit(JSON.parse(e.target.value)); } catch {}
-      }} rows={10} />;
+      return (
+        <div className="space-y-3">
+          <Textarea
+            value={JSON.stringify(content, null, 2)}
+            onChange={(e) => {
+              try { onEdit(JSON.parse(e.target.value)); } catch {}
+            }}
+            rows={8}
+            className="font-mono text-xs"
+          />
+          <p className="text-xs text-muted-foreground">Edit the JSON structure above</p>
+        </div>
+      );
     }
-    return <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(content, null, 2)}</pre>;
+    
+    return (
+      <div className="space-y-3 text-sm">
+        {content.appearance && (
+          <div><span className="font-semibold">Appearance:</span> {content.appearance}</div>
+        )}
+        {content.behavior && (
+          <div><span className="font-semibold">Behavior:</span> {content.behavior}</div>
+        )}
+        {content.speech?.rate && (
+          <div><span className="font-semibold">Speech:</span> {content.speech.rate} rate, {content.speech.volume} volume, {content.speech.articulation} articulation</div>
+        )}
+        {content.mood && (
+          <div><span className="font-semibold">Mood:</span> {content.mood}</div>
+        )}
+        {content.affect?.type && (
+          <div><span className="font-semibold">Affect:</span> {content.affect.type}, {content.affect.range} range, {content.affect.appropriateness} appropriateness</div>
+        )}
+        {content.thoughtProcess && (
+          <div><span className="font-semibold">Thought Process:</span> {content.thoughtProcess}</div>
+        )}
+        {content.thoughtContent && (
+          <div><span className="font-semibold">Thought Content:</span> {content.thoughtContent}</div>
+        )}
+        {content.perception && (
+          <div><span className="font-semibold">Perception:</span> {content.perception}</div>
+        )}
+        {content.cognition?.orientation && (
+          <div><span className="font-semibold">Orientation:</span> {content.cognition.orientation}</div>
+        )}
+        {content.cognition?.memory && (
+          <div><span className="font-semibold">Memory:</span> {content.cognition.memory}</div>
+        )}
+        {content.insight && (
+          <div><span className="font-semibold">Insight:</span> {content.insight}</div>
+        )}
+        {content.judgment && (
+          <div><span className="font-semibold">Judgment:</span> {content.judgment}</div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -41,7 +91,49 @@ export function MentalStatusExamSection({ data, onChange, clientId, fullContext 
       clientId={clientId}
       context={fullContext || ''}
       existingData={data}
-      onAccept={(content) => onChange({ ...data, ...content })}
+      onAccept={(content) => {
+        const updatedData = { ...data };
+        
+        // Simple text fields
+        if (content.appearance) updatedData.appearance = content.appearance;
+        if (content.behavior) updatedData.behavior = content.behavior;
+        if (content.mood) updatedData.mood = content.mood;
+        if (content.thoughtProcess) updatedData.thoughtProcess = content.thoughtProcess;
+        if (content.thoughtContent) updatedData.thoughtContent = content.thoughtContent;
+        if (content.perception) updatedData.perception = content.perception;
+        if (content.insight) updatedData.insight = content.insight;
+        if (content.judgment) updatedData.judgment = content.judgment;
+        
+        // Nested objects
+        if (content.speech) {
+          updatedData.speech = {
+            rate: content.speech.rate || '',
+            volume: content.speech.volume || '',
+            articulation: content.speech.articulation || '',
+            other: content.speech.other || ''
+          };
+        }
+        
+        if (content.affect) {
+          updatedData.affect = {
+            type: content.affect.type || '',
+            range: content.affect.range || '',
+            appropriateness: content.affect.appropriateness || '',
+            other: content.affect.other || ''
+          };
+        }
+        
+        if (content.cognition) {
+          updatedData.cognition = {
+            orientation: content.cognition.orientation || '',
+            memory: content.cognition.memory || '',
+            concentration: content.cognition.concentration || '',
+            abstractThinking: content.cognition.abstractThinking || ''
+          };
+        }
+        
+        onChange(updatedData);
+      }}
       renderSuggestion={renderMSESuggestion}
     >
     <Card>

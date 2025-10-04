@@ -44,11 +44,40 @@ export function CurrentSymptomsSection({ data, onChange, clientId, fullContext }
 
   const renderSymptomsSuggestion = (content: any, isEditing: boolean, onEdit: (newContent: any) => void) => {
     if (isEditing) {
-      return <Textarea value={JSON.stringify(content, null, 2)} onChange={(e) => {
-        try { onEdit(JSON.parse(e.target.value)); } catch {}
-      }} rows={10} />;
+      return (
+        <div className="space-y-3">
+          <Textarea
+            value={JSON.stringify(content, null, 2)}
+            onChange={(e) => {
+              try { onEdit(JSON.parse(e.target.value)); } catch {}
+            }}
+            rows={8}
+            className="font-mono text-xs"
+          />
+          <p className="text-xs text-muted-foreground">Edit the JSON structure above</p>
+        </div>
+      );
     }
-    return <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(content, null, 2)}</pre>;
+    
+    return (
+      <div className="space-y-3 text-sm">
+        {content.symptoms && content.symptoms.length > 0 && (
+          <div>
+            <span className="font-semibold">Symptoms:</span>
+            <ul className="list-disc list-inside mt-1 space-y-1">
+              {content.symptoms.map((symptom: any, i: number) => (
+                <li key={i}>
+                  <span className="font-medium">{symptom.symptom}</span>
+                  {symptom.severity && ` - ${symptom.severity} severity`}
+                  {symptom.frequency && ` (${symptom.frequency})`}
+                  {symptom.duration && ` for ${symptom.duration}`}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -57,7 +86,24 @@ export function CurrentSymptomsSection({ data, onChange, clientId, fullContext }
       clientId={clientId}
       context={fullContext || ''}
       existingData={data}
-      onAccept={(content) => onChange({ ...data, ...content })}
+      onAccept={(content) => {
+        const updatedData = { ...data };
+        
+        // Handle symptoms array - map AI symptoms to our switch format
+        if (content.symptoms && Array.isArray(content.symptoms)) {
+          content.symptoms.forEach((aiSymptom: any) => {
+            const symptomKey = aiSymptom.symptom.toLowerCase().replace(/\s+/g, '');
+            if (symptoms.includes(symptomKey)) {
+              updatedData[symptomKey] = {
+                present: true,
+                severity: aiSymptom.severity || 'Moderate'
+              };
+            }
+          });
+        }
+        
+        onChange(updatedData);
+      }}
       renderSuggestion={renderSymptomsSuggestion}
     >
     <Card>

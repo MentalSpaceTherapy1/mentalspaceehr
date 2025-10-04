@@ -47,11 +47,87 @@ export function TreatmentRecommendationsSection({
 
   const renderTreatmentSuggestion = (content: any, isEditing: boolean, onEdit: (newContent: any) => void) => {
     if (isEditing) {
-      return <Textarea value={JSON.stringify(content, null, 2)} onChange={(e) => {
-        try { onEdit(JSON.parse(e.target.value)); } catch {}
-      }} rows={10} />;
+      return (
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs">Recommended Frequency</Label>
+            <Input
+              value={content.recommendedFrequency || ''}
+              onChange={(e) => onEdit({ ...content, recommendedFrequency: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Recommended Modality</Label>
+            <Input
+              value={content.recommendedModality || ''}
+              onChange={(e) => onEdit({ ...content, recommendedModality: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Therapeutic Approaches (comma-separated)</Label>
+            <Textarea
+              value={Array.isArray(content.therapeuticApproach) ? content.therapeuticApproach.join(', ') : content.therapeuticApproach || ''}
+              onChange={(e) => onEdit({ ...content, therapeuticApproach: e.target.value.split(',').map(s => s.trim()).filter(s => s) })}
+              rows={2}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Additional Recommendations (one per line)</Label>
+            <Textarea
+              value={Array.isArray(content.additionalRecommendations) ? content.additionalRecommendations.join('\n') : content.additionalRecommendations || ''}
+              onChange={(e) => onEdit({ ...content, additionalRecommendations: e.target.value.split('\n').filter(s => s.trim()) })}
+              rows={3}
+            />
+          </div>
+        </div>
+      );
     }
-    return <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(content, null, 2)}</pre>;
+    
+    return (
+      <div className="space-y-3 text-sm">
+        {content.recommendedFrequency && (
+          <div>
+            <span className="font-semibold">Frequency:</span> {content.recommendedFrequency}
+          </div>
+        )}
+        {content.recommendedModality && (
+          <div>
+            <span className="font-semibold">Modality:</span> {content.recommendedModality}
+          </div>
+        )}
+        {content.therapeuticApproach && (
+          <div>
+            <span className="font-semibold">Approaches:</span> {Array.isArray(content.therapeuticApproach) ? content.therapeuticApproach.join(', ') : content.therapeuticApproach}
+          </div>
+        )}
+        {content.medicationRecommendation?.recommended && (
+          <div>
+            <span className="font-semibold">Medication:</span> Recommended
+            {content.medicationRecommendation.referralMade && ` (Referral to: ${content.medicationRecommendation.referralTo})`}
+          </div>
+        )}
+        {content.additionalRecommendations && (
+          <div>
+            <span className="font-semibold">Additional:</span>
+            <ul className="list-disc list-inside mt-1">
+              {(Array.isArray(content.additionalRecommendations) ? content.additionalRecommendations : [content.additionalRecommendations]).map((rec, i) => (
+                <li key={i}>{rec}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {content.initialGoals && content.initialGoals.length > 0 && (
+          <div>
+            <span className="font-semibold">Treatment Goals:</span>
+            <ul className="list-disc list-inside mt-1">
+              {content.initialGoals.map((goal: any, i: number) => (
+                <li key={i}>{goal.goalDescription}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -61,11 +137,37 @@ export function TreatmentRecommendationsSection({
       context={fullContext || ''}
       existingData={{ ...data, initialGoals }}
       onAccept={(content) => {
-        if (content.initialGoals) {
-          onGoalsChange(content.initialGoals);
-          delete content.initialGoals;
+        const updatedData = { ...data };
+        
+        // Handle top-level fields
+        if (content.recommendedFrequency) updatedData.recommendedFrequency = content.recommendedFrequency;
+        if (content.recommendedModality) updatedData.recommendedModality = content.recommendedModality;
+        if (content.therapeuticApproach) {
+          updatedData.therapeuticApproach = Array.isArray(content.therapeuticApproach) 
+            ? content.therapeuticApproach 
+            : [content.therapeuticApproach];
         }
-        onRecommendationsChange({ ...data, ...content });
+        if (content.additionalRecommendations) {
+          updatedData.additionalRecommendations = Array.isArray(content.additionalRecommendations)
+            ? content.additionalRecommendations
+            : [content.additionalRecommendations];
+        }
+        
+        // Handle medication recommendation (nested object with boolean)
+        if (content.medicationRecommendation) {
+          updatedData.medicationRecommendation = {
+            recommended: content.medicationRecommendation.recommended || false,
+            referralMade: content.medicationRecommendation.referralMade || false,
+            referralTo: content.medicationRecommendation.referralTo || ''
+          };
+        }
+        
+        // Handle goals separately
+        if (content.initialGoals && Array.isArray(content.initialGoals)) {
+          onGoalsChange(content.initialGoals);
+        }
+        
+        onRecommendationsChange(updatedData);
       }}
       renderSuggestion={renderTreatmentSuggestion}
     >
