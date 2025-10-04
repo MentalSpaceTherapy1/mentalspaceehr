@@ -148,15 +148,31 @@ serve(async (req) => {
       transcriptionResult.segments
     );
 
+    // Resolve the canonical session ID to the actual UUID
+    console.log('Looking up session UUID for:', sessionId);
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('telehealth_sessions')
+      .select('id')
+      .eq('session_id', sessionId)
+      .maybeSingle();
+
+    if (sessionError || !sessionData) {
+      console.error('Error finding session:', sessionError);
+      throw new Error(`Session not found: ${sessionId}`);
+    }
+
+    const sessionUuid = sessionData.id;
+    console.log('Resolved session UUID:', sessionUuid);
+
     // Store transcript in database
+    console.log('Storing transcript for session UUID:', sessionUuid);
     const { error: insertError } = await supabase
       .from('session_transcripts')
       .insert({
-        session_id: sessionId,
+        session_id: sessionUuid,
         transcript_text: transcriptionResult.text,
-        transcript_data: transcriptEntries,
-        processing_time_ms: transcriptionResult.duration ? Math.floor(transcriptionResult.duration * 1000) : null,
-        created_at: new Date().toISOString(),
+        speaker_labels: transcriptEntries,
+        processing_status: 'completed',
       });
 
     if (insertError) {
