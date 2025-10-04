@@ -93,6 +93,7 @@ export function AppointmentDialog({
   const [clients, setClients] = useState<any[]>([]);
   const [clinicians, setClinicians] = useState<any[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
+  const [serviceCodes, setServiceCodes] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrencePattern, setRecurrencePattern] = useState({
@@ -180,15 +181,17 @@ export function AppointmentDialog({
   }, []);
 
   const fetchData = async () => {
-    const [clientsRes, cliniciansRes, locationsRes] = await Promise.all([
+    const [clientsRes, cliniciansRes, locationsRes, serviceCodesRes] = await Promise.all([
       supabase.from('clients').select('id, first_name, last_name, medical_record_number').eq('status', 'Active'),
       supabase.from('profiles').select('id, first_name, last_name').eq('is_active', true),
       supabase.from('practice_locations').select('*').eq('is_active', true),
+      supabase.from('service_codes').select('*').eq('is_active', true).order('service_type').order('code'),
     ]);
 
     if (clientsRes.data) setClients(clientsRes.data);
     if (cliniciansRes.data) setClinicians(cliniciansRes.data);
     if (locationsRes.data) setLocations(locationsRes.data);
+    if (serviceCodesRes.data) setServiceCodes(serviceCodesRes.data);
   };
 
   const onSubmit = async (data: AppointmentFormData) => {
@@ -476,6 +479,38 @@ export function AppointmentDialog({
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="cpt_code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CPT Code</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select service code" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-[300px]">
+                      <SelectItem value="">None</SelectItem>
+                      {serviceCodes.map((code) => (
+                        <SelectItem key={code.id} value={code.code}>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono">{code.code}</span>
+                            {code.default_modifiers && (
+                              <span className="text-xs text-muted-foreground">({code.default_modifiers})</span>
+                            )}
+                            <span className="text-sm">- {code.description}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {form.watch('service_location') === 'Telehealth' && (
               <div className="space-y-4 p-4 border border-primary/20 rounded-lg bg-primary/5">

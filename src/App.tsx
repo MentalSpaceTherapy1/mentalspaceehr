@@ -14,6 +14,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import CreateUser from "./pages/admin/CreateUser";
 import PracticeSettings from "./pages/admin/PracticeSettings";
 import Locations from "./pages/admin/Locations";
+import ServiceCodes from "./pages/admin/ServiceCodes";
 import Profile from "./pages/Profile";
 import MFASetup from "./pages/MFASetup";
 import TrustedDevices from "./pages/TrustedDevices";
@@ -90,6 +91,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <Locations />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/service-codes" 
+              element={
+                <AdminRoute>
+                  <ServiceCodes />
                 </AdminRoute>
               } 
             />

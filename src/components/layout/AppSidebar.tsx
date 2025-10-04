@@ -62,6 +62,7 @@ export function AppSidebar() {
   const adminItems = [
     { title: 'User Management', url: '/admin/users', icon: UserCog, color: 'from-secondary to-accent' },
     { title: 'Practice Settings', url: '/admin/practice-settings', icon: Building2, color: 'from-primary to-success' },
+    { title: 'Service Codes', url: '/admin/service-codes', icon: DollarSign, color: 'from-success to-primary' },
     { title: 'Locations', url: '/admin/locations', icon: MapPin, color: 'from-accent to-secondary' },
     { title: 'Reminder Settings', url: '/admin/reminder-settings', icon: Bell, color: 'from-blue-400 to-purple-400' },
     { title: 'Appointment Notifications', url: '/admin/appointment-notifications', icon: Mail, color: 'from-purple-400 to-pink-400' },

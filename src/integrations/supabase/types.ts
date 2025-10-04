@@ -2108,6 +2108,63 @@ export type Database = {
           },
         ]
       }
+      service_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          default_modifiers: string | null
+          description: string
+          duration_minutes: number | null
+          id: string
+          include_in_claims: boolean
+          is_active: boolean
+          is_addon: boolean
+          is_default_for_type: boolean
+          service_type: string
+          standard_rate: number | null
+          time_units_billing: string
+          time_units_minutes: number | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          default_modifiers?: string | null
+          description: string
+          duration_minutes?: number | null
+          id?: string
+          include_in_claims?: boolean
+          is_active?: boolean
+          is_addon?: boolean
+          is_default_for_type?: boolean
+          service_type: string
+          standard_rate?: number | null
+          time_units_billing?: string
+          time_units_minutes?: number | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          default_modifiers?: string | null
+          description?: string
+          duration_minutes?: number | null
+          id?: string
+          include_in_claims?: boolean
+          is_active?: boolean
+          is_addon?: boolean
+          is_default_for_type?: boolean
+          service_type?: string
+          standard_rate?: number | null
+          time_units_billing?: string
+          time_units_minutes?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       session_participants: {
         Row: {
           connection_quality: Json | null
