@@ -199,6 +199,11 @@ export function AppointmentDialog({
   const filteredServiceCodes = serviceCodes.filter(
     (code) => code.service_type === selectedAppointmentType
   );
+  
+  // If no codes match, fallback to Therapy Session codes
+  const displayServiceCodes = filteredServiceCodes.length > 0 
+    ? filteredServiceCodes 
+    : serviceCodes.filter((code) => code.service_type === 'Therapy Session');
 
   const onSubmit = async (data: AppointmentFormData) => {
     try {
@@ -490,27 +495,45 @@ export function AppointmentDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>CPT Code</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select service code" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="max-h-[300px]">
-                      <SelectItem value="none">None</SelectItem>
-                      {filteredServiceCodes.map((code) => (
-                        <SelectItem key={code.id} value={code.code}>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono">{code.code}</span>
-                            {code.default_modifiers && (
-                              <span className="text-xs text-muted-foreground">({code.default_modifiers})</span>
-                            )}
-                            <span className="text-sm">- {code.description}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Select service code" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-[300px]">
+                          <SelectItem value="none">None</SelectItem>
+                          {displayServiceCodes.map((code) => (
+                            <SelectItem key={code.id} value={code.code}>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono">{code.code}</span>
+                                {code.default_modifiers && (
+                                  <span className="text-xs text-muted-foreground">({code.default_modifiers})</span>
+                                )}
+                                <span className="text-sm">- {code.description}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Or type custom code:
+                    </div>
+                    <Input
+                      placeholder="Enter CPT code manually"
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      className="font-mono"
+                    />
+                    {filteredServiceCodes.length === 0 && displayServiceCodes.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        No codes found for {selectedAppointmentType}. Showing Therapy Session codes.
+                      </p>
+                    )}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
