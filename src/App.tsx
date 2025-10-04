@@ -28,6 +28,9 @@ import TelehealthSession from "./pages/TelehealthSession";
 import ConfirmAppointment from "./pages/ConfirmAppointment";
 import ReminderSettings from "./pages/admin/ReminderSettings";
 import AppointmentNotificationSettings from "./pages/admin/AppointmentNotificationSettings";
+import AINoteSettings from "./pages/admin/AINoteSettings";
+import Notes from "./pages/Notes";
+import NoteEditor from "./pages/NoteEditor";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -193,6 +196,38 @@ const App = () => (
                 <AdminRoute>
                   <AppointmentNotificationSettings />
                 </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/ai-notes" 
+              element={
+                <AdminRoute>
+                  <AINoteSettings />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/notes" 
+              element={
+                <ProtectedRoute>
+                  <Notes />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/notes/new" 
+              element={
+                <ProtectedRoute>
+                  <NoteEditor />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/notes/:id" 
+              element={
+                <ProtectedRoute>
+                  <NoteEditor />
+                </ProtectedRoute>
               } 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
