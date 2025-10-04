@@ -146,8 +146,8 @@ export default function ServiceCodes() {
           </Button>
         </div>
 
-        <Card>
-          <CardHeader>
+        <Card className="bg-white dark:bg-card border shadow-sm">
+          <CardHeader className="bg-white dark:bg-card border-b">
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="h-5 w-5" />
               Service Codes
@@ -157,7 +157,7 @@ export default function ServiceCodes() {
               and appear on scheduled appointments, notes, and billable items.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="bg-white dark:bg-card">
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
             ) : serviceCodes.length === 0 ? (
@@ -168,7 +168,7 @@ export default function ServiceCodes() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-muted/30">
                       <TableHead>Service Type</TableHead>
                       <TableHead>Code</TableHead>
                       <TableHead>Default Modifiers</TableHead>
@@ -178,7 +178,7 @@ export default function ServiceCodes() {
                       <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                  <TableBody className="bg-white dark:bg-card">
                     {serviceCodes.map((code) => (
                       <TableRow key={code.id}>
                         <TableCell className="font-medium">{code.service_type}</TableCell>
