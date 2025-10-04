@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_note_settings: {
+        Row: {
+          anonymize_before_sending: boolean
+          auto_approve_high_confidence: boolean | null
+          created_at: string
+          data_sharing_consent: boolean
+          enabled: boolean
+          id: string
+          minimum_confidence_threshold: number | null
+          model: string
+          practice_id: string | null
+          provider: string
+          require_clinician_review: boolean | null
+          retain_ai_logs: boolean
+          retention_days: number | null
+          risk_assessment_enabled: boolean
+          suggestion_engine_enabled: boolean
+          template_completion_enabled: boolean
+          text_expansion_enabled: boolean
+          updated_at: string
+          voice_to_text_enabled: boolean
+        }
+        Insert: {
+          anonymize_before_sending?: boolean
+          auto_approve_high_confidence?: boolean | null
+          created_at?: string
+          data_sharing_consent?: boolean
+          enabled?: boolean
+          id?: string
+          minimum_confidence_threshold?: number | null
+          model?: string
+          practice_id?: string | null
+          provider?: string
+          require_clinician_review?: boolean | null
+          retain_ai_logs?: boolean
+          retention_days?: number | null
+          risk_assessment_enabled?: boolean
+          suggestion_engine_enabled?: boolean
+          template_completion_enabled?: boolean
+          text_expansion_enabled?: boolean
+          updated_at?: string
+          voice_to_text_enabled?: boolean
+        }
+        Update: {
+          anonymize_before_sending?: boolean
+          auto_approve_high_confidence?: boolean | null
+          created_at?: string
+          data_sharing_consent?: boolean
+          enabled?: boolean
+          id?: string
+          minimum_confidence_threshold?: number | null
+          model?: string
+          practice_id?: string | null
+          provider?: string
+          require_clinician_review?: boolean | null
+          retain_ai_logs?: boolean
+          retention_days?: number | null
+          risk_assessment_enabled?: boolean
+          suggestion_engine_enabled?: boolean
+          template_completion_enabled?: boolean
+          text_expansion_enabled?: boolean
+          updated_at?: string
+          voice_to_text_enabled?: boolean
+        }
+        Relationships: []
+      }
       appointment_change_logs: {
         Row: {
           action: string
@@ -1017,6 +1083,180 @@ export type Database = {
           },
         ]
       }
+      clinical_notes: {
+        Row: {
+          ai_confidence_score: number | null
+          ai_generated: boolean
+          ai_generation_status:
+            | Database["public"]["Enums"]["ai_generation_status"]
+            | null
+          ai_model_used: string | null
+          ai_processing_time_ms: number | null
+          appointment_id: string | null
+          billing_status: string | null
+          client_id: string
+          clinician_id: string
+          content: Json
+          cpt_codes: string[] | null
+          created_at: string
+          created_by: string
+          date_of_service: string
+          diagnoses: string[] | null
+          id: string
+          interventions: string[] | null
+          locked: boolean | null
+          locked_by: string | null
+          locked_date: string | null
+          medications_discussed: string[] | null
+          note_format: Database["public"]["Enums"]["note_format"]
+          note_type: Database["public"]["Enums"]["note_type"]
+          requires_supervision: boolean | null
+          risk_flags: Json | null
+          safety_plan_updated: boolean | null
+          session_duration_minutes: number | null
+          session_id: string | null
+          supervised_by: string | null
+          supervision_date: string | null
+          supervision_notes: string | null
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          ai_confidence_score?: number | null
+          ai_generated?: boolean
+          ai_generation_status?:
+            | Database["public"]["Enums"]["ai_generation_status"]
+            | null
+          ai_model_used?: string | null
+          ai_processing_time_ms?: number | null
+          appointment_id?: string | null
+          billing_status?: string | null
+          client_id: string
+          clinician_id: string
+          content?: Json
+          cpt_codes?: string[] | null
+          created_at?: string
+          created_by: string
+          date_of_service: string
+          diagnoses?: string[] | null
+          id?: string
+          interventions?: string[] | null
+          locked?: boolean | null
+          locked_by?: string | null
+          locked_date?: string | null
+          medications_discussed?: string[] | null
+          note_format?: Database["public"]["Enums"]["note_format"]
+          note_type: Database["public"]["Enums"]["note_type"]
+          requires_supervision?: boolean | null
+          risk_flags?: Json | null
+          safety_plan_updated?: boolean | null
+          session_duration_minutes?: number | null
+          session_id?: string | null
+          supervised_by?: string | null
+          supervision_date?: string | null
+          supervision_notes?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          ai_confidence_score?: number | null
+          ai_generated?: boolean
+          ai_generation_status?:
+            | Database["public"]["Enums"]["ai_generation_status"]
+            | null
+          ai_model_used?: string | null
+          ai_processing_time_ms?: number | null
+          appointment_id?: string | null
+          billing_status?: string | null
+          client_id?: string
+          clinician_id?: string
+          content?: Json
+          cpt_codes?: string[] | null
+          created_at?: string
+          created_by?: string
+          date_of_service?: string
+          diagnoses?: string[] | null
+          id?: string
+          interventions?: string[] | null
+          locked?: boolean | null
+          locked_by?: string | null
+          locked_date?: string | null
+          medications_discussed?: string[] | null
+          note_format?: Database["public"]["Enums"]["note_format"]
+          note_type?: Database["public"]["Enums"]["note_type"]
+          requires_supervision?: boolean | null
+          risk_flags?: Json | null
+          safety_plan_updated?: boolean | null
+          session_duration_minutes?: number | null
+          session_id?: string | null
+          supervised_by?: string | null
+          supervision_date?: string | null
+          supervision_notes?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_notes_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_notes_clinician_id_fkey"
+            columns: ["clinician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_notes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_notes_locked_by_fkey"
+            columns: ["locked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_notes_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "telehealth_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_notes_supervised_by_fkey"
+            columns: ["supervised_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_notes_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergency_contacts: {
         Row: {
           address: string | null
@@ -1158,6 +1398,113 @@ export type Database = {
           user_agent?: string | null
         }
         Relationships: []
+      }
+      note_templates: {
+        Row: {
+          ai_prompts: Json | null
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          name: string
+          note_format: Database["public"]["Enums"]["note_format"]
+          note_type: Database["public"]["Enums"]["note_type"]
+          template_structure: Json
+          updated_at: string
+        }
+        Insert: {
+          ai_prompts?: Json | null
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name: string
+          note_format: Database["public"]["Enums"]["note_format"]
+          note_type: Database["public"]["Enums"]["note_type"]
+          template_structure: Json
+          updated_at?: string
+        }
+        Update: {
+          ai_prompts?: Json | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string
+          note_format?: Database["public"]["Enums"]["note_format"]
+          note_type?: Database["public"]["Enums"]["note_type"]
+          template_structure?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      note_versions: {
+        Row: {
+          change_summary: string | null
+          content: Json
+          created_at: string
+          created_by: string
+          diagnoses: string[] | null
+          id: string
+          interventions: string[] | null
+          is_ai_generated: boolean
+          note_id: string
+          risk_flags: Json | null
+          version: number
+        }
+        Insert: {
+          change_summary?: string | null
+          content: Json
+          created_at?: string
+          created_by: string
+          diagnoses?: string[] | null
+          id?: string
+          interventions?: string[] | null
+          is_ai_generated?: boolean
+          note_id: string
+          risk_flags?: Json | null
+          version: number
+        }
+        Update: {
+          change_summary?: string | null
+          content?: Json
+          created_at?: string
+          created_by?: string
+          diagnoses?: string[] | null
+          id?: string
+          interventions?: string[] | null
+          is_ai_generated?: boolean
+          note_id?: string
+          risk_flags?: Json | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "note_versions_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_notes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       practice_locations: {
         Row: {
@@ -1790,6 +2137,54 @@ export type Database = {
           },
         ]
       }
+      session_transcripts: {
+        Row: {
+          audio_quality_score: number | null
+          created_at: string
+          id: string
+          note_id: string | null
+          processing_status: string | null
+          session_id: string | null
+          speaker_labels: Json | null
+          transcript_text: string
+        }
+        Insert: {
+          audio_quality_score?: number | null
+          created_at?: string
+          id?: string
+          note_id?: string | null
+          processing_status?: string | null
+          session_id?: string | null
+          speaker_labels?: Json | null
+          transcript_text: string
+        }
+        Update: {
+          audio_quality_score?: number | null
+          created_at?: string
+          id?: string
+          note_id?: string | null
+          processing_status?: string | null
+          session_id?: string | null
+          speaker_labels?: Json | null
+          transcript_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_transcripts_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_transcripts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "telehealth_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supervision_relationships: {
         Row: {
           created_at: string | null
@@ -2297,6 +2692,12 @@ export type Database = {
       }
     }
     Enums: {
+      ai_generation_status:
+        | "pending"
+        | "processing"
+        | "completed"
+        | "failed"
+        | "manual"
       app_role:
         | "administrator"
         | "supervisor"
@@ -2304,6 +2705,16 @@ export type Database = {
         | "billing_staff"
         | "front_desk"
         | "associate_trainee"
+      note_format: "SOAP" | "DAP" | "BIRP" | "GIRP" | "narrative"
+      note_type:
+        | "intake_assessment"
+        | "progress_note"
+        | "psychotherapy_note"
+        | "psychiatric_evaluation"
+        | "crisis_assessment"
+        | "discharge_summary"
+        | "treatment_plan"
+        | "supervision_note"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2431,6 +2842,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ai_generation_status: [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+        "manual",
+      ],
       app_role: [
         "administrator",
         "supervisor",
@@ -2438,6 +2856,17 @@ export const Constants = {
         "billing_staff",
         "front_desk",
         "associate_trainee",
+      ],
+      note_format: ["SOAP", "DAP", "BIRP", "GIRP", "narrative"],
+      note_type: [
+        "intake_assessment",
+        "progress_note",
+        "psychotherapy_note",
+        "psychiatric_evaluation",
+        "crisis_assessment",
+        "discharge_summary",
+        "treatment_plan",
+        "supervision_note",
       ],
     },
   },
