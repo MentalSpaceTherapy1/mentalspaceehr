@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, FileSignature } from 'lucide-react';
+import { Save, ArrowLeft, FileSignature, Plus, X } from 'lucide-react';
 import { SignatureDialog } from '@/components/intake/SignatureDialog';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -39,13 +39,18 @@ export default function ContactNote() {
     interventionProvided: '',
     followUpNeeded: false,
     followUpPlan: '',
+    followUpDate: '',
     collateralContact: false,
     collateralName: '',
     collateralRelationship: '',
     releaseOnFile: false,
     billable: false,
     billingCode: '',
-    status: 'Draft'
+    status: 'Draft',
+    participants: [] as { name: string; role: string }[],
+    location: '',
+    outcome: '',
+    relatedDocumentation: ''
   });
 
   useEffect(() => {
@@ -85,6 +90,29 @@ export default function ContactNote() {
     }
   };
 
+  const addParticipant = () => {
+    setFormData(prev => ({
+      ...prev,
+      participants: [...prev.participants, { name: '', role: '' }]
+    }));
+  };
+
+  const updateParticipant = (index: number, field: 'name' | 'role', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      participants: prev.participants.map((p, i) => 
+        i === index ? { ...p, [field]: value } : p
+      )
+    }));
+  };
+
+  const removeParticipant = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      participants: prev.participants.filter((_, i) => i !== index)
+    }));
+  };
+
   const saveNote = async () => {
     if (!formData.clientId) {
       toast({
@@ -114,6 +142,7 @@ export default function ContactNote() {
         intervention_provided: formData.interventionProvided,
         follow_up_needed: formData.followUpNeeded,
         follow_up_plan: formData.followUpPlan,
+        follow_up_date: formData.followUpDate || null,
         collateral_contact: {
           wasCollateral: formData.collateralContact,
           contactName: formData.collateralName,
@@ -124,6 +153,10 @@ export default function ContactNote() {
         billing_code: formData.billingCode,
         status: formData.status,
         created_by: user?.id,
+        participants: formData.participants.filter(p => p.name && p.role),
+        location: formData.location || null,
+        outcome: formData.outcome || null,
+        related_documentation: formData.relatedDocumentation || null,
       };
 
       const { error } = await supabase
@@ -255,7 +288,7 @@ export default function ContactNote() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label>Initiated By *</Label>
                 <Select
@@ -296,6 +329,66 @@ export default function ContactNote() {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div>
+                <Label>Location</Label>
+                <Select
+                  value={formData.location}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, location: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Office">Office</SelectItem>
+                    <SelectItem value="Phone">Phone</SelectItem>
+                    <SelectItem value="Email">Email</SelectItem>
+                    <SelectItem value="Virtual">Virtual/Video</SelectItem>
+                    <SelectItem value="Home Visit">Home Visit</SelectItem>
+                    <SelectItem value="Community">Community Setting</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label>Participants</Label>
+              <div className="space-y-2 mt-2">
+                {formData.participants.map((participant, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      placeholder="Name"
+                      value={participant.name}
+                      onChange={(e) => updateParticipant(index, 'name', e.target.value)}
+                      className="flex-1"
+                    />
+                    <Input
+                      placeholder="Role/Relationship"
+                      value={participant.role}
+                      onChange={(e) => updateParticipant(index, 'role', e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => removeParticipant(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addParticipant}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Participant
+                </Button>
+              </div>
             </div>
 
             <div>
@@ -305,6 +398,25 @@ export default function ContactNote() {
                 onChange={(e) => setFormData(prev => ({ ...prev, contactDetails: e.target.value }))}
                 placeholder="Describe what was discussed during the contact..."
                 rows={5}
+              />
+            </div>
+
+            <div>
+              <Label>Outcome/Results</Label>
+              <Textarea
+                value={formData.outcome}
+                onChange={(e) => setFormData(prev => ({ ...prev, outcome: e.target.value }))}
+                placeholder="Document the outcome or results of this contact..."
+                rows={4}
+              />
+            </div>
+
+            <div>
+              <Label>Related Documentation</Label>
+              <Input
+                value={formData.relatedDocumentation}
+                onChange={(e) => setFormData(prev => ({ ...prev, relatedDocumentation: e.target.value }))}
+                placeholder="Reference other notes, forms, or documentation"
               />
             </div>
 
@@ -359,14 +471,25 @@ export default function ContactNote() {
               </div>
 
               {formData.followUpNeeded && (
-                <div>
-                  <Label>Follow-up Plan</Label>
-                  <Textarea
-                    value={formData.followUpPlan}
-                    onChange={(e) => setFormData(prev => ({ ...prev, followUpPlan: e.target.value }))}
-                    rows={3}
-                  />
-                </div>
+                <>
+                  <div>
+                    <Label>Follow-up Date</Label>
+                    <Input
+                      type="date"
+                      value={formData.followUpDate}
+                      onChange={(e) => setFormData(prev => ({ ...prev, followUpDate: e.target.value }))}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Follow-up Plan</Label>
+                    <Textarea
+                      value={formData.followUpPlan}
+                      onChange={(e) => setFormData(prev => ({ ...prev, followUpPlan: e.target.value }))}
+                      rows={3}
+                    />
+                  </div>
+                </>
               )}
             </div>
 

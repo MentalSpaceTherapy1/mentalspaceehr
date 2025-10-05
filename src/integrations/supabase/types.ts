@@ -1583,10 +1583,15 @@ export type Database = {
           contact_type: string
           created_by: string | null
           created_date: string | null
+          follow_up_date: string | null
           follow_up_needed: boolean | null
           follow_up_plan: string | null
           id: string
           intervention_provided: string | null
+          location: string | null
+          outcome: string | null
+          participants: Json | null
+          related_documentation: string | null
           risk_details: string | null
           risk_issues: boolean | null
           signed_by: string | null
@@ -1610,10 +1615,15 @@ export type Database = {
           contact_type: string
           created_by?: string | null
           created_date?: string | null
+          follow_up_date?: string | null
           follow_up_needed?: boolean | null
           follow_up_plan?: string | null
           id?: string
           intervention_provided?: string | null
+          location?: string | null
+          outcome?: string | null
+          participants?: Json | null
+          related_documentation?: string | null
           risk_details?: string | null
           risk_issues?: boolean | null
           signed_by?: string | null
@@ -1637,10 +1647,15 @@ export type Database = {
           contact_type?: string
           created_by?: string | null
           created_date?: string | null
+          follow_up_date?: string | null
           follow_up_needed?: boolean | null
           follow_up_plan?: string | null
           id?: string
           intervention_provided?: string | null
+          location?: string | null
+          outcome?: string | null
+          participants?: Json | null
+          related_documentation?: string | null
           risk_details?: string | null
           risk_issues?: boolean | null
           signed_by?: string | null
