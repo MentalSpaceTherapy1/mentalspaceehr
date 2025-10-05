@@ -20,6 +20,24 @@ export const validateTelehealthLicensure = async (
   clinicianId: string
 ): Promise<LicensureValidation> => {
   try {
+    // Check if licensure enforcement is enabled
+    const { data: settings } = await supabase
+      .from('practice_settings')
+      .select('telehealth_settings')
+      .single();
+    
+    const enforceStateLicensure = (settings?.telehealth_settings as any)?.enforce_state_licensure ?? false;
+    
+    // If enforcement is disabled, always return valid
+    if (!enforceStateLicensure) {
+      return {
+        isValid: true,
+        clientState: '',
+        clinicianStates: [],
+        message: 'State licensure verification is disabled',
+      };
+    }
+
     // Get client state
     const { data: client } = await supabase
       .from('clients')

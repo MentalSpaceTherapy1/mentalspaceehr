@@ -48,6 +48,7 @@ import ComplianceRules from "./pages/admin/ComplianceRules";
 import ComplianceDashboard from "./pages/admin/ComplianceDashboard";
 import SupervisionManagement from "./pages/admin/SupervisionManagement";
 import TelehealthConsentManagement from "./pages/admin/TelehealthConsentManagement";
+import TelehealthSettings from "./pages/admin/TelehealthSettings";
 
 const queryClient = new QueryClient();
 
@@ -269,6 +270,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/admin/telehealth-settings" 
+              element={
+                <AdminRoute>
+                  <TelehealthSettings />
+                </AdminRoute>
+              } 
+            />
+            <Route 
               path="/admin/telehealth-consents" 
               element={
                 <AdminRoute>
@@ -277,7 +286,7 @@ const App = () => (
               } 
             />
             <Route
-              path="/notes" 
+              path="/notes"
               element={
                 <ProtectedRoute>
                   <Notes />

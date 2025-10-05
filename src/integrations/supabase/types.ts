@@ -2610,6 +2610,7 @@ export type Database = {
           street1: string
           street2: string | null
           tax_id: string
+          telehealth_settings: Json | null
           updated_at: string | null
           website: string | null
           zip_code: string
@@ -2649,6 +2650,7 @@ export type Database = {
           street1: string
           street2?: string | null
           tax_id: string
+          telehealth_settings?: Json | null
           updated_at?: string | null
           website?: string | null
           zip_code: string
@@ -2688,6 +2690,7 @@ export type Database = {
           street1?: string
           street2?: string | null
           tax_id?: string
+          telehealth_settings?: Json | null
           updated_at?: string | null
           website?: string | null
           zip_code?: string
