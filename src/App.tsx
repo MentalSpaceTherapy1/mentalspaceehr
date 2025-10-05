@@ -46,6 +46,7 @@ import ConsultationNote from "./pages/ConsultationNote";
 import MiscellaneousNote from "./pages/MiscellaneousNote";
 import ComplianceRules from "./pages/admin/ComplianceRules";
 import ComplianceDashboard from "./pages/admin/ComplianceDashboard";
+import SupervisionManagement from "./pages/admin/SupervisionManagement";
 
 const queryClient = new QueryClient();
 
@@ -123,6 +124,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <ComplianceRules />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/supervision-management" 
+              element={
+                <AdminRoute>
+                  <SupervisionManagement />
                 </AdminRoute>
               } 
             />
