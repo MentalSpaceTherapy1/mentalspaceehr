@@ -21,7 +21,7 @@ export const useAssociateCosignatures = (clinicianId?: string) => {
           .from('note_cosignatures')
           .select('*')
           .eq('clinician_id', clinicianId)
-          .in('status', ['Pending Supervisor Review', 'Overdue'])
+          .in('status', ['Pending', 'Pending Review', 'Under Review', 'Revisions Requested', 'Overdue'])
           .order('created_date', { ascending: false });
 
         if (cosigError) throw cosigError;

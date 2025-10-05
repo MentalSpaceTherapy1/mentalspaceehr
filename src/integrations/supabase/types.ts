@@ -2116,16 +2116,25 @@ export type Database = {
           escalated: boolean | null
           escalated_date: string | null
           id: string
+          is_incident_to: boolean | null
           note_id: string
           note_type: string
+          notification_log: Json | null
           relationship_id: string | null
+          reviewed_date: string | null
+          revision_details: string | null
+          revision_history: Json | null
+          revisions_requested: boolean | null
           status: string
+          submitted_for_cosign_date: string | null
+          supervisor_attestation: string | null
           supervisor_comments: string | null
           supervisor_cosigned: boolean | null
           supervisor_cosigned_date: string | null
           supervisor_id: string
           supervisor_notified: boolean | null
           supervisor_notified_date: string | null
+          time_spent_reviewing: number | null
           updated_at: string | null
         }
         Insert: {
@@ -2137,16 +2146,25 @@ export type Database = {
           escalated?: boolean | null
           escalated_date?: string | null
           id?: string
+          is_incident_to?: boolean | null
           note_id: string
           note_type: string
+          notification_log?: Json | null
           relationship_id?: string | null
+          reviewed_date?: string | null
+          revision_details?: string | null
+          revision_history?: Json | null
+          revisions_requested?: boolean | null
           status?: string
+          submitted_for_cosign_date?: string | null
+          supervisor_attestation?: string | null
           supervisor_comments?: string | null
           supervisor_cosigned?: boolean | null
           supervisor_cosigned_date?: string | null
           supervisor_id: string
           supervisor_notified?: boolean | null
           supervisor_notified_date?: string | null
+          time_spent_reviewing?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -2158,16 +2176,25 @@ export type Database = {
           escalated?: boolean | null
           escalated_date?: string | null
           id?: string
+          is_incident_to?: boolean | null
           note_id?: string
           note_type?: string
+          notification_log?: Json | null
           relationship_id?: string | null
+          reviewed_date?: string | null
+          revision_details?: string | null
+          revision_history?: Json | null
+          revisions_requested?: boolean | null
           status?: string
+          submitted_for_cosign_date?: string | null
+          supervisor_attestation?: string | null
           supervisor_comments?: string | null
           supervisor_cosigned?: boolean | null
           supervisor_cosigned_date?: string | null
           supervisor_id?: string
           supervisor_notified?: boolean | null
           supervisor_notified_date?: string | null
+          time_spent_reviewing?: number | null
           updated_at?: string | null
         }
         Relationships: [

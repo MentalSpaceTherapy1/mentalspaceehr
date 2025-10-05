@@ -1,6 +1,18 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface RevisionHistoryItem {
+  revisionDate: string;
+  revisionReason: string;
+  revisionCompleteDate?: string | null;
+}
+
+export interface NotificationLogItem {
+  notificationDate: string;
+  notificationType: 'Submitted' | 'Reminder' | 'Overdue' | 'Cosigned' | 'Revisions Requested';
+  recipient: string;
+}
+
 export interface NoteCosignature {
   id: string;
   note_id: string;
@@ -8,19 +20,46 @@ export interface NoteCosignature {
   clinician_id: string;
   supervisor_id: string;
   relationship_id?: string | null;
+  
+  // Submission
   clinician_signed: boolean;
   clinician_signed_date?: string | null;
+  submitted_for_cosign_date?: string | null;
+  
+  // Review
   supervisor_cosigned: boolean;
   supervisor_cosigned_date?: string | null;
+  reviewed_date?: string | null;
+  time_spent_reviewing?: number | null;
   supervisor_comments?: string | null;
-  status: string;
+  
+  // Revisions
+  revisions_requested: boolean;
+  revision_details?: string | null;
+  revision_history: RevisionHistoryItem[];
+  
+  // Status
+  status: 'Pending' | 'Pending Review' | 'Under Review' | 'Reviewed' | 'Revisions Requested' | 'Cosigned' | 'Returned' | 'Overdue';
   due_date?: string | null;
+  
+  // Notifications
   supervisor_notified: boolean;
   supervisor_notified_date?: string | null;
+  notification_log: NotificationLogItem[];
+  
+  // Escalation
   escalated: boolean;
   escalated_date?: string | null;
-  created_date: string;
   
+  // Incident-to Billing
+  is_incident_to: boolean;
+  supervisor_attestation?: string | null;
+  
+  // Timestamps
+  created_date: string;
+  updated_at?: string | null;
+  
+  // Related data
   clinician?: {
     id: string;
     first_name: string;

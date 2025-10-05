@@ -50,7 +50,12 @@ export function AssociateDashboard() {
   });
 
   const overdueNotes = cosignatures.filter(c => c.status === 'Overdue');
-  const pendingNotes = cosignatures.filter(c => c.status === 'Pending Supervisor Review');
+  const pendingNotes = cosignatures.filter(c => 
+    c.status === 'Pending' || 
+    c.status === 'Pending Review' || 
+    c.status === 'Under Review' ||
+    c.status === 'Revisions Requested'
+  );
 
   const requiredHours = relationship?.required_supervision_hours || 0;
   const completedHours = hours.total;
