@@ -1862,6 +1862,88 @@ export type Database = {
           },
         ]
       }
+      incident_to_billing: {
+        Row: {
+          billed_under_provider_id: string
+          billing_compliant: boolean
+          client_id: string
+          compliance_check_date: string | null
+          created_at: string
+          created_by: string | null
+          documentation_complete: boolean
+          id: string
+          note_id: string
+          notes: string | null
+          provider_attestation: Json
+          rendering_provider_id: string
+          requirements_met: Json
+          session_id: string | null
+          supervising_provider_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          billed_under_provider_id: string
+          billing_compliant?: boolean
+          client_id: string
+          compliance_check_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          documentation_complete?: boolean
+          id?: string
+          note_id: string
+          notes?: string | null
+          provider_attestation?: Json
+          rendering_provider_id: string
+          requirements_met?: Json
+          session_id?: string | null
+          supervising_provider_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          billed_under_provider_id?: string
+          billing_compliant?: boolean
+          client_id?: string
+          compliance_check_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          documentation_complete?: boolean
+          id?: string
+          note_id?: string
+          notes?: string | null
+          provider_attestation?: Json
+          rendering_provider_id?: string
+          requirements_met?: Json
+          session_id?: string | null
+          supervising_provider_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_to_billing_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_to_billing_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_to_billing_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "telehealth_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       insurance_companies: {
         Row: {
           claims_address: Json | null
