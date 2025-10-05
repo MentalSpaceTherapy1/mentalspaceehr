@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Save, Building2, MapPin, Clock, Shield, Stethoscope, Palette, Upload, X, Plus, LayoutDashboard, CalendarClock } from 'lucide-react';
+import { ArrowLeft, Save, Building2, MapPin, Clock, Shield, Stethoscope, Palette, Upload, X, Plus, LayoutDashboard, CalendarClock, FileCheck } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -94,6 +94,18 @@ export default function PracticeSettings() {
     max_recurring_instances: 52,
   });
 
+  const [cosignSettings, setCosignSettings] = useState({
+    default_cosign_due_days: 7,
+    warning_days_before_due: [3, 1],
+    auto_escalate_after_days_overdue: 3,
+    send_daily_reminders: true,
+    send_supervisor_digest: true,
+    supervisor_digest_time: '08:00',
+    require_cosign_for_associates: true,
+    allow_self_review: false,
+    escalation_recipients: [] as string[],
+  });
+
   const [officeHours, setOfficeHours] = useState<OfficeHours>({
     monday: { open: '09:00', close: '17:00', closed: false },
     tuesday: { open: '09:00', close: '17:00', closed: false },
@@ -161,6 +173,11 @@ export default function PracticeSettings() {
         if ((data as any).schedule_settings) {
           setScheduleSettings(prev => ({ ...prev, ...(data as any).schedule_settings }));
         }
+
+        // Load co-sign settings (if they exist)
+        if ((data as any).cosign_settings) {
+          setCosignSettings(prev => ({ ...prev, ...(data as any).cosign_settings }));
+        }
         
         // Check if billing address is different
         if (data.billing_street1 || data.billing_city || data.billing_state || data.billing_zip_code) {
@@ -190,6 +207,7 @@ export default function PracticeSettings() {
         office_hours: officeHours,
         dashboard_settings: dashboardSettings,
         schedule_settings: scheduleSettings,
+        cosign_settings: cosignSettings,
       };
 
       if (settingsId) {
@@ -321,6 +339,10 @@ export default function PracticeSettings() {
             <TabsTrigger value="branding">
               <Palette className="h-4 w-4 mr-2" />
               Branding
+            </TabsTrigger>
+            <TabsTrigger value="cosigning">
+              <FileCheck className="h-4 w-4 mr-2" />
+              Co-Signing
             </TabsTrigger>
             <TabsTrigger value="dashboards">
               <LayoutDashboard className="h-4 w-4 mr-2" />
@@ -1263,6 +1285,173 @@ export default function PracticeSettings() {
                   <MapPin className="h-4 w-4 mr-2" />
                   Manage Locations
                 </Button>
+              </div>
+            </Card>
+          </TabsContent>
+
+          {/* Co-Signing Settings Tab */}
+          <TabsContent value="cosigning" className="space-y-6">
+            <Card className="p-6 space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Co-Signing Configuration</h3>
+                <p className="text-sm text-muted-foreground">
+                  Configure note co-signing requirements, notifications, and escalation rules
+                </p>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h4 className="font-semibold">Timeline & Due Dates</h4>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="default_cosign_due_days">Default Days Until Co-Sign Due</Label>
+                    <Input
+                      id="default_cosign_due_days"
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={cosignSettings.default_cosign_due_days}
+                      onChange={(e) => setCosignSettings({ ...cosignSettings, default_cosign_due_days: parseInt(e.target.value) || 7 })}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Number of days supervisors have to co-sign notes
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="auto_escalate_after_days_overdue">Auto-Escalate After Days Overdue</Label>
+                    <Input
+                      id="auto_escalate_after_days_overdue"
+                      type="number"
+                      min="1"
+                      max="14"
+                      value={cosignSettings.auto_escalate_after_days_overdue}
+                      onChange={(e) => setCosignSettings({ ...cosignSettings, auto_escalate_after_days_overdue: parseInt(e.target.value) || 3 })}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Days after overdue to escalate to administrators
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h4 className="font-semibold">Notification Settings</h4>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="send_daily_reminders">Send Daily Reminders</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Send daily reminder emails to supervisors with pending co-signs
+                      </p>
+                    </div>
+                    <Switch
+                      id="send_daily_reminders"
+                      checked={cosignSettings.send_daily_reminders}
+                      onCheckedChange={(checked) => setCosignSettings({ ...cosignSettings, send_daily_reminders: checked })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="send_supervisor_digest">Send Supervisor Digest</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Send daily digest email summarizing all pending co-signs
+                      </p>
+                    </div>
+                    <Switch
+                      id="send_supervisor_digest"
+                      checked={cosignSettings.send_supervisor_digest}
+                      onCheckedChange={(checked) => setCosignSettings({ ...cosignSettings, send_supervisor_digest: checked })}
+                    />
+                  </div>
+
+                  {cosignSettings.send_supervisor_digest && (
+                    <div>
+                      <Label htmlFor="supervisor_digest_time">Digest Email Time</Label>
+                      <Input
+                        id="supervisor_digest_time"
+                        type="time"
+                        value={cosignSettings.supervisor_digest_time}
+                        onChange={(e) => setCosignSettings({ ...cosignSettings, supervisor_digest_time: e.target.value })}
+                        className="w-40"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Daily time to send supervisor digest emails
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h4 className="font-semibold">Supervision Requirements</h4>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="require_cosign_for_associates">Require Co-Sign for Associates</Label>
+                      <p className="text-xs text-muted-foreground">
+                        All notes by associate trainees must be co-signed
+                      </p>
+                    </div>
+                    <Switch
+                      id="require_cosign_for_associates"
+                      checked={cosignSettings.require_cosign_for_associates}
+                      onCheckedChange={(checked) => setCosignSettings({ ...cosignSettings, require_cosign_for_associates: checked })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="allow_self_review">Allow Self Review</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Allow supervisors to review their own notes (not recommended)
+                      </p>
+                    </div>
+                    <Switch
+                      id="allow_self_review"
+                      checked={cosignSettings.allow_self_review}
+                      onCheckedChange={(checked) => setCosignSettings({ ...cosignSettings, allow_self_review: checked })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h4 className="font-semibold">Warning Timeline</h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Days before co-sign is due to send warning notifications
+                </p>
+                
+                <div className="flex gap-2">
+                  {cosignSettings.warning_days_before_due.map((days, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="14"
+                        value={days}
+                        onChange={(e) => {
+                          const newWarnings = [...cosignSettings.warning_days_before_due];
+                          newWarnings[index] = parseInt(e.target.value) || 0;
+                          setCosignSettings({ ...cosignSettings, warning_days_before_due: newWarnings });
+                        }}
+                        className="w-20"
+                      />
+                      <span className="text-sm">days before</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </Card>
           </TabsContent>
