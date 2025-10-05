@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, FileCheck, Clock, AlertCircle, Calendar, TrendingUp, CheckCircle, FileText, Plus } from "lucide-react";
+import { Users, FileCheck, Clock, AlertCircle, Calendar, TrendingUp, CheckCircle, FileText, Plus, Award, Settings } from "lucide-react";
 import { UnlockRequestManagement } from "../compliance/UnlockRequestManagement";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupervisionRelationships } from "@/hooks/useSupervisionRelationships";
@@ -10,6 +10,8 @@ import { useNoteCosignatures } from "@/hooks/useNoteCosignatures";
 import { SupervisionRelationshipDialog } from "../supervision/SupervisionRelationshipDialog";
 import { SupervisionSessionDialog } from "../supervision/SupervisionSessionDialog";
 import { CosignNoteDialog } from "../supervision/CosignNoteDialog";
+import { CompetenciesDialog } from "../supervision/CompetenciesDialog";
+import { RelationshipStatusDialog } from "../supervision/RelationshipStatusDialog";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,6 +22,8 @@ export function SupervisorDashboard() {
   const [selectedRelationship, setSelectedRelationship] = useState<any>(null);
   const [showCosignDialog, setShowCosignDialog] = useState(false);
   const [selectedCosignature, setSelectedCosignature] = useState<any>(null);
+  const [showCompetenciesDialog, setShowCompetenciesDialog] = useState(false);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
   
   const { relationships, loading: loadingRel } = useSupervisionRelationships(user?.id);
   const { cosignatures, loading: loadingCosig } = useNoteCosignatures(user?.id, 'Pending');
@@ -125,26 +129,52 @@ export function SupervisorDashboard() {
               ) : (
                 <div className="space-y-4">
                   {activeRelationships.map((rel) => (
-                    <div key={rel.id} className="flex items-center justify-between border-b pb-3">
-                      <div className="flex-1">
-                        <p className="font-medium">
-                          {rel.supervisee?.first_name} {rel.supervisee?.last_name}
-                        </p>
-                        <p className="text-sm text-muted-foreground">{rel.relationship_type}</p>
-                        <div className="flex gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {Math.round(rel.completed_hours || 0)}/{rel.required_supervision_hours} hrs
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {rel.supervision_frequency}
-                          </Badge>
+                    <div key={rel.id} className="border-b pb-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium">
+                            {rel.supervisee?.first_name} {rel.supervisee?.last_name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">{rel.relationship_type}</p>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              {Math.round(rel.completed_hours || 0)}/{rel.required_supervision_hours} hrs
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {rel.supervision_frequency}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">
+                            {Math.round((rel.completed_hours || 0) / rel.required_supervision_hours * 100)}%
+                          </p>
+                          <p className="text-xs text-muted-foreground">Complete</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">
-                          {Math.round((rel.completed_hours || 0) / rel.required_supervision_hours * 100)}%
-                        </p>
-                        <p className="text-xs text-muted-foreground">Complete</p>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedRelationship(rel);
+                            setShowCompetenciesDialog(true);
+                          }}
+                        >
+                          <Award className="h-3 w-3 mr-1" />
+                          Competencies
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedRelationship(rel);
+                            setShowStatusDialog(true);
+                          }}
+                        >
+                          <Settings className="h-3 w-3 mr-1" />
+                          Status
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -318,6 +348,30 @@ export function SupervisorDashboard() {
           clientName={`${selectedCosignature.client?.first_name} ${selectedCosignature.client?.last_name}`}
           clinicianName={`${selectedCosignature.clinician?.first_name} ${selectedCosignature.clinician?.last_name}`}
           createdDate={selectedCosignature.created_date}
+          onSuccess={() => {
+            // Refresh happens automatically via subscription
+          }}
+        />
+      )}
+
+      {selectedRelationship && showCompetenciesDialog && (
+        <CompetenciesDialog
+          open={showCompetenciesDialog}
+          onOpenChange={setShowCompetenciesDialog}
+          relationshipId={selectedRelationship.id}
+          supervisorId={user?.id || ''}
+          mode="supervisor"
+          onSuccess={() => {
+            // Refresh happens automatically via subscription
+          }}
+        />
+      )}
+
+      {selectedRelationship && showStatusDialog && (
+        <RelationshipStatusDialog
+          open={showStatusDialog}
+          onOpenChange={setShowStatusDialog}
+          relationship={selectedRelationship}
           onSuccess={() => {
             // Refresh happens automatically via subscription
           }}

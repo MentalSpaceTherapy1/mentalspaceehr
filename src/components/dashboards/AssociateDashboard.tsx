@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { SupervisionSessionDialog } from "@/components/supervision/SupervisionSessionDialog";
+import { CompetenciesDialog } from "@/components/supervision/CompetenciesDialog";
+import { SupervisionHoursChart } from "@/components/supervision/SupervisionHoursChart";
 import { 
   GraduationCap, 
   FileSignature, 
@@ -23,7 +25,8 @@ import {
   FileText,
   CalendarPlus,
   Users,
-  AlertCircle
+  AlertCircle,
+  Award
 } from "lucide-react";
 import { format, isToday, differenceInDays, parseISO } from "date-fns";
 import { Link } from "react-router-dom";
@@ -37,6 +40,7 @@ export function AssociateDashboard() {
   const { appointments } = useAppointments(undefined, undefined, user?.id || '');
   
   const [showSessionDialog, setShowSessionDialog] = useState(false);
+  const [showCompetenciesDialog, setShowCompetenciesDialog] = useState(false);
 
   const todayAppointments = appointments.filter(apt => {
     const aptDate = new Date(apt.appointment_date);
@@ -212,99 +216,13 @@ export function AssociateDashboard() {
             </CardContent>
           </Card>
 
-          {/* Supervision Hours Progress */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Supervision Hours Progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium">Overall Progress</span>
-                  <span className="text-sm text-muted-foreground">
-                    {completedHours.toFixed(1)} / {requiredHours} hours
-                  </span>
-                </div>
-                <Progress value={progressPercentage} className="h-3" />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {(requiredHours - completedHours).toFixed(1)} hours remaining
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <p className="text-sm font-medium">Hours by Type</p>
-                
-                {relationship?.required_direct_hours && (
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Direct Clinical</span>
-                      <span className="text-muted-foreground">
-                        {hours.direct.toFixed(1)} / {relationship.required_direct_hours}h
-                      </span>
-                    </div>
-                    <Progress 
-                      value={(hours.direct / relationship.required_direct_hours) * 100} 
-                      className="h-2"
-                    />
-                  </div>
-                )}
-
-                {relationship?.required_indirect_hours && (
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Indirect/Admin</span>
-                      <span className="text-muted-foreground">
-                        {hours.indirect.toFixed(1)} / {relationship.required_indirect_hours}h
-                      </span>
-                    </div>
-                    <Progress 
-                      value={(hours.indirect / relationship.required_indirect_hours) * 100} 
-                      className="h-2"
-                    />
-                  </div>
-                )}
-
-                {relationship?.required_group_hours && (
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Group Supervision</span>
-                      <span className="text-muted-foreground">
-                        {hours.group.toFixed(1)} / {relationship.required_group_hours}h
-                      </span>
-                    </div>
-                    <Progress 
-                      value={(hours.group / relationship.required_group_hours) * 100} 
-                      className="h-2"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {sessions.length > 0 && (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="text-sm font-medium mb-2">Recent Sessions</p>
-                    <div className="space-y-2">
-                      {sessions.slice(0, 3).map((session) => (
-                        <div key={session.id} className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            {format(new Date(session.session_date), 'MMM dd, yyyy')}
-                          </span>
-                          <span className="font-medium">{session.session_duration_minutes} min</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
+          {/* Supervision Hours Progress Chart */}
+          {relationship && (
+            <SupervisionHoursChart 
+              relationship={relationship}
+              recentSessions={sessions}
+            />
+          )}
         </div>
 
         {/* Right Column */}
@@ -457,6 +375,20 @@ export function AssociateDashboard() {
                 <Clock className="mr-2 h-4 w-4" />
                 Log Supervision Hours
               </Button>
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => {
+                  if (relationship) {
+                    setShowCompetenciesDialog(true);
+                  } else {
+                    toast.error("No active supervision relationship");
+                  }
+                }}
+              >
+                <Award className="mr-2 h-4 w-4" />
+                View Competencies
+              </Button>
               {relationship && (
                 <Button className="w-full" variant="outline" asChild>
                   <a href={`mailto:${relationship.supervisee?.email}`}>
@@ -471,16 +403,29 @@ export function AssociateDashboard() {
       </div>
 
       {relationship && (
-        <SupervisionSessionDialog
-          open={showSessionDialog}
-          onOpenChange={setShowSessionDialog}
-          relationshipId={relationship.id}
-          supervisorId={relationship.supervisor_id}
-          superviseeId={user?.id || ''}
-          onSuccess={() => {
-            // Refresh happens automatically via subscription
-          }}
-        />
+        <>
+          <SupervisionSessionDialog
+            open={showSessionDialog}
+            onOpenChange={setShowSessionDialog}
+            relationshipId={relationship.id}
+            supervisorId={relationship.supervisor_id}
+            superviseeId={user?.id || ''}
+            onSuccess={() => {
+              // Refresh happens automatically via subscription
+            }}
+          />
+
+          <CompetenciesDialog
+            open={showCompetenciesDialog}
+            onOpenChange={setShowCompetenciesDialog}
+            relationshipId={relationship.id}
+            supervisorId={relationship.supervisor_id}
+            mode="supervisee"
+            onSuccess={() => {
+              // Refresh happens automatically via subscription
+            }}
+          />
+        </>
       )}
     </div>
   );
