@@ -23,12 +23,14 @@ export default function ConsultationNote() {
   const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
   const [clinicianName, setClinicianName] = useState('');
   const [availableClients, setAvailableClients] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<any[]>([]);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [aiInput, setAiInput] = useState('');
   const [aiSuggestion, setAiSuggestion] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     clientId: '',
+    appointmentId: '',
     consultationDate: new Date().toISOString().split('T')[0],
     consultationType: 'Case Consultation',
     consultingName: '',
@@ -54,6 +56,28 @@ export default function ConsultationNote() {
     loadClients();
     loadClinicianName();
   }, []);
+
+  useEffect(() => {
+    if (formData.clientId) {
+      loadAppointments();
+    }
+  }, [formData.clientId]);
+
+  const loadAppointments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('client_id', formData.clientId)
+        .in('status', ['Completed', 'Checked Out'])
+        .order('appointment_date', { ascending: false });
+
+      if (error) throw error;
+      setAppointments(data || []);
+    } catch (error) {
+      console.error('Error loading appointments:', error);
+    }
+  };
 
   const loadClients = async () => {
     try {
@@ -97,12 +121,22 @@ export default function ConsultationNote() {
       return;
     }
 
+    if (!formData.appointmentId) {
+      toast({
+        title: 'Required Field Missing',
+        description: 'Please select an appointment',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       setSaving(true);
 
       const noteData: any = {
         client_id: formData.clientId,
         clinician_id: user?.id,
+        appointment_id: formData.appointmentId,
         consultation_date: formData.consultationDate,
         consultation_type: formData.consultationType,
         consulting_with: {
@@ -275,7 +309,7 @@ export default function ConsultationNote() {
                 <Label>Client *</Label>
                 <Select
                   value={formData.clientId}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, clientId: value }))}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, clientId: value, appointmentId: '' }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select client" />
@@ -291,16 +325,36 @@ export default function ConsultationNote() {
               </div>
 
               <div>
-                <Label>Consultation Date *</Label>
-                <Input
-                  type="date"
-                  value={formData.consultationDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, consultationDate: e.target.value }))}
-                />
+                <Label>Appointment *</Label>
+                <Select
+                  value={formData.appointmentId}
+                  onValueChange={(value) => {
+                    const appt = appointments.find(a => a.id === value);
+                    if (appt) {
+                      setFormData(prev => ({
+                        ...prev,
+                        appointmentId: value,
+                        consultationDate: appt.appointment_date,
+                      }));
+                    }
+                  }}
+                  disabled={!formData.clientId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select appointment" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {appointments.map((appt) => (
+                      <SelectItem key={appt.id} value={appt.id}>
+                        {new Date(appt.appointment_date).toLocaleDateString()} - {appt.start_time} ({appt.appointment_type})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            <div>
+            <div className="grid grid-cols-2 gap-4">
               <Label>Consultation Type *</Label>
               <Select
                 value={formData.consultationType}
@@ -334,7 +388,17 @@ export default function ConsultationNote() {
                   />
                 </div>
 
-                <div>
+              <div>
+                <Label>Consultation Date</Label>
+                <Input
+                  type="date"
+                  value={formData.consultationDate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, consultationDate: e.target.value }))}
+                  disabled={!formData.appointmentId}
+                />
+              </div>
+
+              <div>
                   <Label>Role *</Label>
                   <Input
                     value={formData.consultingRole}
@@ -382,7 +446,7 @@ export default function ConsultationNote() {
                 onChange={(e) => setAiInput(e.target.value)}
                 placeholder="Describe the consultation details: reason for consultation, clinical questions asked, information shared, consultant's expertise and recommendations, discussion points, etc. The AI will generate a structured consultation note from this information."
                 rows={6}
-                disabled={generatingAI || !formData.clientId}
+                disabled={generatingAI || !formData.clientId || !formData.appointmentId}
               />
               <p className="text-xs text-muted-foreground mt-2">
                 Provide as much detail as possible about the consultation. You can write in free-form text or bullet points.
@@ -391,7 +455,7 @@ export default function ConsultationNote() {
 
             <Button
               onClick={generateWithAI}
-              disabled={generatingAI || !aiInput.trim() || !formData.clientId}
+              disabled={generatingAI || !aiInput.trim() || !formData.clientId || !formData.appointmentId}
               className="w-full"
             >
               {generatingAI ? (
@@ -409,6 +473,9 @@ export default function ConsultationNote() {
 
             {!formData.clientId && (
               <p className="text-sm text-warning">Please select a client first</p>
+            )}
+            {!formData.appointmentId && formData.clientId && (
+              <p className="text-sm text-warning">Please select an appointment first</p>
             )}
           </CardContent>
         </Card>
