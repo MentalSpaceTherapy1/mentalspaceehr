@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import { validateTelehealthLicensure } from '@/lib/stateLicensure';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ConsentVerificationGateProps {
   clientId: string;
@@ -21,7 +22,7 @@ export const ConsentVerificationGate = ({
   children,
 }: ConsentVerificationGateProps) => {
   const [loading, setLoading] = useState(true);
-  const [consentStatus, setConsentStatus] = useState<'missing' | 'expired' | 'expiring_soon' | 'active' | 'invalid_licensure'>('missing');
+  const [consentStatus, setConsentStatus] = useState<'missing' | 'expired' | 'expiring_soon' | 'active' | 'invalid_licensure' | 'not_required'>('missing');
   const [existingConsent, setExistingConsent] = useState<any>(null);
   const [daysUntilExpiration, setDaysUntilExpiration] = useState(0);
   const [showForm, setShowForm] = useState(false);
@@ -35,6 +36,22 @@ export const ConsentVerificationGate = ({
   const checkConsent = async () => {
     setLoading(true);
     
+    // Check if consent is required
+    const { data: settings } = await supabase
+      .from('practice_settings')
+      .select('telehealth_settings')
+      .single();
+    
+    const requireConsent = (settings?.telehealth_settings as any)?.require_consent ?? true;
+    
+    // If consent not required, bypass all checks
+    if (!requireConsent) {
+      setConsentStatus('not_required');
+      setLoading(false);
+      onConsentVerified('consent-not-required');
+      return;
+    }
+
     // Check state licensure first
     const licensure = await validateTelehealthLicensure(clientId, clinicianId);
     
@@ -191,6 +208,11 @@ export const ConsentVerificationGate = ({
     );
   }
 
-  // Active consent - render children (session)
+  // Active consent or consent not required - render children (session)
+  if (consentStatus === 'active' || consentStatus === 'not_required') {
+    return <>{children}</>;
+  }
+
+  // Default fallback
   return <>{children}</>;
 };

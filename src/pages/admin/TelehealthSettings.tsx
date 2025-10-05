@@ -17,6 +17,7 @@ interface TelehealthSettings {
   session_timeout_minutes: number;
   consent_renewal_reminder_days: number;
   max_participants: number;
+  require_consent: boolean;
 }
 
 export default function TelehealthSettings() {
@@ -31,6 +32,7 @@ export default function TelehealthSettings() {
     session_timeout_minutes: 120,
     consent_renewal_reminder_days: 30,
     max_participants: 10,
+    require_consent: true,
   });
 
   useEffect(() => {
@@ -112,6 +114,34 @@ export default function TelehealthSettings() {
         </div>
         
         <div className="space-y-6 max-w-4xl">
+        {/* Consent Requirement */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Consent Requirement
+            </CardTitle>
+            <CardDescription>
+              Control whether telehealth sessions require signed consent forms
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="require-consent">Require Telehealth Consent</Label>
+                <p className="text-sm text-muted-foreground">
+                  When enabled, clients must complete and sign a consent form before joining telehealth sessions
+                </p>
+              </div>
+              <Switch
+                id="require-consent"
+                checked={settings.require_consent}
+                onCheckedChange={(checked) => updateSetting('require_consent', checked)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* State Licensure Verification */}
         <Card>
           <CardHeader>
