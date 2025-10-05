@@ -1110,45 +1110,72 @@ export type Database = {
       }
       client_portal_messages: {
         Row: {
+          added_to_chart: boolean | null
+          chart_note_id: string | null
           client_id: string
           clinician_id: string
           created_at: string | null
+          encrypted: boolean | null
           id: string
           is_read: boolean | null
           message: string
           parent_message_id: string | null
           priority: string | null
           read_at: string | null
+          requires_response: boolean | null
+          responded_to: boolean | null
+          response_message_id: string | null
           sender_id: string
+          sent_date: string | null
+          status: string
           subject: string
+          thread_id: string | null
           updated_at: string | null
         }
         Insert: {
+          added_to_chart?: boolean | null
+          chart_note_id?: string | null
           client_id: string
           clinician_id: string
           created_at?: string | null
+          encrypted?: boolean | null
           id?: string
           is_read?: boolean | null
           message: string
           parent_message_id?: string | null
           priority?: string | null
           read_at?: string | null
+          requires_response?: boolean | null
+          responded_to?: boolean | null
+          response_message_id?: string | null
           sender_id: string
+          sent_date?: string | null
+          status?: string
           subject: string
+          thread_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          added_to_chart?: boolean | null
+          chart_note_id?: string | null
           client_id?: string
           clinician_id?: string
           created_at?: string | null
+          encrypted?: boolean | null
           id?: string
           is_read?: boolean | null
           message?: string
           parent_message_id?: string | null
           priority?: string | null
           read_at?: string | null
+          requires_response?: boolean | null
+          responded_to?: boolean | null
+          response_message_id?: string | null
           sender_id?: string
+          sent_date?: string | null
+          status?: string
           subject?: string
+          thread_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -2517,6 +2544,44 @@ export type Database = {
         }
         Relationships: []
       }
+      message_attachments: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id: string
+          message_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id?: string
+          message_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          id?: string
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "client_portal_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       miscellaneous_notes: {
         Row: {
           billable: boolean | null
@@ -3865,6 +3930,106 @@ export type Database = {
             columns: ["supervisor_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      progress_tracker_entries: {
+        Row: {
+          created_at: string | null
+          data: Json
+          entry_date: string
+          entry_time: string | null
+          id: string
+          notes: string | null
+          tracker_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data: Json
+          entry_date: string
+          entry_time?: string | null
+          id?: string
+          notes?: string | null
+          tracker_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          entry_date?: string
+          entry_time?: string | null
+          id?: string
+          notes?: string | null
+          tracker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progress_tracker_entries_tracker_id_fkey"
+            columns: ["tracker_id"]
+            isOneToOne: false
+            referencedRelation: "progress_trackers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      progress_trackers: {
+        Row: {
+          assigned_by: string
+          assigned_date: string | null
+          chart_data: Json | null
+          chart_type: string | null
+          client_id: string
+          created_at: string | null
+          frequency: string
+          id: string
+          shared_with_clinician: boolean | null
+          status: string
+          symptoms: Json | null
+          tracker_title: string
+          tracker_type: string
+          updated_at: string | null
+          visible_to_client: boolean | null
+        }
+        Insert: {
+          assigned_by: string
+          assigned_date?: string | null
+          chart_data?: Json | null
+          chart_type?: string | null
+          client_id: string
+          created_at?: string | null
+          frequency: string
+          id?: string
+          shared_with_clinician?: boolean | null
+          status?: string
+          symptoms?: Json | null
+          tracker_title: string
+          tracker_type: string
+          updated_at?: string | null
+          visible_to_client?: boolean | null
+        }
+        Update: {
+          assigned_by?: string
+          assigned_date?: string | null
+          chart_data?: Json | null
+          chart_type?: string | null
+          client_id?: string
+          created_at?: string | null
+          frequency?: string
+          id?: string
+          shared_with_clinician?: boolean | null
+          status?: string
+          symptoms?: Json | null
+          tracker_title?: string
+          tracker_type?: string
+          updated_at?: string | null
+          visible_to_client?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progress_trackers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
