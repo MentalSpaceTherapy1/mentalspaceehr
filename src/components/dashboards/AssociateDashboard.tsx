@@ -15,6 +15,7 @@ import { CompetenciesDialog } from "@/components/supervision/CompetenciesDialog"
 import { SupervisionHoursChart } from "@/components/supervision/SupervisionHoursChart";
 import { RecentSessionsCard } from "@/components/supervision/RecentSessionsCard";
 import { ActionItemsCard } from "@/components/supervision/ActionItemsCard";
+import { NoteRevisionPanel } from "@/components/supervision/NoteRevisionPanel";
 import { 
   GraduationCap, 
   FileSignature, 
@@ -56,6 +57,7 @@ export function AssociateDashboard() {
     c.status === 'Under Review' ||
     c.status === 'Revisions Requested'
   );
+  const revisionNotes = cosignatures.filter(c => c.status === 'Revisions Requested');
 
   const requiredHours = relationship?.required_supervision_hours || 0;
   const completedHours = hours.total;
@@ -128,6 +130,25 @@ export function AssociateDashboard() {
           </GradientCardContent>
         </GradientCard>
       </div>
+
+      {/* Revision Requests */}
+      {revisionNotes.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-amber-600" />
+            Revision Requests ({revisionNotes.length})
+          </h2>
+          {revisionNotes.map((cosig) => (
+            <NoteRevisionPanel 
+              key={cosig.id} 
+              cosignature={cosig}
+              onResubmit={() => {
+                toast.success("Note resubmitted for supervisor review");
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Left Column */}

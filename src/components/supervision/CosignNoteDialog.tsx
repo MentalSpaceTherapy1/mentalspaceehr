@@ -7,8 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, FileCheck, FileX, User, Calendar, FileText } from "lucide-react";
+import { Loader2, FileCheck, FileX, User, Calendar, FileText, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
+import { RequestRevisionsDialog } from "./RequestRevisionsDialog";
+import { RevisionHistoryViewer } from "./RevisionHistoryViewer";
 
 interface CosignNoteDialogProps {
   open: boolean;
@@ -35,9 +37,11 @@ export function CosignNoteDialog({
 }: CosignNoteDialogProps) {
   const [loading, setLoading] = useState(false);
   const [noteContent, setNoteContent] = useState<any>(null);
+  const [cosignatureData, setCosignatureData] = useState<any>(null);
   const [loadingNote, setLoadingNote] = useState(true);
   const [supervisorComments, setSupervisorComments] = useState('');
   const [signature, setSignature] = useState('');
+  const [showRevisionsDialog, setShowRevisionsDialog] = useState(false);
 
   useEffect(() => {
     if (open && noteId) {
@@ -48,6 +52,8 @@ export function CosignNoteDialog({
   const loadNoteContent = async () => {
     try {
       setLoadingNote(true);
+      
+      // Load note content
       const { data, error } = await supabase
         .from('clinical_notes')
         .select('*')
@@ -56,6 +62,16 @@ export function CosignNoteDialog({
 
       if (error) throw error;
       setNoteContent(data);
+
+      // Load cosignature data for revision history
+      const { data: cosigData, error: cosigError } = await supabase
+        .from('note_cosignatures')
+        .select('*')
+        .eq('id', cosignatureId)
+        .single();
+
+      if (cosigError) throw cosigError;
+      setCosignatureData(cosigData);
     } catch (error: any) {
       console.error('Error loading note:', error);
       toast.error("Failed to load note content");
@@ -220,6 +236,14 @@ export function CosignNoteDialog({
 
             <Separator />
 
+            {/* Revision History */}
+            {cosignatureData?.revision_history && cosignatureData.revision_history.length > 0 && (
+              <>
+                <RevisionHistoryViewer revisionHistory={cosignatureData.revision_history} />
+                <Separator />
+              </>
+            )}
+
             {/* Supervisor Feedback */}
             <div className="space-y-4">
               <div className="space-y-2">
@@ -261,6 +285,16 @@ export function CosignNoteDialog({
               </Button>
               <Button
                 type="button"
+                variant="outline"
+                onClick={() => setShowRevisionsDialog(true)}
+                disabled={loading}
+                className="border-amber-600 text-amber-600 hover:bg-amber-50"
+              >
+                <AlertTriangle className="mr-2 h-4 w-4" />
+                Request Revisions
+              </Button>
+              <Button
+                type="button"
                 variant="destructive"
                 onClick={handleReject}
                 disabled={loading}
@@ -281,6 +315,19 @@ export function CosignNoteDialog({
             </div>
           </div>
         )}
+
+        {/* Request Revisions Dialog */}
+        <RequestRevisionsDialog
+          open={showRevisionsDialog}
+          onOpenChange={setShowRevisionsDialog}
+          cosignatureId={cosignatureId}
+          noteId={noteId}
+          clinicianName={clinicianName}
+          onSuccess={() => {
+            onOpenChange(false);
+            onSuccess?.();
+          }}
+        />
       </DialogContent>
     </Dialog>
   );
