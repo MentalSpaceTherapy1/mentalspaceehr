@@ -18,6 +18,7 @@ import PortalProgress from "./pages/portal/PortalProgress";
 import PortalMessages from "./pages/portal/PortalMessages";
 import PortalProfile from "./pages/portal/PortalProfile";
 import PortalResources from "./pages/portal/PortalResources";
+import PortalNotifications from "./pages/portal/PortalNotifications";
 import { PortalLayout } from "@/components/portal/PortalLayout";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -451,6 +452,14 @@ const App = () => (
               element={
                 <ClientPortalRoute>
                   <PortalResources />
+                </ClientPortalRoute>
+              }
+            />
+            <Route
+              path="/portal/notifications"
+              element={
+                <ClientPortalRoute>
+                  <PortalNotifications />
                 </ClientPortalRoute>
               }
             />
