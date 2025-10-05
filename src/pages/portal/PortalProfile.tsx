@@ -1,12 +1,114 @@
+import { useState, useEffect } from 'react';
 import { PortalLayout } from '@/components/portal/PortalLayout';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PersonalInformationSection } from '@/components/portal/profile/PersonalInformationSection';
+import { InsuranceSection } from '@/components/portal/profile/InsuranceSection';
+import { PreferencesSection } from '@/components/portal/profile/PreferencesSection';
+import { SecuritySettingsSection } from '@/components/portal/profile/SecuritySettingsSection';
+import { usePortalAccount } from '@/hooks/usePortalAccount';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 export default function PortalProfile() {
+  const { portalContext, loading, updatePreferences, updateSecurity, refreshContext } = usePortalAccount();
+  const [insuranceData, setInsuranceData] = useState<any[]>([]);
+  const [loadingInsurance, setLoadingInsurance] = useState(true);
+
+  useEffect(() => {
+    if (portalContext?.client?.id) {
+      loadInsuranceData();
+    }
+  }, [portalContext?.client?.id]);
+
+  const loadInsuranceData = async () => {
+    if (!portalContext?.client?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('client_insurance')
+        .select('*')
+        .eq('client_id', portalContext.client.id)
+        .order('rank');
+
+      if (error) throw error;
+      setInsuranceData(data || []);
+    } catch (error) {
+      console.error('Error loading insurance data:', error);
+    } finally {
+      setLoadingInsurance(false);
+    }
+  };
+
+  const handleUpdate = () => {
+    refreshContext();
+    loadInsuranceData();
+  };
+
+  if (loading || loadingInsurance) {
+    return (
+      <PortalLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </PortalLayout>
+    );
+  }
+
+  if (!portalContext) {
+    return (
+      <PortalLayout>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Unable to load profile data</p>
+        </div>
+      </PortalLayout>
+    );
+  }
+
   return (
     <PortalLayout>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Profile</h1>
-        <p className="text-muted-foreground">Manage your profile and preferences</p>
-        {/* TODO: Implement profile management */}
+        <div>
+          <h1 className="text-3xl font-bold">Profile Settings</h1>
+          <p className="text-muted-foreground">Manage your personal information and account preferences</p>
+        </div>
+
+        <Tabs defaultValue="personal" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="personal">Personal Info</TabsTrigger>
+            <TabsTrigger value="insurance">Insurance</TabsTrigger>
+            <TabsTrigger value="preferences">Preferences</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="personal">
+            <PersonalInformationSection
+              clientData={portalContext.client}
+              onUpdate={handleUpdate}
+            />
+          </TabsContent>
+
+          <TabsContent value="insurance">
+            <InsuranceSection
+              clientData={portalContext.client}
+              insuranceData={insuranceData}
+              onUpdate={handleUpdate}
+            />
+          </TabsContent>
+
+          <TabsContent value="preferences">
+            <PreferencesSection
+              preferences={portalContext.preferences}
+              onUpdate={updatePreferences}
+            />
+          </TabsContent>
+
+          <TabsContent value="security">
+            <SecuritySettingsSection
+              security={portalContext.security}
+              onUpdate={updateSecurity}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </PortalLayout>
   );
