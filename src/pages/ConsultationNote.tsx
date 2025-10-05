@@ -32,7 +32,7 @@ export default function ConsultationNote() {
     clientId: '',
     appointmentId: '',
     consultationDate: new Date().toISOString().split('T')[0],
-    consultationType: 'Case Consultation',
+    consultationType: 'Coaching',
     consultingName: '',
     consultingRole: '',
     consultingSpecialty: '',
@@ -69,7 +69,7 @@ export default function ConsultationNote() {
         .from('appointments')
         .select('*')
         .eq('client_id', formData.clientId)
-        .in('status', ['Completed', 'Checked Out'])
+        .in('status', ['Scheduled', 'Checked In', 'Completed', 'Checked Out'])
         .order('appointment_date', { ascending: false });
 
       if (error) throw error;
@@ -344,17 +344,23 @@ export default function ConsultationNote() {
                     <SelectValue placeholder="Select appointment" />
                   </SelectTrigger>
                   <SelectContent>
-                    {appointments.map((appt) => (
-                      <SelectItem key={appt.id} value={appt.id}>
-                        {new Date(appt.appointment_date).toLocaleDateString()} - {appt.start_time} ({appt.appointment_type})
-                      </SelectItem>
-                    ))}
+                    {appointments.length === 0 && formData.clientId ? (
+                      <div className="p-2 text-sm text-muted-foreground">
+                        No appointments found for this client
+                      </div>
+                    ) : (
+                      appointments.map((appt) => (
+                        <SelectItem key={appt.id} value={appt.id}>
+                          {new Date(appt.appointment_date).toLocaleDateString()} - {appt.start_time} ({appt.appointment_type})
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div>
               <Label>Consultation Type *</Label>
               <Select
                 value={formData.consultationType}
@@ -364,11 +370,11 @@ export default function ConsultationNote() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Case Consultation">Case Consultation</SelectItem>
+                  <SelectItem value="Coaching">Coaching</SelectItem>
                   <SelectItem value="Medication Consultation">Medication Consultation</SelectItem>
                   <SelectItem value="Diagnostic Consultation">Diagnostic Consultation</SelectItem>
                   <SelectItem value="Treatment Planning">Treatment Planning</SelectItem>
-                  <SelectItem value="Collateral Consultation">Collateral Consultation</SelectItem>
+                  <SelectItem value="Initial Consultation">Initial Consultation</SelectItem>
                   <SelectItem value="Supervision">Supervision</SelectItem>
                   <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
