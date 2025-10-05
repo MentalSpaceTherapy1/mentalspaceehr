@@ -15,6 +15,7 @@ import { PostSessionDialog } from '@/components/telehealth/PostSessionDialog';
 import { RecordingConsentDialog } from '@/components/telehealth/RecordingConsentDialog';
 import { SessionTimeoutWarning } from '@/components/telehealth/SessionTimeoutWarning';
 import { BandwidthTestDialog } from '@/components/telehealth/BandwidthTestDialog';
+import { ConsentVerificationGate } from '@/components/telehealth/ConsentVerificationGate';
 import { BandwidthTestResult } from '@/hooks/useBandwidthTest';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -46,6 +47,8 @@ export default function TelehealthSession() {
   const [showBandwidthTest, setShowBandwidthTest] = useState(false);
   const [bandwidthTestComplete, setBandwidthTestComplete] = useState(false);
   const [bandwidthResult, setBandwidthResult] = useState<BandwidthTestResult | null>(null);
+  const [consentVerified, setConsentVerified] = useState(false);
+  const [consentId, setConsentId] = useState<string | null>(null);
   
   const timeoutCheckRef = useRef<NodeJS.Timeout | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -100,7 +103,12 @@ export default function TelehealthSession() {
       // 1) Try to fetch existing session by any candidate
       const { data: foundSessions, error: findErr } = await supabase
         .from('telehealth_sessions')
-        .select('*')
+        .select(`
+          *,
+          appointments:appointment_id (
+            client_id
+          )
+        `)
         .in('session_id', candidates);
 
       if (findErr) throw findErr;
@@ -138,7 +146,12 @@ export default function TelehealthSession() {
               appointment_id: hostAppointment.id,
               status: 'waiting'
             })
-            .select('*')
+            .select(`
+              *,
+              appointments:appointment_id (
+                client_id
+              )
+            `)
             .maybeSingle();
 
           if (insertErr) throw insertErr;
@@ -400,6 +413,34 @@ export default function TelehealthSession() {
 
   // Check participant limit before allowing joins
   const canJoinSession = participantCount < (session?.max_participants || 16);
+
+  // Show consent verification gate first (if session has client_id)
+  if (!loading && !error && session?.appointment_id && !consentVerified) {
+    const clientId = session?.appointments?.client_id;
+    
+    if (clientId) {
+      return (
+        <ConsentVerificationGate
+          clientId={clientId}
+          clinicianId={user?.id || ''}
+          onConsentVerified={(id) => {
+            setConsentId(id);
+            setConsentVerified(true);
+            // Update session with consent
+            supabase
+              .from('telehealth_sessions')
+              .update({
+                consent_id: id,
+                consent_verified: true,
+                consent_verification_date: new Date().toISOString(),
+              })
+              .eq('id', session.id)
+              .then(() => console.log('Consent verified for session'));
+          }}
+        />
+      );
+    }
+  }
 
   if (loading) {
     return (
