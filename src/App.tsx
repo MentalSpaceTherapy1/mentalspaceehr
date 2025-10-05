@@ -9,6 +9,7 @@ import { AdminRoute } from "@/components/AdminRoute";
 import { ClientPortalRoute } from "@/components/ClientPortalRoute";
 import { SessionTimeoutWarning } from "@/components/SessionTimeoutWarning";
 import Index from "./pages/Index";
+import PortalLogin from "./pages/portal/PortalLogin";
 import PortalDashboard from "./pages/portal/PortalDashboard";
 import PortalAppointments from "./pages/portal/PortalAppointments";
 import PortalDocuments from "./pages/portal/PortalDocuments";
@@ -72,9 +73,10 @@ const App = () => (
         <AuthProvider>
           <SessionTimeoutWarning />
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/portal/login" element={<PortalLogin />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route 
               path="/dashboard" 
