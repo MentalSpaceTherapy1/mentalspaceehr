@@ -24,10 +24,13 @@ interface WaitingRoomProps {
 
 export const WaitingRoom = ({ sessionId, isHost }: WaitingRoomProps) => {
   const [waiting, setWaiting] = useState<WaitingParticipant[]>([]);
+  const [participantCount, setParticipantCount] = useState(0);
+  const [maxParticipants, setMaxParticipants] = useState(16);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchWaiting();
+    fetchSessionInfo();
 
     const channel = supabase
       .channel(`waiting-room-${sessionId}`)
@@ -60,6 +63,30 @@ export const WaitingRoom = ({ sessionId, isHost }: WaitingRoomProps) => {
 
     if (data) {
       setWaiting(data as WaitingParticipant[]);
+    }
+  };
+
+  const fetchSessionInfo = async () => {
+    // Get current participant count
+    const { count } = await supabase
+      .from('session_participants')
+      .select('*', { count: 'exact', head: true })
+      .eq('session_id', sessionId)
+      .eq('connection_state', 'connected');
+    
+    if (count !== null) {
+      setParticipantCount(count);
+    }
+
+    // Get max participants from session
+    const { data: session } = await supabase
+      .from('telehealth_sessions')
+      .select('max_participants')
+      .eq('id', sessionId)
+      .maybeSingle();
+    
+    if (session?.max_participants) {
+      setMaxParticipants(session.max_participants);
     }
   };
 
@@ -112,10 +139,15 @@ export const WaitingRoom = ({ sessionId, isHost }: WaitingRoomProps) => {
 
   return (
     <Card className="p-4 mb-4 border-primary/20 bg-primary/5">
-      <div className="flex items-center gap-2 mb-3">
-        <Clock className="h-5 w-5 text-primary" />
-        <h3 className="font-semibold">Waiting Room</h3>
-        <Badge variant="secondary">{waiting.length}</Badge>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Clock className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold">Waiting Room</h3>
+          <Badge variant="secondary">{waiting.length}</Badge>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Capacity: {participantCount}/{maxParticipants}
+        </div>
       </div>
 
       <div className="space-y-2">

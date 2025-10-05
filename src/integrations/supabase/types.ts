@@ -3044,6 +3044,59 @@ export type Database = {
         }
         Relationships: []
       }
+      session_bandwidth_tests: {
+        Row: {
+          created_at: string | null
+          download_mbps: number | null
+          id: string
+          quality_rating: string | null
+          recommended_video_quality: string | null
+          session_id: string | null
+          test_duration_ms: number | null
+          test_timestamp: string | null
+          upload_mbps: number | null
+          user_id: string | null
+          user_proceeded: boolean | null
+          user_selected_quality: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          download_mbps?: number | null
+          id?: string
+          quality_rating?: string | null
+          recommended_video_quality?: string | null
+          session_id?: string | null
+          test_duration_ms?: number | null
+          test_timestamp?: string | null
+          upload_mbps?: number | null
+          user_id?: string | null
+          user_proceeded?: boolean | null
+          user_selected_quality?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          download_mbps?: number | null
+          id?: string
+          quality_rating?: string | null
+          recommended_video_quality?: string | null
+          session_id?: string | null
+          test_duration_ms?: number | null
+          test_timestamp?: string | null
+          upload_mbps?: number | null
+          user_id?: string | null
+          user_proceeded?: boolean | null
+          user_selected_quality?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_bandwidth_tests_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "telehealth_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_connection_metrics: {
         Row: {
           bandwidth_kbps: number | null

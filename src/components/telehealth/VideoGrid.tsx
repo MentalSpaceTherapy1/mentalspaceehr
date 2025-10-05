@@ -102,7 +102,7 @@ export const VideoGrid = ({
     if (totalParticipants === 1) return 'grid-cols-1';
     if (totalParticipants === 2) return 'grid-cols-2';
     if (totalParticipants <= 4) return 'grid-cols-2';
-    if (totalParticipants <= 6) return 'grid-cols-3';
+    if (totalParticipants <= 9) return 'grid-cols-3';
     return 'grid-cols-4';
   };
 

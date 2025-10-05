@@ -14,6 +14,8 @@ import { ScreenProtection } from '@/components/telehealth/ScreenProtection';
 import { PostSessionDialog } from '@/components/telehealth/PostSessionDialog';
 import { RecordingConsentDialog } from '@/components/telehealth/RecordingConsentDialog';
 import { SessionTimeoutWarning } from '@/components/telehealth/SessionTimeoutWarning';
+import { BandwidthTestDialog } from '@/components/telehealth/BandwidthTestDialog';
+import { BandwidthTestResult } from '@/hooks/useBandwidthTest';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Loader2, AlertCircle, Video as VideoIcon } from 'lucide-react';
@@ -41,6 +43,9 @@ export default function TelehealthSession() {
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
   const [minutesRemaining, setMinutesRemaining] = useState(10);
+  const [showBandwidthTest, setShowBandwidthTest] = useState(false);
+  const [bandwidthTestComplete, setBandwidthTestComplete] = useState(false);
+  const [bandwidthResult, setBandwidthResult] = useState<BandwidthTestResult | null>(null);
   
   const timeoutCheckRef = useRef<NodeJS.Timeout | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -184,6 +189,13 @@ export default function TelehealthSession() {
         .maybeSingle();
 
       setProfile(profileData);
+
+      // Show bandwidth test before initializing media
+      if (!bandwidthTestComplete) {
+        setShowBandwidthTest(true);
+        setLoading(false);
+        return;
+      }
 
       // Initialize media
       await initializeMedia();
@@ -387,7 +399,7 @@ export default function TelehealthSession() {
   }, []);
 
   // Check participant limit before allowing joins
-  const canJoinSession = participantCount < 4;
+  const canJoinSession = participantCount < (session?.max_participants || 16);
 
   if (loading) {
     return (
@@ -546,11 +558,36 @@ export default function TelehealthSession() {
         onEnd={handleEndSession}
       />
 
+      <BandwidthTestDialog
+        open={showBandwidthTest}
+        sessionId={session?.id}
+        onComplete={async (result) => {
+          setBandwidthResult(result);
+          setBandwidthTestComplete(true);
+          setShowBandwidthTest(false);
+          
+          // Continue with session initialization
+          if (result) {
+            toast({
+              title: "Connection Test Complete",
+              description: result.recommendation
+            });
+          }
+          
+          // Re-trigger loadSession to continue
+          await loadSession();
+        }}
+        onCancel={() => {
+          setShowBandwidthTest(false);
+          navigate('/schedule');
+        }}
+      />
+
       {!canJoinSession && (
         <Alert variant="destructive" className="fixed top-4 left-1/2 -translate-x-1/2 max-w-md z-50">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            This session has reached the maximum of 4 participants.
+            This session has reached the maximum of {session?.max_participants || 16} participants.
           </AlertDescription>
         </Alert>
       )}
