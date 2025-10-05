@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Save, Shield } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Save, Shield, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -153,6 +154,18 @@ export function PortalSettings() {
               }
             />
           </div>
+
+          {settings.allow_self_registration && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>HIPAA Security Warning:</strong> Self-registration is NOT recommended for clinical practices. 
+                Enabling this feature without proper verification (MRN + DOB match, admin approval, identity verification) 
+                may expose Protected Health Information (PHI) to unauthorized individuals. 
+                For HIPAA compliance, use invitation-only access with proper client verification.
+              </AlertDescription>
+            </Alert>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

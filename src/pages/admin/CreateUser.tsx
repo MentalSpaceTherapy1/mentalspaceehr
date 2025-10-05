@@ -10,6 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export default function CreateUser() {
   const navigate = useNavigate();
@@ -28,6 +29,17 @@ export default function CreateUser() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    // SECURITY: Rate limit user creation to 10 per hour
+    const rateLimit = checkRateLimit(user.id, 'create_user', 10, 60 * 60 * 1000);
+    if (rateLimit.isLimited) {
+      toast({
+        title: 'Rate Limit Exceeded',
+        description: `Too many user creation attempts. Please try again after ${rateLimit.resetTime?.toLocaleTimeString()}`,
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setLoading(true);
     try {

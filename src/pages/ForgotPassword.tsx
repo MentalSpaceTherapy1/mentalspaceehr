@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Mail } from 'lucide-react';
+import { toast } from 'sonner';
+import { checkRateLimit } from '@/lib/rateLimit';
 import logo from '@/assets/mentalspace-logo.png';
 
 export default function ForgotPassword() {
@@ -16,6 +18,14 @@ export default function ForgotPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // SECURITY: Rate limit password reset attempts
+    const rateLimit = checkRateLimit(email, 'password_reset', 3, 60 * 60 * 1000);
+    if (rateLimit.isLimited) {
+      toast.error(`Too many password reset attempts. Please try again after ${rateLimit.resetTime?.toLocaleTimeString()}`);
+      return;
+    }
+    
     setLoading(true);
 
     const { error } = await resetPassword(email);

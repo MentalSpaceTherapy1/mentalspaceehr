@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { formatDistanceToNow } from 'date-fns';
 import { AppRole } from '@/hooks/useUserRoles';
 import { toggleUserActive } from '@/lib/api/users';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 interface UserProfile {
   id: string;
@@ -155,7 +156,14 @@ export default function UserProfile() {
   };
 
   const handleSendInvite = async () => {
-    if (!id) return;
+    if (!id || !profile) return;
+
+    // SECURITY: Rate limit invitation sending to 10 per hour
+    const rateLimit = checkRateLimit(profile.id, 'send_invitation', 10, 60 * 60 * 1000);
+    if (rateLimit.isLimited) {
+      toast.error(`Too many invitation attempts. Please try again after ${rateLimit.resetTime?.toLocaleTimeString()}`);
+      return;
+    }
 
     setSendingInvite(true);
     try {
@@ -184,6 +192,39 @@ export default function UserProfile() {
     if (!id || !selectedSupervisor) return;
 
     try {
+      // SECURITY: Validate supervisor qualifications before assignment
+      const { data: supervisorProfile, error: supervisorError } = await supabase
+        .from('profiles')
+        .select('is_active, license_number, licensed_states')
+        .eq('id', selectedSupervisor)
+        .single();
+
+      if (supervisorError) throw supervisorError;
+
+      // Verify supervisor is active
+      if (!supervisorProfile.is_active) {
+        toast.error('Cannot assign inactive supervisor');
+        return;
+      }
+
+      // Verify supervisor has required license
+      if (!supervisorProfile.license_number) {
+        toast.error('Supervisor must have a valid license number');
+        return;
+      }
+
+      // Check supervisor capacity (max 10 supervisees)
+      const { count: superviseeCount } = await supabase
+        .from('supervision_relationships')
+        .select('*', { count: 'exact', head: true })
+        .eq('supervisor_id', selectedSupervisor)
+        .eq('status', 'Active');
+
+      if (superviseeCount && superviseeCount >= 10) {
+        toast.error('Supervisor has reached maximum capacity (10 supervisees)');
+        return;
+      }
+
       // Check if relationship already exists
       const { data: existing } = await supabase
         .from('supervision_relationships')
