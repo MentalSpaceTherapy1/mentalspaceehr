@@ -92,7 +92,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "Client Portal <onboarding@resend.dev>",
+      from: "CHC Therapy Client Portal <support@chctherapy.com>",
       to: [email],
       subject: "Your Client Portal Account is Ready!",
       html: emailHtml,

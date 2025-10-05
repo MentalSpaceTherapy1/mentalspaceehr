@@ -79,7 +79,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "Client Portal <onboarding@resend.dev>",
+      from: "CHC Therapy Support <support@chctherapy.com>",
       to: [email],
       subject: "Reset Your Client Portal Password",
       html: emailHtml,
