@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GradientCard, GradientCardContent, GradientCardDescription, GradientCardHeader, GradientCardTitle } from '@/components/ui/gradient-card';
 import { Button } from '@/components/ui/button';
@@ -10,14 +11,29 @@ import {
   XCircle,
   AlertCircle,
   CreditCard,
-  Users
+  Users,
+  ClipboardCheck
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { IncidentToBillingReport } from '@/components/billing/IncidentToBillingReport';
 
 export const BillingDashboard = () => {
+  const [activeTab, setActiveTab] = useState("overview");
+
   return (
     <div className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="incident-to">
+            <ClipboardCheck className="mr-2 h-4 w-4" />
+            Incident-to Billing
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6 mt-6">
       {/* Financial Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
@@ -261,6 +277,12 @@ export const BillingDashboard = () => {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="incident-to" className="mt-6">
+          <IncidentToBillingReport />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

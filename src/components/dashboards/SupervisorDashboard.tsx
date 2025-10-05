@@ -5,7 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, FileCheck, Clock, AlertCircle, Calendar, TrendingUp, CheckCircle, FileText, Plus, Award, Settings, Search, ArrowUpDown, ClipboardCheck } from "lucide-react";
+import { Users, FileCheck, Clock, AlertCircle, Calendar, TrendingUp, CheckCircle, FileText, Plus, Award, Settings, Search, ArrowUpDown, ClipboardCheck, DollarSign } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { IncidentToBillingReport } from "@/components/billing/IncidentToBillingReport";
 import { UnlockRequestManagement } from "../compliance/UnlockRequestManagement";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupervisionRelationships } from "@/hooks/useSupervisionRelationships";
@@ -31,6 +33,7 @@ export function SupervisorDashboard() {
   const [selectedCosignature, setSelectedCosignature] = useState<any>(null);
   const [showCompetenciesDialog, setShowCompetenciesDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [showIncidentToBillingDialog, setShowIncidentToBillingDialog] = useState(false);
   
   // Filters for cosignatures table
   const [searchQuery, setSearchQuery] = useState('');
@@ -174,10 +177,16 @@ export function SupervisorDashboard() {
       <div className="space-y-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Supervisor Dashboard</h1>
-          <Button onClick={() => setShowNewRelationship(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Supervisee
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowIncidentToBillingDialog(true)}>
+              <DollarSign className="mr-2 h-4 w-4" />
+              Incident-to Billing
+            </Button>
+            <Button onClick={() => setShowNewRelationship(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Supervisee
+            </Button>
+          </div>
         </div>
 
         {/* Overview Stats */}
@@ -639,6 +648,15 @@ export function SupervisorDashboard() {
           }}
         />
       )}
+
+      <Dialog open={showIncidentToBillingDialog} onOpenChange={setShowIncidentToBillingDialog}>
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Incident-to Billing Report</DialogTitle>
+          </DialogHeader>
+          <IncidentToBillingReport />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
