@@ -71,7 +71,7 @@ export const WaitingRoomClinician = ({ clinicianId, onAdmitClient }: WaitingRoom
         clients:client_id (first_name, last_name),
         appointments:appointment_id (appointment_date, start_time, appointment_type)
       `)
-      .eq('status', 'Waiting')
+      .in('status', ['Waiting', 'Left'])
       .order('client_arrived_time', { ascending: true });
 
     if (data) {
@@ -190,30 +190,40 @@ export const WaitingRoomClinician = ({ clinicianId, onAdmitClient }: WaitingRoom
                     {client.appointments.appointment_type}
                   </p>
                 </div>
-                <Badge variant="outline" className="text-xs">
-                  {getWaitTime(client.client_arrived_time)}m
-                </Badge>
+                <div className="flex gap-1">
+                  {client.status === 'Left' ? (
+                    <Badge variant="secondary" className="text-xs">
+                      Left
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs">
+                      {getWaitTime(client.client_arrived_time)}m
+                    </Badge>
+                  )}
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => admitClient(client)}
-                  className="flex-1"
-                >
-                  <UserCheck className="h-3 w-3 mr-1" />
-                  Admit
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedClient(client);
-                    loadMessages(client.id);
-                  }}
-                >
-                  <MessageSquare className="h-3 w-3" />
-                </Button>
-              </div>
+              {client.status === 'Waiting' && (
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => admitClient(client)}
+                    className="flex-1"
+                  >
+                    <UserCheck className="h-3 w-3 mr-1" />
+                    Admit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedClient(client);
+                      loadMessages(client.id);
+                    }}
+                  >
+                    <MessageSquare className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </CardContent>

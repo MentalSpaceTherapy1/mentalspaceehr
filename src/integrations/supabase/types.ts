@@ -4049,6 +4049,8 @@ export type Database = {
           clinician_notified: boolean
           created_at: string
           id: string
+          last_heartbeat: string | null
+          left_time: string | null
           notification_time: string | null
           session_id: string
           status: string
@@ -4065,6 +4067,8 @@ export type Database = {
           clinician_notified?: boolean
           created_at?: string
           id?: string
+          last_heartbeat?: string | null
+          left_time?: string | null
           notification_time?: string | null
           session_id: string
           status?: string
@@ -4081,6 +4085,8 @@ export type Database = {
           clinician_notified?: boolean
           created_at?: string
           id?: string
+          last_heartbeat?: string | null
+          left_time?: string | null
           notification_time?: string | null
           session_id?: string
           status?: string

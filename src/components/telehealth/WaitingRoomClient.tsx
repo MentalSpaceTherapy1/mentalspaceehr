@@ -78,10 +78,30 @@ export const WaitingRoomClient = ({
       setWaitTime(prev => prev + 1);
     }, 1000);
 
+    // Handle client leaving (closing browser/tab)
+    const handleBeforeUnload = async () => {
+      // Use sendBeacon for reliable delivery during page unload
+      const blob = new Blob(
+        [JSON.stringify({ status: 'Left', left_time: new Date().toISOString() })],
+        { type: 'application/json' }
+      );
+      
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      
+      navigator.sendBeacon(
+        `${supabaseUrl}/rest/v1/telehealth_waiting_rooms?id=eq.${waitingRoomId}`,
+        blob
+      );
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(messagesChannel);
       clearInterval(interval);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [waitingRoomId]);
 

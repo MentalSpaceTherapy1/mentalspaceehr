@@ -21,6 +21,8 @@ interface TelehealthSettings {
   require_consent: boolean;
   ai_note_generation_enabled: boolean;
   waiting_room_timeout_minutes: number;
+  notify_clinician_on_arrival: boolean;
+  waiting_room_notification_email: string;
 }
 
 export default function TelehealthSettings() {
@@ -39,6 +41,8 @@ export default function TelehealthSettings() {
     require_consent: false,
     ai_note_generation_enabled: false,
     waiting_room_timeout_minutes: 30,
+    notify_clinician_on_arrival: true,
+    waiting_room_notification_email: '',
   });
 
   useEffect(() => {
@@ -95,7 +99,7 @@ export default function TelehealthSettings() {
     }
   };
 
-  const updateSetting = (key: keyof TelehealthSettings, value: boolean | number) => {
+  const updateSetting = (key: keyof TelehealthSettings, value: boolean | number | string) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
@@ -330,10 +334,10 @@ export default function TelehealthSettings() {
               Waiting Room
             </CardTitle>
             <CardDescription>
-              Configure timeout and behavior for client waiting room
+              Configure timeout and notification behavior for client waiting room
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-1 flex-1">
                 <Label htmlFor="waiting-room-timeout">Waiting Room Timeout (minutes)</Label>
@@ -351,6 +355,39 @@ export default function TelehealthSettings() {
                 className="w-24"
               />
             </div>
+            
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div className="space-y-1">
+                <Label htmlFor="notify-arrival" className="flex items-center gap-2">
+                  <Bell className="h-4 w-4" />
+                  Notify Clinician on Client Arrival
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Send email notification when client joins waiting room
+                </p>
+              </div>
+              <Switch
+                id="notify-arrival"
+                checked={settings.notify_clinician_on_arrival}
+                onCheckedChange={(checked) => updateSetting('notify_clinician_on_arrival', checked)}
+              />
+            </div>
+
+            {settings.notify_clinician_on_arrival && (
+              <div className="space-y-2 pt-2">
+                <Label htmlFor="notification-email">Custom Notification Email (optional)</Label>
+                <Input
+                  id="notification-email"
+                  type="email"
+                  placeholder="Leave blank to use clinician's email"
+                  value={settings.waiting_room_notification_email || ''}
+                  onChange={(e) => updateSetting('waiting_room_notification_email', e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Override the clinician's email for waiting room notifications
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

@@ -38,6 +38,7 @@ serve(async (req) => {
       .select(`
         id,
         client_arrived_time,
+        last_heartbeat,
         appointments:appointment_id (
           clinician_id
         )
@@ -50,8 +51,21 @@ serve(async (req) => {
       throw fetchError;
     }
 
-    if (!timedOutRooms || timedOutRooms.length === 0) {
-      console.log('[Waiting Room Timeout] No timed out waiting rooms found');
+    // Find rooms with stale heartbeats (client disconnected)
+    const heartbeatThreshold = new Date();
+    heartbeatThreshold.setMinutes(heartbeatThreshold.getMinutes() - 2); // 2 minutes no heartbeat
+
+    const { data: staleHeartbeatRooms } = await supabaseClient
+      .from('telehealth_waiting_rooms')
+      .select('id, last_heartbeat')
+      .eq('status', 'Waiting')
+      .not('last_heartbeat', 'is', null)
+      .lt('last_heartbeat', heartbeatThreshold.toISOString());
+
+    const totalRooms = (timedOutRooms?.length || 0) + (staleHeartbeatRooms?.length || 0);
+
+    if (totalRooms === 0) {
+      console.log('[Waiting Room Timeout] No timed out or disconnected waiting rooms found');
       return new Response(
         JSON.stringify({ message: 'No timed out waiting rooms', count: 0 }),
         {
@@ -61,30 +75,47 @@ serve(async (req) => {
       );
     }
 
-    console.log(`[Waiting Room Timeout] Found ${timedOutRooms.length} timed out waiting rooms`);
+    console.log(`[Waiting Room Timeout] Found ${timedOutRooms?.length || 0} timed out and ${staleHeartbeatRooms?.length || 0} disconnected waiting rooms`);
 
     // Update timed out waiting rooms
-    const { error: updateError } = await supabaseClient
-      .from('telehealth_waiting_rooms')
-      .update({
-        status: 'Timed Out',
-        client_timed_out: true,
-        timeout_time: new Date().toISOString()
-      })
-      .in('id', timedOutRooms.map(room => room.id));
+    if (timedOutRooms && timedOutRooms.length > 0) {
+      const { error: updateError } = await supabaseClient
+        .from('telehealth_waiting_rooms')
+        .update({
+          status: 'Timed Out',
+          client_timed_out: true,
+          timeout_time: new Date().toISOString()
+        })
+        .in('id', timedOutRooms.map(room => room.id));
 
-    if (updateError) {
-      console.error('[Waiting Room Timeout] Error updating waiting rooms:', updateError);
-      throw updateError;
+      if (updateError) {
+        console.error('[Waiting Room Timeout] Error updating timed out rooms:', updateError);
+      }
     }
 
-    console.log(`[Waiting Room Timeout] Successfully timed out ${timedOutRooms.length} waiting rooms`);
+    // Update rooms with stale heartbeats to 'Left'
+    if (staleHeartbeatRooms && staleHeartbeatRooms.length > 0) {
+      const { error: leftError } = await supabaseClient
+        .from('telehealth_waiting_rooms')
+        .update({
+          status: 'Left',
+          left_time: new Date().toISOString()
+        })
+        .in('id', staleHeartbeatRooms.map(room => room.id));
+
+      if (leftError) {
+        console.error('[Waiting Room Timeout] Error updating left rooms:', leftError);
+      }
+    }
+
+    console.log(`[Waiting Room Timeout] Successfully processed ${totalRooms} waiting rooms`);
 
     return new Response(
       JSON.stringify({
-        message: 'Waiting rooms timed out successfully',
-        count: timedOutRooms.length,
-        timedOutRoomIds: timedOutRooms.map(room => room.id)
+        message: 'Waiting rooms processed successfully',
+        timedOutCount: timedOutRooms?.length || 0,
+        leftCount: staleHeartbeatRooms?.length || 0,
+        totalCount: totalRooms
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

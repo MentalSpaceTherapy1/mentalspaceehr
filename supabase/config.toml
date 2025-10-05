@@ -63,5 +63,8 @@ verify_jwt = false
 [functions.waiting-room-timeout]
 verify_jwt = false
 
+[functions.send-waiting-room-notification]
+verify_jwt = false
+
 [functions.verify-incident-to-compliance]
 verify_jwt = true

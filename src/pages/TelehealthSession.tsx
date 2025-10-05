@@ -256,6 +256,14 @@ export default function TelehealthSession() {
             setWaitingRoomId(newWaitingRoom.id);
             setInWaitingRoom(true);
             setLoading(false);
+            
+            // Send notification to clinician
+            supabase.functions.invoke('send-waiting-room-notification', {
+              body: { waitingRoomId: newWaitingRoom.id }
+            }).catch(error => {
+              console.error('Failed to send waiting room notification:', error);
+            });
+            
             return;
           }
         } else if (waitingRoom.status === 'Waiting') {
