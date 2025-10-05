@@ -139,6 +139,14 @@ export default function Notes() {
       duration: '20 min',
       description: 'Document consultations with other providers',
       route: '/consultation-note'
+    },
+    {
+      name: 'Miscellaneous Note',
+      icon: FileText,
+      color: 'bg-amber-500',
+      duration: '10-15 min',
+      description: 'Document other clinical activities and observations',
+      route: '/miscellaneous-note'
     }
   ];
 
