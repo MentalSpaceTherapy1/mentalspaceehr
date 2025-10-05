@@ -46,46 +46,28 @@ export const PortalAccessDialog = ({
       if (enabled) {
         // Enable portal access
         let userId = portalUserId;
+        let tempPassword = '';
 
         if (!userId && email) {
-          // Create auth user for client
-          const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!1A`;
-          const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-            email,
-            password: tempPassword,
-            email_confirm: false,
-            user_metadata: {
-              client_id: clientId,
-              is_portal_user: true,
+          // Create portal user via edge function (requires service role)
+          const { data: createResult, error: createError } = await supabase.functions.invoke('create-portal-user', {
+            body: {
+              clientId,
+              email,
+              clientName,
             },
           });
 
-          if (authError) throw authError;
-          userId = authData.user.id;
+          if (createError) throw createError;
+          if (!createResult?.success) throw new Error(createResult?.error || 'Failed to create portal user');
 
-          // Assign client_user role
-          const { error: roleError } = await supabase
-            .from('user_roles')
-            .insert({ user_id: userId, role: 'client_user' });
-
-          if (roleError) throw roleError;
-
-          // Update client with portal_user_id
-          const { error: updateError } = await supabase
-            .from('clients')
-            .update({ 
-              portal_user_id: userId, 
-              portal_enabled: true,
-              email: email
-            })
-            .eq('id', clientId);
-
-          if (updateError) throw updateError;
+          userId = createResult.userId;
+          tempPassword = createResult.tempPassword;
 
           // Send invitation email if requested
           if (sendInvite) {
             try {
-              await supabase.functions.invoke('send-portal-invitation', {
+              const { error: emailError } = await supabase.functions.invoke('send-portal-invitation', {
                 body: {
                   clientId,
                   email,
@@ -94,6 +76,8 @@ export const PortalAccessDialog = ({
                   tempPassword,
                 },
               });
+
+              if (emailError) throw emailError;
               toast.success('Invitation email sent to ' + email);
             } catch (emailError) {
               console.error('Error sending invitation email:', emailError);

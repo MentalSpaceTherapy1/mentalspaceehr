@@ -68,3 +68,19 @@ verify_jwt = false
 
 [functions.verify-incident-to-compliance]
 verify_jwt = true
+
+[functions.create-portal-user]
+verify_jwt = true
+
+[functions.send-portal-invitation]
+verify_jwt = true
+
+[functions.send-password-reset]
+verify_jwt = true
+
+[functions.create-test-portal-user]
+verify_jwt = true
+
+[functions.scan-uploaded-file]
+verify_jwt = true
+
