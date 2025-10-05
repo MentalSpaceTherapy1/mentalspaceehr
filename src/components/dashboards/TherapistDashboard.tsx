@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { ComplianceAlerts } from './ComplianceAlerts';
 
 export const TherapistDashboard = () => {
   return (
@@ -63,6 +64,9 @@ export const TherapistDashboard = () => {
           </GradientCardContent>
         </GradientCard>
       </div>
+
+      {/* Compliance Alerts Section */}
+      <ComplianceAlerts />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Today's Schedule */}
@@ -122,17 +126,6 @@ export const TherapistDashboard = () => {
                   <div>
                     <p className="text-sm font-medium">Treatment Plans Due</p>
                     <p className="text-xs text-muted-foreground">Review and update</p>
-                  </div>
-                </div>
-                <Badge variant="secondary">0</Badge>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="h-4 w-4 text-destructive" />
-                  <div>
-                    <p className="text-sm font-medium">Compliance Warnings</p>
-                    <p className="text-xs text-muted-foreground">Action required</p>
                   </div>
                 </div>
                 <Badge variant="secondary">0</Badge>
