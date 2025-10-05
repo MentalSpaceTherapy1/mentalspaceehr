@@ -3153,60 +3153,102 @@ export type Database = {
       }
       supervision_sessions: {
         Row: {
+          action_items: Json | null
+          areas_for_improvement: string[] | null
+          areas_of_strength: string[] | null
+          cases_discussed: Json | null
           cases_reviewed: string[] | null
           competencies_addressed: string[] | null
           created_by: string | null
           created_date: string | null
+          feedback_provided: string | null
+          group_supervisees: Json | null
           id: string
+          next_session_date: string | null
+          next_session_scheduled: boolean | null
           notes: string | null
           notes_reviewed: string[] | null
           relationship_id: string
           session_date: string
           session_duration_minutes: number
+          session_end_time: string | null
           session_format: string | null
+          session_start_time: string | null
           session_type: string
+          skills_developed: string[] | null
+          supervisee_reflection: string | null
+          supervisee_signature_name: string | null
           supervisee_signed: boolean | null
           supervisee_signed_date: string | null
+          supervisor_signature_name: string | null
           supervisor_signed: boolean | null
           supervisor_signed_date: string | null
           topics_discussed: string[] | null
           updated_at: string | null
         }
         Insert: {
+          action_items?: Json | null
+          areas_for_improvement?: string[] | null
+          areas_of_strength?: string[] | null
+          cases_discussed?: Json | null
           cases_reviewed?: string[] | null
           competencies_addressed?: string[] | null
           created_by?: string | null
           created_date?: string | null
+          feedback_provided?: string | null
+          group_supervisees?: Json | null
           id?: string
+          next_session_date?: string | null
+          next_session_scheduled?: boolean | null
           notes?: string | null
           notes_reviewed?: string[] | null
           relationship_id: string
           session_date: string
           session_duration_minutes: number
+          session_end_time?: string | null
           session_format?: string | null
+          session_start_time?: string | null
           session_type: string
+          skills_developed?: string[] | null
+          supervisee_reflection?: string | null
+          supervisee_signature_name?: string | null
           supervisee_signed?: boolean | null
           supervisee_signed_date?: string | null
+          supervisor_signature_name?: string | null
           supervisor_signed?: boolean | null
           supervisor_signed_date?: string | null
           topics_discussed?: string[] | null
           updated_at?: string | null
         }
         Update: {
+          action_items?: Json | null
+          areas_for_improvement?: string[] | null
+          areas_of_strength?: string[] | null
+          cases_discussed?: Json | null
           cases_reviewed?: string[] | null
           competencies_addressed?: string[] | null
           created_by?: string | null
           created_date?: string | null
+          feedback_provided?: string | null
+          group_supervisees?: Json | null
           id?: string
+          next_session_date?: string | null
+          next_session_scheduled?: boolean | null
           notes?: string | null
           notes_reviewed?: string[] | null
           relationship_id?: string
           session_date?: string
           session_duration_minutes?: number
+          session_end_time?: string | null
           session_format?: string | null
+          session_start_time?: string | null
           session_type?: string
+          skills_developed?: string[] | null
+          supervisee_reflection?: string | null
+          supervisee_signature_name?: string | null
           supervisee_signed?: boolean | null
           supervisee_signed_date?: string | null
+          supervisor_signature_name?: string | null
           supervisor_signed?: boolean | null
           supervisor_signed_date?: string | null
           topics_discussed?: string[] | null
