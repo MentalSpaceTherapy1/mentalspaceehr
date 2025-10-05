@@ -39,7 +39,17 @@ export default function MiscellaneousNote() {
     clinicallyRelevant: false,
     billable: false,
     billingCode: '',
-    status: 'Draft'
+    status: 'Draft',
+    duration: '',
+    participants: [] as { name: string; role: string }[],
+    location: '',
+    contactMethod: '',
+    purpose: '',
+    outcome: '',
+    followUpRequired: false,
+    followUpDate: '',
+    followUpPlan: '',
+    relatedDocumentation: ''
   });
 
   useEffect(() => {
