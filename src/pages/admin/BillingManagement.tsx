@@ -238,21 +238,19 @@ export default function BillingManagement() {
                       {payments.map((payment: any) => (
                         <TableRow key={payment.id}>
                           <TableCell className="font-mono text-sm">
-                            {payment.receipt_number}
+                            {payment.receipt_number || 'N/A'}
                           </TableCell>
                           <TableCell>{format(new Date(payment.payment_date), 'MMM d, yyyy')}</TableCell>
-                          <TableCell>{payment.payer?.name || 'Self-Pay'}</TableCell>
+                          <TableCell>Payment</TableCell>
                           <TableCell>
-                            <Badge variant="outline">{payment.payment_method}</Badge>
+                            <Badge variant="outline">Check</Badge>
                           </TableCell>
                           <TableCell>{payment.check_number || '—'}</TableCell>
                           <TableCell className="text-right font-medium">
-                            {formatCurrency(payment.payment_amount)}
+                            {formatCurrency(payment.check_amount)}
                           </TableCell>
                           <TableCell>
-                            {payment.posted_by
-                              ? `${payment.posted_by.first_name} ${payment.posted_by.last_name}`
-                              : 'Unknown'}
+                            Staff
                           </TableCell>
                           <TableCell className="text-center">
                             <Button

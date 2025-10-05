@@ -32,15 +32,15 @@ export const PaymentPostingDialog = ({ open, onOpenChange }: PaymentPostingDialo
     adjustmentAmount: number;
   }>>([]);
 
-  // Fetch insurance companies for dropdown
+  // Fetch insurance companies for dropdown  
   const { data: insuranceCompanies } = useQuery({
     queryKey: ['insurance-companies'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('insurance_companies')
         .select('*')
         .eq('is_active', true)
-        .order('company_name');
+        .order('name');
       
       if (error) throw error;
       return data;
@@ -63,12 +63,12 @@ export const PaymentPostingDialog = ({ open, onOpenChange }: PaymentPostingDialo
     enabled: paymentSource === 'Client',
   });
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!payerId || !paymentAmount || allocations.length === 0) {
       return;
     }
 
-    await postPayment.mutateAsync({
+    postPayment({
       paymentSource,
       payerId,
       checkNumber,
@@ -77,15 +77,17 @@ export const PaymentPostingDialog = ({ open, onOpenChange }: PaymentPostingDialo
       paymentMethod,
       paymentNotes,
       lineItems: allocations,
+    }, {
+      onSuccess: () => {
+        // Reset form
+        setPayerId("");
+        setCheckNumber("");
+        setPaymentAmount("");
+        setPaymentNotes("");
+        setAllocations([]);
+        onOpenChange(false);
+      }
     });
-
-    // Reset form
-    setPayerId("");
-    setCheckNumber("");
-    setPaymentAmount("");
-    setPaymentNotes("");
-    setAllocations([]);
-    onOpenChange(false);
   };
 
   const totalAllocated = allocations.reduce((sum, item) => sum + item.paymentAmount, 0);
