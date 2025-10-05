@@ -2721,6 +2721,7 @@ export type Database = {
           license_expiration_date: string | null
           license_number: string | null
           license_state: string | null
+          licensed_states: string[] | null
           mfa_enabled: boolean | null
           middle_name: string | null
           notification_preferences: Json | null
@@ -2770,6 +2771,7 @@ export type Database = {
           license_expiration_date?: string | null
           license_number?: string | null
           license_state?: string | null
+          licensed_states?: string[] | null
           mfa_enabled?: boolean | null
           middle_name?: string | null
           notification_preferences?: Json | null
@@ -2819,6 +2821,7 @@ export type Database = {
           license_expiration_date?: string | null
           license_number?: string | null
           license_state?: string | null
+          licensed_states?: string[] | null
           mfa_enabled?: boolean | null
           middle_name?: string | null
           notification_preferences?: Json | null
@@ -3757,6 +3760,135 @@ export type Database = {
         }
         Relationships: []
       }
+      telehealth_consents: {
+        Row: {
+          adequate_connection_confirmed: boolean | null
+          can_revoke_consent: boolean | null
+          client_id: string
+          client_signature: string | null
+          client_state_of_residence: string | null
+          clinician_id: string | null
+          clinician_licensed_in_state: boolean | null
+          confidentiality_limits_understood: boolean | null
+          consent_date: string | null
+          consent_given: boolean | null
+          consent_revoked: boolean | null
+          consents_to_recording: boolean | null
+          created_at: string | null
+          current_physical_location: string | null
+          emergency_contact: Json | null
+          emergency_contact_provided: boolean | null
+          emergency_protocol_understood: boolean | null
+          expiration_date: string | null
+          id: string
+          local_emergency_number: string | null
+          privacy_policy_reviewed: boolean | null
+          private_location_confirmed: boolean | null
+          renewal_notification_date: string | null
+          renewal_notified: boolean | null
+          revocation_date: string | null
+          revocation_reason: string | null
+          risks_acknowledged: Json | null
+          secure_platform_understood: boolean | null
+          technical_requirements_understood: boolean | null
+          understands_recording_policy: boolean | null
+          understood_alternatives: boolean | null
+          understood_benefits: boolean | null
+          understood_limitations: boolean | null
+          understood_risks: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          adequate_connection_confirmed?: boolean | null
+          can_revoke_consent?: boolean | null
+          client_id: string
+          client_signature?: string | null
+          client_state_of_residence?: string | null
+          clinician_id?: string | null
+          clinician_licensed_in_state?: boolean | null
+          confidentiality_limits_understood?: boolean | null
+          consent_date?: string | null
+          consent_given?: boolean | null
+          consent_revoked?: boolean | null
+          consents_to_recording?: boolean | null
+          created_at?: string | null
+          current_physical_location?: string | null
+          emergency_contact?: Json | null
+          emergency_contact_provided?: boolean | null
+          emergency_protocol_understood?: boolean | null
+          expiration_date?: string | null
+          id?: string
+          local_emergency_number?: string | null
+          privacy_policy_reviewed?: boolean | null
+          private_location_confirmed?: boolean | null
+          renewal_notification_date?: string | null
+          renewal_notified?: boolean | null
+          revocation_date?: string | null
+          revocation_reason?: string | null
+          risks_acknowledged?: Json | null
+          secure_platform_understood?: boolean | null
+          technical_requirements_understood?: boolean | null
+          understands_recording_policy?: boolean | null
+          understood_alternatives?: boolean | null
+          understood_benefits?: boolean | null
+          understood_limitations?: boolean | null
+          understood_risks?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          adequate_connection_confirmed?: boolean | null
+          can_revoke_consent?: boolean | null
+          client_id?: string
+          client_signature?: string | null
+          client_state_of_residence?: string | null
+          clinician_id?: string | null
+          clinician_licensed_in_state?: boolean | null
+          confidentiality_limits_understood?: boolean | null
+          consent_date?: string | null
+          consent_given?: boolean | null
+          consent_revoked?: boolean | null
+          consents_to_recording?: boolean | null
+          created_at?: string | null
+          current_physical_location?: string | null
+          emergency_contact?: Json | null
+          emergency_contact_provided?: boolean | null
+          emergency_protocol_understood?: boolean | null
+          expiration_date?: string | null
+          id?: string
+          local_emergency_number?: string | null
+          privacy_policy_reviewed?: boolean | null
+          private_location_confirmed?: boolean | null
+          renewal_notification_date?: string | null
+          renewal_notified?: boolean | null
+          revocation_date?: string | null
+          revocation_reason?: string | null
+          risks_acknowledged?: Json | null
+          secure_platform_understood?: boolean | null
+          technical_requirements_understood?: boolean | null
+          understands_recording_policy?: boolean | null
+          understood_alternatives?: boolean | null
+          understood_benefits?: boolean | null
+          understood_limitations?: boolean | null
+          understood_risks?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telehealth_consents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "telehealth_consents_clinician_id_fkey"
+            columns: ["clinician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       telehealth_security_events: {
         Row: {
           created_at: string | null
@@ -3810,6 +3942,9 @@ export type Database = {
       telehealth_sessions: {
         Row: {
           appointment_id: string | null
+          consent_id: string | null
+          consent_verification_date: string | null
+          consent_verified: boolean | null
           created_at: string | null
           current_participant_count: number | null
           duration_seconds: number | null
@@ -3832,6 +3967,9 @@ export type Database = {
         }
         Insert: {
           appointment_id?: string | null
+          consent_id?: string | null
+          consent_verification_date?: string | null
+          consent_verified?: boolean | null
           created_at?: string | null
           current_participant_count?: number | null
           duration_seconds?: number | null
@@ -3854,6 +3992,9 @@ export type Database = {
         }
         Update: {
           appointment_id?: string | null
+          consent_id?: string | null
+          consent_verification_date?: string | null
+          consent_verified?: boolean | null
           created_at?: string | null
           current_participant_count?: number | null
           duration_seconds?: number | null
@@ -3880,6 +4021,13 @@ export type Database = {
             columns: ["appointment_id"]
             isOneToOne: false
             referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "telehealth_sessions_consent_id_fkey"
+            columns: ["consent_id"]
+            isOneToOne: false
+            referencedRelation: "telehealth_consents"
             referencedColumns: ["id"]
           },
         ]
@@ -4316,6 +4464,10 @@ export type Database = {
       }
       is_session_participant: {
         Args: { _session_id: string; _user_id: string }
+        Returns: boolean
+      }
+      validate_telehealth_licensure: {
+        Args: { _client_id: string; _clinician_id: string }
         Returns: boolean
       }
     }
