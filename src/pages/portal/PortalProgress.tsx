@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { PortalLayout } from '@/components/portal/PortalLayout';
-import { usePortalProgress } from '@/hooks/usePortalProgress';
+import { usePortalProgress, ProgressTracker } from '@/hooks/usePortalProgress';
 import { usePortalAccount } from '@/hooks/usePortalAccount';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,10 +9,43 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LineChart, Activity, Target, BookOpen, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AddTrackerEntryDialog } from '@/components/portal/AddTrackerEntryDialog';
+import { TrackerDetailsDialog } from '@/components/portal/TrackerDetailsDialog';
+import { useToast } from '@/hooks/use-toast';
 
 export default function PortalProgress() {
   const { portalContext } = usePortalAccount();
-  const { trackers, loading } = usePortalProgress(portalContext?.client?.id);
+  const { trackers, loading, addEntry, refreshTrackers } = usePortalProgress(portalContext?.client?.id);
+  const { toast } = useToast();
+  
+  const [selectedTracker, setSelectedTracker] = useState<ProgressTracker | null>(null);
+  const [addEntryDialogOpen, setAddEntryDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  
+  const handleAddEntry = (tracker: ProgressTracker) => {
+    setSelectedTracker(tracker);
+    setAddEntryDialogOpen(true);
+  };
+  
+  const handleViewDetails = (tracker: ProgressTracker) => {
+    setSelectedTracker(tracker);
+    setDetailsDialogOpen(true);
+  };
+  
+  const handleSubmitEntry = async (data: any) => {
+    if (!selectedTracker) return;
+    
+    try {
+      await addEntry(selectedTracker.id, data);
+      await refreshTrackers();
+      toast({
+        title: 'Success',
+        description: 'Entry added successfully',
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
 
   const activeTrackers = trackers.filter(t => t.status === 'Active');
   const completedTrackers = trackers.filter(t => t.status === 'Completed');
@@ -162,10 +196,18 @@ export default function PortalProgress() {
                         </div>
                       </div>
                       <div className="mt-4 flex gap-2">
-                        <Button className="flex-1" size="sm">
+                        <Button 
+                          className="flex-1" 
+                          size="sm"
+                          onClick={() => handleAddEntry(tracker)}
+                        >
                           Add Entry
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewDetails(tracker)}
+                        >
                           View Details
                         </Button>
                       </div>
@@ -218,10 +260,18 @@ export default function PortalProgress() {
                         )}
                       </div>
                       <div className="mt-4 flex gap-2">
-                        <Button className="flex-1" size="sm">
+                        <Button 
+                          className="flex-1" 
+                          size="sm"
+                          onClick={() => handleAddEntry(tracker)}
+                        >
                           Add Entry
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewDetails(tracker)}
+                        >
                           View Details
                         </Button>
                       </div>
@@ -266,7 +316,12 @@ export default function PortalProgress() {
                         </div>
                       </div>
                       <div className="mt-4">
-                        <Button variant="outline" size="sm" className="w-full">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => handleViewDetails(tracker)}
+                        >
                           View History
                         </Button>
                       </div>
@@ -278,6 +333,24 @@ export default function PortalProgress() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Dialogs */}
+      {selectedTracker && (
+        <>
+          <AddTrackerEntryDialog
+            open={addEntryDialogOpen}
+            onOpenChange={setAddEntryDialogOpen}
+            tracker={selectedTracker}
+            onSubmit={handleSubmitEntry}
+          />
+          
+          <TrackerDetailsDialog
+            open={detailsDialogOpen}
+            onOpenChange={setDetailsDialogOpen}
+            tracker={selectedTracker}
+          />
+        </>
+      )}
     </PortalLayout>
   );
 }
