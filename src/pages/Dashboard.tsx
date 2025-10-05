@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCurrentUserRoles, AppRole } from '@/hooks/useUserRoles';
 import { AdminDashboard } from '@/components/dashboards/AdminDashboard';
 import { TherapistDashboard } from '@/components/dashboards/TherapistDashboard';
@@ -12,7 +13,18 @@ import { useAuth } from '@/hooks/useAuth';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { roles } = useCurrentUserRoles();
+  const { roles, loading } = useCurrentUserRoles();
+  const navigate = useNavigate();
+
+  // Redirect client users to portal
+  useEffect(() => {
+    if (!loading && roles.length > 0) {
+      // If user only has client_user role, redirect to portal
+      if (roles.length === 1 && roles[0] === 'client_user') {
+        navigate('/portal');
+      }
+    }
+  }, [roles, loading, navigate]);
 
   // Determine default dashboard based on role priority
   const getDefaultRole = (): AppRole => {
@@ -26,6 +38,13 @@ export default function Dashboard() {
   };
 
   const [selectedRole, setSelectedRole] = useState<AppRole>(getDefaultRole());
+
+  // Update selected role when roles change
+  useEffect(() => {
+    if (roles.length > 0 && !roles.includes(selectedRole)) {
+      setSelectedRole(getDefaultRole());
+    }
+  }, [roles]);
 
   // Get the dashboard component based on selected role
   const getDashboardComponent = () => {

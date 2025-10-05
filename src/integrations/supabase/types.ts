@@ -2111,6 +2111,81 @@ export type Database = {
           },
         ]
       }
+      guardian_relationships: {
+        Row: {
+          can_communicate_with_clinician: boolean | null
+          can_schedule_appointments: boolean | null
+          can_view_billing: boolean | null
+          can_view_notes: boolean | null
+          created_at: string | null
+          created_by: string | null
+          guardian_client_id: string
+          id: string
+          legal_document_path: string | null
+          legal_document_verified: boolean | null
+          minor_client_id: string
+          notes: string | null
+          relationship_type: string
+          status: string | null
+          updated_at: string | null
+          verified_by: string | null
+          verified_date: string | null
+        }
+        Insert: {
+          can_communicate_with_clinician?: boolean | null
+          can_schedule_appointments?: boolean | null
+          can_view_billing?: boolean | null
+          can_view_notes?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          guardian_client_id: string
+          id?: string
+          legal_document_path?: string | null
+          legal_document_verified?: boolean | null
+          minor_client_id: string
+          notes?: string | null
+          relationship_type: string
+          status?: string | null
+          updated_at?: string | null
+          verified_by?: string | null
+          verified_date?: string | null
+        }
+        Update: {
+          can_communicate_with_clinician?: boolean | null
+          can_schedule_appointments?: boolean | null
+          can_view_billing?: boolean | null
+          can_view_notes?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          guardian_client_id?: string
+          id?: string
+          legal_document_path?: string | null
+          legal_document_verified?: boolean | null
+          minor_client_id?: string
+          notes?: string | null
+          relationship_type?: string
+          status?: string | null
+          updated_at?: string | null
+          verified_by?: string | null
+          verified_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guardian_relationships_guardian_client_id_fkey"
+            columns: ["guardian_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guardian_relationships_minor_client_id_fkey"
+            columns: ["minor_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       homework_assignments: {
         Row: {
           assigned_date: string | null
@@ -2885,6 +2960,124 @@ export type Database = {
           },
         ]
       }
+      portal_access_log: {
+        Row: {
+          action: string
+          client_id: string
+          created_at: string | null
+          failure_reason: string | null
+          id: string
+          ip_address: string | null
+          portal_user_id: string | null
+          session_id: string | null
+          success: boolean | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          client_id: string
+          created_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          portal_user_id?: string | null
+          session_id?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          client_id?: string
+          created_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          portal_user_id?: string | null
+          session_id?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_access_log_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_account_security: {
+        Row: {
+          account_locked_until: string | null
+          active_session_tokens: string[] | null
+          client_id: string
+          created_at: string | null
+          failed_login_attempts: number | null
+          id: string
+          last_password_change: string | null
+          max_concurrent_sessions: number | null
+          mfa_backup_codes: string[] | null
+          mfa_enabled: boolean | null
+          mfa_method: string | null
+          mfa_phone: string | null
+          mfa_secret: string | null
+          password_reset_token: string | null
+          password_reset_token_expires: string | null
+          portal_user_id: string | null
+          security_questions: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_locked_until?: string | null
+          active_session_tokens?: string[] | null
+          client_id: string
+          created_at?: string | null
+          failed_login_attempts?: number | null
+          id?: string
+          last_password_change?: string | null
+          max_concurrent_sessions?: number | null
+          mfa_backup_codes?: string[] | null
+          mfa_enabled?: boolean | null
+          mfa_method?: string | null
+          mfa_phone?: string | null
+          mfa_secret?: string | null
+          password_reset_token?: string | null
+          password_reset_token_expires?: string | null
+          portal_user_id?: string | null
+          security_questions?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_locked_until?: string | null
+          active_session_tokens?: string[] | null
+          client_id?: string
+          created_at?: string | null
+          failed_login_attempts?: number | null
+          id?: string
+          last_password_change?: string | null
+          max_concurrent_sessions?: number | null
+          mfa_backup_codes?: string[] | null
+          mfa_enabled?: boolean | null
+          mfa_method?: string | null
+          mfa_phone?: string | null
+          mfa_secret?: string | null
+          password_reset_token?: string | null
+          password_reset_token_expires?: string | null
+          portal_user_id?: string | null
+          security_questions?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_account_security_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portal_notifications: {
         Row: {
           action_url: string | null
@@ -2924,6 +3117,65 @@ export type Database = {
             foreignKeyName: "portal_notifications_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_preferences: {
+        Row: {
+          appointment_reminders: boolean | null
+          billing_reminders: boolean | null
+          client_id: string
+          created_at: string | null
+          email_notifications: boolean | null
+          id: string
+          language: string | null
+          message_notifications: boolean | null
+          preferred_contact_method: string | null
+          reminder_hours_before: number | null
+          sms_notifications: boolean | null
+          theme: string | null
+          timezone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          appointment_reminders?: boolean | null
+          billing_reminders?: boolean | null
+          client_id: string
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          language?: string | null
+          message_notifications?: boolean | null
+          preferred_contact_method?: string | null
+          reminder_hours_before?: number | null
+          sms_notifications?: boolean | null
+          theme?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          appointment_reminders?: boolean | null
+          billing_reminders?: boolean | null
+          client_id?: string
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          language?: string | null
+          message_notifications?: boolean | null
+          preferred_contact_method?: string | null
+          reminder_hours_before?: number | null
+          sms_notifications?: boolean | null
+          theme?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_preferences_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },

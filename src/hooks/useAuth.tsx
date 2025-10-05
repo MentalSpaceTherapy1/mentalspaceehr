@@ -166,8 +166,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Log successful attempt
       await logLoginAttempt(email, true);
       
-      toast.success('Welcome back!');
-      navigate('/dashboard');
+      // Check user roles and redirect appropriately
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', authUser.id);
+
+        const userRoles = roles?.map(r => r.role) || [];
+        
+        // If user only has client_user role, redirect to portal
+        if (userRoles.length === 1 && userRoles[0] === 'client_user') {
+          toast.success('Welcome back!');
+          navigate('/portal');
+        } else {
+          // Staff user - redirect to dashboard
+          toast.success('Welcome back!');
+          navigate('/dashboard');
+        }
+      } else {
+        navigate('/dashboard');
+      }
+      
       return { error: null };
     } catch (error) {
       const err = error as Error;

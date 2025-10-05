@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { usePortalAccount } from '@/hooks/usePortalAccount';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, FileText, MessageSquare, TrendingUp, Bell } from 'lucide-react';
+import { Calendar, FileText, MessageSquare, TrendingUp, Bell, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -25,6 +26,7 @@ interface UpcomingAppointment {
 
 export default function PortalDashboard() {
   const { user } = useAuth();
+  const { portalContext, loading: contextLoading } = usePortalAccount();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<PortalStats>({
@@ -129,7 +131,7 @@ export default function PortalDashboard() {
     }
   };
 
-  if (loading) {
+  if (loading || contextLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -149,10 +151,19 @@ export default function PortalDashboard() {
     );
   }
 
+  const clientName = portalContext?.client ? `${portalContext.client.firstName} ${portalContext.client.lastName}` : 'User';
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Welcome to Your Portal</h1>
+        <div>
+          <h1 className="text-3xl font-bold">Welcome, {clientName}</h1>
+          {portalContext?.account.isGuardianAccount && (
+            <p className="text-muted-foreground mt-1">
+              Managing {portalContext.minorClients?.length || 0} minor account(s)
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Stats Cards */}
