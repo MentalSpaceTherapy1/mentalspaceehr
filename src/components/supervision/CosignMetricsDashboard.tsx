@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import { 
   Clock, TrendingUp, TrendingDown, AlertCircle, CheckCircle, 
-  FileText, Users, Download, Calendar 
+  FileText, Users, Download, Calendar, FileCheck
 } from "lucide-react";
 import { format, differenceInDays, subDays } from "date-fns";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ interface MetricsData {
   pendingCount: number;
   cosignedCount: number;
   overdueCount: number;
+  incidentToCount: number;
   averageTimeToSign: number;
   complianceRate: number;
   revisionRate: number;
@@ -98,6 +99,7 @@ export function CosignMetricsDashboard() {
           pendingCount: 0,
           cosignedCount: 0,
           overdueCount: 0,
+          incidentToCount: 0,
           averageTimeToSign: 0,
           complianceRate: 0,
           revisionRate: 0,
@@ -118,6 +120,7 @@ export function CosignMetricsDashboard() {
       ).length;
       const overdueCount = cosignatures.filter(c => c.status === 'Overdue').length;
       const revisionCount = cosignatures.filter(c => c.revisions_requested).length;
+      const incidentToCount = cosignatures.filter(c => c.is_incident_to === true).length;
 
       // Average time to sign (in days)
       const signedNotes = cosignatures.filter(c => 
@@ -163,6 +166,7 @@ export function CosignMetricsDashboard() {
         pendingCount,
         cosignedCount,
         overdueCount,
+        incidentToCount,
         averageTimeToSign,
         complianceRate,
         revisionRate,
@@ -282,6 +286,7 @@ export function CosignMetricsDashboard() {
       ['Cosigned', metrics.cosignedCount],
       ['Pending', metrics.pendingCount],
       ['Overdue', metrics.overdueCount],
+      ['Incident-to Billing', metrics.incidentToCount],
       ['Average Time to Sign (days)', metrics.averageTimeToSign.toFixed(1)],
       ['Compliance Rate (%)', metrics.complianceRate.toFixed(1)],
       ['Revision Rate (%)', metrics.revisionRate.toFixed(1)],
@@ -353,7 +358,7 @@ export function CosignMetricsDashboard() {
       </div>
 
       {/* Key Metrics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Cosignatures</CardTitle>
@@ -410,6 +415,22 @@ export function CosignMetricsDashboard() {
             <div className="text-2xl font-bold text-destructive">{metrics.overdueCount}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Require immediate attention
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Incident-to Billing</CardTitle>
+            <FileCheck className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{metrics.incidentToCount}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {metrics.totalCosignatures > 0 
+                ? `${((metrics.incidentToCount / metrics.totalCosignatures) * 100).toFixed(1)}% of total`
+                : 'No data'
+              }
             </p>
           </CardContent>
         </Card>

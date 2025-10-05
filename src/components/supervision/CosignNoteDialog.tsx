@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, FileCheck, FileX, User, Calendar, FileText, AlertTriangle, Clock } from "lucide-react";
@@ -43,6 +44,12 @@ export function CosignNoteDialog({
   const [supervisorComments, setSupervisorComments] = useState('');
   const [signature, setSignature] = useState('');
   const [showRevisionsDialog, setShowRevisionsDialog] = useState(false);
+  
+  // Incident-to billing
+  const [isIncidentTo, setIsIncidentTo] = useState(false);
+  const [supervisorAttestation, setSupervisorAttestation] = useState(
+    "I attest that I was present during the provision of these services and provided direct supervision to the clinician. The services were rendered under my direct supervision in accordance with Medicare incident-to billing requirements."
+  );
   
   // Time tracking
   const { startTracking, stopTracking, isTracking, elapsedMinutes } = useReviewTimeTracking(cosignatureId);
@@ -99,6 +106,11 @@ export function CosignNoteDialog({
       return;
     }
 
+    if (isIncidentTo && !supervisorAttestation.trim()) {
+      toast.error("Please provide attestation for incident-to billing");
+      return;
+    }
+
     setLoading(true);
     try {
       // Stop time tracking and get total review time
@@ -112,10 +124,28 @@ export function CosignNoteDialog({
           supervisor_comments: supervisorComments || null,
           status: 'Approved',
           time_spent_reviewing: reviewTime,
+          is_incident_to: isIncidentTo,
+          supervisor_attestation: isIncidentTo ? supervisorAttestation : null,
         })
         .eq('id', cosignatureId);
 
       if (error) throw error;
+
+      // Call workflow to trigger notifications and update clinical note
+      await supabase.functions.invoke('cosignature-workflow', {
+        body: {
+          action: 'cosign',
+          cosignatureId,
+          noteId,
+          userId: (await supabase.auth.getUser()).data.user?.id,
+          data: {
+            comments: supervisorComments,
+            timeSpent: reviewTime,
+            isIncidentTo,
+            attestation: isIncidentTo ? supervisorAttestation : null
+          }
+        }
+      });
 
       toast.success("Note co-signed successfully");
       onOpenChange(false);
@@ -282,6 +312,39 @@ export function CosignNoteDialog({
                   value={supervisorComments}
                   onChange={(e) => setSupervisorComments(e.target.value)}
                 />
+              </div>
+
+              {/* Incident-to Billing */}
+              <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="incident-to"
+                    checked={isIncidentTo}
+                    onCheckedChange={(checked) => setIsIncidentTo(checked as boolean)}
+                  />
+                  <Label htmlFor="incident-to" className="font-semibold cursor-pointer">
+                    This is Incident-to billing
+                  </Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Check this box if services were provided under Medicare incident-to billing rules
+                </p>
+
+                {isIncidentTo && (
+                  <div className="space-y-2 mt-4">
+                    <Label htmlFor="attestation">Supervisor Attestation *</Label>
+                    <Textarea
+                      id="attestation"
+                      rows={4}
+                      value={supervisorAttestation}
+                      onChange={(e) => setSupervisorAttestation(e.target.value)}
+                      className="bg-background"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Confirm you provided direct supervision during service provision
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
