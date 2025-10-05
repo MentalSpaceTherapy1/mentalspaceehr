@@ -10,6 +10,8 @@ import { ClientPortalRoute } from "@/components/ClientPortalRoute";
 import { SessionTimeoutWarning } from "@/components/SessionTimeoutWarning";
 import Index from "./pages/Index";
 import PortalLogin from "./pages/portal/PortalLogin";
+import PortalForgotPassword from "./pages/portal/PortalForgotPassword";
+import PortalResetPassword from "./pages/portal/PortalResetPassword";
 import PortalDashboard from "./pages/portal/PortalDashboard";
 import PortalAppointments from "./pages/portal/PortalAppointments";
 import PortalDocuments from "./pages/portal/PortalDocuments";
@@ -77,6 +79,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/portal/login" element={<PortalLogin />} />
+          <Route path="/portal/forgot-password" element={<PortalForgotPassword />} />
+          <Route path="/portal/reset-password" element={<PortalResetPassword />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route 

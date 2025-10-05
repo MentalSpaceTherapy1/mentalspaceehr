@@ -36,41 +36,98 @@ export const PortalAccessDialog = ({
   const [sendInvite, setSendInvite] = useState(!portalUserId);
 
   const handleSave = async () => {
+    if (enabled && !email) {
+      toast.error("Please provide an email address");
+      return;
+    }
+
     setLoading(true);
     try {
-      // Update portal access
-      if (enabled !== portalEnabled) {
-        if (enabled) {
-          const result = await enablePortalAccess(clientId, 'current-user'); // Replace with actual user ID
-          if (!result.success) {
-            toast.error(result.error || 'Failed to enable portal access');
-            return;
+      if (enabled) {
+        // Enable portal access
+        let userId = portalUserId;
+
+        if (!userId && email) {
+          // Create auth user for client
+          const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!1A`;
+          const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+            email,
+            password: tempPassword,
+            email_confirm: false,
+            user_metadata: {
+              client_id: clientId,
+              is_portal_user: true,
+            },
+          });
+
+          if (authError) throw authError;
+          userId = authData.user.id;
+
+          // Assign client_user role
+          const { error: roleError } = await supabase
+            .from('user_roles')
+            .insert({ user_id: userId, role: 'client_user' });
+
+          if (roleError) throw roleError;
+
+          // Update client with portal_user_id
+          const { error: updateError } = await supabase
+            .from('clients')
+            .update({ 
+              portal_user_id: userId, 
+              portal_enabled: true,
+              email: email
+            })
+            .eq('id', clientId);
+
+          if (updateError) throw updateError;
+
+          // Send invitation email if requested
+          if (sendInvite) {
+            try {
+              await supabase.functions.invoke('send-portal-invitation', {
+                body: {
+                  clientId,
+                  email,
+                  firstName: clientName.split(' ')[0],
+                  lastName: clientName.split(' ').slice(1).join(' ') || '',
+                  tempPassword,
+                },
+              });
+              toast.success('Invitation email sent to ' + email);
+            } catch (emailError) {
+              console.error('Error sending invitation email:', emailError);
+              toast.error('Portal enabled but failed to send invitation email');
+            }
           }
         } else {
-          const result = await disablePortalAccess(clientId);
-          if (!result.success) {
-            toast.error(result.error || 'Failed to disable portal access');
-            return;
-          }
+          // Just enable portal access for existing user
+          const { error: updateError } = await supabase
+            .from('clients')
+            .update({ portal_enabled: true })
+            .eq('id', clientId);
+
+          if (updateError) throw updateError;
         }
+
+        toast.success('Portal access enabled successfully');
+      } else {
+        // Disable portal access
+        const { error } = await supabase
+          .from('clients')
+          .update({ portal_enabled: false })
+          .eq('id', clientId);
+
+        if (error) throw error;
+
+        toast.success('Portal access disabled');
       }
 
-      // Send invitation if requested and enabling portal
-      if (enabled && sendInvite && email) {
-        const result = await sendPortalInvitation(clientId, email, 'current-user');
-        if (!result.success) {
-          toast.error(result.error || 'Failed to send invitation');
-          return;
-        }
-        toast.success('Portal invitation sent successfully');
-      }
-
-      toast.success('Portal access updated successfully');
       onUpdate();
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating portal access:', error);
-      toast.error('Failed to update portal access');
+      toast.error(error.message || 'Failed to update portal access');
     } finally {
       setLoading(false);
     }

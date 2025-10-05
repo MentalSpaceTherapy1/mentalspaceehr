@@ -53,19 +53,34 @@ export default function PortalLogin() {
     try {
       signInSchema.parse(data);
       
-      const { error } = await signIn(data.email, data.password);
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
 
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          toast.error('Invalid email or password');
-        } else {
-          toast.error(error.message);
-        }
+      if (error) throw error;
+
+      // Check if email is verified
+      if (!authData.user.email_confirmed_at) {
+        await supabase.auth.signOut();
+        toast.error('Please verify your email before logging in. Check your inbox for the verification link.');
+        setLoading(false);
         return;
       }
 
+      // Verify user has client_user role
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authData.user.id);
+
+      if (!roles?.some(r => r.role === 'client_user')) {
+        await supabase.auth.signOut();
+        throw new Error('This account does not have portal access.');
+      }
+
       // Success - navigation will be handled by useEffect above
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
         error.errors.forEach((err) => {
@@ -74,6 +89,8 @@ export default function PortalLogin() {
           }
         });
         setErrors(fieldErrors);
+      } else {
+        toast.error(error.message || 'Invalid email or password');
       }
     } finally {
       setLoading(false);
@@ -182,17 +199,18 @@ export default function PortalLogin() {
                 {loading ? 'Signing In...' : 'Sign In'}
               </Button>
               
-              <Button 
-                type="button"
-                variant="link" 
-                className="text-sm"
-                onClick={() => navigate('/forgot-password')}
-              >
-                Forgot Password?
-              </Button>
-
-              <div className="text-center text-sm text-muted-foreground">
-                Need help? Contact your care provider
+              <div className="text-sm text-center space-y-2">
+                <div>
+                  <Link to="/portal/forgot-password" className="text-primary hover:underline">
+                    Forgot your password?
+                  </Link>
+                </div>
+                <div className="text-muted-foreground">
+                  Need help?{' '}
+                  <a href="mailto:support@example.com" className="text-primary hover:underline">
+                    Contact Support
+                  </a>
+                </div>
               </div>
             </CardFooter>
           </form>
