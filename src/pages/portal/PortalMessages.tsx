@@ -1,18 +1,22 @@
+import { useState } from 'react';
 import { PortalLayout } from '@/components/portal/PortalLayout';
 import { usePortalMessages } from '@/hooks/usePortalMessages';
 import { usePortalAccount } from '@/hooks/usePortalAccount';
+import { ComposeMessageDialog } from '@/components/portal/ComposeMessageDialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Mail, MailOpen, Send, Reply, AlertCircle, Paperclip } from 'lucide-react';
+import { Mail, MailOpen, Send, Reply, AlertCircle, Paperclip, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function PortalMessages() {
   const { portalContext } = usePortalAccount();
   const { messages, loading, markAsRead } = usePortalMessages(portalContext?.client?.id);
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [replyTo, setReplyTo] = useState<any>(null);
 
   const unreadMessages = messages.filter(msg => !msg.readByRecipient);
   const urgentMessages = messages.filter(msg => msg.priority === 'Urgent');
@@ -21,6 +25,17 @@ export default function PortalMessages() {
     if (!isRead) {
       await markAsRead(messageId);
     }
+  };
+
+  const handleReply = (message: any) => {
+    setReplyTo({
+      recipientId: message.clinicianId,
+      recipientName: message.senderName,
+      subject: message.subject,
+      originalMessage: message.message,
+      threadId: message.threadId
+    });
+    setComposeOpen(true);
   };
 
   if (loading) {
@@ -42,9 +57,15 @@ export default function PortalMessages() {
   return (
     <PortalLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Messages</h1>
-          <p className="text-muted-foreground">Secure messaging with your care team</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Messages</h1>
+            <p className="text-muted-foreground">Secure messaging with your care team</p>
+          </div>
+          <Button onClick={() => { setReplyTo(null); setComposeOpen(true); }}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Message
+          </Button>
         </div>
 
         {/* Summary Cards */}
@@ -134,13 +155,28 @@ export default function PortalMessages() {
                             </div>
                           </CardHeader>
                           <CardContent>
-                            <p className="text-sm text-muted-foreground line-clamp-2">{message.message}</p>
-                            {message.attachments.length > 0 && (
-                              <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                                <Paperclip className="h-4 w-4" />
-                                <span>{message.attachments.length} attachment(s)</span>
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <p className="text-sm text-muted-foreground line-clamp-2">{message.message}</p>
+                                {message.attachments.length > 0 && (
+                                  <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                                    <Paperclip className="h-4 w-4" />
+                                    <span>{message.attachments.length} attachment(s)</span>
+                                  </div>
+                                )}
                               </div>
-                            )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReply(message);
+                                }}
+                              >
+                                <Reply className="h-4 w-4 mr-2" />
+                                Reply
+                              </Button>
+                            </div>
                           </CardContent>
                         </Card>
                       ))}
@@ -250,6 +286,15 @@ export default function PortalMessages() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <ComposeMessageDialog 
+        open={composeOpen} 
+        onOpenChange={(open) => {
+          setComposeOpen(open);
+          if (!open) setReplyTo(null);
+        }}
+        replyTo={replyTo}
+      />
     </PortalLayout>
   );
 }

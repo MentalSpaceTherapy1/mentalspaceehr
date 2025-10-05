@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import { NotificationBell } from './NotificationBell';
 import { 
   Calendar, 
   FileText, 
@@ -10,7 +11,6 @@ import {
   MessageSquare, 
   User, 
   BookOpen,
-  Bell,
   LogOut,
   Home
 } from 'lucide-react';
@@ -53,9 +53,7 @@ export const PortalLayout = ({ children }: PortalLayoutProps) => {
           </div>
           
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon">
-              <Bell className="h-5 w-5" />
-            </Button>
+            <NotificationBell />
             <Button variant="ghost" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
