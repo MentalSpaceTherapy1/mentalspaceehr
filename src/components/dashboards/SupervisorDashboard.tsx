@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { UnlockRequestManagement } from '@/components/compliance/UnlockRequestManagement';
 
 export const SupervisorDashboard = () => {
   return (
@@ -63,6 +64,9 @@ export const SupervisorDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Unlock Request Management */}
+      <UnlockRequestManagement />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Supervisees Overview */}

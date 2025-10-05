@@ -16,6 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
+import { UnlockRequestManagement } from '@/components/compliance/UnlockRequestManagement';
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -115,6 +116,9 @@ export const AdminDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Unlock Request Management */}
+      <UnlockRequestManagement />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Compliance Alerts */}
