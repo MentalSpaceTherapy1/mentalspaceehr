@@ -423,19 +423,35 @@ export default function TelehealthSession() {
         <ConsentVerificationGate
           clientId={clientId}
           clinicianId={user?.id || ''}
-          onConsentVerified={(id) => {
+          onConsentVerified={async (id) => {
             setConsentId(id);
             setConsentVerified(true);
+            
             // Update session with consent
-            supabase
+            await supabase
               .from('telehealth_sessions')
               .update({
                 consent_id: id,
                 consent_verified: true,
                 consent_verification_date: new Date().toISOString(),
               })
-              .eq('id', session.id)
-              .then(() => console.log('Consent verified for session'));
+              .eq('id', session.id);
+            
+            console.log('Consent verified for session, continuing to media initialization');
+            
+            // Continue with bandwidth test or media initialization
+            if (!bandwidthTestComplete) {
+              setShowBandwidthTest(true);
+            } else {
+              // Initialize media directly
+              try {
+                await initializeMedia();
+                setMediaReady(true);
+              } catch (err) {
+                console.error('Error initializing media after consent:', err);
+                setError('Failed to access camera/microphone');
+              }
+            }
           }}
         />
       );
@@ -480,7 +496,23 @@ export default function TelehealthSession() {
           <p className="text-muted-foreground mb-4">
             Please allow access to continue to the session
           </p>
-          <Button onClick={initializeMedia}>
+          <Button 
+            onClick={async () => {
+              try {
+                console.log('Grant Access clicked, initializing media...');
+                await initializeMedia();
+                setMediaReady(true);
+                console.log('Media ready set to true');
+              } catch (err) {
+                console.error('Failed to initialize media:', err);
+                toast({
+                  title: 'Access Denied',
+                  description: 'Please allow camera and microphone access in your browser settings',
+                  variant: 'destructive'
+                });
+              }
+            }}
+          >
             Grant Access
           </Button>
         </Card>
@@ -603,11 +635,11 @@ export default function TelehealthSession() {
         open={showBandwidthTest}
         sessionId={session?.id}
         onComplete={async (result) => {
+          console.log('Bandwidth test complete, result:', result);
           setBandwidthResult(result);
           setBandwidthTestComplete(true);
           setShowBandwidthTest(false);
           
-          // Continue with session initialization
           if (result) {
             toast({
               title: "Connection Test Complete",
@@ -615,8 +647,33 @@ export default function TelehealthSession() {
             });
           }
           
-          // Re-trigger loadSession to continue
-          await loadSession();
+          // Initialize media after bandwidth test
+          try {
+            console.log('Initializing media after bandwidth test...');
+            await initializeMedia();
+            setMediaReady(true);
+            console.log('Media initialized successfully');
+            
+            // Create participant record
+            if (session && user && profile) {
+              try {
+                await supabase.from('session_participants').insert({
+                  session_id: session.id,
+                  user_id: user.id,
+                  participant_name: `${profile.first_name} ${profile.last_name}`,
+                  participant_role: isHost ? 'host' : 'client',
+                  device_fingerprint: '',
+                  ip_address: '',
+                  user_agent: navigator.userAgent
+                });
+              } catch (e) {
+                console.warn('[Telehealth] Participant insert warning:', e);
+              }
+            }
+          } catch (err) {
+            console.error('Error initializing media:', err);
+            setError('Failed to access camera/microphone');
+          }
         }}
         onCancel={() => {
           setShowBandwidthTest(false);
