@@ -104,6 +104,14 @@ export default function PracticeSettings() {
     require_cosign_for_associates: true,
     allow_self_review: false,
     escalation_recipients: [] as string[],
+    notification_settings: {
+      send_new_note_notification: true,
+      send_cosigned_notification: true,
+      send_revision_notification: true,
+      send_rejection_notification: true,
+      send_overdue_notification: true,
+      escalate_to_admins: true,
+    }
   });
 
   const [officeHours, setOfficeHours] = useState<OfficeHours>({
@@ -1451,6 +1459,131 @@ export default function PracticeSettings() {
                       <span className="text-sm">days before</span>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h4 className="font-semibold">Notification Preferences</h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Control which email notifications are sent during the co-signature workflow
+                </p>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>New Note Submitted</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Notify supervisor when a new note is submitted for co-signature
+                      </p>
+                    </div>
+                    <Switch
+                      checked={cosignSettings.notification_settings?.send_new_note_notification !== false}
+                      onCheckedChange={(checked) => setCosignSettings({ 
+                        ...cosignSettings, 
+                        notification_settings: { 
+                          ...cosignSettings.notification_settings, 
+                          send_new_note_notification: checked 
+                        }
+                      })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Note Co-Signed</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Notify clinician when their note has been co-signed
+                      </p>
+                    </div>
+                    <Switch
+                      checked={cosignSettings.notification_settings?.send_cosigned_notification !== false}
+                      onCheckedChange={(checked) => setCosignSettings({ 
+                        ...cosignSettings, 
+                        notification_settings: { 
+                          ...cosignSettings.notification_settings, 
+                          send_cosigned_notification: checked 
+                        }
+                      })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Revisions Requested</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Notify clinician when supervisor requests revisions
+                      </p>
+                    </div>
+                    <Switch
+                      checked={cosignSettings.notification_settings?.send_revision_notification !== false}
+                      onCheckedChange={(checked) => setCosignSettings({ 
+                        ...cosignSettings, 
+                        notification_settings: { 
+                          ...cosignSettings.notification_settings, 
+                          send_revision_notification: checked 
+                        }
+                      })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Note Rejected</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Notify clinician when supervisor returns/rejects their note
+                      </p>
+                    </div>
+                    <Switch
+                      checked={cosignSettings.notification_settings?.send_rejection_notification !== false}
+                      onCheckedChange={(checked) => setCosignSettings({ 
+                        ...cosignSettings, 
+                        notification_settings: { 
+                          ...cosignSettings.notification_settings, 
+                          send_rejection_notification: checked 
+                        }
+                      })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Overdue Co-Signature</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Notify supervisor when a co-signature becomes overdue
+                      </p>
+                    </div>
+                    <Switch
+                      checked={cosignSettings.notification_settings?.send_overdue_notification !== false}
+                      onCheckedChange={(checked) => setCosignSettings({ 
+                        ...cosignSettings, 
+                        notification_settings: { 
+                          ...cosignSettings.notification_settings, 
+                          send_overdue_notification: checked 
+                        }
+                      })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Escalate to Administrators</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Send escalation emails to admins for severely overdue co-signatures
+                      </p>
+                    </div>
+                    <Switch
+                      checked={cosignSettings.notification_settings?.escalate_to_admins !== false}
+                      onCheckedChange={(checked) => setCosignSettings({ 
+                        ...cosignSettings, 
+                        notification_settings: { 
+                          ...cosignSettings.notification_settings, 
+                          escalate_to_admins: checked 
+                        }
+                      })}
+                    />
+                  </div>
                 </div>
               </div>
             </Card>
