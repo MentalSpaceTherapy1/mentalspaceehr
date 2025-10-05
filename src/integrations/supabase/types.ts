@@ -3078,6 +3078,208 @@ export type Database = {
           },
         ]
       }
+      portal_form_assignments: {
+        Row: {
+          assigned_by: string
+          assigned_date: string
+          chart_note_id: string | null
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          instructions: string | null
+          priority: string
+          saved_to_chart: boolean
+          status: string
+          status_updated_at: string
+          template_id: string
+          time_spent_seconds: number | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_by: string
+          assigned_date?: string
+          chart_note_id?: string | null
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          instructions?: string | null
+          priority?: string
+          saved_to_chart?: boolean
+          status?: string
+          status_updated_at?: string
+          template_id: string
+          time_spent_seconds?: number | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string
+          assigned_date?: string
+          chart_note_id?: string | null
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          instructions?: string | null
+          priority?: string
+          saved_to_chart?: boolean
+          status?: string
+          status_updated_at?: string
+          template_id?: string
+          time_spent_seconds?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_form_assignments_chart_note_id_fkey"
+            columns: ["chart_note_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_form_assignments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_form_assignments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "portal_form_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_form_responses: {
+        Row: {
+          assignment_id: string
+          client_id: string
+          client_signature: string | null
+          completed_at: string | null
+          created_at: string
+          flagged_for_followup: boolean
+          id: string
+          last_saved_at: string | null
+          progress_percentage: number
+          responses: Json
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          signature_date: string | null
+          signature_ip: string | null
+          started_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          client_id: string
+          client_signature?: string | null
+          completed_at?: string | null
+          created_at?: string
+          flagged_for_followup?: boolean
+          id?: string
+          last_saved_at?: string | null
+          progress_percentage?: number
+          responses?: Json
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          signature_date?: string | null
+          signature_ip?: string | null
+          started_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          client_id?: string
+          client_signature?: string | null
+          completed_at?: string | null
+          created_at?: string
+          flagged_for_followup?: boolean
+          id?: string
+          last_saved_at?: string | null
+          progress_percentage?: number
+          responses?: Json
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          signature_date?: string | null
+          signature_ip?: string | null
+          started_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_form_responses_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: true
+            referencedRelation: "portal_form_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_form_responses_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_form_templates: {
+        Row: {
+          allow_partial_save: boolean
+          created_at: string
+          created_by: string | null
+          description: string | null
+          estimated_minutes: number | null
+          form_type: string
+          id: string
+          is_active: boolean
+          requires_signature: boolean
+          sections: Json
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          allow_partial_save?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          estimated_minutes?: number | null
+          form_type: string
+          id?: string
+          is_active?: boolean
+          requires_signature?: boolean
+          sections?: Json
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          allow_partial_save?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          estimated_minutes?: number | null
+          form_type?: string
+          id?: string
+          is_active?: boolean
+          requires_signature?: boolean
+          sections?: Json
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       portal_notifications: {
         Row: {
           action_url: string | null
