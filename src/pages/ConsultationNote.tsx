@@ -10,9 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, FileSignature, Brain, Sparkles, Check, X } from 'lucide-react';
+import { Save, ArrowLeft, FileSignature, Brain, Sparkles, Check, X, Lock } from 'lucide-react';
 import { SignatureDialog } from '@/components/intake/SignatureDialog';
 import { useAuth } from '@/hooks/useAuth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useNoteLockStatus } from '@/hooks/useNoteLockStatus';
+import { UnlockRequestDialog } from '@/components/compliance/UnlockRequestDialog';
+import { format } from 'date-fns';
 
 export default function ConsultationNote() {
   const navigate = useNavigate();
@@ -27,6 +31,10 @@ export default function ConsultationNote() {
   const [generatingAI, setGeneratingAI] = useState(false);
   const [aiInput, setAiInput] = useState('');
   const [aiSuggestion, setAiSuggestion] = useState<any>(null);
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+  const [noteId] = useState<string | null>(null); // Will be set after creation
+  
+  const { isLocked, lockDetails, loading: lockLoading } = useNoteLockStatus(noteId, 'consultation_note');
 
   const [formData, setFormData] = useState({
     clientId: '',

@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, AlertTriangle, FileSignature, Clock, Sparkles, User, Loader2, Brain } from 'lucide-react';
+import { Save, ArrowLeft, AlertTriangle, FileSignature, Clock, Sparkles, User, Loader2, Brain, Lock } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SessionInformationSection } from '@/components/intake/SessionInformationSection';
 import { PresentingProblemSection } from '@/components/intake/PresentingProblemSection';
@@ -27,6 +27,9 @@ import { TreatmentRecommendationsSection } from '@/components/intake/TreatmentRe
 import { SignatureDialog } from '@/components/intake/SignatureDialog';
 import { SupervisorCosignDialog } from '@/components/intake/SupervisorCosignDialog';
 import { useAuth } from '@/hooks/useAuth';
+import { useNoteLockStatus } from '@/hooks/useNoteLockStatus';
+import { UnlockRequestDialog } from '@/components/compliance/UnlockRequestDialog';
+import { format } from 'date-fns';
 
 export interface IntakeAssessmentData {
   noteId?: string;
@@ -85,8 +88,11 @@ export default function IntakeAssessment() {
   const [freeTextInput, setFreeTextInput] = useState('');
   const [appointments, setAppointments] = useState<any[]>([]);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState('');
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const timeTracker = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
+  
+  const { isLocked, lockDetails, loading: lockLoading } = useNoteLockStatus(noteId || null, 'intake_assessment');
   
   const [formData, setFormData] = useState<IntakeAssessmentData>({
     clientId: clientId || '',

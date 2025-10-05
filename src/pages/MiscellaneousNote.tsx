@@ -11,9 +11,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, FileSignature, Plus, X, Brain, Sparkles, Check } from 'lucide-react';
+import { Save, ArrowLeft, FileSignature, Plus, X, Brain, Sparkles, Check, Lock } from 'lucide-react';
 import { SignatureDialog } from '@/components/intake/SignatureDialog';
 import { useAuth } from '@/hooks/useAuth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useNoteLockStatus } from '@/hooks/useNoteLockStatus';
+import { UnlockRequestDialog } from '@/components/compliance/UnlockRequestDialog';
+import { format } from 'date-fns';
 
 export default function MiscellaneousNote() {
   const navigate = useNavigate();
@@ -28,6 +32,10 @@ export default function MiscellaneousNote() {
   const [generatingAI, setGeneratingAI] = useState(false);
   const [aiInput, setAiInput] = useState('');
   const [aiSuggestion, setAiSuggestion] = useState<any>(null);
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+  const [noteId] = useState<string | null>(null); // Will be set after creation
+  
+  const { isLocked, lockDetails, loading: lockLoading } = useNoteLockStatus(noteId, 'miscellaneous_note');
 
   const [formData, setFormData] = useState({
     clientId: '',

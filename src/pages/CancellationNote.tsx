@@ -10,9 +10,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, FileSignature } from 'lucide-react';
+import { Save, ArrowLeft, FileSignature, Lock } from 'lucide-react';
 import { SignatureDialog } from '@/components/intake/SignatureDialog';
 import { useAuth } from '@/hooks/useAuth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useNoteLockStatus } from '@/hooks/useNoteLockStatus';
+import { UnlockRequestDialog } from '@/components/compliance/UnlockRequestDialog';
+import { format } from 'date-fns';
 
 export default function CancellationNote() {
   const navigate = useNavigate();
@@ -26,6 +30,10 @@ export default function CancellationNote() {
   const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
   const [clinicianName, setClinicianName] = useState('');
   const [availableClients, setAvailableClients] = useState<any[]>([]);
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+  const [noteId] = useState<string | null>(null); // Will be set after creation
+  
+  const { isLocked, lockDetails, loading: lockLoading } = useNoteLockStatus(noteId, 'cancellation_note');
 
   const [formData, setFormData] = useState({
     clientId: '',

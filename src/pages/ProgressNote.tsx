@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, FileSignature, Clock, AlertTriangle, Brain, Sparkles, Edit, Check, X, CheckCircle2 } from 'lucide-react';
+import { Save, ArrowLeft, FileSignature, Clock, AlertTriangle, Brain, Sparkles, Edit, Check, X, CheckCircle2, Lock } from 'lucide-react';
 import { SignatureDialog } from '@/components/intake/SignatureDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
@@ -20,6 +20,8 @@ import { PlanSection } from '@/components/progress-note/PlanSection';
 import { SessionInformationSection } from '@/components/intake/SessionInformationSection';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useNoteLockStatus } from '@/hooks/useNoteLockStatus';
+import { UnlockRequestDialog } from '@/components/compliance/UnlockRequestDialog';
 
 export interface ProgressNoteData {
   noteId?: string;
@@ -176,6 +178,9 @@ export default function ProgressNote() {
   const [aiInput, setAiInput] = useState('');
   const [aiSuggestion, setAiSuggestion] = useState<any>(null);
   const [isEditingAiSuggestion, setIsEditingAiSuggestion] = useState(false);
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+  
+  const { isLocked, lockDetails, loading: lockLoading } = useNoteLockStatus(noteId || null, 'progress_note');
 
   const [formData, setFormData] = useState<ProgressNoteData>({
     clientId: '',
@@ -810,13 +815,13 @@ export default function ProgressNote() {
             )}
             <Button 
               onClick={saveDraft} 
-              disabled={saving || loading || formData.status === 'Locked'}
+              disabled={saving || loading || formData.status === 'Locked' || isLocked}
               variant="outline"
             >
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Saving...' : 'Save Draft'}
             </Button>
-            <Button onClick={saveNote} disabled={saving || loading || formData.status === 'Locked'}>
+            <Button onClick={saveNote} disabled={saving || loading || formData.status === 'Locked' || isLocked}>
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Saving...' : 'Save Note'}
             </Button>
@@ -841,7 +846,39 @@ export default function ProgressNote() {
           </div>
         )}
 
-        {formData.status === 'Locked' && (
+        {isLocked && lockDetails && (
+          <Alert variant="destructive">
+            <Lock className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <div>
+                <strong>Note Locked Due to Compliance:</strong> This note was automatically locked on{' '}
+                {lockDetails.locked_date && format(new Date(lockDetails.locked_date), 'PPP')} because it exceeded
+                the documentation deadline ({lockDetails.days_overdue} days overdue).
+                {lockDetails.unlock_requested && !lockDetails.unlock_approved && (
+                  <span className="block mt-2 text-sm">
+                    ⏳ Unlock request pending supervisor approval.
+                  </span>
+                )}
+                {lockDetails.unlock_approved && lockDetails.unlock_expires_at && (
+                  <span className="block mt-2 text-sm text-success">
+                    ✓ Unlocked until {format(new Date(lockDetails.unlock_expires_at), 'PPp')}
+                  </span>
+                )}
+              </div>
+              {!lockDetails.unlock_requested && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setUnlockDialogOpen(true)}
+                >
+                  Request Unlock
+                </Button>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {formData.status === 'Locked' && !isLocked && (
           <Alert>
             <CheckCircle2 className="h-4 w-4" />
             <AlertDescription>
@@ -935,7 +972,7 @@ export default function ProgressNote() {
                 }));
                 setHasUnsavedChanges(true);
               }}
-              disabled={formData.status === 'Locked'}
+              disabled={formData.status === 'Locked' || isLocked}
             />
 
             <div className="grid grid-cols-3 gap-4">
