@@ -3280,6 +3280,77 @@ export type Database = {
         }
         Relationships: []
       }
+      portal_invoices: {
+        Row: {
+          amount_paid: number | null
+          balance_due: number
+          client_id: string
+          created_at: string | null
+          discount_amount: number | null
+          due_date: string
+          generated_by: string | null
+          generated_date: string | null
+          id: string
+          invoice_date: string
+          invoice_number: string
+          line_items: Json
+          notes: string | null
+          status: string
+          subtotal: number
+          tax_amount: number | null
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          amount_paid?: number | null
+          balance_due: number
+          client_id: string
+          created_at?: string | null
+          discount_amount?: number | null
+          due_date: string
+          generated_by?: string | null
+          generated_date?: string | null
+          id?: string
+          invoice_date: string
+          invoice_number: string
+          line_items?: Json
+          notes?: string | null
+          status?: string
+          subtotal: number
+          tax_amount?: number | null
+          total_amount: number
+          updated_at?: string | null
+        }
+        Update: {
+          amount_paid?: number | null
+          balance_due?: number
+          client_id?: string
+          created_at?: string | null
+          discount_amount?: number | null
+          due_date?: string
+          generated_by?: string | null
+          generated_date?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          line_items?: Json
+          notes?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number | null
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portal_notifications: {
         Row: {
           action_url: string | null
@@ -3317,6 +3388,92 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "portal_notifications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_payments: {
+        Row: {
+          applied_to_invoices: Json | null
+          card_brand: string | null
+          card_last4: string | null
+          card_token: string | null
+          client_id: string
+          created_at: string | null
+          created_date: string | null
+          decline_reason: string | null
+          id: string
+          notes: string | null
+          payment_amount: number
+          payment_date: string
+          payment_method: string
+          processed_by: string | null
+          receipt_generated: boolean | null
+          receipt_url: string | null
+          refund_amount: number | null
+          refund_date: string | null
+          refund_reason: string | null
+          refunded: boolean | null
+          transaction_id: string | null
+          transaction_status: string
+          updated_at: string | null
+        }
+        Insert: {
+          applied_to_invoices?: Json | null
+          card_brand?: string | null
+          card_last4?: string | null
+          card_token?: string | null
+          client_id: string
+          created_at?: string | null
+          created_date?: string | null
+          decline_reason?: string | null
+          id?: string
+          notes?: string | null
+          payment_amount: number
+          payment_date: string
+          payment_method: string
+          processed_by?: string | null
+          receipt_generated?: boolean | null
+          receipt_url?: string | null
+          refund_amount?: number | null
+          refund_date?: string | null
+          refund_reason?: string | null
+          refunded?: boolean | null
+          transaction_id?: string | null
+          transaction_status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          applied_to_invoices?: Json | null
+          card_brand?: string | null
+          card_last4?: string | null
+          card_token?: string | null
+          client_id?: string
+          created_at?: string | null
+          created_date?: string | null
+          decline_reason?: string | null
+          id?: string
+          notes?: string | null
+          payment_amount?: number
+          payment_date?: string
+          payment_method?: string
+          processed_by?: string | null
+          receipt_generated?: boolean | null
+          receipt_url?: string | null
+          refund_amount?: number | null
+          refund_date?: string | null
+          refund_reason?: string | null
+          refunded?: boolean | null
+          transaction_id?: string | null
+          transaction_status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_payments_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
