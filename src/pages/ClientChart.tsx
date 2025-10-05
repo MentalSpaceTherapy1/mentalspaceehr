@@ -366,17 +366,6 @@ export default function ClientChart() {
               onConfirm={handleRevokeConsent}
               loading={consentLoading}
             />
-            
-            <PortalAccessDialog
-              open={portalDialogOpen}
-              onOpenChange={setPortalDialogOpen}
-              clientId={id!}
-              clientName={`${client?.first_name} ${client?.last_name}`}
-              currentEmail={client?.email || ''}
-              portalEnabled={client?.portal_enabled || false}
-              portalUserId={client?.portal_user_id || undefined}
-              onUpdate={fetchClient}
-            />
           </>
         );
       default:
@@ -487,6 +476,18 @@ export default function ClientChart() {
           </div>
         </div>
       </div>
+
+      {/* Portal Access Dialog - rendered at component level */}
+      <PortalAccessDialog
+        open={portalDialogOpen}
+        onOpenChange={setPortalDialogOpen}
+        clientId={id!}
+        clientName={`${client?.first_name} ${client?.last_name}`}
+        currentEmail={client?.email || ''}
+        portalEnabled={client?.portal_enabled || false}
+        portalUserId={client?.portal_user_id || undefined}
+        onUpdate={fetchClient}
+      />
     </DashboardLayout>
   );
 }
