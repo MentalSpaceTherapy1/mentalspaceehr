@@ -16,6 +16,9 @@ export interface SupervisionRelationship {
   supervision_frequency?: string | null;
   scheduled_day_time?: string | null;
   requires_note_cosign: boolean;
+  can_bill_incident_to: boolean;
+  incident_to_start_date?: string | null;
+  incident_to_requirements_verified?: any;
   notification_settings?: any;
   competencies_to_achieve?: string[] | null;
   competencies_achieved?: any;

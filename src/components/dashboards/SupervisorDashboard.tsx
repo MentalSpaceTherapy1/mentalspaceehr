@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, FileCheck, Clock, AlertCircle, Calendar, TrendingUp, CheckCircle, FileText, Plus, Award, Settings, Search, ArrowUpDown } from "lucide-react";
+import { Users, FileCheck, Clock, AlertCircle, Calendar, TrendingUp, CheckCircle, FileText, Plus, Award, Settings, Search, ArrowUpDown, ClipboardCheck } from "lucide-react";
 import { UnlockRequestManagement } from "../compliance/UnlockRequestManagement";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupervisionRelationships } from "@/hooks/useSupervisionRelationships";
@@ -428,13 +428,19 @@ export function SupervisorDashboard() {
                             {rel.supervisee?.first_name} {rel.supervisee?.last_name}
                           </p>
                           <p className="text-sm text-muted-foreground">{rel.relationship_type}</p>
-                          <div className="flex gap-2 mt-1">
+                          <div className="flex gap-2 mt-1 flex-wrap">
                             <Badge variant="outline" className="text-xs">
                               {Math.round(rel.completed_hours || 0)}/{rel.required_supervision_hours} hrs
                             </Badge>
                             <Badge variant="outline" className="text-xs">
                               {rel.supervision_frequency}
                             </Badge>
+                            {rel.can_bill_incident_to && (
+                              <Badge variant="default" className="text-xs bg-green-600">
+                                <ClipboardCheck className="h-3 w-3 mr-1" />
+                                Incident-to Eligible
+                              </Badge>
+                            )}
                           </div>
                         </div>
                         <div className="text-right">

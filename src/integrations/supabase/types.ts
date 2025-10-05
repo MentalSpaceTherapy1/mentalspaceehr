@@ -3193,12 +3193,15 @@ export type Database = {
       }
       supervision_relationships: {
         Row: {
+          can_bill_incident_to: boolean
           competencies_achieved: Json | null
           competencies_to_achieve: string[] | null
           created_by: string | null
           created_date: string | null
           end_date: string | null
           id: string
+          incident_to_requirements_verified: Json | null
+          incident_to_start_date: string | null
           notification_settings: Json | null
           relationship_type: string
           required_direct_hours: number | null
@@ -3215,12 +3218,15 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          can_bill_incident_to?: boolean
           competencies_achieved?: Json | null
           competencies_to_achieve?: string[] | null
           created_by?: string | null
           created_date?: string | null
           end_date?: string | null
           id?: string
+          incident_to_requirements_verified?: Json | null
+          incident_to_start_date?: string | null
           notification_settings?: Json | null
           relationship_type?: string
           required_direct_hours?: number | null
@@ -3237,12 +3243,15 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          can_bill_incident_to?: boolean
           competencies_achieved?: Json | null
           competencies_to_achieve?: string[] | null
           created_by?: string | null
           created_date?: string | null
           end_date?: string | null
           id?: string
+          incident_to_requirements_verified?: Json | null
+          incident_to_start_date?: string | null
           notification_settings?: Json | null
           relationship_type?: string
           required_direct_hours?: number | null

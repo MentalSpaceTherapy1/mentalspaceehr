@@ -5,9 +5,15 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CalendarIcon, ClipboardCheck } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface SupervisionRelationshipDialogProps {
   open: boolean;
@@ -44,6 +50,9 @@ export function SupervisionRelationshipDialog({
     supervision_frequency: 'Weekly' as const,
     scheduled_day_time: '',
     requires_note_cosign: true,
+    can_bill_incident_to: false,
+    incident_to_start_date: null as Date | null,
+    verification_notes: '',
   });
 
   useEffect(() => {
@@ -96,6 +105,8 @@ export function SupervisionRelationshipDialog({
     setLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { error } = await supabase
         .from('supervision_relationships')
         .insert({
@@ -110,6 +121,13 @@ export function SupervisionRelationshipDialog({
           supervision_frequency: formData.supervision_frequency,
           scheduled_day_time: formData.scheduled_day_time || null,
           requires_note_cosign: formData.requires_note_cosign,
+          can_bill_incident_to: formData.can_bill_incident_to,
+          incident_to_start_date: formData.incident_to_start_date?.toISOString().split('T')[0] || null,
+          incident_to_requirements_verified: formData.can_bill_incident_to ? {
+            verifiedBy: user?.id,
+            verifiedDate: new Date().toISOString(),
+            verificationNotes: formData.verification_notes
+          } : null,
         });
 
       if (error) throw error;
@@ -130,6 +148,9 @@ export function SupervisionRelationshipDialog({
         supervision_frequency: 'Weekly',
         scheduled_day_time: '',
         requires_note_cosign: true,
+        can_bill_incident_to: false,
+        incident_to_start_date: null,
+        verification_notes: '',
       });
     } catch (error) {
       console.error('Error creating relationship:', error);
@@ -289,6 +310,85 @@ export function SupervisionRelationshipDialog({
                 Require supervisor co-signature on all notes
               </Label>
             </div>
+          </div>
+
+          <Separator />
+
+          {/* Incident-to Billing Eligibility */}
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+            <div className="flex items-start space-x-2">
+              <Checkbox
+                id="can_bill_incident_to"
+                checked={formData.can_bill_incident_to}
+                onCheckedChange={(checked) => setFormData({ 
+                  ...formData, 
+                  can_bill_incident_to: checked as boolean,
+                  incident_to_start_date: checked ? formData.incident_to_start_date : null,
+                  verification_notes: checked ? formData.verification_notes : ''
+                })}
+              />
+              <div className="flex-1">
+                <Label htmlFor="can_bill_incident_to" className="cursor-pointer font-semibold flex items-center gap-2">
+                  <ClipboardCheck className="h-4 w-4" />
+                  Qualified for Incident-to Billing
+                </Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Check if this supervisee meets Medicare incident-to billing requirements
+                </p>
+              </div>
+            </div>
+
+            {formData.can_bill_incident_to && (
+              <div className="space-y-4 ml-6">
+                <div className="space-y-2">
+                  <Label htmlFor="incident_to_start_date">Eligibility Start Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !formData.incident_to_start_date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.incident_to_start_date ? (
+                          format(formData.incident_to_start_date, 'PPP')
+                        ) : (
+                          <span>Select date when eligible</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formData.incident_to_start_date || undefined}
+                        onSelect={(date) => setFormData({ ...formData, incident_to_start_date: date || null })}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-xs text-muted-foreground">
+                    Date when supervisee became qualified for incident-to billing
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="verification_notes">Verification Notes</Label>
+                  <Textarea
+                    id="verification_notes"
+                    placeholder="Document how requirements were verified (licenses, credentials, training, etc.)"
+                    value={formData.verification_notes}
+                    onChange={(e) => setFormData({ ...formData, verification_notes: e.target.value })}
+                    rows={3}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Document verification of incident-to billing qualifications
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
