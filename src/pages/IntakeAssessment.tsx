@@ -542,7 +542,12 @@ export default function IntakeAssessment() {
       timeSpentDocumenting: documentationTime
     }));
     
-    await saveIntakeAssessment('Signed');
+    const savedNoteId = await saveIntakeAssessment('Signed');
+    
+    if (savedNoteId) {
+      // Check if clinician has a supervisor and needs cosigning
+      await checkAndSubmitForCosign(savedNoteId, 'intake_assessment');
+    }
     
     toast({
       title: 'Success',
@@ -567,14 +572,14 @@ export default function IntakeAssessment() {
     });
   };
 
-  const saveIntakeAssessment = async (status: 'Draft' | 'Pending Signature' | 'Signed' = 'Draft') => {
+  const saveIntakeAssessment = async (status: 'Draft' | 'Pending Signature' | 'Signed' = 'Draft'): Promise<string | null> => {
     if (!formData.clientId) {
       toast({
         title: 'Error',
         description: 'Please select a client',
         variant: 'destructive'
       });
-      return;
+      return null;
     }
 
     if (!selectedAppointmentId) {
@@ -583,7 +588,7 @@ export default function IntakeAssessment() {
         description: 'An intake assessment must be linked to a scheduled appointment',
         variant: 'destructive'
       });
-      return;
+      return null;
     }
 
     // If signing but requires supervisor cosign and not yet cosigned, don't allow
@@ -593,7 +598,7 @@ export default function IntakeAssessment() {
         description: 'This note requires supervisor co-signature before it can be signed',
         variant: 'destructive'
       });
-      return;
+      return null;
     }
 
     try {
@@ -644,6 +649,8 @@ export default function IntakeAssessment() {
         created_by: user?.id
       };
 
+      let savedNoteId = noteId;
+
       if (noteId) {
         const { error } = await supabase
           .from('clinical_notes')
@@ -661,6 +668,7 @@ export default function IntakeAssessment() {
         if (error) throw error;
         
         if (data) {
+          savedNoteId = data.id;
           navigate(`/intake-assessment?noteId=${data.id}&clientId=${formData.clientId}`, { replace: true });
         }
       }
@@ -671,6 +679,7 @@ export default function IntakeAssessment() {
       });
       
       setHasUnsavedChanges(false);
+      return savedNoteId;
     } catch (error) {
       console.error('Error saving intake assessment:', error);
       toast({
@@ -678,8 +687,82 @@ export default function IntakeAssessment() {
         description: 'Failed to save intake assessment',
         variant: 'destructive'
       });
+      return null;
     } finally {
       setSaving(false);
+    }
+  };
+
+  const checkAndSubmitForCosign = async (savedNoteId: string, noteType: string) => {
+    try {
+      // Check if clinician has an active supervisor
+      const { data: supervisionData, error: supervisionError } = await supabase
+        .from('supervision_relationships')
+        .select('supervisor_id, supervisee_id')
+        .eq('supervisee_id', user?.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (supervisionError) {
+        console.error('Error checking supervision:', supervisionError);
+        return;
+      }
+
+      if (!supervisionData) {
+        // No active supervisor, no need to submit for cosign
+        return;
+      }
+
+      // Get practice settings for due date
+      const { data: settingsData } = await supabase
+        .from('practice_settings')
+        .select('*')
+        .maybeSingle();
+
+      const cosignSettings = (settingsData as any)?.cosign_settings;
+      const defaultDueDays = cosignSettings?.default_cosign_due_days || 7;
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + defaultDueDays);
+
+      // Create cosignature record
+      const { data: cosignData, error: cosignError } = await supabase
+        .from('note_cosignatures')
+        .insert({
+          note_id: savedNoteId,
+          note_type: noteType,
+          clinician_id: user?.id,
+          supervisor_id: supervisionData.supervisor_id,
+          status: 'Pending Review',
+          submitted_for_cosign_date: new Date().toISOString(),
+          due_date: dueDate.toISOString()
+        })
+        .select('id')
+        .single();
+
+      if (cosignError) {
+        console.error('Error creating cosignature record:', cosignError);
+        return;
+      }
+
+      // Call workflow edge function to trigger notifications
+      if (cosignData) {
+        await supabase.functions.invoke('cosignature-workflow', {
+          body: {
+            action: 'submit',
+            cosignatureId: cosignData.id,
+            noteId: savedNoteId,
+            userId: user?.id
+          }
+        });
+
+        toast({
+          title: 'Note Submitted for Review',
+          description: 'Your note has been submitted to your supervisor for co-signature',
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting for cosign:', error);
+      // Don't block the signing process if cosign submission fails
     }
   };
 

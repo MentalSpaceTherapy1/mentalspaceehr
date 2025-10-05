@@ -635,6 +635,9 @@ export default function TreatmentPlan() {
 
       if (error) throw error;
 
+      // Check if clinician has a supervisor and needs cosigning
+      await checkAndSubmitForCosign(planId, 'treatment_plan');
+
       toast({
         title: 'Treatment Plan Signed',
         description: 'Treatment plan has been signed and activated',
@@ -666,6 +669,79 @@ export default function TreatmentPlan() {
     } finally {
       setSaving(false);
       setSignatureDialogOpen(false);
+    }
+  };
+
+  const checkAndSubmitForCosign = async (savedPlanId: string, noteType: string) => {
+    try {
+      // Check if clinician has an active supervisor
+      const { data: supervisionData, error: supervisionError } = await supabase
+        .from('supervision_relationships')
+        .select('supervisor_id, supervisee_id')
+        .eq('supervisee_id', user?.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (supervisionError) {
+        console.error('Error checking supervision:', supervisionError);
+        return;
+      }
+
+      if (!supervisionData) {
+        // No active supervisor, no need to submit for cosign
+        return;
+      }
+
+      // Get practice settings for due date
+      const { data: settingsData } = await supabase
+        .from('practice_settings')
+        .select('*')
+        .maybeSingle();
+
+      const cosignSettings = (settingsData as any)?.cosign_settings;
+      const defaultDueDays = cosignSettings?.default_cosign_due_days || 7;
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + defaultDueDays);
+
+      // Create cosignature record
+      const { data: cosignData, error: cosignError } = await supabase
+        .from('note_cosignatures')
+        .insert({
+          note_id: savedPlanId,
+          note_type: noteType,
+          clinician_id: user?.id,
+          supervisor_id: supervisionData.supervisor_id,
+          status: 'Pending Review',
+          submitted_for_cosign_date: new Date().toISOString(),
+          due_date: dueDate.toISOString()
+        })
+        .select('id')
+        .single();
+
+      if (cosignError) {
+        console.error('Error creating cosignature record:', cosignError);
+        return;
+      }
+
+      // Call workflow edge function to trigger notifications
+      if (cosignData) {
+        await supabase.functions.invoke('cosignature-workflow', {
+          body: {
+            action: 'submit',
+            cosignatureId: cosignData.id,
+            noteId: savedPlanId,
+            userId: user?.id
+          }
+        });
+
+        toast({
+          title: 'Plan Submitted for Review',
+          description: 'Your treatment plan has been submitted to your supervisor for co-signature',
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting for cosign:', error);
+      // Don't block the signing process if cosign submission fails
     }
   };
 
