@@ -3086,7 +3086,6 @@ export type Database = {
         Row: {
           competencies_achieved: Json | null
           competencies_to_achieve: string[] | null
-          cosign_timeframe: number
           created_by: string | null
           created_date: string | null
           end_date: string | null
@@ -3109,7 +3108,6 @@ export type Database = {
         Insert: {
           competencies_achieved?: Json | null
           competencies_to_achieve?: string[] | null
-          cosign_timeframe?: number
           created_by?: string | null
           created_date?: string | null
           end_date?: string | null
@@ -3132,7 +3130,6 @@ export type Database = {
         Update: {
           competencies_achieved?: Json | null
           competencies_to_achieve?: string[] | null
-          cosign_timeframe?: number
           created_by?: string | null
           created_date?: string | null
           end_date?: string | null

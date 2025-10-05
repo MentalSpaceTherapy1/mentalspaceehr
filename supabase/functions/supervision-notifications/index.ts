@@ -59,7 +59,7 @@ serve(async (req) => {
               <h2>New Note Requires Your Co-Signature</h2>
               <p>Dear ${relationship.supervisor.first_name},</p>
               <p>${relationship.supervisee.first_name} ${relationship.supervisee.last_name} has created a new clinical note that requires your co-signature.</p>
-              <p>Please review and sign the note within ${relationship.cosign_timeframe} days to maintain compliance.</p>
+              <p>Please review and sign the note to maintain compliance.</p>
               <p><a href="${supabaseUrl}/dashboard">View Dashboard</a></p>
             `
           });

@@ -27,7 +27,6 @@ interface RelationshipWithDetails {
   required_indirect_hours: number | null;
   required_group_hours: number | null;
   requires_note_cosign: boolean;
-  cosign_timeframe: number;
   supervisor_name: string;
   supervisee_name: string;
   completed_hours: number;

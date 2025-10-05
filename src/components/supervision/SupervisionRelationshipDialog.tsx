@@ -44,7 +44,6 @@ export function SupervisionRelationshipDialog({
     supervision_frequency: 'Weekly' as const,
     scheduled_day_time: '',
     requires_note_cosign: true,
-    cosign_timeframe: 7,
   });
 
   useEffect(() => {
@@ -111,7 +110,6 @@ export function SupervisionRelationshipDialog({
           supervision_frequency: formData.supervision_frequency,
           scheduled_day_time: formData.scheduled_day_time || null,
           requires_note_cosign: formData.requires_note_cosign,
-          cosign_timeframe: formData.cosign_timeframe,
         });
 
       if (error) throw error;
@@ -132,7 +130,6 @@ export function SupervisionRelationshipDialog({
         supervision_frequency: 'Weekly',
         scheduled_day_time: '',
         requires_note_cosign: true,
-        cosign_timeframe: 7,
       });
     } catch (error) {
       console.error('Error creating relationship:', error);
@@ -292,20 +289,6 @@ export function SupervisionRelationshipDialog({
                 Require supervisor co-signature on all notes
               </Label>
             </div>
-
-            {formData.requires_note_cosign && (
-              <div className="space-y-2 ml-6">
-                <Label htmlFor="cosign_timeframe">Co-sign Timeframe (days)</Label>
-                <Input
-                  id="cosign_timeframe"
-                  type="number"
-                  value={formData.cosign_timeframe}
-                  onChange={(e) => setFormData({ ...formData, cosign_timeframe: parseInt(e.target.value) })}
-                  min="1"
-                  max="30"
-                />
-              </div>
-            )}
           </div>
 
           <DialogFooter>
