@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { 
   Loader2, Calendar, Clock, ChevronDown, 
   FileText, Lightbulb, CheckSquare, CalendarPlus, 
-  MessageSquare, PenTool, Video, Phone, Building, Users
+  MessageSquare, PenTool, Video, Phone, Building, Users, CheckCircle
 } from "lucide-react";
 import { format } from "date-fns";
 import { CaseDiscussion, ActionItem, GroupSupervisee } from "@/hooks/useSupervisionSessions";
@@ -48,6 +48,7 @@ export function SupervisionSessionDialog({
     actions: false,
     followup: false,
     reflection: false,
+    verification: false,
     signatures: true
   });
 
@@ -85,6 +86,12 @@ export function SupervisionSessionDialog({
     
     // Supervisee reflection
     supervisee_reflection: '',
+    
+    // Verification & License (NEW)
+    verified_by_supervisor: false,
+    status: 'Pending' as 'Pending' | 'Verified' | 'Disputed',
+    dispute_reason: '',
+    applies_to: '',
     
     // Signatures
     supervisor_signature_name: '',
@@ -128,6 +135,13 @@ export function SupervisionSessionDialog({
         next_session_scheduled: formData.next_session_scheduled,
         next_session_date: formData.next_session_scheduled ? formData.next_session_date : null,
         supervisee_reflection: formData.supervisee_reflection || null,
+        // Verification & License fields (NEW)
+        verified_by_supervisor: formData.verified_by_supervisor,
+        verification_date: formData.verified_by_supervisor ? now : null,
+        status: formData.status,
+        dispute_reason: formData.status === 'Disputed' ? formData.dispute_reason : null,
+        applies_to: formData.applies_to || null,
+        // Signatures
         supervisor_signature_name: formData.supervisor_signature_name,
         supervisor_signed: true,
         supervisor_signed_date: now,
@@ -162,6 +176,10 @@ export function SupervisionSessionDialog({
         next_session_scheduled: false,
         next_session_date: '',
         supervisee_reflection: '',
+        verified_by_supervisor: false,
+        status: 'Pending',
+        dispute_reason: '',
+        applies_to: '',
         supervisor_signature_name: '',
         supervisee_signature_name: ''
       });
@@ -201,6 +219,7 @@ export function SupervisionSessionDialog({
               <ChevronDown className={`h-4 w-4 transition-transform ${sectionsOpen.basic ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-4">
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="session_date">Session Date *</Label>
@@ -325,27 +344,25 @@ export function SupervisionSessionDialog({
             </CollapsibleContent>
           </Collapsible>
 
-          {/* Group Supervision */}
-          {formData.session_type === 'Group' && (
-            <Collapsible 
-              open={sectionsOpen.group}
-              onOpenChange={(open) => setSectionsOpen({ ...sectionsOpen, group: open })}
-            >
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted rounded-lg hover:bg-muted/80">
-                <div className="flex items-center gap-2 font-semibold">
-                  <Users className="h-4 w-4" />
-                  Group Supervisees ({formData.group_supervisees.length})
-                </div>
-                <ChevronDown className={`h-4 w-4 transition-transform ${sectionsOpen.group ? 'rotate-180' : ''}`} />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-4 pt-4">
-                <GroupSuperviseesInput 
-                  supervisees={formData.group_supervisees}
-                  onChange={(supervisees) => setFormData({ ...formData, group_supervisees: supervisees })}
-                />
-              </CollapsibleContent>
-            </Collapsible>
-          )}
+          {/* Group Supervision Details */}
+          <Collapsible 
+            open={sectionsOpen.group}
+            onOpenChange={(open) => setSectionsOpen({ ...sectionsOpen, group: open })}
+          >
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted rounded-lg hover:bg-muted/80">
+              <div className="flex items-center gap-2 font-semibold">
+                <Users className="h-4 w-4" />
+                Group Supervision Details
+              </div>
+              <ChevronDown className={`h-4 w-4 transition-transform ${sectionsOpen.group ? 'rotate-180' : ''}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-4 pt-4">
+              <GroupSuperviseesInput
+                groupSupervisees={formData.group_supervisees}
+                onChange={(newSupervisees) => setFormData({ ...formData, group_supervisees: newSupervisees })}
+              />
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* Cases Discussed */}
           <Collapsible 
@@ -355,15 +372,43 @@ export function SupervisionSessionDialog({
             <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted rounded-lg hover:bg-muted/80">
               <div className="flex items-center gap-2 font-semibold">
                 <FileText className="h-4 w-4" />
-                Cases Discussed ({formData.cases_discussed.length})
+                Cases Discussed
               </div>
               <ChevronDown className={`h-4 w-4 transition-transform ${sectionsOpen.cases ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-4">
-              <CaseDiscussionInput 
-                cases={formData.cases_discussed}
-                onChange={(cases) => setFormData({ ...formData, cases_discussed: cases })}
-              />
+              {formData.cases_discussed.map((caseDiscussion, index) => (
+                <CaseDiscussionInput
+                  key={index}
+                  caseDiscussion={caseDiscussion}
+                  onChange={(updatedCase) => {
+                    const updatedCases = [...formData.cases_discussed];
+                    updatedCases[index] = updatedCase;
+                    setFormData({ ...formData, cases_discussed: updatedCases });
+                  }}
+                  onDelete={() => {
+                    const updatedCases = [...formData.cases_discussed];
+                    updatedCases.splice(index, 1);
+                    setFormData({ ...formData, cases_discussed: updatedCases });
+                  }}
+                />
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setFormData({
+                  ...formData,
+                  cases_discussed: [...formData.cases_discussed, {
+                    client_id: '',
+                    discussion_summary: '',
+                    clinical_issues: [],
+                    interventions_recommended: []
+                  }]
+                })}
+              >
+                Add Case Discussion
+              </Button>
             </CollapsibleContent>
           </Collapsible>
 
@@ -381,22 +426,24 @@ export function SupervisionSessionDialog({
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label>Skills Developed (one per line)</Label>
+                <Label htmlFor="skills_developed">Skills Developed (one per line)</Label>
                 <Textarea
-                  placeholder="Enter skills developed or practiced in this session"
-                  rows={2}
+                  id="skills_developed"
+                  placeholder="List skills developed during this session, one per line"
+                  rows={3}
                   value={formData.skills_developed.join('\n')}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    skills_developed: e.target.value.split('\n').filter(t => t.trim()) 
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    skills_developed: e.target.value.split('\n').filter(s => s.trim())
                   })}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Feedback Provided</Label>
+                <Label htmlFor="feedback_provided">Feedback Provided</Label>
                 <Textarea
-                  placeholder="Detailed feedback given to supervisee"
+                  id="feedback_provided"
+                  placeholder="Specific feedback provided to the supervisee"
                   rows={3}
                   value={formData.feedback_provided}
                   onChange={(e) => setFormData({ ...formData, feedback_provided: e.target.value })}
@@ -404,27 +451,29 @@ export function SupervisionSessionDialog({
               </div>
 
               <div className="space-y-2">
-                <Label>Areas of Strength (one per line)</Label>
+                <Label htmlFor="areas_of_strength">Areas of Strength (one per line)</Label>
                 <Textarea
-                  placeholder="Enter areas where supervisee excelled"
-                  rows={2}
+                  id="areas_of_strength"
+                  placeholder="Supervisee's areas of strength, one per line"
+                  rows={3}
                   value={formData.areas_of_strength.join('\n')}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    areas_of_strength: e.target.value.split('\n').filter(t => t.trim()) 
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    areas_of_strength: e.target.value.split('\n').filter(a => a.trim())
                   })}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Areas for Improvement (one per line)</Label>
+                <Label htmlFor="areas_for_improvement">Areas for Improvement (one per line)</Label>
                 <Textarea
-                  placeholder="Enter areas for continued growth and development"
-                  rows={2}
+                  id="areas_for_improvement"
+                  placeholder="Areas where the supervisee can improve, one per line"
+                  rows={3}
                   value={formData.areas_for_improvement.join('\n')}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    areas_for_improvement: e.target.value.split('\n').filter(t => t.trim()) 
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    areas_for_improvement: e.target.value.split('\n').filter(a => a.trim())
                   })}
                 />
               </div>
@@ -439,20 +488,19 @@ export function SupervisionSessionDialog({
             <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted rounded-lg hover:bg-muted/80">
               <div className="flex items-center gap-2 font-semibold">
                 <CheckSquare className="h-4 w-4" />
-                Action Items ({formData.action_items.length})
+                Action Items
               </div>
               <ChevronDown className={`h-4 w-4 transition-transform ${sectionsOpen.actions ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-4">
-              <ActionItemsList 
-                items={formData.action_items}
-                onChange={(items) => setFormData({ ...formData, action_items: items })}
-                showCompleted={false}
+              <ActionItemsList
+                actionItems={formData.action_items}
+                onChange={(newItems) => setFormData({ ...formData, action_items: newItems })}
               />
             </CollapsibleContent>
           </Collapsible>
 
-          {/* Follow-up Planning */}
+          {/* Follow-up */}
           <Collapsible 
             open={sectionsOpen.followup}
             onOpenChange={(open) => setSectionsOpen({ ...sectionsOpen, followup: open })}
@@ -460,29 +508,27 @@ export function SupervisionSessionDialog({
             <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted rounded-lg hover:bg-muted/80">
               <div className="flex items-center gap-2 font-semibold">
                 <CalendarPlus className="h-4 w-4" />
-                Follow-up Planning
+                Follow-up
               </div>
               <ChevronDown className={`h-4 w-4 transition-transform ${sectionsOpen.followup ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-4">
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="next_session"
+                  id="next_session_scheduled"
                   checked={formData.next_session_scheduled}
-                  onCheckedChange={(checked) => setFormData({ 
-                    ...formData, 
-                    next_session_scheduled: checked as boolean 
-                  })}
+                  onCheckedChange={(checked) => setFormData({ ...formData, next_session_scheduled: !!checked })}
                 />
-                <Label htmlFor="next_session" className="cursor-pointer">
-                  Next supervision session scheduled
+                <Label htmlFor="next_session_scheduled" className="text-sm font-normal">
+                  Next Session Scheduled?
                 </Label>
               </div>
 
               {formData.next_session_scheduled && (
                 <div className="space-y-2">
-                  <Label>Next Session Date</Label>
+                  <Label htmlFor="next_session_date">Next Session Date</Label>
                   <Input
+                    id="next_session_date"
                     type="date"
                     value={formData.next_session_date}
                     onChange={(e) => setFormData({ ...formData, next_session_date: e.target.value })}
@@ -506,21 +552,98 @@ export function SupervisionSessionDialog({
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label>Supervisee's Reflection on Session</Label>
+                <Label htmlFor="supervisee_reflection">Supervisee's Reflection</Label>
                 <Textarea
-                  placeholder="Supervisee's own notes and reflections about the session"
-                  rows={4}
+                  id="supervisee_reflection"
+                  placeholder="Supervisee's thoughts and reflections on the session"
+                  rows={3}
                   value={formData.supervisee_reflection}
                   onChange={(e) => setFormData({ ...formData, supervisee_reflection: e.target.value })}
                 />
-                <p className="text-xs text-muted-foreground">
-                  This section is for the supervisee to document their own perspective and learning
-                </p>
               </div>
             </CollapsibleContent>
           </Collapsible>
 
-          {/* Signatures */}
+          {/* Verification & Licensure Section (NEW) */}
+          <Collapsible 
+            open={sectionsOpen.verification}
+            onOpenChange={(open) => setSectionsOpen({ ...sectionsOpen, verification: open })}
+          >
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted rounded-lg hover:bg-muted/80">
+              <div className="flex items-center gap-2 font-semibold">
+                <CheckCircle className="h-4 w-4" />
+                Verification & License Tracking
+              </div>
+              <ChevronDown className={`h-4 w-4 transition-transform ${sectionsOpen.verification ? 'rotate-180' : ''}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="applies_to">Applies To (License Type)</Label>
+                <Select
+                  value={formData.applies_to}
+                  onValueChange={(value) => setFormData({ ...formData, applies_to: value })}
+                >
+                  <SelectTrigger id="applies_to">
+                    <SelectValue placeholder="Select license type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="LMSW">LMSW (Licensed Master Social Worker)</SelectItem>
+                    <SelectItem value="LCSW">LCSW (Licensed Clinical Social Worker)</SelectItem>
+                    <SelectItem value="LMHC">LMHC (Licensed Mental Health Counselor)</SelectItem>
+                    <SelectItem value="LMFT">LMFT (Licensed Marriage and Family Therapist)</SelectItem>
+                    <SelectItem value="LCAT">LCAT (Licensed Creative Arts Therapist)</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Specify which licensure requirement these hours apply to
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="verified_by_supervisor"
+                  checked={formData.verified_by_supervisor}
+                  onCheckedChange={(checked) => setFormData({ ...formData, verified_by_supervisor: !!checked })}
+                />
+                <Label htmlFor="verified_by_supervisor" className="text-sm font-normal">
+                  Verified by Supervisor
+                </Label>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Session Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value: any) => setFormData({ ...formData, status: value })}
+                >
+                  <SelectTrigger id="status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="Verified">Verified</SelectItem>
+                    <SelectItem value="Disputed">Disputed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.status === 'Disputed' && (
+                <div className="space-y-2">
+                  <Label htmlFor="dispute_reason">Dispute Reason</Label>
+                  <Textarea
+                    id="dispute_reason"
+                    rows={3}
+                    placeholder="Explain the reason for dispute..."
+                    value={formData.dispute_reason}
+                    onChange={(e) => setFormData({ ...formData, dispute_reason: e.target.value })}
+                  />
+                </div>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Signatures Section */}
           <Collapsible 
             open={sectionsOpen.signatures}
             onOpenChange={(open) => setSectionsOpen({ ...sectionsOpen, signatures: open })}
@@ -528,43 +651,38 @@ export function SupervisionSessionDialog({
             <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted rounded-lg hover:bg-muted/80">
               <div className="flex items-center gap-2 font-semibold">
                 <PenTool className="h-4 w-4" />
-                Signatures (Required)
+                Signatures
               </div>
               <ChevronDown className={`h-4 w-4 transition-transform ${sectionsOpen.signatures ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="supervisor_sig">Supervisor Signature *</Label>
-                <Input
-                  id="supervisor_sig"
-                  placeholder="Type full name to sign"
-                  value={formData.supervisor_signature_name}
-                  onChange={(e) => setFormData({ ...formData, supervisor_signature_name: e.target.value })}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  By signing, the supervisor confirms this session occurred as documented
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="supervisee_sig">Supervisee Signature *</Label>
-                <Input
-                  id="supervisee_sig"
-                  placeholder="Type full name to sign"
-                  value={formData.supervisee_signature_name}
-                  onChange={(e) => setFormData({ ...formData, supervisee_signature_name: e.target.value })}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  By signing, the supervisee confirms this session occurred as documented
-                </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="supervisor_signature">Supervisor Signature *</Label>
+                  <Input
+                    id="supervisor_signature"
+                    placeholder="Type your full name"
+                    value={formData.supervisor_signature_name}
+                    onChange={(e) => setFormData({ ...formData, supervisor_signature_name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="supervisee_signature">Supervisee Signature *</Label>
+                  <Input
+                    id="supervisee_signature"
+                    placeholder="Type your full name"
+                    value={formData.supervisee_signature_name}
+                    onChange={(e) => setFormData({ ...formData, supervisee_signature_name: e.target.value })}
+                    required
+                  />
+                </div>
               </div>
             </CollapsibleContent>
           </Collapsible>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          {/* Submit Button */}
+          <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

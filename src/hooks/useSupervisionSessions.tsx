@@ -68,6 +68,15 @@ export interface SupervisionSession {
   supervisor_signed_date?: string | null;
   supervisee_signed_date?: string | null;
   
+  // Verification (Phase 1)
+  verified_by_supervisor?: boolean | null;
+  verification_date?: string | null;
+  status?: string | null; // 'Pending' | 'Verified' | 'Disputed'
+  dispute_reason?: string | null;
+  
+  // Licensure Tracking (Phase 2)
+  applies_to?: string | null; // which license requirement
+  
   // Metadata
   created_date: string;
   created_by?: string | null;

@@ -1,11 +1,17 @@
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { SupervisionSession } from "@/hooks/useSupervisionSessions";
+import { useSupervisionAttachments } from "@/hooks/useSupervisionAttachments";
 import { ActionItemsList } from "./ActionItemsList";
 import { 
   Calendar, Clock, Users, FileText, Lightbulb, 
-  CheckSquare, MessageSquare, PenTool, Video, Phone, Building
+  CheckSquare, MessageSquare, PenTool, Video, Phone, Building,
+  CheckCircle, XCircle, AlertCircle, Paperclip, Download, Trash2, Upload
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -20,6 +26,10 @@ export function SupervisionSessionViewer({
   onOpenChange, 
   session 
 }: SupervisionSessionViewerProps) {
+  const { attachments, uploading, uploadFile, deleteAttachment, downloadAttachment } = useSupervisionAttachments(session?.id);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileDescription, setFileDescription] = useState('');
+
   if (!session) return null;
 
   const formatTime = (time: string | null | undefined) => {
@@ -43,6 +53,32 @@ export function SupervisionSessionViewer({
         return <Phone className="h-4 w-4" />;
       default:
         return <Building className="h-4 w-4" />;
+    }
+  };
+
+  const getStatusBadge = (status?: string | null) => {
+    switch (status) {
+      case 'Verified':
+        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Verified</Badge>;
+      case 'Disputed':
+        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Disputed</Badge>;
+      default:
+        return <Badge variant="secondary"><AlertCircle className="h-3 w-3 mr-1" />Pending</Badge>;
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!selectedFile || !session.id) return;
+    const success = await uploadFile(selectedFile, session.id, fileDescription);
+    if (success) {
+      setSelectedFile(null);
+      setFileDescription('');
     }
   };
 
@@ -276,6 +312,118 @@ export function SupervisionSessionViewer({
               <Separator />
             </>
           )}
+
+          {/* Verification & License Info (NEW) */}
+          <div className="space-y-3">
+            <h3 className="font-semibold flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              Verification & License
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium mb-2">Status</p>
+                {getStatusBadge(session.status)}
+              </div>
+              {session.applies_to && (
+                <div>
+                  <p className="text-sm font-medium mb-2">Applies To</p>
+                  <Badge variant="outline">{session.applies_to}</Badge>
+                </div>
+              )}
+              {session.verified_by_supervisor && session.verification_date && (
+                <div>
+                  <p className="text-sm font-medium mb-2">Verified Date</p>
+                  <p className="text-sm text-muted-foreground">{formatDate(session.verification_date)}</p>
+                </div>
+              )}
+              {session.dispute_reason && (
+                <div className="col-span-2">
+                  <p className="text-sm font-medium mb-2">Dispute Reason</p>
+                  <p className="text-sm text-muted-foreground">{session.dispute_reason}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Attachments (NEW) */}
+          <div className="space-y-3">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Paperclip className="h-4 w-4" />
+              Attachments
+            </h3>
+            
+            {/* Upload Section */}
+            <div className="mb-4 p-4 bg-muted rounded-lg space-y-3">
+              <div>
+                <Label htmlFor="file-upload">Upload Document</Label>
+                <Input
+                  id="file-upload"
+                  type="file"
+                  onChange={handleFileSelect}
+                  className="mt-1"
+                />
+              </div>
+              {selectedFile && (
+                <>
+                  <div>
+                    <Label htmlFor="file-description">Description (optional)</Label>
+                    <Input
+                      id="file-description"
+                      placeholder="E.g., Signed supervision agreement"
+                      value={fileDescription}
+                      onChange={(e) => setFileDescription(e.target.value)}
+                    />
+                  </div>
+                  <Button onClick={handleFileUpload} disabled={uploading} size="sm">
+                    <Upload className="h-4 w-4 mr-2" />
+                    {uploading ? 'Uploading...' : 'Upload'}
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Attachments List */}
+            {attachments.length > 0 ? (
+              <div className="space-y-2">
+                {attachments.map((attachment) => (
+                  <div key={attachment.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{attachment.file_name}</p>
+                      {attachment.description && (
+                        <p className="text-xs text-muted-foreground">{attachment.description}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {format(new Date(attachment.uploaded_at), 'MMM d, yyyy')}
+                        {attachment.file_size && ` • ${(attachment.file_size / 1024).toFixed(1)} KB`}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => downloadAttachment(attachment.file_path, attachment.file_name)}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => deleteAttachment(attachment.id, attachment.file_path)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No attachments uploaded yet</p>
+            )}
+          </div>
+
+          <Separator />
 
           {/* Signatures */}
           <div className="space-y-3">

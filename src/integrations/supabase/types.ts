@@ -3354,9 +3354,54 @@ export type Database = {
         }
         Relationships: []
       }
+      supervision_session_attachments: {
+        Row: {
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string
+          id: string
+          session_id: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+          session_id: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          session_id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supervision_session_attachments_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "supervision_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supervision_sessions: {
         Row: {
           action_items: Json | null
+          applies_to: string | null
           areas_for_improvement: string[] | null
           areas_of_strength: string[] | null
           cases_discussed: Json | null
@@ -3364,6 +3409,7 @@ export type Database = {
           competencies_addressed: string[] | null
           created_by: string | null
           created_date: string | null
+          dispute_reason: string | null
           feedback_provided: string | null
           group_supervisees: Json | null
           id: string
@@ -3379,6 +3425,7 @@ export type Database = {
           session_start_time: string | null
           session_type: string
           skills_developed: string[] | null
+          status: string
           supervisee_reflection: string | null
           supervisee_signature_name: string | null
           supervisee_signed: boolean | null
@@ -3388,9 +3435,12 @@ export type Database = {
           supervisor_signed_date: string | null
           topics_discussed: string[] | null
           updated_at: string | null
+          verification_date: string | null
+          verified_by_supervisor: boolean | null
         }
         Insert: {
           action_items?: Json | null
+          applies_to?: string | null
           areas_for_improvement?: string[] | null
           areas_of_strength?: string[] | null
           cases_discussed?: Json | null
@@ -3398,6 +3448,7 @@ export type Database = {
           competencies_addressed?: string[] | null
           created_by?: string | null
           created_date?: string | null
+          dispute_reason?: string | null
           feedback_provided?: string | null
           group_supervisees?: Json | null
           id?: string
@@ -3413,6 +3464,7 @@ export type Database = {
           session_start_time?: string | null
           session_type: string
           skills_developed?: string[] | null
+          status?: string
           supervisee_reflection?: string | null
           supervisee_signature_name?: string | null
           supervisee_signed?: boolean | null
@@ -3422,9 +3474,12 @@ export type Database = {
           supervisor_signed_date?: string | null
           topics_discussed?: string[] | null
           updated_at?: string | null
+          verification_date?: string | null
+          verified_by_supervisor?: boolean | null
         }
         Update: {
           action_items?: Json | null
+          applies_to?: string | null
           areas_for_improvement?: string[] | null
           areas_of_strength?: string[] | null
           cases_discussed?: Json | null
@@ -3432,6 +3487,7 @@ export type Database = {
           competencies_addressed?: string[] | null
           created_by?: string | null
           created_date?: string | null
+          dispute_reason?: string | null
           feedback_provided?: string | null
           group_supervisees?: Json | null
           id?: string
@@ -3447,6 +3503,7 @@ export type Database = {
           session_start_time?: string | null
           session_type?: string
           skills_developed?: string[] | null
+          status?: string
           supervisee_reflection?: string | null
           supervisee_signature_name?: string | null
           supervisee_signed?: boolean | null
@@ -3456,6 +3513,8 @@ export type Database = {
           supervisor_signed_date?: string | null
           topics_discussed?: string[] | null
           updated_at?: string | null
+          verification_date?: string | null
+          verified_by_supervisor?: boolean | null
         }
         Relationships: [
           {
