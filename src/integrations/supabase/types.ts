@@ -2106,6 +2106,87 @@ export type Database = {
           },
         ]
       }
+      note_cosignatures: {
+        Row: {
+          clinician_id: string
+          clinician_signed: boolean | null
+          clinician_signed_date: string | null
+          created_date: string | null
+          due_date: string | null
+          escalated: boolean | null
+          escalated_date: string | null
+          id: string
+          note_id: string
+          note_type: string
+          relationship_id: string | null
+          status: string
+          supervisor_comments: string | null
+          supervisor_cosigned: boolean | null
+          supervisor_cosigned_date: string | null
+          supervisor_id: string
+          supervisor_notified: boolean | null
+          supervisor_notified_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          clinician_id: string
+          clinician_signed?: boolean | null
+          clinician_signed_date?: string | null
+          created_date?: string | null
+          due_date?: string | null
+          escalated?: boolean | null
+          escalated_date?: string | null
+          id?: string
+          note_id: string
+          note_type: string
+          relationship_id?: string | null
+          status?: string
+          supervisor_comments?: string | null
+          supervisor_cosigned?: boolean | null
+          supervisor_cosigned_date?: string | null
+          supervisor_id: string
+          supervisor_notified?: boolean | null
+          supervisor_notified_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          clinician_id?: string
+          clinician_signed?: boolean | null
+          clinician_signed_date?: string | null
+          created_date?: string | null
+          due_date?: string | null
+          escalated?: boolean | null
+          escalated_date?: string | null
+          id?: string
+          note_id?: string
+          note_type?: string
+          relationship_id?: string | null
+          status?: string
+          supervisor_comments?: string | null
+          supervisor_cosigned?: boolean | null
+          supervisor_cosigned_date?: string | null
+          supervisor_id?: string
+          supervisor_notified?: boolean | null
+          supervisor_notified_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_cosignatures_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "supervision_hours_summary"
+            referencedColumns: ["relationship_id"]
+          },
+          {
+            foreignKeyName: "note_cosignatures_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "supervision_relationships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       note_feedback: {
         Row: {
           ai_sections_kept: Json | null
@@ -3003,54 +3084,150 @@ export type Database = {
       }
       supervision_relationships: {
         Row: {
-          created_at: string | null
+          competencies_achieved: Json | null
+          competencies_to_achieve: string[] | null
+          cosign_timeframe: number
+          created_by: string | null
+          created_date: string | null
           end_date: string | null
           id: string
-          is_active: boolean | null
-          notes: string | null
+          notification_settings: Json | null
+          relationship_type: string
+          required_direct_hours: number | null
+          required_group_hours: number | null
+          required_indirect_hours: number | null
+          required_supervision_hours: number
+          requires_note_cosign: boolean
+          scheduled_day_time: string | null
           start_date: string
+          status: string
           supervisee_id: string
-          supervision_type: string | null
+          supervision_frequency: string | null
           supervisor_id: string
           updated_at: string | null
         }
         Insert: {
-          created_at?: string | null
+          competencies_achieved?: Json | null
+          competencies_to_achieve?: string[] | null
+          cosign_timeframe?: number
+          created_by?: string | null
+          created_date?: string | null
           end_date?: string | null
           id?: string
-          is_active?: boolean | null
-          notes?: string | null
+          notification_settings?: Json | null
+          relationship_type?: string
+          required_direct_hours?: number | null
+          required_group_hours?: number | null
+          required_indirect_hours?: number | null
+          required_supervision_hours?: number
+          requires_note_cosign?: boolean
+          scheduled_day_time?: string | null
           start_date?: string
+          status?: string
           supervisee_id: string
-          supervision_type?: string | null
+          supervision_frequency?: string | null
           supervisor_id: string
           updated_at?: string | null
         }
         Update: {
-          created_at?: string | null
+          competencies_achieved?: Json | null
+          competencies_to_achieve?: string[] | null
+          cosign_timeframe?: number
+          created_by?: string | null
+          created_date?: string | null
           end_date?: string | null
           id?: string
-          is_active?: boolean | null
-          notes?: string | null
+          notification_settings?: Json | null
+          relationship_type?: string
+          required_direct_hours?: number | null
+          required_group_hours?: number | null
+          required_indirect_hours?: number | null
+          required_supervision_hours?: number
+          requires_note_cosign?: boolean
+          scheduled_day_time?: string | null
           start_date?: string
+          status?: string
           supervisee_id?: string
-          supervision_type?: string | null
+          supervision_frequency?: string | null
           supervisor_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      supervision_sessions: {
+        Row: {
+          cases_reviewed: string[] | null
+          competencies_addressed: string[] | null
+          created_by: string | null
+          created_date: string | null
+          id: string
+          notes: string | null
+          notes_reviewed: string[] | null
+          relationship_id: string
+          session_date: string
+          session_duration_minutes: number
+          session_format: string | null
+          session_type: string
+          supervisee_signed: boolean | null
+          supervisee_signed_date: string | null
+          supervisor_signed: boolean | null
+          supervisor_signed_date: string | null
+          topics_discussed: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          cases_reviewed?: string[] | null
+          competencies_addressed?: string[] | null
+          created_by?: string | null
+          created_date?: string | null
+          id?: string
+          notes?: string | null
+          notes_reviewed?: string[] | null
+          relationship_id: string
+          session_date: string
+          session_duration_minutes: number
+          session_format?: string | null
+          session_type: string
+          supervisee_signed?: boolean | null
+          supervisee_signed_date?: string | null
+          supervisor_signed?: boolean | null
+          supervisor_signed_date?: string | null
+          topics_discussed?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          cases_reviewed?: string[] | null
+          competencies_addressed?: string[] | null
+          created_by?: string | null
+          created_date?: string | null
+          id?: string
+          notes?: string | null
+          notes_reviewed?: string[] | null
+          relationship_id?: string
+          session_date?: string
+          session_duration_minutes?: number
+          session_format?: string | null
+          session_type?: string
+          supervisee_signed?: boolean | null
+          supervisee_signed_date?: string | null
+          supervisor_signed?: boolean | null
+          supervisor_signed_date?: string | null
+          topics_discussed?: string[] | null
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "supervision_relationships_supervisee_id_fkey"
-            columns: ["supervisee_id"]
+            foreignKeyName: "supervision_sessions_relationship_id_fkey"
+            columns: ["relationship_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: "supervision_hours_summary"
+            referencedColumns: ["relationship_id"]
           },
           {
-            foreignKeyName: "supervision_relationships_supervisor_id_fkey"
-            columns: ["supervisor_id"]
+            foreignKeyName: "supervision_sessions_relationship_id_fkey"
+            columns: ["relationship_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "supervision_relationships"
             referencedColumns: ["id"]
           },
         ]
@@ -3666,7 +3843,23 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      supervision_hours_summary: {
+        Row: {
+          completed_hours: number | null
+          direct_hours_completed: number | null
+          group_hours_completed: number | null
+          indirect_hours_completed: number | null
+          relationship_id: string | null
+          remaining_hours: number | null
+          required_direct_hours: number | null
+          required_group_hours: number | null
+          required_indirect_hours: number | null
+          required_supervision_hours: number | null
+          supervisee_id: string | null
+          supervisor_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_compliance_status: {

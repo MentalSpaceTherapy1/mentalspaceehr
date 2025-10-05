@@ -1,239 +1,273 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GradientCard, GradientCardContent, GradientCardDescription, GradientCardHeader, GradientCardTitle } from '@/components/ui/gradient-card';
-import { Button } from '@/components/ui/button';
-import { 
-  Users, 
-  FileCheck, 
-  Clock, 
-  AlertCircle, 
-  Calendar,
-  TrendingUp,
-  CheckCircle2,
-  FileText
-} from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { UnlockRequestManagement } from '@/components/compliance/UnlockRequestManagement';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Users, FileCheck, Clock, AlertCircle, Calendar, TrendingUp, CheckCircle, FileText, Plus } from "lucide-react";
+import { UnlockRequestManagement } from "../compliance/UnlockRequestManagement";
+import { useAuth } from "@/hooks/useAuth";
+import { useSupervisionRelationships } from "@/hooks/useSupervisionRelationships";
+import { useNoteCosignatures } from "@/hooks/useNoteCosignatures";
+import { SupervisionRelationshipDialog } from "../supervision/SupervisionRelationshipDialog";
+import { Loader2 } from "lucide-react";
+import { DashboardLayout } from "../layout/DashboardLayout";
 
-export const SupervisorDashboard = () => {
+export function SupervisorDashboard() {
+  const { user } = useAuth();
+  const [showNewRelationship, setShowNewRelationship] = useState(false);
+  
+  const { relationships, loading: loadingRel } = useSupervisionRelationships(user?.id);
+  const { cosignatures, loading: loadingCosig } = useNoteCosignatures(user?.id, 'Pending');
+
+  const activeRelationships = relationships.filter(r => r.status === 'Active');
+  const pendingCosigns = cosignatures.length;
+  
+  const totalHoursCompleted = relationships.reduce((sum, r) => sum + (r.completed_hours || 0), 0);
+  
+  const complianceIssues = activeRelationships.filter(r => {
+    const progress = (r.completed_hours || 0) / r.required_supervision_hours;
+    const monthsSinceStart = Math.max(1, Math.floor(
+      (new Date().getTime() - new Date(r.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30)
+    ));
+    const expectedProgress = monthsSinceStart / 12;
+    return progress < expectedProgress * 0.8;
+  }).length;
+
+  if (loadingRel) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Supervisees</CardTitle>
-            <Users className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Under supervision</p>
-          </CardContent>
-        </Card>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Supervisor Dashboard</h1>
+          <Button onClick={() => setShowNewRelationship(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Supervisee
+          </Button>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Co-Signs</CardTitle>
-            <FileCheck className="h-4 w-4 text-warning" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Notes awaiting signature</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Supervision Hours</CardTitle>
-            <Clock className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Hours this month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compliance Issues</CardTitle>
-            <AlertCircle className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Items needing attention</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Unlock Request Management */}
-      <UnlockRequestManagement />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Supervisees Overview */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Supervisees
-            </CardTitle>
-            <CardDescription>Current supervision relationships</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center p-8">
-              <div className="text-center">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No active supervisees</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Contact an administrator to set up supervision relationships
-                </p>
+        {/* Overview Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <Users className="h-8 w-8 text-primary" />
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              <div>
+                <p className="text-sm text-muted-foreground">Active Supervisees</p>
+                <p className="text-2xl font-bold">{activeRelationships.length}</p>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Notes Pending Co-Signature */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileCheck className="h-5 w-5" />
-              Notes Pending Co-Signature
-            </CardTitle>
-            <CardDescription>Documents awaiting your approval</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-center p-8">
-                <div className="text-center">
-                  <FileCheck className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <FileCheck className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Pending Co-Signs</p>
+                <p className="text-2xl font-bold">{pendingCosigns}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <Clock className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Supervision Hours (Total)</p>
+                <p className="text-2xl font-bold">{Math.round(totalHoursCompleted)}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <AlertCircle className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Compliance Issues</p>
+                <p className="text-2xl font-bold">{complianceIssues}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Unlock Request Management */}
+        <UnlockRequestManagement />
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Supervisees Overview */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Supervisees</CardTitle>
+              <CardDescription>Current supervision relationships</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {activeRelationships.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No active supervision relationships.</p>
+              ) : (
+                <div className="space-y-4">
+                  {activeRelationships.map((rel) => (
+                    <div key={rel.id} className="flex items-center justify-between border-b pb-3">
+                      <div className="flex-1">
+                        <p className="font-medium">
+                          {rel.supervisee?.first_name} {rel.supervisee?.last_name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">{rel.relationship_type}</p>
+                        <div className="flex gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {Math.round(rel.completed_hours || 0)}/{rel.required_supervision_hours} hrs
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {rel.supervision_frequency}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">
+                          {Math.round((rel.completed_hours || 0) / rel.required_supervision_hours * 100)}%
+                        </p>
+                        <p className="text-xs text-muted-foreground">Complete</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Notes Pending Co-Signature */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Notes Pending Co-Signature</CardTitle>
+              <CardDescription>Documents awaiting your approval</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingCosig ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : pendingCosigns === 0 ? (
+                <div className="text-center py-8">
+                  <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">All caught up!</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    No notes pending co-signature
-                  </p>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-3">
+                  {cosignatures.slice(0, 5).map((cosig) => (
+                    <div key={cosig.id} className="flex items-center justify-between border-b pb-2">
+                      <div>
+                        <p className="font-medium text-sm">
+                          {cosig.client?.first_name} {cosig.client?.last_name || 'Unknown Client'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          By {cosig.clinician?.first_name} {cosig.clinician?.last_name}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant="outline" className="text-xs">
+                          {cosig.note_type}
+                        </Badge>
+                        {cosig.due_date && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Due: {new Date(cosig.due_date).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Supervision Hours Summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Supervision Hours Summary</CardTitle>
+            <CardDescription>Hours provided by supervisee</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {activeRelationships.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No supervision hours recorded</p>
+              ) : (
+                activeRelationships.map((rel) => (
+                  <div key={rel.id} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">
+                        {rel.supervisee?.first_name} {rel.supervisee?.last_name}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {Math.round(rel.completed_hours || 0)} / {rel.required_supervision_hours} hours
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div
+                        className="bg-primary h-2 rounded-full transition-all"
+                        style={{
+                          width: `${Math.min(100, (rel.completed_hours || 0) / rel.required_supervision_hours * 100)}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>Common supervision tasks</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+                <FileCheck className="h-5 w-5" />
+                <span className="text-sm">Review Notes</span>
+              </Button>
+              <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+                <Calendar className="h-5 w-5" />
+                <span className="text-sm">Schedule Meeting</span>
+              </Button>
+              <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+                <Clock className="h-5 w-5" />
+                <span className="text-sm">Log Hours</span>
+              </Button>
+              <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+                <TrendingUp className="h-5 w-5" />
+                <span className="text-sm">View Progress</span>
+              </Button>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Supervision Hours Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Supervision Hours Summary
-          </CardTitle>
-          <CardDescription>Hours provided by supervisee</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-center p-8">
-              <p className="text-sm text-muted-foreground">No supervision hours recorded</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Supervisee Compliance Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5" />
-              Supervisee Compliance Status
-            </CardTitle>
-            <CardDescription>Documentation and licensing compliance</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-4 w-4 text-success" />
-                  <div>
-                    <p className="text-sm font-medium">Documentation Current</p>
-                    <p className="text-xs text-muted-foreground">All notes up to date</p>
-                  </div>
-                </div>
-                <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                  0
-                </Badge>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="h-4 w-4 text-warning" />
-                  <div>
-                    <p className="text-sm font-medium">Documentation Overdue</p>
-                    <p className="text-xs text-muted-foreground">Needs attention</p>
-                  </div>
-                </div>
-                <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                  0
-                </Badge>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Clock className="h-4 w-4 text-primary" />
-                  <div>
-                    <p className="text-sm font-medium">License Renewals</p>
-                    <p className="text-xs text-muted-foreground">Due within 90 days</p>
-                  </div>
-                </div>
-                <Badge variant="secondary">0</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Supervision Meetings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Upcoming Supervision Meetings
-            </CardTitle>
-            <CardDescription>Scheduled supervision sessions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center p-8">
-              <div className="text-center">
-                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No upcoming meetings</p>
-                <Button variant="link" className="mt-2">Schedule supervision</Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Common supervision tasks</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
-              <FileCheck className="h-5 w-5" />
-              <span className="text-sm">Review Notes</span>
-            </Button>
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
-              <Calendar className="h-5 w-5" />
-              <span className="text-sm">Schedule Meeting</span>
-            </Button>
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
-              <Clock className="h-5 w-5" />
-              <span className="text-sm">Log Hours</span>
-            </Button>
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
-              <TrendingUp className="h-5 w-5" />
-              <span className="text-sm">View Progress</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+      <SupervisionRelationshipDialog
+        open={showNewRelationship}
+        onOpenChange={setShowNewRelationship}
+        onSuccess={() => {
+          // Refresh happens automatically via subscription
+        }}
+        supervisorId={user?.id || ''}
+      />
+    </DashboardLayout>
   );
-};
+}

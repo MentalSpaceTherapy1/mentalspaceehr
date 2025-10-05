@@ -13,7 +13,7 @@ export interface NoteCosignature {
   supervisor_cosigned: boolean;
   supervisor_cosigned_date?: string | null;
   supervisor_comments?: string | null;
-  status: 'Pending' | 'Reviewed' | 'Cosigned' | 'Returned';
+  status: string;
   due_date?: string | null;
   supervisor_notified: boolean;
   supervisor_notified_date?: string | null;
@@ -21,7 +21,6 @@ export interface NoteCosignature {
   escalated_date?: string | null;
   created_date: string;
   
-  // Joined data
   clinician?: {
     id: string;
     first_name: string;
@@ -69,8 +68,7 @@ export const useNoteCosignatures = (supervisorId?: string, status?: string) => {
           return;
         }
 
-        // Fetch clinician profiles
-        const clinicianIds = [...new Set(cosignaturesData.map(c => c.clinician_id))];
+        const clinicianIds = [...new Set(cosignaturesData.map((c: any) => c.clinician_id))];
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, first_name, last_name')
@@ -78,48 +76,43 @@ export const useNoteCosignatures = (supervisorId?: string, status?: string) => {
 
         if (profilesError) throw profilesError;
 
-        // Fetch client information for each note
         const clientsMap = new Map();
         for (const cosig of cosignaturesData) {
-          let clientData = null;
-          
-          // Try different note types
-          if (cosig.note_type === 'clinical_note' || cosig.note_type === 'progress_note') {
-            const { data } = await supabase
-              .from('clinical_notes')
-              .select('client_id')
-              .eq('id', cosig.note_id)
-              .single();
-            if (data) clientData = data;
-          } else if (cosig.note_type === 'intake_assessment') {
-            const { data } = await supabase
-              .from('intake_assessments')
-              .select('client_id')
-              .eq('id', cosig.note_id)
-              .single();
-            if (data) clientData = data;
-          }
-          
-          if (clientData?.client_id) {
-            const { data: client } = await supabase
-              .from('clients')
-              .select('id, first_name, last_name')
-              .eq('id', clientData.client_id)
-              .single();
-            if (client) {
-              clientsMap.set(cosig.note_id, client);
+          try {
+            let clientData = null;
+            
+            if (cosig.note_type === 'clinical_note' || cosig.note_type === 'progress_note') {
+              const { data } = await supabase
+                .from('clinical_notes')
+                .select('client_id')
+                .eq('id', cosig.note_id)
+                .maybeSingle();
+              if (data) clientData = data;
             }
+            // TODO: Add intake_assessments table query when available
+            
+            if (clientData?.client_id) {
+              const { data: client } = await supabase
+                .from('clients')
+                .select('id, first_name, last_name')
+                .eq('id', clientData.client_id)
+                .maybeSingle();
+              if (client) {
+                clientsMap.set(cosig.note_id, client);
+              }
+            }
+          } catch (err) {
+            console.error('Error fetching client for cosignature:', err);
           }
         }
 
-        // Combine data
-        const combined = cosignaturesData.map(cosig => ({
+        const combined = cosignaturesData.map((cosig: any) => ({
           ...cosig,
-          clinician: profiles?.find(p => p.id === cosig.clinician_id),
+          clinician: profiles?.find((p: any) => p.id === cosig.clinician_id),
           client: clientsMap.get(cosig.note_id),
         }));
 
-        setCosignatures(combined);
+        setCosignatures(combined as NoteCosignature[]);
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to fetch cosignatures'));
       } finally {
@@ -129,7 +122,6 @@ export const useNoteCosignatures = (supervisorId?: string, status?: string) => {
 
     fetchCosignatures();
 
-    // Subscribe to changes
     const channel = supabase
       .channel(`note_cosignatures_${supervisorId}`)
       .on(
