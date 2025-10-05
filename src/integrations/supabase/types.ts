@@ -1477,6 +1477,110 @@ export type Database = {
           },
         ]
       }
+      compliance_rules: {
+        Row: {
+          allow_exceptions: boolean | null
+          automatic_locking: boolean
+          created_at: string
+          created_by: string | null
+          days_allowed_for_documentation: number
+          exception_roles: string[] | null
+          grace_period_hours: number | null
+          id: string
+          is_active: boolean
+          lockout_day: string
+          lockout_time: string
+          require_approval_to_unlock: boolean
+          rule_id: string
+          rule_name: string
+          rule_type: string
+          send_warning_notifications: boolean
+          updated_at: string
+          warning_days_before_due: number[] | null
+        }
+        Insert: {
+          allow_exceptions?: boolean | null
+          automatic_locking?: boolean
+          created_at?: string
+          created_by?: string | null
+          days_allowed_for_documentation?: number
+          exception_roles?: string[] | null
+          grace_period_hours?: number | null
+          id?: string
+          is_active?: boolean
+          lockout_day?: string
+          lockout_time?: string
+          require_approval_to_unlock?: boolean
+          rule_id: string
+          rule_name: string
+          rule_type: string
+          send_warning_notifications?: boolean
+          updated_at?: string
+          warning_days_before_due?: number[] | null
+        }
+        Update: {
+          allow_exceptions?: boolean | null
+          automatic_locking?: boolean
+          created_at?: string
+          created_by?: string | null
+          days_allowed_for_documentation?: number
+          exception_roles?: string[] | null
+          grace_period_hours?: number | null
+          id?: string
+          is_active?: boolean
+          lockout_day?: string
+          lockout_time?: string
+          require_approval_to_unlock?: boolean
+          rule_id?: string
+          rule_name?: string
+          rule_type?: string
+          send_warning_notifications?: boolean
+          updated_at?: string
+          warning_days_before_due?: number[] | null
+        }
+        Relationships: []
+      }
+      compliance_warnings: {
+        Row: {
+          compliance_status_id: string
+          created_at: string
+          delivered: boolean
+          delivery_date: string | null
+          error_message: string | null
+          id: string
+          warning_date: string
+          warning_type: string
+        }
+        Insert: {
+          compliance_status_id: string
+          created_at?: string
+          delivered?: boolean
+          delivery_date?: string | null
+          error_message?: string | null
+          id?: string
+          warning_date?: string
+          warning_type: string
+        }
+        Update: {
+          compliance_status_id?: string
+          created_at?: string
+          delivered?: boolean
+          delivery_date?: string | null
+          error_message?: string | null
+          id?: string
+          warning_date?: string
+          warning_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_warnings_compliance_status_id_fkey"
+            columns: ["compliance_status_id"]
+            isOneToOne: false
+            referencedRelation: "note_compliance_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultation_notes: {
         Row: {
           billable: boolean | null
@@ -1906,6 +2010,95 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "miscellaneous_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      note_compliance_status: {
+        Row: {
+          client_id: string
+          clinician_id: string
+          created_at: string
+          days_overdue: number | null
+          days_until_due: number | null
+          due_date: string
+          id: string
+          is_locked: boolean
+          lock_reason: string | null
+          locked_date: string | null
+          note_id: string
+          note_type: string
+          session_date: string
+          status: string
+          unlock_approved: boolean | null
+          unlock_approved_date: string | null
+          unlock_approver_id: string | null
+          unlock_denied_reason: string | null
+          unlock_expires_at: string | null
+          unlock_request_date: string | null
+          unlock_request_reason: string | null
+          unlock_requested: boolean
+          unlock_requester_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          clinician_id: string
+          created_at?: string
+          days_overdue?: number | null
+          days_until_due?: number | null
+          due_date: string
+          id?: string
+          is_locked?: boolean
+          lock_reason?: string | null
+          locked_date?: string | null
+          note_id: string
+          note_type: string
+          session_date: string
+          status?: string
+          unlock_approved?: boolean | null
+          unlock_approved_date?: string | null
+          unlock_approver_id?: string | null
+          unlock_denied_reason?: string | null
+          unlock_expires_at?: string | null
+          unlock_request_date?: string | null
+          unlock_request_reason?: string | null
+          unlock_requested?: boolean
+          unlock_requester_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          clinician_id?: string
+          created_at?: string
+          days_overdue?: number | null
+          days_until_due?: number | null
+          due_date?: string
+          id?: string
+          is_locked?: boolean
+          lock_reason?: string | null
+          locked_date?: string | null
+          note_id?: string
+          note_type?: string
+          session_date?: string
+          status?: string
+          unlock_approved?: boolean | null
+          unlock_approved_date?: string | null
+          unlock_approver_id?: string | null
+          unlock_denied_reason?: string | null
+          unlock_expires_at?: string | null
+          unlock_request_date?: string | null
+          unlock_request_reason?: string | null
+          unlock_requested?: boolean
+          unlock_requester_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_compliance_status_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
@@ -3287,6 +3480,65 @@ export type Database = {
         }
         Relationships: []
       }
+      unlock_requests: {
+        Row: {
+          compliance_status_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          note_id: string
+          note_type: string
+          request_date: string
+          request_reason: string
+          requester_id: string
+          review_notes: string | null
+          reviewed_date: string | null
+          reviewer_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          compliance_status_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          note_id: string
+          note_type: string
+          request_date?: string
+          request_reason: string
+          requester_id: string
+          review_notes?: string | null
+          reviewed_date?: string | null
+          reviewer_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          compliance_status_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          note_id?: string
+          note_type?: string
+          request_date?: string
+          request_reason?: string
+          requester_id?: string
+          review_notes?: string | null
+          reviewed_date?: string | null
+          reviewer_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unlock_requests_compliance_status_id_fkey"
+            columns: ["compliance_status_id"]
+            isOneToOne: false
+            referencedRelation: "note_compliance_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_audit_log: {
         Row: {
           action_type: string
@@ -3417,6 +3669,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_compliance_status: {
+        Args: { p_days_allowed?: number; p_session_date: string }
+        Returns: {
+          days_overdue: number
+          days_until_due: number
+          due_date: string
+          status: string
+        }[]
+      }
       cleanup_expired_devices: {
         Args: Record<PropertyKey, never>
         Returns: undefined
