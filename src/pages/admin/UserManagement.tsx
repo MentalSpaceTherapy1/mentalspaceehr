@@ -8,7 +8,7 @@ import { RoleAssignmentDialog } from '@/components/admin/RoleAssignmentDialog';
 import { getAllUsersWithRoles } from '@/lib/api/userRoles';
 import { toggleUserActive } from '@/lib/api/users';
 import { AppRole } from '@/hooks/useUserRoles';
-import { Search, UserCog, UserPlus } from 'lucide-react';
+import { Search, UserCog, UserPlus, Eye } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -211,14 +211,24 @@ export default function UserManagement() {
                       : 'Never'}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleManageRoles(user)}
-                    >
-                      <UserCog className="h-4 w-4 mr-2" />
-                      Manage Roles
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/admin/users/${user.id}`)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Profile
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleManageRoles(user)}
+                      >
+                        <UserCog className="h-4 w-4 mr-2" />
+                        Manage Roles
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

@@ -26,6 +26,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import CreateUser from "./pages/admin/CreateUser";
+import UserProfile from "./pages/admin/UserProfile";
 import PracticeSettings from "./pages/admin/PracticeSettings";
 import Locations from "./pages/admin/Locations";
 import ServiceCodes from "./pages/admin/ServiceCodes";
@@ -109,7 +110,15 @@ const App = () => (
               } 
             />
             <Route 
-              path="/admin/practice-settings" 
+              path="/admin/users/:id" 
+              element={
+                <AdminRoute>
+                  <UserProfile />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/practice-settings"
               element={
                 <AdminRoute>
                   <PracticeSettings />
