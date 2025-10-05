@@ -32,7 +32,7 @@ export default function TelehealthSettings() {
     session_timeout_minutes: 120,
     consent_renewal_reminder_days: 30,
     max_participants: 10,
-    require_consent: true,
+    require_consent: false,
   });
 
   useEffect(() => {
