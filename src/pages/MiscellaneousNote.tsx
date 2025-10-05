@@ -6,12 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, FileSignature, Plus, X } from 'lucide-react';
+import { Save, ArrowLeft, FileSignature, Plus, X, Brain, Sparkles, Check } from 'lucide-react';
 import { SignatureDialog } from '@/components/intake/SignatureDialog';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -25,6 +25,9 @@ export default function MiscellaneousNote() {
   const [clinicianName, setClinicianName] = useState('');
   const [availableClients, setAvailableClients] = useState<any[]>([]);
   const [newTag, setNewTag] = useState('');
+  const [generatingAI, setGeneratingAI] = useState(false);
+  const [aiInput, setAiInput] = useState('');
+  const [aiSuggestion, setAiSuggestion] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     clientId: '',
@@ -150,6 +153,85 @@ export default function MiscellaneousNote() {
     setSignatureDialogOpen(false);
   };
 
+  const generateWithAI = async () => {
+    if (!aiInput.trim()) {
+      toast({
+        title: 'Input Required',
+        description: 'Please provide note details for AI to process',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!formData.clientId) {
+      toast({
+        title: 'Client Required',
+        description: 'Please select a client first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setGeneratingAI(true);
+
+      const { data, error } = await supabase.functions.invoke('generate-section-content', {
+        body: {
+          sectionType: 'miscellaneous_note',
+          context: aiInput,
+          clientId: formData.clientId,
+          existingData: formData
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.content) {
+        setAiSuggestion(data.content);
+        toast({
+          title: 'Note Generated',
+          description: 'AI has generated note content. Please review and accept or reject.',
+        });
+        setAiInput('');
+      }
+    } catch (error: any) {
+      console.error('Error generating note:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to generate note with AI',
+        variant: 'destructive'
+      });
+    } finally {
+      setGeneratingAI(false);
+    }
+  };
+
+  const acceptAiSuggestion = () => {
+    if (!aiSuggestion) return;
+
+    setFormData(prev => ({
+      ...prev,
+      subject: aiSuggestion.subject || prev.subject,
+      noteContent: aiSuggestion.noteContent || prev.noteContent,
+      noteType: aiSuggestion.noteType || prev.noteType,
+    }));
+
+    setAiSuggestion(null);
+
+    toast({
+      title: 'Suggestion Accepted',
+      description: 'AI-generated content has been added to the note',
+    });
+  };
+
+  const rejectAiSuggestion = () => {
+    setAiSuggestion(null);
+    toast({
+      title: 'Suggestion Rejected',
+      description: 'AI-generated content was discarded',
+    });
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -177,7 +259,10 @@ export default function MiscellaneousNote() {
         </div>
 
         <Card>
-          <CardContent className="pt-6 space-y-6">
+          <CardHeader>
+            <CardTitle>Basic Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Client *</Label>
@@ -227,7 +312,109 @@ export default function MiscellaneousNote() {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5" />
+              AI-Assisted Generation
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Note Information</Label>
+              <Textarea
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+                placeholder="Describe what needs to be documented: phone conversation details, email summary, administrative notes, follow-up reminders, etc. The AI will generate a structured note from this information."
+                rows={6}
+                disabled={generatingAI || !formData.clientId}
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                Provide as much detail as possible. You can write in free-form text or bullet points.
+              </p>
+            </div>
+
+            <Button
+              onClick={generateWithAI}
+              disabled={generatingAI || !aiInput.trim() || !formData.clientId}
+              className="w-full"
+            >
+              {generatingAI ? (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2 animate-pulse" />
+                  Generating Note...
+                </>
+              ) : (
+                <>
+                  <Brain className="h-4 w-4 mr-2" />
+                  Generate Note with AI
+                </>
+              )}
+            </Button>
+
+            {!formData.clientId && (
+              <p className="text-sm text-warning">Please select a client first</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {aiSuggestion && (
+          <Card className="border-primary/50 bg-primary/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  AI-Generated Note
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={acceptAiSuggestion}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Check className="h-4 w-4 mr-1" />
+                    Accept All
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={rejectAiSuggestion}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Reject
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {aiSuggestion.noteType && (
+                <div>
+                  <span className="font-medium">Note Type: </span>
+                  <span className="text-muted-foreground">{aiSuggestion.noteType}</span>
+                </div>
+              )}
+              {aiSuggestion.subject && (
+                <div>
+                  <span className="font-medium">Subject: </span>
+                  <span className="text-muted-foreground">{aiSuggestion.subject}</span>
+                </div>
+              )}
+              {aiSuggestion.noteContent && (
+                <div>
+                  <span className="font-medium">Note Content: </span>
+                  <p className="text-muted-foreground mt-1 whitespace-pre-wrap">{aiSuggestion.noteContent}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardContent className="pt-6 space-y-6">
             <div>
               <Label>Note Content *</Label>
               <Textarea
