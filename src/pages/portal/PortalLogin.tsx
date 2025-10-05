@@ -153,6 +153,7 @@ export default function PortalLogin() {
                   name="email"
                   type="email" 
                   placeholder="your.email@example.com"
+                  autoComplete="email"
                   required 
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
@@ -165,6 +166,7 @@ export default function PortalLogin() {
                   name="password"
                   type="password"
                   placeholder="••••••••••••"
+                  autoComplete="current-password"
                   required 
                 />
                 {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}

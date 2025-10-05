@@ -224,6 +224,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
 
+      // Update last_password_change timestamp
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ last_password_change: new Date().toISOString() })
+          .eq('id', user.id);
+      }
+
       toast.success('Password updated successfully');
       return { error: null };
     } catch (error) {

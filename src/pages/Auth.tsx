@@ -19,7 +19,12 @@ const signUpSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(12, 'Password must be at least 12 characters'),
+  password: z.string()
+    .min(12, 'Password must be at least 12 characters')
+    .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Must contain at least one number')
+    .regex(/[^A-Za-z0-9]/, 'Must contain at least one special character'),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -252,6 +257,7 @@ export default function Auth() {
                       name="email"
                       type="email" 
                       placeholder="your.email@example.com"
+                      autoComplete="email"
                       required 
                     />
                     {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
@@ -264,6 +270,7 @@ export default function Auth() {
                       name="password"
                       type="password"
                       placeholder="••••••••••••"
+                      autoComplete="current-password"
                       required 
                     />
                     {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
@@ -341,6 +348,7 @@ export default function Auth() {
                       name="email"
                       type="email" 
                       placeholder="your.email@example.com"
+                      autoComplete="email"
                       required 
                     />
                     {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
@@ -353,9 +361,19 @@ export default function Auth() {
                       name="password"
                       type="password"
                       placeholder="••••••••••••"
+                      autoComplete="new-password"
                       required 
                     />
-                    <p className="text-xs text-muted-foreground">Minimum 12 characters</p>
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <p>Password must contain:</p>
+                      <ul className="list-disc list-inside space-y-0.5">
+                        <li>At least 12 characters</li>
+                        <li>One uppercase letter</li>
+                        <li>One lowercase letter</li>
+                        <li>One number</li>
+                        <li>One special character</li>
+                      </ul>
+                    </div>
                     {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
                   </div>
                   
@@ -366,6 +384,7 @@ export default function Auth() {
                       name="confirmPassword"
                       type="password"
                       placeholder="••••••••••••"
+                      autoComplete="new-password"
                       required 
                     />
                     {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}

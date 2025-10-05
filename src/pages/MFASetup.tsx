@@ -206,6 +206,7 @@ export default function MFASetup() {
                     maxLength={6}
                     value={verifyCode}
                     onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ''))}
+                    autoComplete="off"
                   />
                   <Button onClick={handleVerifyMFA} disabled={loading || verifyCode.length !== 6}>
                     {loading ? 'Verifying...' : 'Verify'}

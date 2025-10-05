@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from './NotificationBell';
+import { PasswordExpirationWarning } from '@/components/PasswordExpirationWarning';
 import { 
   Calendar, 
   FileText, 
@@ -44,6 +45,7 @@ export const PortalLayout = ({ children }: PortalLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background">
+      <PasswordExpirationWarning />
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">

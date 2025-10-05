@@ -3,6 +3,7 @@ import { AppSidebar } from './AppSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { RoleBadge } from '@/components/admin/RoleBadge';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { PasswordExpirationWarning } from '@/components/PasswordExpirationWarning';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ export function DashboardLayout({ children, dashboardSwitcher }: DashboardLayout
 
   return (
     <SidebarProvider>
+      <PasswordExpirationWarning />
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         

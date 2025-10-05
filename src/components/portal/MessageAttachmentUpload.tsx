@@ -3,6 +3,7 @@ import { Upload, X, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { validateFile, sanitizeFilename, formatFileSize as formatSize } from '@/lib/fileValidation';
 
 interface MessageAttachmentUploadProps {
   attachments: File[];
@@ -10,7 +11,6 @@ interface MessageAttachmentUploadProps {
   disabled?: boolean;
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 5;
 const ACCEPTED_TYPES = [
   'application/pdf',
@@ -26,16 +26,6 @@ export const MessageAttachmentUpload = ({
   disabled 
 }: MessageAttachmentUploadProps) => {
 
-  const validateFile = (file: File): string | null => {
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      return `${file.name} is not an accepted file type`;
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      return `${file.name} is too large (max 10MB)`;
-    }
-    return null;
-  };
-
   const handleFileSelect = useCallback((files: FileList | null) => {
     if (!files || disabled) return;
 
@@ -48,9 +38,10 @@ export const MessageAttachmentUpload = ({
 
     const validFiles: File[] = [];
     for (const file of newFiles) {
-      const error = validateFile(file);
-      if (error) {
-        toast.error(error);
+      // Validate using the security-enhanced validation
+      const validation = validateFile(file, 'documents');
+      if (!validation.valid) {
+        toast.error(validation.error || 'Invalid file');
       } else {
         validFiles.push(file);
       }
@@ -75,13 +66,6 @@ export const MessageAttachmentUpload = ({
     onAttachmentsChange(newFiles);
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-  };
 
   return (
     <div className="space-y-4">
@@ -137,7 +121,7 @@ export const MessageAttachmentUpload = ({
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{file.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {formatFileSize(file.size)}
+                      {formatSize(file.size)}
                     </p>
                   </div>
                 </div>

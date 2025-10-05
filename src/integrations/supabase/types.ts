@@ -3797,6 +3797,7 @@ export type Database = {
           languages_spoken: string[] | null
           last_login_date: string | null
           last_name: string
+          last_password_change: string | null
           license_expiration_date: string | null
           license_number: string | null
           license_state: string | null
@@ -3847,6 +3848,7 @@ export type Database = {
           languages_spoken?: string[] | null
           last_login_date?: string | null
           last_name: string
+          last_password_change?: string | null
           license_expiration_date?: string | null
           license_number?: string | null
           license_state?: string | null
@@ -3897,6 +3899,7 @@ export type Database = {
           languages_spoken?: string[] | null
           last_login_date?: string | null
           last_name?: string
+          last_password_change?: string | null
           license_expiration_date?: string | null
           license_number?: string | null
           license_state?: string | null
@@ -4168,6 +4171,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_incidents: {
+        Row: {
+          created_at: string | null
+          description: string
+          detected_at: string | null
+          id: string
+          incident_type: string
+          investigated: boolean | null
+          investigated_at: string | null
+          investigated_by: string | null
+          ip_address: string | null
+          resolution_notes: string | null
+          severity: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          detected_at?: string | null
+          id?: string
+          incident_type: string
+          investigated?: boolean | null
+          investigated_at?: string | null
+          investigated_by?: string | null
+          ip_address?: string | null
+          resolution_notes?: string | null
+          severity: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          detected_at?: string | null
+          id?: string
+          incident_type?: string
+          investigated?: boolean | null
+          investigated_at?: string | null
+          investigated_by?: string | null
+          ip_address?: string | null
+          resolution_notes?: string | null
+          severity?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       service_codes: {
         Row: {

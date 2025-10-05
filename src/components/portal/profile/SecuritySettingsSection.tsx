@@ -128,7 +128,7 @@ export function SecuritySettingsSection({ security, onUpdate }: SecuritySettings
                   <FormItem>
                     <FormLabel>Current Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input type="password" autoComplete="current-password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -142,7 +142,7 @@ export function SecuritySettingsSection({ security, onUpdate }: SecuritySettings
                   <FormItem>
                     <FormLabel>New Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input type="password" autoComplete="new-password" {...field} />
                     </FormControl>
                     <FormDescription>
                       Must be at least 8 characters with uppercase, lowercase, number, and special character
@@ -159,7 +159,7 @@ export function SecuritySettingsSection({ security, onUpdate }: SecuritySettings
                   <FormItem>
                     <FormLabel>Confirm New Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input type="password" autoComplete="new-password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
