@@ -21,6 +21,7 @@ interface PostSessionDialogProps {
   audioBlob: Blob | null;
   appointmentId?: string;
   clientId: string;
+  enableAIGenerate?: boolean;
 }
 
 interface BillingInfo {
@@ -37,6 +38,7 @@ export const PostSessionDialog = ({
   audioBlob,
   appointmentId,
   clientId,
+  enableAIGenerate = false,
 }: PostSessionDialogProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -212,7 +214,7 @@ export const PostSessionDialog = ({
           </div>
 
           <div className="space-y-2">
-            {hasRecording && (
+            {hasRecording && enableAIGenerate && (
               <Button
                 onClick={handleGenerateFromRecording}
                 disabled={isProcessing}

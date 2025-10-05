@@ -645,6 +645,7 @@ export default function TelehealthSession() {
         audioBlob={audioBlob}
         appointmentId={session?.appointment_id}
         clientId={session?.appointments?.client_id || ''}
+        enableAIGenerate={teleFlags.ai_note_generation_enabled}
       />
 
       <SessionTimeoutWarning
