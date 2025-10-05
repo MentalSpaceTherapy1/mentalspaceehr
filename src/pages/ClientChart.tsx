@@ -24,7 +24,8 @@ import {
   AlertTriangle,
   FileCheck,
   CheckCircle,
-  XCircle
+  XCircle,
+  UserCog
 } from 'lucide-react';
 import { toast, useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -36,6 +37,8 @@ import { RevokeConsentDialog } from '@/components/telehealth/RevokeConsentDialog
 import { downloadConsentPdf } from '@/lib/consentPdfGenerator';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { PortalAccessDialog } from '@/components/admin/PortalAccessDialog';
+import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 
@@ -76,8 +79,11 @@ export default function ClientChart() {
   const [consent, setConsent] = useState<any>(null);
   const [consentStatus, setConsentStatus] = useState<any>(null);
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
+  const [portalDialogOpen, setPortalDialogOpen] = useState(false);
   const { checkConsentExpiration, revokeConsent, loading: consentLoading } = useTelehealthConsent();
   const { toast: toastHook } = useToast();
+  const { roles } = useCurrentUserRoles();
+  const isAdmin = roles.includes('administrator');
 
   useEffect(() => {
     if (user && id) {
@@ -179,7 +185,22 @@ export default function ClientChart() {
         return (
           <Card>
             <CardHeader>
-              <CardTitle>Demographics</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Demographics</CardTitle>
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPortalDialogOpen(true)}
+                  >
+                    <UserCog className="h-4 w-4 mr-2" />
+                    Manage Portal Access
+                    <Badge variant={client?.portal_enabled ? 'default' : 'secondary'} className="ml-2">
+                      {client?.portal_enabled ? 'Enabled' : 'Disabled'}
+                    </Badge>
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
@@ -344,6 +365,17 @@ export default function ClientChart() {
               onOpenChange={setRevokeDialogOpen}
               onConfirm={handleRevokeConsent}
               loading={consentLoading}
+            />
+            
+            <PortalAccessDialog
+              open={portalDialogOpen}
+              onOpenChange={setPortalDialogOpen}
+              clientId={id!}
+              clientName={`${client?.first_name} ${client?.last_name}`}
+              currentEmail={client?.email || ''}
+              portalEnabled={client?.portal_enabled || false}
+              portalUserId={client?.portal_user_id || undefined}
+              onUpdate={fetchClient}
             />
           </>
         );
