@@ -47,3 +47,9 @@ verify_jwt = true
 
 [functions.supervision-notifications]
 verify_jwt = false
+
+[functions.cosignature-status-monitor]
+verify_jwt = false
+
+[functions.cosignature-workflow]
+verify_jwt = true
