@@ -21,6 +21,7 @@ export default function Tasks() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'todo' | 'all'>('todo');
   const [filters, setFilters] = useState({
     status: 'all',
     priority: 'all',
@@ -117,6 +118,19 @@ export default function Tasks() {
     const matchesPriority = filters.priority === 'all' || task.priority === filters.priority;
     const matchesCategory = filters.category === 'all' || task.category === filters.category;
 
+    // In "to-do" mode, only show pending tasks or overdue tasks
+    if (viewMode === 'todo') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const isOverdue = task.due_date && new Date(task.due_date) < today && task.status !== 'Completed';
+      const isPending = task.status === 'Pending' || task.status === 'In Progress';
+      
+      if (!isOverdue && !isPending) {
+        return false;
+      }
+    }
+
     return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
   });
 
@@ -124,6 +138,24 @@ export default function Tasks() {
     <DashboardLayout>
       <div className="space-y-6 p-6">
         <h1 className="text-3xl font-bold">Tasks</h1>
+        
+        <div className="flex items-center gap-2 border-b">
+          <Button
+            variant={viewMode === 'todo' ? 'default' : 'ghost'}
+            onClick={() => setViewMode('todo')}
+            className="rounded-b-none"
+          >
+            My To-Do List
+          </Button>
+          <Button
+            variant={viewMode === 'all' ? 'default' : 'ghost'}
+            onClick={() => setViewMode('all')}
+            className="rounded-b-none"
+          >
+            All Tasks
+          </Button>
+        </div>
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
             <div className="relative flex-1 max-w-sm">

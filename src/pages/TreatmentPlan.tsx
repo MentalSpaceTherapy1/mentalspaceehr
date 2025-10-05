@@ -520,6 +520,30 @@ export default function TreatmentPlan() {
       return;
     }
 
+    // Validate next review date is set and not more than 90 days in the future
+    if (!formData.nextReviewDate) {
+      toast({
+        title: 'Required Field Missing',
+        description: 'Please set the next review date for this treatment plan',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const today = new Date();
+    const nextReview = new Date(formData.nextReviewDate);
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 90);
+
+    if (nextReview > maxDate) {
+      toast({
+        title: 'Invalid Review Date',
+        description: 'Treatment plans must be reviewed at least every 3 months (90 days). Please select an earlier date.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       setSaving(true);
 

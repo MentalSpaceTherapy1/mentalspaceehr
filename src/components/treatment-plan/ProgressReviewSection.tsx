@@ -110,15 +110,37 @@ export function ProgressReviewSection({ data, onChange, disabled }: ProgressRevi
       </div>
 
       <div>
-        <Label htmlFor="next-review-date">Next Review Date (Auto-calculated)</Label>
+        <Label htmlFor="next-review-date">Next Review Date (Required - Max 90 days)</Label>
         <Input
           id="next-review-date"
           type="date"
           value={data.nextReviewDate || ''}
-          onChange={(e) => onChange({ ...data, nextReviewDate: e.target.value })}
+          max={(() => {
+            const maxDate = new Date();
+            maxDate.setDate(maxDate.getDate() + 90);
+            return maxDate.toISOString().split('T')[0];
+          })()}
+          onChange={(e) => {
+            const selectedDate = e.target.value;
+            const today = new Date();
+            const maxDate = new Date();
+            maxDate.setDate(maxDate.getDate() + 90);
+            const selected = new Date(selectedDate);
+            
+            if (selected > maxDate) {
+              // Don't allow dates beyond 90 days
+              return;
+            }
+            
+            onChange({ ...data, nextReviewDate: selectedDate });
+          }}
           disabled={disabled}
           className="mt-2"
+          required
         />
+        <p className="text-xs text-muted-foreground mt-1">
+          Treatment plans must be reviewed at least every 3 months (90 days)
+        </p>
       </div>
 
       <div>
