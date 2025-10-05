@@ -9,7 +9,6 @@ import { useSupervisionRelationships } from "@/hooks/useSupervisionRelationships
 import { useNoteCosignatures } from "@/hooks/useNoteCosignatures";
 import { SupervisionRelationshipDialog } from "../supervision/SupervisionRelationshipDialog";
 import { Loader2 } from "lucide-react";
-import { DashboardLayout } from "../layout/DashboardLayout";
 
 export function SupervisorDashboard() {
   const { user } = useAuth();
@@ -34,16 +33,14 @@ export function SupervisorDashboard() {
 
   if (loadingRel) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <div className="space-y-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Supervisor Dashboard</h1>
@@ -268,6 +265,6 @@ export function SupervisorDashboard() {
         }}
         supervisorId={user?.id || ''}
       />
-    </DashboardLayout>
+    </>
   );
 }
