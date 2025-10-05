@@ -1,17 +1,77 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface CaseDiscussion {
+  client_id: string;
+  discussion_summary: string;
+  clinical_issues: string[];
+  interventions_recommended: string[];
+}
+
+export interface ActionItem {
+  item: string;
+  due_date?: string;
+  completed: boolean;
+}
+
+export interface GroupSupervisee {
+  supervisee_id: string;
+  hours_earned: number;
+}
+
 export interface SupervisionSession {
   id: string;
   relationship_id: string;
+  
+  // Time details
   session_date: string;
+  session_start_time?: string | null;
+  session_end_time?: string | null;
   session_duration_minutes: number;
-  session_type: string;
+  
+  // Session details
+  session_type: string; // 'Individual' | 'Direct' | 'Indirect' | 'Group'
+  session_format?: string | null; // 'In-Person' | 'Telehealth' | 'Phone'
+  
+  // Group supervision
+  group_supervisees?: GroupSupervisee[] | null;
+  
+  // Content
   topics_covered?: string[] | null;
   notes?: string | null;
-  supervisor_signature?: string | null;
-  supervisee_signature?: string | null;
+  
+  cases_discussed?: CaseDiscussion[] | null;
+  
+  // Skills & development
+  skills_developed?: string[] | null;
+  feedback_provided?: string | null;
+  areas_of_strength?: string[] | null;
+  areas_for_improvement?: string[] | null;
+  
+  // Action items
+  action_items?: ActionItem[] | null;
+  
+  // Follow-up
+  next_session_scheduled?: boolean | null;
+  next_session_date?: string | null;
+  
+  // Supervisee perspective
+  supervisee_reflection?: string | null;
+  
+  // Signatures (enhanced with boolean flags)
+  supervisor_signature?: string | null; // Legacy field
+  supervisee_signature?: string | null; // Legacy field
+  supervisor_signature_name?: string | null;
+  supervisee_signature_name?: string | null;
+  supervisor_signed?: boolean | null;
+  supervisee_signed?: boolean | null;
+  supervisor_signed_date?: string | null;
+  supervisee_signed_date?: string | null;
+  
+  // Metadata
   created_date: string;
+  created_by?: string | null;
+  updated_at?: string | null;
 }
 
 export interface SupervisionHours {
@@ -50,7 +110,8 @@ export const useSupervisionSessions = (relationshipId?: string) => {
 
         if (sessionsError) throw sessionsError;
 
-        setSessions(sessionsData || []);
+        // Cast the data to our interface type
+        setSessions((sessionsData as any[]) || []);
 
         // Calculate hours by type
         const calculatedHours = (sessionsData || []).reduce(
