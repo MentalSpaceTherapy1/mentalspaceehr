@@ -4038,6 +4038,72 @@ export type Database = {
           },
         ]
       }
+      telehealth_waiting_rooms: {
+        Row: {
+          admitted_by_clinician: string | null
+          appointment_id: string
+          client_admitted_time: string | null
+          client_arrived_time: string
+          client_id: string
+          client_timed_out: boolean
+          clinician_notified: boolean
+          created_at: string
+          id: string
+          notification_time: string | null
+          session_id: string
+          status: string
+          timeout_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          admitted_by_clinician?: string | null
+          appointment_id: string
+          client_admitted_time?: string | null
+          client_arrived_time?: string
+          client_id: string
+          client_timed_out?: boolean
+          clinician_notified?: boolean
+          created_at?: string
+          id?: string
+          notification_time?: string | null
+          session_id: string
+          status?: string
+          timeout_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admitted_by_clinician?: string | null
+          appointment_id?: string
+          client_admitted_time?: string | null
+          client_arrived_time?: string
+          client_id?: string
+          client_timed_out?: boolean
+          clinician_notified?: boolean
+          created_at?: string
+          id?: string
+          notification_time?: string | null
+          session_id?: string
+          status?: string
+          timeout_time?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telehealth_waiting_rooms_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "telehealth_waiting_rooms_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       treatment_plans: {
         Row: {
           anticipated_discharge_date: string | null
@@ -4339,6 +4405,41 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waiting_room_messages: {
+        Row: {
+          created_at: string
+          from_clinician: boolean
+          id: string
+          message_text: string
+          message_time: string
+          waiting_room_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_clinician: boolean
+          id?: string
+          message_text: string
+          message_time?: string
+          waiting_room_id: string
+        }
+        Update: {
+          created_at?: string
+          from_clinician?: boolean
+          id?: string
+          message_text?: string
+          message_time?: string
+          waiting_room_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waiting_room_messages_waiting_room_id_fkey"
+            columns: ["waiting_room_id"]
+            isOneToOne: false
+            referencedRelation: "telehealth_waiting_rooms"
             referencedColumns: ["id"]
           },
         ]
