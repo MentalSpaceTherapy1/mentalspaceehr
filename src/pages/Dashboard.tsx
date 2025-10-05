@@ -5,6 +5,7 @@ import { TherapistDashboard } from '@/components/dashboards/TherapistDashboard';
 import { SupervisorDashboard } from '@/components/dashboards/SupervisorDashboard';
 import { BillingDashboard } from '@/components/dashboards/BillingDashboard';
 import { FrontDeskDashboard } from '@/components/dashboards/FrontDeskDashboard';
+import { AssociateDashboard } from '@/components/dashboards/AssociateDashboard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DashboardSwitcher } from '@/components/dashboards/DashboardSwitcher';
 import { useAuth } from '@/hooks/useAuth';
@@ -38,8 +39,9 @@ export default function Dashboard() {
       case 'front_desk':
         return <FrontDeskDashboard />;
       case 'therapist':
-      case 'associate_trainee':
         return <TherapistDashboard />;
+      case 'associate_trainee':
+        return <AssociateDashboard />;
       default:
         return <TherapistDashboard />;
     }
