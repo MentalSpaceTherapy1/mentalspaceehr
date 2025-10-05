@@ -3,12 +3,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format, isToday, isPast } from 'date-fns';
-import { Calendar as CalendarIcon, Sparkles, Repeat, Video } from 'lucide-react';
+import { Calendar as CalendarIcon, Sparkles, Repeat, Video, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { TimeSlotPicker } from './TimeSlotPicker';
 import { RecurringAppointmentForm } from './RecurringAppointmentForm';
 import { GroupSessionParticipants } from './GroupSessionParticipants';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -58,13 +59,9 @@ const appointmentSchema = z.object({
   cpt_code: z.string().optional(),
   icd_codes: z.array(z.string()).optional(),
   is_recurring: z.boolean().optional(),
-  recurrence_pattern: z.object({
-    frequency: z.string(),
-    interval: z.number(),
-    daysOfWeek: z.array(z.string()).optional(),
-    endDate: z.date().optional(),
-    numberOfOccurrences: z.number().optional(),
-  }).optional(),
+  recurrence_pattern: z.any().optional(),
+  is_incident_to: z.boolean().optional(),
+  billed_under_provider_id: z.string().optional().nullable(),
 });
 
 type AppointmentFormData = z.infer<typeof appointmentSchema>;
@@ -105,6 +102,8 @@ export function AppointmentDialog({
   const [isGroupSession, setIsGroupSession] = useState(false);
   const [groupParticipants, setGroupParticipants] = useState<string[]>([]);
   const [maxParticipants, setMaxParticipants] = useState(10);
+  const [isIncidentTo, setIsIncidentTo] = useState(false);
+  const [supervisors, setSupervisors] = useState<any[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -179,6 +178,12 @@ export function AppointmentDialog({
   useEffect(() => {
     fetchData();
   }, []);
+  
+  useEffect(() => {
+    if (clinicians.length > 0) {
+      fetchSupervisors();
+    }
+  }, [clinicians]);
 
   const fetchData = async () => {
     const [clientsRes, cliniciansRes, locationsRes, serviceCodesRes] = await Promise.all([
@@ -192,6 +197,20 @@ export function AppointmentDialog({
     if (cliniciansRes.data) setClinicians(cliniciansRes.data);
     if (locationsRes.data) setLocations(locationsRes.data);
     if (serviceCodesRes.data) setServiceCodes(serviceCodesRes.data);
+  };
+  
+  const fetchSupervisors = async () => {
+    const { data } = await supabase
+      .from('supervision_relationships')
+      .select('supervisor_id')
+      .eq('status', 'Active')
+      .eq('incident_to_billing_allowed', true);
+    
+    if (data && clinicians.length > 0) {
+      const supervisorIds = [...new Set(data.map((r: any) => r.supervisor_id))];
+      const supervisorProfiles = clinicians.filter((c: any) => supervisorIds.includes(c.id));
+      setSupervisors(supervisorProfiles);
+    }
   };
 
   // Filter service codes based on selected appointment type
@@ -227,6 +246,8 @@ export function AppointmentDialog({
         is_group_session: isGroupSession,
         max_participants: isGroupSession ? maxParticipants : null,
         current_participants: isGroupSession ? groupParticipants.length : 1,
+        is_incident_to: isIncidentTo,
+        billed_under_provider_id: isIncidentTo ? data.billed_under_provider_id : null,
         // Ensure room and notes are null instead of undefined if empty
         room: data.room || null,
         appointment_notes: data.appointment_notes || null,
@@ -634,6 +655,56 @@ export function AppointmentDialog({
                 onMaxParticipantsChange={setMaxParticipants}
               />
             )}
+
+            {/* Incident-to Billing Section */}
+            <div className="space-y-4 p-4 border border-primary/20 rounded-lg bg-primary/5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FormLabel className="flex items-center gap-2">
+                    <Checkbox
+                      checked={isIncidentTo}
+                      onCheckedChange={(checked) => setIsIncidentTo(checked as boolean)}
+                    />
+                    <span>Incident-to Billing</span>
+                  </FormLabel>
+                </div>
+                {isIncidentTo && (
+                  <Badge variant="secondary">
+                    Medicare Incident-to
+                  </Badge>
+                )}
+              </div>
+              
+              {isIncidentTo && (
+                <FormField
+                  control={form.control}
+                  name="billed_under_provider_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Supervising Provider</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || undefined}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select supervising provider" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {supervisors.map((supervisor) => (
+                            <SelectItem key={supervisor.id} value={supervisor.id}>
+                              {supervisor.first_name} {supervisor.last_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Select the provider who will attest to incident-to requirements
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
 
             {(!appointment || editSeries) && (
               <RecurringAppointmentForm
