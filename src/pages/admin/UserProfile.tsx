@@ -5,14 +5,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Save, Mail, Shield, User as UserIcon } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { ArrowLeft, Save, Mail, Shield, User as UserIcon, UserCog, GraduationCap, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { RoleBadge } from '@/components/admin/RoleBadge';
+import { RoleAssignmentDialog } from '@/components/admin/RoleAssignmentDialog';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatDistanceToNow } from 'date-fns';
 import { AppRole } from '@/hooks/useUserRoles';
+import { toggleUserActive } from '@/lib/api/users';
 
 interface UserProfile {
   id: string;
@@ -36,7 +40,11 @@ export default function UserProfile() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sendingInvite, setSendingInvite] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [supervisors, setSupervisors] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedSupervisor, setSelectedSupervisor] = useState<string>('');
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -50,8 +58,32 @@ export default function UserProfile() {
   useEffect(() => {
     if (id) {
       fetchUserProfile();
+      fetchSupervisors();
     }
   }, [id]);
+
+  const fetchSupervisors = async () => {
+    try {
+      // Fetch users with supervisor role
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('user_id, profiles!user_roles_user_id_fkey(id, first_name, last_name)')
+        .eq('role', 'supervisor');
+
+      if (error) throw error;
+
+      const supervisorList = data
+        ?.filter(item => item.profiles)
+        .map(item => ({
+          id: (item.profiles as any).id,
+          name: `${(item.profiles as any).first_name} ${(item.profiles as any).last_name}`,
+        })) || [];
+
+      setSupervisors(supervisorList);
+    } catch (error) {
+      console.error('Error fetching supervisors:', error);
+    }
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -89,12 +121,104 @@ export default function UserProfile() {
         npi_number: userData.npi_number || '',
         dea_number: userData.dea_number || '',
       });
+
+      // Fetch supervisor relationship if exists
+      const { data: supervisionData } = await supabase
+        .from('supervision_relationships')
+        .select('supervisor_id')
+        .eq('supervisee_id', id)
+        .eq('status', 'Active')
+        .maybeSingle();
+
+      if (supervisionData) {
+        setSelectedSupervisor(supervisionData.supervisor_id);
+      }
     } catch (error) {
       console.error('Error fetching user profile:', error);
       toast.error('Failed to load user profile');
       navigate('/admin/users');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleActive = async () => {
+    if (!id || !profile) return;
+
+    try {
+      await toggleUserActive(id, !profile.is_active);
+      toast.success(`User ${profile.is_active ? 'deactivated' : 'activated'} successfully`);
+      fetchUserProfile();
+    } catch (error) {
+      toast.error('Failed to update user status');
+    }
+  };
+
+  const handleSendInvite = async () => {
+    if (!id) return;
+
+    setSendingInvite(true);
+    try {
+      // Generate temporary password
+      const tempPassword = Math.random().toString(36).slice(-12) + 'Aa1!';
+
+      const { error } = await supabase.functions.invoke('send-staff-invitation', {
+        body: {
+          userId: id,
+          tempPassword: tempPassword,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success('Invitation email sent successfully!');
+    } catch (error) {
+      console.error('Error sending invitation:', error);
+      toast.error('Failed to send invitation email');
+    } finally {
+      setSendingInvite(false);
+    }
+  };
+
+  const handleAssignSupervisor = async () => {
+    if (!id || !selectedSupervisor) return;
+
+    try {
+      // Check if relationship already exists
+      const { data: existing } = await supabase
+        .from('supervision_relationships')
+        .select('id')
+        .eq('supervisee_id', id)
+        .eq('supervisor_id', selectedSupervisor)
+        .maybeSingle();
+
+      if (existing) {
+        // Update existing relationship to active
+        const { error } = await supabase
+          .from('supervision_relationships')
+          .update({ status: 'Active' })
+          .eq('id', existing.id);
+
+        if (error) throw error;
+      } else {
+        // Create new relationship
+        const { error } = await supabase
+          .from('supervision_relationships')
+          .insert({
+            supervisor_id: selectedSupervisor,
+            supervisee_id: id,
+            status: 'Active',
+            start_date: new Date().toISOString().split('T')[0],
+          });
+
+        if (error) throw error;
+      }
+
+      toast.success('Supervisor assigned successfully');
+      fetchUserProfile();
+    } catch (error) {
+      console.error('Error assigning supervisor:', error);
+      toast.error('Failed to assign supervisor');
     }
   };
 
@@ -151,21 +275,47 @@ export default function UserProfile() {
             </h1>
             <p className="text-muted-foreground mt-1">{profile.email}</p>
           </div>
-          <Badge variant={profile.is_active ? 'default' : 'outline'}>
-            {profile.is_active ? 'Active' : 'Inactive'}
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant={profile.is_active ? 'default' : 'outline'}>
+              {profile.is_active ? 'Active' : 'Inactive'}
+            </Badge>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleSendInvite}
+              disabled={sendingInvite}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {sendingInvite ? 'Sending...' : 'Send Invite'}
+            </Button>
+          </div>
         </div>
 
-        {/* Account Information */}
+        {/* Account Management */}
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              <CardTitle>Account Information</CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                <CardTitle>Account Management</CardTitle>
+              </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Account Status</Label>
+                <p className="text-sm text-muted-foreground">
+                  Enable or disable user access to the system
+                </p>
+              </div>
+              <Switch
+                checked={profile.is_active}
+                onCheckedChange={handleToggleActive}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t">
               <div>
                 <Label className="text-sm text-muted-foreground">Account Created</Label>
                 <p className="font-medium">
@@ -183,16 +333,75 @@ export default function UserProfile() {
                 </p>
               </div>
             </div>
-            <div>
-              <Label className="text-sm text-muted-foreground">Roles</Label>
-              <div className="flex gap-2 mt-2 flex-wrap">
-                {profile.roles.length > 0 ? (
-                  profile.roles.map(role => (
-                    <RoleBadge key={role} role={role} />
-                  ))
-                ) : (
-                  <span className="text-sm text-muted-foreground">No roles assigned</span>
-                )}
+          </CardContent>
+        </Card>
+
+        {/* Roles Management */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <UserCog className="h-5 w-5" />
+                <CardTitle>Roles & Permissions</CardTitle>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setRoleDialogOpen(true)}
+              >
+                <UserCog className="h-4 w-4 mr-2" />
+                Manage Roles
+              </Button>
+            </div>
+            <CardDescription>Assign system roles to control user permissions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2 flex-wrap">
+              {profile.roles.length > 0 ? (
+                profile.roles.map(role => (
+                  <RoleBadge key={role} role={role} />
+                ))
+              ) : (
+                <span className="text-sm text-muted-foreground">No roles assigned</span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Supervision Assignment */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5" />
+              <CardTitle>Supervision</CardTitle>
+            </div>
+            <CardDescription>Assign a supervisor for clinical oversight</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Label htmlFor="supervisor">Supervisor</Label>
+                <Select value={selectedSupervisor} onValueChange={setSelectedSupervisor}>
+                  <SelectTrigger id="supervisor">
+                    <SelectValue placeholder="Select a supervisor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {supervisors.map(supervisor => (
+                      <SelectItem key={supervisor.id} value={supervisor.id}>
+                        {supervisor.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="pt-6">
+                <Button
+                  variant="secondary"
+                  onClick={handleAssignSupervisor}
+                  disabled={!selectedSupervisor}
+                >
+                  Assign Supervisor
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -299,6 +508,18 @@ export default function UserProfile() {
             {saving ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
+
+        {/* Role Assignment Dialog */}
+        {profile && (
+          <RoleAssignmentDialog
+            open={roleDialogOpen}
+            onOpenChange={setRoleDialogOpen}
+            userId={profile.id}
+            userName={`${profile.first_name} ${profile.last_name}`}
+            currentRoles={profile.roles}
+            onRolesUpdated={fetchUserProfile}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
