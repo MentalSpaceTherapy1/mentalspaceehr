@@ -64,6 +64,7 @@ import SupervisionManagement from "./pages/admin/SupervisionManagement";
 import TelehealthConsentManagement from "./pages/admin/TelehealthConsentManagement";
 import TelehealthSettings from "./pages/admin/TelehealthSettings";
 import CreateTestPortalUser from "./pages/admin/CreateTestPortalUser";
+import PortalManagement from "./pages/admin/PortalManagement";
 
 const queryClient = new QueryClient();
 
@@ -112,6 +113,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <PracticeSettings />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/portal-management" 
+              element={
+                <AdminRoute>
+                  <PortalManagement />
                 </AdminRoute>
               } 
             />

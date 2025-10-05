@@ -4315,6 +4315,8 @@ export type Database = {
           note_lockout_time: string | null
           npi_number: string
           office_hours: Json
+          portal_email_templates: Json | null
+          portal_settings: Json | null
           practice_name: string
           primary_color: string | null
           require_supervisor_cosign: boolean | null
@@ -4355,6 +4357,8 @@ export type Database = {
           note_lockout_time?: string | null
           npi_number: string
           office_hours?: Json
+          portal_email_templates?: Json | null
+          portal_settings?: Json | null
           practice_name: string
           primary_color?: string | null
           require_supervisor_cosign?: boolean | null
@@ -4395,6 +4399,8 @@ export type Database = {
           note_lockout_time?: string | null
           npi_number?: string
           office_hours?: Json
+          portal_email_templates?: Json | null
+          portal_settings?: Json | null
           practice_name?: string
           primary_color?: string | null
           require_supervisor_cosign?: boolean | null

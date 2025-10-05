@@ -66,6 +66,7 @@ export function AppSidebar() {
   const adminItems = [
     { title: 'User Management', url: '/admin/users', icon: UserCog, color: 'from-secondary to-accent' },
     { title: 'Practice Settings', url: '/admin/practice-settings', icon: Building2, color: 'from-primary to-success' },
+    { title: 'Client Portal', url: '/admin/portal-management', icon: Users, color: 'from-violet-400 to-purple-400' },
     { title: 'Service Codes', url: '/admin/service-codes', icon: DollarSign, color: 'from-success to-primary' },
     { title: 'Locations', url: '/admin/locations', icon: MapPin, color: 'from-accent to-secondary' },
     { title: 'Supervision Management', url: '/admin/supervision-management', icon: GraduationCap, color: 'from-indigo-400 to-purple-400' },

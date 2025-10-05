@@ -52,7 +52,8 @@ export function PortalSettings() {
       if (data) {
         setSettingsId(data.id);
         if (data.portal_settings) {
-          setSettings({ ...DEFAULT_SETTINGS, ...data.portal_settings });
+          const savedSettings = data.portal_settings as any;
+          setSettings({ ...DEFAULT_SETTINGS, ...savedSettings });
         }
       }
     } catch (error) {
@@ -63,7 +64,7 @@ export function PortalSettings() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      const payload = {
+      const payload: any = {
         portal_settings: settings,
       };
 

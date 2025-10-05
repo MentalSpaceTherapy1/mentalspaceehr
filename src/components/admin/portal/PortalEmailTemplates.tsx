@@ -72,7 +72,8 @@ export function PortalEmailTemplates() {
       if (data) {
         setSettingsId(data.id);
         if (data.portal_email_templates) {
-          setTemplates({ ...DEFAULT_TEMPLATES, ...data.portal_email_templates });
+          const savedTemplates = data.portal_email_templates as any;
+          setTemplates({ ...DEFAULT_TEMPLATES, ...savedTemplates });
         }
       }
     } catch (error) {
@@ -83,7 +84,7 @@ export function PortalEmailTemplates() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      const payload = {
+      const payload: any = {
         portal_email_templates: templates,
       };
 
