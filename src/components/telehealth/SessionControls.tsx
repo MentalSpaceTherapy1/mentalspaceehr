@@ -1,4 +1,4 @@
-import { Mic, MicOff, Video, VideoOff, Monitor, MonitorOff, Phone, MessageSquare } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, Monitor, MonitorOff, Phone, MessageSquare, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -95,7 +95,10 @@ export const SessionControls = ({
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
               </span>
             )}
-            <Mic className="h-4 w-4 md:h-5 md:w-5" />
+            <Circle className={cn(
+              "h-4 w-4 md:h-5 md:w-5",
+              isRecording && "fill-current"
+            )} />
             {isRecording && <span className="text-xs md:text-sm">{formatDuration(recordingDuration)}</span>}
           </Button>
         )}

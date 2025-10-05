@@ -65,6 +65,9 @@ export const PostSessionDialog = ({
     setIsProcessing(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
       // Convert audio blob to base64
       const arrayBuffer = await audioBlob.arrayBuffer();
       const base64Audio = btoa(
@@ -74,27 +77,34 @@ export const PostSessionDialog = ({
         )
       );
 
-      // Call transcription function
-      const { data: transcriptData, error: transcriptError } = await supabase.functions.invoke(
-        'transcribe-session',
+      toast({
+        title: 'AI Processing Started',
+        description: 'Transcribing audio and generating clinical note...',
+      });
+
+      // Call the new transcribe-and-generate-note function
+      const { data: result, error } = await supabase.functions.invoke(
+        'transcribe-and-generate-note',
         {
           body: {
+            audioBase64: base64Audio,
+            clientId,
+            clinicianId: user.id,
+            appointmentId,
             sessionId,
-            audio: base64Audio,
-            mimeType: audioBlob.type,
           },
         }
       );
 
-      if (transcriptError) throw transcriptError;
+      if (error) throw error;
 
       toast({
-        title: 'Transcription Complete',
-        description: 'Generating clinical note from transcript...',
+        title: 'AI Note Generated!',
+        description: 'Clinical note has been created from your session recording.',
       });
 
-      // Navigate to note editor with session context
-      navigate(`/notes/new?sessionId=${sessionId}&clientId=${clientId}${appointmentId ? `&appointmentId=${appointmentId}` : ''}`);
+      // Navigate to the generated note
+      navigate(`/notes/${result.noteId}`);
       onOpenChange(false);
 
     } catch (error) {
@@ -209,15 +219,15 @@ export const PostSessionDialog = ({
                 className="w-full"
                 size="lg"
               >
-                {isProcessing ? (
+                 {isProcessing ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing Recording...
+                    AI Processing...
                   </>
                 ) : (
                   <>
                     <Mic className="mr-2 h-4 w-4" />
-                    Generate Note from Recording
+                    AI: Generate Note from Recording
                   </>
                 )}
               </Button>
