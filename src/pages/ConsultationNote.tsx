@@ -10,9 +10,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, ArrowLeft, FileSignature } from 'lucide-react';
+import { Save, ArrowLeft, FileSignature, Sparkles, Check, X, Edit } from 'lucide-react';
 import { SignatureDialog } from '@/components/intake/SignatureDialog';
 import { useAuth } from '@/hooks/useAuth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function ConsultationNote() {
   const navigate = useNavigate();
@@ -23,6 +24,12 @@ export default function ConsultationNote() {
   const [signatureDialogOpen, setSignatureDialogOpen] = useState(false);
   const [clinicianName, setClinicianName] = useState('');
   const [availableClients, setAvailableClients] = useState<any[]>([]);
+  const [generatingRecommendations, setGeneratingRecommendations] = useState(false);
+  const [generatingChanges, setGeneratingChanges] = useState(false);
+  const [generatingFollowUp, setGeneratingFollowUp] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<any>(null);
+  const [suggestionType, setSuggestionType] = useState<'recommendations' | 'changes' | 'followup' | null>(null);
+  const [isEditingSuggestion, setIsEditingSuggestion] = useState(false);
 
   const [formData, setFormData] = useState({
     clientId: '',
@@ -151,6 +158,90 @@ export default function ConsultationNote() {
   const handleSign = async () => {
     await saveNote();
     setSignatureDialogOpen(false);
+  };
+
+  const generateAIContent = async (type: 'recommendations' | 'changes' | 'followup') => {
+    if (!formData.clientId) {
+      toast({
+        title: 'Error',
+        description: 'Please select a client first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const setGenerating = 
+      type === 'recommendations' ? setGeneratingRecommendations :
+      type === 'changes' ? setGeneratingChanges : setGeneratingFollowUp;
+
+    try {
+      setGenerating(true);
+      setSuggestionType(type);
+
+      const context = `
+Consultation Type: ${formData.consultationType}
+Consulting With: ${formData.consultingName} (${formData.consultingRole})
+Consultation Reason: ${formData.consultationReason}
+Clinical Question: ${formData.clinicalQuestion}
+Information Provided: ${formData.informationProvided}
+Information Received: ${formData.informationReceived}
+${type === 'recommendations' ? `Current Recommendations: ${formData.recommendations}` : ''}
+${type === 'changes' ? `Current Treatment Changes: ${formData.treatmentChanges}` : ''}
+${type === 'followup' ? `Current Follow-up Plan: ${formData.followUpPlan}` : ''}
+      `.trim();
+
+      const { data, error } = await supabase.functions.invoke('generate-section-content', {
+        body: {
+          sectionType: `consultation_${type}`,
+          context,
+          clientId: formData.clientId,
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.content) {
+        setAiSuggestion(data.content);
+        toast({
+          title: 'AI Suggestion Generated',
+          description: 'Review and edit the suggestion, then accept or reject it.',
+        });
+      }
+    } catch (error: any) {
+      console.error('Error generating AI content:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to generate AI suggestion',
+        variant: 'destructive'
+      });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const acceptSuggestion = () => {
+    if (aiSuggestion && suggestionType) {
+      if (suggestionType === 'recommendations') {
+        setFormData(prev => ({ ...prev, recommendations: aiSuggestion }));
+      } else if (suggestionType === 'changes') {
+        setFormData(prev => ({ ...prev, treatmentChanges: aiSuggestion }));
+      } else if (suggestionType === 'followup') {
+        setFormData(prev => ({ ...prev, followUpPlan: aiSuggestion }));
+      }
+      setAiSuggestion(null);
+      setSuggestionType(null);
+      setIsEditingSuggestion(false);
+      toast({
+        title: 'Suggestion Applied',
+        description: 'AI suggestion has been applied to the note',
+      });
+    }
+  };
+
+  const rejectSuggestion = () => {
+    setAiSuggestion(null);
+    setSuggestionType(null);
+    setIsEditingSuggestion(false);
   };
 
   return (
@@ -317,7 +408,57 @@ export default function ConsultationNote() {
             </div>
 
             <div>
-              <Label>Recommendations</Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label>Recommendations</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => generateAIContent('recommendations')}
+                  disabled={generatingRecommendations || !formData.clientId}
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  {generatingRecommendations ? 'Generating...' : 'Generate AI Suggestions'}
+                </Button>
+              </div>
+
+              {aiSuggestion && suggestionType === 'recommendations' && (
+                <Alert className="mb-4">
+                  <AlertDescription>
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-sm font-medium">AI Suggestion:</span>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setIsEditingSuggestion(!isEditingSuggestion)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={acceptSuggestion}>
+                            <Check className="h-4 w-4 text-green-600" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={rejectSuggestion}>
+                            <X className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </div>
+                      {isEditingSuggestion ? (
+                        <Textarea
+                          value={aiSuggestion}
+                          onChange={(e) => setAiSuggestion(e.target.value)}
+                          rows={4}
+                          className="text-sm"
+                        />
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap">{aiSuggestion}</p>
+                      )}
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <Textarea
                 value={formData.recommendations}
                 onChange={(e) => setFormData(prev => ({ ...prev, recommendations: e.target.value }))}
@@ -338,7 +479,57 @@ export default function ConsultationNote() {
 
               {formData.changesToTreatment && (
                 <div>
-                  <Label>Treatment Changes</Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label>Treatment Changes</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => generateAIContent('changes')}
+                      disabled={generatingChanges || !formData.clientId}
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      {generatingChanges ? 'Generating...' : 'Generate AI Suggestions'}
+                    </Button>
+                  </div>
+
+                  {aiSuggestion && suggestionType === 'changes' && (
+                    <Alert className="mb-4">
+                      <AlertDescription>
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-sm font-medium">AI Suggestion:</span>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setIsEditingSuggestion(!isEditingSuggestion)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={acceptSuggestion}>
+                                <Check className="h-4 w-4 text-green-600" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={rejectSuggestion}>
+                                <X className="h-4 w-4 text-red-600" />
+                              </Button>
+                            </div>
+                          </div>
+                          {isEditingSuggestion ? (
+                            <Textarea
+                              value={aiSuggestion}
+                              onChange={(e) => setAiSuggestion(e.target.value)}
+                              rows={3}
+                              className="text-sm"
+                            />
+                          ) : (
+                            <p className="text-sm whitespace-pre-wrap">{aiSuggestion}</p>
+                          )}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
                   <Textarea
                     value={formData.treatmentChanges}
                     onChange={(e) => setFormData(prev => ({ ...prev, treatmentChanges: e.target.value }))}
@@ -368,7 +559,57 @@ export default function ConsultationNote() {
 
               {formData.followUpConsultation && (
                 <div>
-                  <Label>Follow-up Plan</Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label>Follow-up Plan</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => generateAIContent('followup')}
+                      disabled={generatingFollowUp || !formData.clientId}
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      {generatingFollowUp ? 'Generating...' : 'Generate AI Suggestions'}
+                    </Button>
+                  </div>
+
+                  {aiSuggestion && suggestionType === 'followup' && (
+                    <Alert className="mb-4">
+                      <AlertDescription>
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-sm font-medium">AI Suggestion:</span>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setIsEditingSuggestion(!isEditingSuggestion)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={acceptSuggestion}>
+                                <Check className="h-4 w-4 text-green-600" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={rejectSuggestion}>
+                                <X className="h-4 w-4 text-red-600" />
+                              </Button>
+                            </div>
+                          </div>
+                          {isEditingSuggestion ? (
+                            <Textarea
+                              value={aiSuggestion}
+                              onChange={(e) => setAiSuggestion(e.target.value)}
+                              rows={3}
+                              className="text-sm"
+                            />
+                          ) : (
+                            <p className="text-sm whitespace-pre-wrap">{aiSuggestion}</p>
+                          )}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
                   <Textarea
                     value={formData.followUpPlan}
                     onChange={(e) => setFormData(prev => ({ ...prev, followUpPlan: e.target.value }))}
