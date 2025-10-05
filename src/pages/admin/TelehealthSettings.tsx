@@ -13,11 +13,13 @@ import { Loader2, Video, Shield, Camera, Clock, Bell, Users } from 'lucide-react
 interface TelehealthSettings {
   enforce_state_licensure: boolean;
   require_bandwidth_test: boolean;
+  recording_feature_enabled: boolean;
   auto_record_sessions: boolean;
   session_timeout_minutes: number;
   consent_renewal_reminder_days: number;
   max_participants: number;
   require_consent: boolean;
+  ai_note_generation_enabled: boolean;
 }
 
 export default function TelehealthSettings() {
@@ -28,11 +30,13 @@ export default function TelehealthSettings() {
   const [settings, setSettings] = useState<TelehealthSettings>({
     enforce_state_licensure: false,
     require_bandwidth_test: true,
+    recording_feature_enabled: false,
     auto_record_sessions: false,
     session_timeout_minutes: 120,
     consent_renewal_reminder_days: 30,
     max_participants: 10,
     require_consent: false,
+    ai_note_generation_enabled: false,
   });
 
   useEffect(() => {
@@ -233,6 +237,20 @@ export default function TelehealthSettings() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="space-y-1">
+                <Label htmlFor="recording-enabled">Enable Session Recording</Label>
+                <p className="text-sm text-muted-foreground">
+                  Show recording control and allow recording during sessions
+                </p>
+              </div>
+              <Switch
+                id="recording-enabled"
+                checked={settings.recording_feature_enabled}
+                onCheckedChange={(checked) => updateSetting('recording_feature_enabled', checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between mt-4">
+              <div className="space-y-1">
                 <Label htmlFor="auto-record">Auto-Record Sessions</Label>
                 <p className="text-sm text-muted-foreground">
                   Automatically start recording when sessions begin (requires client consent)
@@ -242,6 +260,29 @@ export default function TelehealthSettings() {
                 id="auto-record"
                 checked={settings.auto_record_sessions}
                 onCheckedChange={(checked) => updateSetting('auto_record_sessions', checked)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* AI Note Generation */}
+        <Card>
+          <CardHeader>
+            <CardTitle>AI Note Generation</CardTitle>
+            <CardDescription>Enable converting recordings into clinical notes</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="ai-notes-enabled">Enable AI Note Generation</Label>
+                <p className="text-sm text-muted-foreground">
+                  Controls AI note option in post-session dialog. Also requires AI to be enabled in AI Note Settings.
+                </p>
+              </div>
+              <Switch
+                id="ai-notes-enabled"
+                checked={settings.ai_note_generation_enabled}
+                onCheckedChange={(checked) => updateSetting('ai_note_generation_enabled', checked)}
               />
             </div>
           </CardContent>

@@ -49,6 +49,10 @@ export default function TelehealthSession() {
   const [bandwidthResult, setBandwidthResult] = useState<BandwidthTestResult | null>(null);
   const [consentVerified, setConsentVerified] = useState(false);
   const [consentId, setConsentId] = useState<string | null>(null);
+  const [teleFlags, setTeleFlags] = useState({
+    recording_feature_enabled: false,
+    ai_note_generation_enabled: false,
+  });
   
   const timeoutCheckRef = useRef<NodeJS.Timeout | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -83,6 +87,25 @@ export default function TelehealthSession() {
     if (!user || !sessionId) return;
     loadSession();
   }, [user, sessionId]);
+
+  useEffect(() => {
+    const fetchTele = async () => {
+      try {
+        const { data } = await supabase
+          .from('practice_settings')
+          .select('telehealth_settings')
+          .single();
+        const tele = (data?.telehealth_settings as any) || {};
+        setTeleFlags({
+          recording_feature_enabled: !!tele.recording_feature_enabled,
+          ai_note_generation_enabled: !!tele.ai_note_generation_enabled,
+        });
+      } catch (e) {
+        console.warn('Failed to load telehealth flags', e);
+      }
+    };
+    fetchTele();
+  }, []);
 
   const loadSession = async () => {
     try {
@@ -597,13 +620,13 @@ export default function TelehealthSession() {
         isVideoEnabled={isVideoEnabled}
         isScreenSharing={isScreenSharing}
         isChatOpen={isChatOpen}
-        isRecording={isRecording}
-        recordingDuration={recordingDuration}
+        isRecording={teleFlags.recording_feature_enabled ? isRecording : false}
+        recordingDuration={teleFlags.recording_feature_enabled ? recordingDuration : 0}
         onToggleMute={toggleMute}
         onToggleVideo={toggleVideo}
         onToggleScreenShare={handleToggleScreenShare}
         onToggleChat={() => setIsChatOpen(!isChatOpen)}
-        onToggleRecording={handleToggleRecording}
+        onToggleRecording={teleFlags.recording_feature_enabled ? handleToggleRecording : undefined}
         onEndSession={handleEndSession}
       />
 
