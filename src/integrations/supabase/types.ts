@@ -459,6 +459,7 @@ export type Database = {
           appointment_date: string
           appointment_notes: string | null
           appointment_type: string
+          billed_under_provider_id: string | null
           billing_status: string
           cancellation_date: string | null
           cancellation_fee_applied: boolean | null
@@ -482,6 +483,7 @@ export type Database = {
           icd_codes: string[] | null
           id: string
           is_group_session: boolean | null
+          is_incident_to: boolean
           is_recurring: boolean | null
           last_modified: string | null
           last_modified_by: string | null
@@ -511,6 +513,7 @@ export type Database = {
           appointment_date: string
           appointment_notes?: string | null
           appointment_type: string
+          billed_under_provider_id?: string | null
           billing_status?: string
           cancellation_date?: string | null
           cancellation_fee_applied?: boolean | null
@@ -534,6 +537,7 @@ export type Database = {
           icd_codes?: string[] | null
           id?: string
           is_group_session?: boolean | null
+          is_incident_to?: boolean
           is_recurring?: boolean | null
           last_modified?: string | null
           last_modified_by?: string | null
@@ -563,6 +567,7 @@ export type Database = {
           appointment_date?: string
           appointment_notes?: string | null
           appointment_type?: string
+          billed_under_provider_id?: string | null
           billing_status?: string
           cancellation_date?: string | null
           cancellation_fee_applied?: boolean | null
@@ -586,6 +591,7 @@ export type Database = {
           icd_codes?: string[] | null
           id?: string
           is_group_session?: boolean | null
+          is_incident_to?: boolean
           is_recurring?: boolean | null
           last_modified?: string | null
           last_modified_by?: string | null
@@ -1858,6 +1864,85 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incident_to_audit_log: {
+        Row: {
+          action_timestamp: string
+          action_type: string
+          appointment_id: string | null
+          change_reason: string | null
+          compliance_issues: Json | null
+          compliance_status: string | null
+          created_at: string
+          id: string
+          incident_to_billing_id: string | null
+          ip_address: string | null
+          new_values: Json | null
+          note_id: string | null
+          notes: string | null
+          performed_by: string
+          previous_values: Json | null
+          user_agent: string | null
+        }
+        Insert: {
+          action_timestamp?: string
+          action_type: string
+          appointment_id?: string | null
+          change_reason?: string | null
+          compliance_issues?: Json | null
+          compliance_status?: string | null
+          created_at?: string
+          id?: string
+          incident_to_billing_id?: string | null
+          ip_address?: string | null
+          new_values?: Json | null
+          note_id?: string | null
+          notes?: string | null
+          performed_by: string
+          previous_values?: Json | null
+          user_agent?: string | null
+        }
+        Update: {
+          action_timestamp?: string
+          action_type?: string
+          appointment_id?: string | null
+          change_reason?: string | null
+          compliance_issues?: Json | null
+          compliance_status?: string | null
+          created_at?: string
+          id?: string
+          incident_to_billing_id?: string | null
+          ip_address?: string | null
+          new_values?: Json | null
+          note_id?: string | null
+          notes?: string | null
+          performed_by?: string
+          previous_values?: Json | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_to_audit_log_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_to_audit_log_incident_to_billing_id_fkey"
+            columns: ["incident_to_billing_id"]
+            isOneToOne: false
+            referencedRelation: "incident_to_billing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_to_audit_log_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_notes"
             referencedColumns: ["id"]
           },
         ]

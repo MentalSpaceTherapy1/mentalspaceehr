@@ -131,6 +131,10 @@ export function CosignNoteDialog({
       // Stop time tracking and get total review time
       const reviewTime = await stopTracking();
 
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // Update cosignature
       const { error } = await supabase
         .from('note_cosignatures')
         .update({
@@ -146,13 +150,57 @@ export function CosignNoteDialog({
 
       if (error) throw error;
 
+      // If incident-to billing, create the billing record
+      if (incidentToBillingData.isIncidentTo && cosignatureData) {
+        const { data: insertedBilling, error: billingError } = await supabase
+          .from('incident_to_billing')
+          .insert({
+            note_id: noteId,
+            client_id: noteContent.client_id,
+            session_id: noteContent.session_id,
+            supervising_provider_id: user?.id,
+            rendering_provider_id: cosignatureData.supervisee_id,
+            requirements_met: incidentToBillingData.requirementsMet,
+            provider_attestation: {
+              ...incidentToBillingData.providerAttestation,
+              attestationDate: new Date().toISOString(),
+              attestationSignature: signature
+            },
+            billed_under_provider_id: user?.id,
+            documentation_complete: true,
+          })
+          .select()
+          .single();
+
+        if (billingError) {
+          console.error('Error creating incident-to billing record:', billingError);
+          toast.error("Note cosigned but incident-to billing record failed");
+        } else if (insertedBilling) {
+          // Log audit trail
+          await supabase
+            .from('incident_to_audit_log')
+            .insert({
+              incident_to_billing_id: insertedBilling.id,
+              note_id: noteId,
+              action_type: 'created',
+              performed_by: user?.id,
+              notes: 'Incident-to billing record created with note cosignature',
+            });
+
+          // Run compliance check
+          await supabase.functions.invoke('verify-incident-to-compliance', {
+            body: { incidentToBillingId: insertedBilling.id }
+          });
+        }
+      }
+
       // Call workflow to trigger notifications and update clinical note
       await supabase.functions.invoke('cosignature-workflow', {
         body: {
           action: 'cosign',
           cosignatureId,
           noteId,
-          userId: (await supabase.auth.getUser()).data.user?.id,
+          userId: user?.id,
           data: {
             comments: supervisorComments,
             timeSpent: reviewTime,
