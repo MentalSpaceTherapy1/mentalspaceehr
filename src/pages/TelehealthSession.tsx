@@ -16,6 +16,8 @@ import { RecordingConsentDialog } from '@/components/telehealth/RecordingConsent
 import { SessionTimeoutWarning } from '@/components/telehealth/SessionTimeoutWarning';
 import { BandwidthTestDialog } from '@/components/telehealth/BandwidthTestDialog';
 import { ConsentVerificationGate } from '@/components/telehealth/ConsentVerificationGate';
+import { WaitingRoomClient } from '@/components/telehealth/WaitingRoomClient';
+import { WaitingRoomClinician } from '@/components/telehealth/WaitingRoomClinician';
 import { BandwidthTestResult } from '@/hooks/useBandwidthTest';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -53,6 +55,9 @@ export default function TelehealthSession() {
     recording_feature_enabled: false,
     ai_note_generation_enabled: false,
   });
+  const [waitingRoomId, setWaitingRoomId] = useState<string | null>(null);
+  const [inWaitingRoom, setInWaitingRoom] = useState(false);
+  const [waitingRoomAdmitted, setWaitingRoomAdmitted] = useState(false);
   
   const timeoutCheckRef = useRef<NodeJS.Timeout | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -225,6 +230,49 @@ export default function TelehealthSession() {
         .maybeSingle();
 
       setProfile(profileData);
+
+      // Check waiting room status for non-hosts
+      if (!isUserHost && sessionData.appointment_id) {
+        const { data: waitingRoom } = await supabase
+          .from('telehealth_waiting_rooms')
+          .select('*')
+          .eq('appointment_id', sessionData.appointment_id)
+          .eq('session_id', sessionData.session_id)
+          .maybeSingle();
+
+        if (!waitingRoom) {
+          // Create waiting room entry
+          const { data: newWaitingRoom } = await supabase
+            .from('telehealth_waiting_rooms')
+            .insert({
+              appointment_id: sessionData.appointment_id,
+              client_id: sessionData.appointments?.client_id,
+              session_id: sessionData.session_id
+            })
+            .select()
+            .single();
+
+          if (newWaitingRoom) {
+            setWaitingRoomId(newWaitingRoom.id);
+            setInWaitingRoom(true);
+            setLoading(false);
+            return;
+          }
+        } else if (waitingRoom.status === 'Waiting') {
+          // Client is in waiting room
+          setWaitingRoomId(waitingRoom.id);
+          setInWaitingRoom(true);
+          setLoading(false);
+          return;
+        } else if (waitingRoom.status === 'Admitted') {
+          // Client has been admitted, proceed with session
+          setWaitingRoomAdmitted(true);
+        } else if (waitingRoom.status === 'Timed Out') {
+          setError('Your session has timed out. Please contact your clinician.');
+          setLoading(false);
+          return;
+        }
+      }
 
       // Show bandwidth test before initializing media
       if (!bandwidthTestComplete) {
@@ -494,6 +542,26 @@ export default function TelehealthSession() {
     );
   }
 
+  // Show waiting room for non-host clients
+  if (inWaitingRoom && !isHost && waitingRoomId && session) {
+    return (
+      <WaitingRoomClient
+        waitingRoomId={waitingRoomId}
+        clinicianName={profile ? `${profile.first_name} ${profile.last_name}` : 'Your Clinician'}
+        appointmentTime={session.appointments?.start_time || 'Scheduled'}
+        onAdmitted={() => {
+          setInWaitingRoom(false);
+          setWaitingRoomAdmitted(true);
+          // Reload session to continue
+          loadSession();
+        }}
+        onTimeout={() => {
+          setError('Your session has timed out. Please contact your clinician to reschedule.');
+        }}
+      />
+    );
+  }
+
   if (error) {
     return (
       <div className="flex items-center justify-center h-screen p-4">
@@ -566,6 +634,21 @@ export default function TelehealthSession() {
   return (
     <div className="h-screen flex flex-col bg-background">
       <ScreenProtection sessionId={session?.id} userId={user?.id || ''} />
+
+      {/* Waiting Room Management for Hosts */}
+      {isHost && user && (
+        <WaitingRoomClinician 
+          clinicianId={user.id}
+          onAdmitClient={(admittedSessionId) => {
+            if (admittedSessionId === session?.session_id) {
+              toast({
+                title: 'Client Admitted',
+                description: 'The client is now joining the session'
+              });
+            }
+          }}
+        />
+      )}
 
       {/* Header */}
       <div className="p-4 border-b">

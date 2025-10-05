@@ -20,6 +20,7 @@ interface TelehealthSettings {
   max_participants: number;
   require_consent: boolean;
   ai_note_generation_enabled: boolean;
+  waiting_room_timeout_minutes: number;
 }
 
 export default function TelehealthSettings() {
@@ -37,6 +38,7 @@ export default function TelehealthSettings() {
     max_participants: 10,
     require_consent: false,
     ai_note_generation_enabled: false,
+    waiting_room_timeout_minutes: 30,
   });
 
   useEffect(() => {
@@ -314,6 +316,38 @@ export default function TelehealthSettings() {
                 max="50"
                 value={settings.max_participants}
                 onChange={(e) => updateSetting('max_participants', parseInt(e.target.value))}
+                className="w-24"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Waiting Room */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Waiting Room
+            </CardTitle>
+            <CardDescription>
+              Configure timeout and behavior for client waiting room
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1 flex-1">
+                <Label htmlFor="waiting-room-timeout">Waiting Room Timeout (minutes)</Label>
+                <p className="text-sm text-muted-foreground">
+                  Maximum time clients can wait before timing out
+                </p>
+              </div>
+              <Input
+                id="waiting-room-timeout"
+                type="number"
+                min="5"
+                max="120"
+                value={settings.waiting_room_timeout_minutes}
+                onChange={(e) => updateSetting('waiting_room_timeout_minutes', parseInt(e.target.value))}
                 className="w-24"
               />
             </div>

@@ -56,3 +56,12 @@ verify_jwt = true
 
 [functions.transcribe-and-generate-note]
 verify_jwt = true
+
+[functions.telehealth-consent-renewal]
+verify_jwt = false
+
+[functions.waiting-room-timeout]
+verify_jwt = false
+
+[functions.verify-incident-to-compliance]
+verify_jwt = true
