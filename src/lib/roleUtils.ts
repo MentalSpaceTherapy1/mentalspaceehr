@@ -18,7 +18,8 @@ export const roleDisplayNames: Record<AppRole, string> = {
   therapist: 'Therapist/Clinician',
   billing_staff: 'Billing Staff',
   front_desk: 'Front Desk/Scheduler',
-  associate_trainee: 'Associate/Trainee'
+  associate_trainee: 'Associate/Trainee',
+  client_user: 'Client Portal User'
 };
 
 export const roleDescriptions: Record<AppRole, string> = {
@@ -27,7 +28,8 @@ export const roleDescriptions: Record<AppRole, string> = {
   therapist: 'Manage schedule, document notes, view assigned patients',
   billing_staff: 'Access billing module, process claims and payments',
   front_desk: 'Manage appointments, check-in/out patients, send reminders',
-  associate_trainee: 'Limited access, requires supervisor co-signature on all notes'
+  associate_trainee: 'Limited access, requires supervisor co-signature on all notes',
+  client_user: 'Access client portal, view appointments and documents, secure messaging'
 };
 
 export const roleColors: Record<AppRole, string> = {
@@ -36,5 +38,6 @@ export const roleColors: Record<AppRole, string> = {
   therapist: 'secondary',
   billing_staff: 'outline',
   front_desk: 'outline',
-  associate_trainee: 'outline'
+  associate_trainee: 'outline',
+  client_user: 'outline'
 };

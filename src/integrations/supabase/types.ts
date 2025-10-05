@@ -869,6 +869,74 @@ export type Database = {
           },
         ]
       }
+      client_documents: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          description: string | null
+          document_type: string
+          expires_at: string | null
+          file_path: string
+          file_size_bytes: number | null
+          id: string
+          mime_type: string | null
+          requires_signature: boolean | null
+          signature_data: string | null
+          signed_at: string | null
+          signed_by: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          description?: string | null
+          document_type: string
+          expires_at?: string | null
+          file_path: string
+          file_size_bytes?: number | null
+          id?: string
+          mime_type?: string | null
+          requires_signature?: boolean | null
+          signature_data?: string | null
+          signed_at?: string | null
+          signed_by?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          description?: string | null
+          document_type?: string
+          expires_at?: string | null
+          file_path?: string
+          file_size_bytes?: number | null
+          id?: string
+          mime_type?: string | null
+          requires_signature?: boolean | null
+          signature_data?: string | null
+          signed_at?: string | null
+          signed_by?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_insurance: {
         Row: {
           back_card_image: string | null
@@ -1040,6 +1108,121 @@ export type Database = {
           },
         ]
       }
+      client_portal_messages: {
+        Row: {
+          client_id: string
+          clinician_id: string
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          parent_message_id: string | null
+          priority: string | null
+          read_at: string | null
+          sender_id: string
+          subject: string
+          updated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          clinician_id: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          parent_message_id?: string | null
+          priority?: string | null
+          read_at?: string | null
+          sender_id: string
+          subject: string
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          clinician_id?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          parent_message_id?: string | null
+          priority?: string | null
+          read_at?: string | null
+          sender_id?: string
+          subject?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_portal_messages_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_portal_messages_clinician_id_fkey"
+            columns: ["clinician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_portal_messages_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "client_portal_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_resource_assignments: {
+        Row: {
+          assigned_by: string
+          assigned_date: string | null
+          client_id: string
+          completed_at: string | null
+          id: string
+          notes: string | null
+          resource_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          assigned_by: string
+          assigned_date?: string | null
+          client_id: string
+          completed_at?: string | null
+          id?: string
+          notes?: string | null
+          resource_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          assigned_by?: string
+          assigned_date?: string | null
+          client_id?: string
+          completed_at?: string | null
+          id?: string
+          notes?: string | null
+          resource_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_resource_assignments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_resource_assignments_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "educational_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           accessibility_needs: string[] | null
@@ -1084,6 +1267,10 @@ export type Database = {
           occupation: string | null
           okay_to_leave_message: boolean | null
           other_languages_spoken: string[] | null
+          portal_enabled: boolean | null
+          portal_invitation_sent_at: string | null
+          portal_last_login: string | null
+          portal_user_id: string | null
           preferred_contact_method: string | null
           preferred_name: string | null
           preferred_pharmacy: Json | null
@@ -1160,6 +1347,10 @@ export type Database = {
           occupation?: string | null
           okay_to_leave_message?: boolean | null
           other_languages_spoken?: string[] | null
+          portal_enabled?: boolean | null
+          portal_invitation_sent_at?: string | null
+          portal_last_login?: string | null
+          portal_user_id?: string | null
           preferred_contact_method?: string | null
           preferred_name?: string | null
           preferred_pharmacy?: Json | null
@@ -1236,6 +1427,10 @@ export type Database = {
           occupation?: string | null
           okay_to_leave_message?: boolean | null
           other_languages_spoken?: string[] | null
+          portal_enabled?: boolean | null
+          portal_invitation_sent_at?: string | null
+          portal_last_login?: string | null
+          portal_user_id?: string | null
           preferred_contact_method?: string | null
           preferred_name?: string | null
           preferred_pharmacy?: Json | null
@@ -1783,6 +1978,54 @@ export type Database = {
           },
         ]
       }
+      educational_resources: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          file_path: string | null
+          id: string
+          is_public: boolean | null
+          resource_type: string
+          tags: string[] | null
+          target_conditions: string[] | null
+          title: string
+          updated_at: string | null
+          url: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_path?: string | null
+          id?: string
+          is_public?: boolean | null
+          resource_type: string
+          tags?: string[] | null
+          target_conditions?: string[] | null
+          title: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_path?: string | null
+          id?: string
+          is_public?: boolean | null
+          resource_type?: string
+          tags?: string[] | null
+          target_conditions?: string[] | null
+          title?: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
       emergency_contacts: {
         Row: {
           address: string | null
@@ -1864,6 +2107,72 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_assignments: {
+        Row: {
+          assigned_date: string | null
+          client_id: string
+          clinician_id: string
+          completed_date: string | null
+          completion_notes: string | null
+          created_at: string | null
+          description: string
+          due_date: string | null
+          id: string
+          instructions: string | null
+          related_session_id: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_date?: string | null
+          client_id: string
+          clinician_id: string
+          completed_date?: string | null
+          completion_notes?: string | null
+          created_at?: string | null
+          description: string
+          due_date?: string | null
+          id?: string
+          instructions?: string | null
+          related_session_id?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_date?: string | null
+          client_id?: string
+          clinician_id?: string
+          completed_date?: string | null
+          completion_notes?: string | null
+          created_at?: string | null
+          description?: string
+          due_date?: string | null
+          id?: string
+          instructions?: string | null
+          related_session_id?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_assignments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_assignments_clinician_id_fkey"
+            columns: ["clinician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2055,6 +2364,53 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      journal_entries: {
+        Row: {
+          client_id: string
+          clinician_viewed_at: string | null
+          created_at: string | null
+          entry_content: string
+          entry_date: string
+          entry_title: string | null
+          id: string
+          is_shared_with_clinician: boolean | null
+          mood: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          clinician_viewed_at?: string | null
+          created_at?: string | null
+          entry_content: string
+          entry_date?: string
+          entry_title?: string | null
+          id?: string
+          is_shared_with_clinician?: boolean | null
+          mood?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          clinician_viewed_at?: string | null
+          created_at?: string | null
+          entry_content?: string
+          entry_date?: string
+          entry_title?: string | null
+          id?: string
+          is_shared_with_clinician?: boolean | null
+          mood?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       login_attempts: {
         Row: {
@@ -2525,6 +2881,50 @@ export type Database = {
             columns: ["note_id"]
             isOneToOne: false
             referencedRelation: "clinical_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_notifications: {
+        Row: {
+          action_url: string | null
+          client_id: string
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          notification_type: string
+          read_at: string | null
+          title: string
+        }
+        Insert: {
+          action_url?: string | null
+          client_id: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          notification_type: string
+          read_at?: string | null
+          title: string
+        }
+        Update: {
+          action_url?: string | null
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          notification_type?: string
+          read_at?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_notifications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
@@ -3639,6 +4039,68 @@ export type Database = {
           },
         ]
       }
+      symptom_trackers: {
+        Row: {
+          anxiety_rating: number | null
+          client_id: string
+          created_at: string | null
+          depression_rating: number | null
+          energy_level: number | null
+          id: string
+          medication_taken: boolean | null
+          mood_rating: number | null
+          notes: string | null
+          sleep_hours: number | null
+          sleep_quality: number | null
+          stress_level: number | null
+          symptoms: Json | null
+          tracker_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          anxiety_rating?: number | null
+          client_id: string
+          created_at?: string | null
+          depression_rating?: number | null
+          energy_level?: number | null
+          id?: string
+          medication_taken?: boolean | null
+          mood_rating?: number | null
+          notes?: string | null
+          sleep_hours?: number | null
+          sleep_quality?: number | null
+          stress_level?: number | null
+          symptoms?: Json | null
+          tracker_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          anxiety_rating?: number | null
+          client_id?: string
+          created_at?: string | null
+          depression_rating?: number | null
+          energy_level?: number | null
+          id?: string
+          medication_taken?: boolean | null
+          mood_rating?: number | null
+          notes?: string | null
+          sleep_hours?: number | null
+          sleep_quality?: number | null
+          stress_level?: number | null
+          symptoms?: Json | null
+          tracker_date?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "symptom_trackers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_comments: {
         Row: {
           comment: string
@@ -4598,6 +5060,7 @@ export type Database = {
         | "billing_staff"
         | "front_desk"
         | "associate_trainee"
+        | "client_user"
       note_format: "SOAP" | "DAP" | "BIRP" | "GIRP" | "narrative" | "Narrative"
       note_type:
         | "intake_assessment"
@@ -4749,6 +5212,7 @@ export const Constants = {
         "billing_staff",
         "front_desk",
         "associate_trainee",
+        "client_user",
       ],
       note_format: ["SOAP", "DAP", "BIRP", "GIRP", "narrative", "Narrative"],
       note_type: [

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
-export type AppRole = 'administrator' | 'supervisor' | 'therapist' | 'billing_staff' | 'front_desk' | 'associate_trainee';
+export type AppRole = 'administrator' | 'supervisor' | 'therapist' | 'billing_staff' | 'front_desk' | 'associate_trainee' | 'client_user';
 
 export const useUserRoles = (userId?: string) => {
   const [roles, setRoles] = useState<AppRole[]>([]);

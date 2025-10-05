@@ -6,8 +6,18 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
+import { ClientPortalRoute } from "@/components/ClientPortalRoute";
 import { SessionTimeoutWarning } from "@/components/SessionTimeoutWarning";
 import Index from "./pages/Index";
+import PortalDashboard from "./pages/portal/PortalDashboard";
+import PortalAppointments from "./pages/portal/PortalAppointments";
+import PortalDocuments from "./pages/portal/PortalDocuments";
+import PortalBilling from "./pages/portal/PortalBilling";
+import PortalProgress from "./pages/portal/PortalProgress";
+import PortalMessages from "./pages/portal/PortalMessages";
+import PortalProfile from "./pages/portal/PortalProfile";
+import PortalResources from "./pages/portal/PortalResources";
+import { PortalLayout } from "@/components/portal/PortalLayout";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import UserManagement from "./pages/admin/UserManagement";
@@ -365,6 +375,75 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            
+            {/* CLIENT PORTAL ROUTES */}
+            <Route
+              path="/portal"
+              element={
+                <ClientPortalRoute>
+                  <PortalLayout>
+                    <PortalDashboard />
+                  </PortalLayout>
+                </ClientPortalRoute>
+              }
+            />
+            <Route
+              path="/portal/appointments"
+              element={
+                <ClientPortalRoute>
+                  <PortalAppointments />
+                </ClientPortalRoute>
+              }
+            />
+            <Route
+              path="/portal/documents"
+              element={
+                <ClientPortalRoute>
+                  <PortalDocuments />
+                </ClientPortalRoute>
+              }
+            />
+            <Route
+              path="/portal/billing"
+              element={
+                <ClientPortalRoute>
+                  <PortalBilling />
+                </ClientPortalRoute>
+              }
+            />
+            <Route
+              path="/portal/progress"
+              element={
+                <ClientPortalRoute>
+                  <PortalProgress />
+                </ClientPortalRoute>
+              }
+            />
+            <Route
+              path="/portal/messages"
+              element={
+                <ClientPortalRoute>
+                  <PortalMessages />
+                </ClientPortalRoute>
+              }
+            />
+            <Route
+              path="/portal/profile"
+              element={
+                <ClientPortalRoute>
+                  <PortalProfile />
+                </ClientPortalRoute>
+              }
+            />
+            <Route
+              path="/portal/resources"
+              element={
+                <ClientPortalRoute>
+                  <PortalResources />
+                </ClientPortalRoute>
+              }
+            />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
