@@ -6,9 +6,10 @@ import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
+  dashboardSwitcher?: React.ReactNode;
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export function DashboardLayout({ children, dashboardSwitcher }: DashboardLayoutProps) {
   const { user } = useAuth();
   const { roles } = useCurrentUserRoles();
 
@@ -23,7 +24,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex h-14 items-center gap-4 px-4">
               <SidebarTrigger />
               
-              <div className="flex-1" />
+              {dashboardSwitcher && (
+                <div className="flex-1 flex justify-center">
+                  {dashboardSwitcher}
+                </div>
+              )}
+              {!dashboardSwitcher && <div className="flex-1" />}
               
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground hidden sm:inline">
