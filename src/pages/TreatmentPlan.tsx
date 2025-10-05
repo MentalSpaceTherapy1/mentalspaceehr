@@ -725,6 +725,13 @@ export default function TreatmentPlan() {
 
       // Call workflow edge function to trigger notifications
       if (cosignData) {
+        // Fetch supervisor profile for toast message
+        const { data: supervisorProfile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', supervisionData.supervisor_id)
+          .single();
+
         await supabase.functions.invoke('cosignature-workflow', {
           body: {
             action: 'submit',
@@ -735,8 +742,10 @@ export default function TreatmentPlan() {
         });
 
         toast({
-          title: 'Plan Submitted for Review',
-          description: 'Your treatment plan has been submitted to your supervisor for co-signature',
+          title: '✓ Treatment Plan Submitted for Co-Signature',
+          description: supervisorProfile 
+            ? `Your treatment plan has been submitted to ${supervisorProfile.first_name} ${supervisorProfile.last_name} for review and co-signature.`
+            : 'Your treatment plan has been submitted to your supervisor for review and co-signature.',
         });
       }
     } catch (error) {

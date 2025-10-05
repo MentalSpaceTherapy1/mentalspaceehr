@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Brain, Lock, AlertTriangle, Target, Calendar, Phone, Users, Search, Plus, ClipboardList, Clock } from 'lucide-react';
+import { FileText, Brain, Lock, AlertTriangle, Target, Calendar, Phone, Users, Search, Plus, ClipboardList, Clock, FileCheck, UserCheck, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 
@@ -36,6 +36,19 @@ interface ClinicalNote {
     first_name: string;
     last_name: string;
   };
+  cosignature?: {
+    id: string;
+    status: string;
+    supervisor_id: string;
+    due_date: string;
+    submitted_for_cosign_date: string;
+    supervisor_cosigned_date: string | null;
+    is_incident_to: boolean;
+    supervisor?: {
+      first_name: string;
+      last_name: string;
+    };
+  }[];
 }
 
 export default function Notes() {
@@ -52,7 +65,7 @@ export default function Notes() {
   const loadNotes = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data: notesData, error: notesError } = await supabase
         .from('clinical_notes')
         .select(`
           *,
@@ -64,8 +77,47 @@ export default function Notes() {
         .order('date_of_service', { ascending: false })
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setNotes(data || []);
+      if (notesError) throw notesError;
+      
+      // Fetch cosignatures separately for each note
+      const notesWithCosignatures = await Promise.all(
+        (notesData || []).map(async (note) => {
+          const { data: cosignData } = await supabase
+            .from('note_cosignatures')
+            .select('*')
+            .eq('note_id', note.id)
+            .order('created_at', { ascending: false });
+          
+          // Fetch supervisor details for each cosignature
+          const cosignaturesWithSupervisor = await Promise.all(
+            (cosignData || []).map(async (cosign) => {
+              const { data: supervisorData } = await supabase
+                .from('profiles')
+                .select('first_name, last_name')
+                .eq('id', cosign.supervisor_id)
+                .single();
+              
+              return {
+                id: cosign.id,
+                status: cosign.status,
+                supervisor_id: cosign.supervisor_id,
+                due_date: cosign.due_date,
+                submitted_for_cosign_date: cosign.submitted_for_cosign_date,
+                supervisor_cosigned_date: cosign.supervisor_cosigned_date,
+                is_incident_to: cosign.is_incident_to,
+                supervisor: supervisorData || undefined
+              };
+            })
+          );
+          
+          return {
+            ...note,
+            cosignature: cosignaturesWithSupervisor
+          };
+        })
+      );
+      
+      setNotes(notesWithCosignatures as any);
     } catch (error) {
       console.error('Error loading notes:', error);
       toast({
@@ -261,67 +313,131 @@ export default function Notes() {
                         <TableHead>Type</TableHead>
                         <TableHead>Format</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Co-Signature</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredNotes.map((note) => (
-                        <TableRow key={note.id}>
-                          <TableCell className="font-medium">
-                            {note.clients?.first_name} {note.clients?.last_name}
-                          </TableCell>
-                          <TableCell>
-                            {format(new Date(note.date_of_service), 'MMM d, yyyy')}
-                          </TableCell>
-                          <TableCell>{formatNoteType(note.note_type)}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{note.note_format}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2 items-center">
-                              {note.ai_generated && (
-                                <Badge variant="secondary">
-                                  <Brain className="h-3 w-3 mr-1" />
-                                  AI
-                                </Badge>
+                      {filteredNotes.map((note) => {
+                        const cosign = note.cosignature && note.cosignature.length > 0 ? note.cosignature[0] : null;
+                        
+                        return (
+                          <TableRow key={note.id}>
+                            <TableCell className="font-medium">
+                              {note.clients?.first_name} {note.clients?.last_name}
+                            </TableCell>
+                            <TableCell>
+                              {format(new Date(note.date_of_service), 'MMM d, yyyy')}
+                            </TableCell>
+                            <TableCell>{formatNoteType(note.note_type)}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{note.note_format}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2 items-center flex-wrap">
+                                {note.ai_generated && (
+                                  <Badge variant="secondary">
+                                    <Brain className="h-3 w-3 mr-1" />
+                                    AI
+                                  </Badge>
+                                )}
+                                {note.locked && (
+                                  <Badge variant="secondary">
+                                    <Lock className="h-3 w-3 mr-1" />
+                                    Locked
+                                  </Badge>
+                                )}
+                                {note.risk_flags && Array.isArray(note.risk_flags) && note.risk_flags.length > 0 && (
+                                  <Badge variant="destructive">
+                                    <AlertTriangle className="h-3 w-3 mr-1" />
+                                    Risk
+                                  </Badge>
+                                )}
+                                {note.requires_supervision && !cosign && (
+                                  <Badge variant="outline">
+                                    <FileCheck className="h-3 w-3 mr-1" />
+                                    Needs Co-Sign
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {cosign ? (
+                                <div className="flex flex-col gap-1">
+                                  {cosign.status === 'Cosigned' && (
+                                    <>
+                                      <Badge variant="default" className="bg-green-500">
+                                        <UserCheck className="h-3 w-3 mr-1" />
+                                        Co-Signed
+                                      </Badge>
+                                      {cosign.supervisor && (
+                                        <span className="text-xs text-muted-foreground">
+                                          by {cosign.supervisor.first_name} {cosign.supervisor.last_name}
+                                        </span>
+                                      )}
+                                      {cosign.is_incident_to && (
+                                        <Badge variant="outline" className="text-xs">
+                                          Incident-to
+                                        </Badge>
+                                      )}
+                                    </>
+                                  )}
+                                  {cosign.status === 'Pending Review' && (
+                                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      Pending Review
+                                    </Badge>
+                                  )}
+                                  {cosign.status === 'Under Review' && (
+                                    <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                                      <FileCheck className="h-3 w-3 mr-1" />
+                                      Under Review
+                                    </Badge>
+                                  )}
+                                  {cosign.status === 'Revisions Requested' && (
+                                    <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                                      <AlertCircle className="h-3 w-3 mr-1" />
+                                      Needs Revision
+                                    </Badge>
+                                  )}
+                                  {cosign.status === 'Overdue' && (
+                                    <Badge variant="destructive">
+                                      <AlertTriangle className="h-3 w-3 mr-1" />
+                                      Overdue
+                                    </Badge>
+                                  )}
+                                  {cosign.status === 'Returned' && (
+                                    <Badge variant="secondary" className="bg-red-100 text-red-800">
+                                      <AlertCircle className="h-3 w-3 mr-1" />
+                                      Returned
+                                    </Badge>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">—</span>
                               )}
-                              {note.locked && (
-                                <Badge variant="secondary">
-                                  <Lock className="h-3 w-3 mr-1" />
-                                  Locked
-                                </Badge>
-                              )}
-                              {note.risk_flags && Array.isArray(note.risk_flags) && note.risk_flags.length > 0 && (
-                                <Badge variant="destructive">
-                                  <AlertTriangle className="h-3 w-3 mr-1" />
-                                  Risk
-                                </Badge>
-                              )}
-                              {note.requires_supervision && (
-                                <Badge variant="outline">Needs Supervision</Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                if (note.note_type === 'intake_assessment') {
-                                  navigate(`/intake-assessment?noteId=${note.id}`);
-                                } else if (note.note_type === 'progress_note') {
-                                  navigate(`/progress-note?noteId=${note.id}`);
-                                } else {
-                                  navigate(`/notes/${note.id}`);
-                                }
-                              }}
-                            >
-                              <FileText className="h-4 w-4 mr-1" />
-                              View
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (note.note_type === 'intake_assessment') {
+                                    navigate(`/intake-assessment?noteId=${note.id}`);
+                                  } else if (note.note_type === 'progress_note') {
+                                    navigate(`/progress-note?noteId=${note.id}`);
+                                  } else {
+                                    navigate(`/notes/${note.id}`);
+                                  }
+                                }}
+                              >
+                                <FileText className="h-4 w-4 mr-1" />
+                                View
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 )}
