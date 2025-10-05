@@ -59,6 +59,7 @@ import ComplianceDashboard from "./pages/admin/ComplianceDashboard";
 import SupervisionManagement from "./pages/admin/SupervisionManagement";
 import TelehealthConsentManagement from "./pages/admin/TelehealthConsentManagement";
 import TelehealthSettings from "./pages/admin/TelehealthSettings";
+import CreateTestPortalUser from "./pages/admin/CreateTestPortalUser";
 
 const queryClient = new QueryClient();
 
@@ -292,6 +293,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <TelehealthConsentManagement />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/create-test-portal-user" 
+              element={
+                <AdminRoute>
+                  <CreateTestPortalUser />
                 </AdminRoute>
               } 
             />
