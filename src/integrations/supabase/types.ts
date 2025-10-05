@@ -1807,12 +1807,22 @@ export type Database = {
           client_id: string
           clinically_relevant: boolean | null
           clinician_id: string
+          contact_method: string | null
           created_by: string | null
           created_date: string | null
+          duration: number | null
+          follow_up_date: string | null
+          follow_up_plan: string | null
+          follow_up_required: boolean | null
           id: string
+          location: string | null
           note_content: string
           note_date: string
           note_type: string
+          outcome: string | null
+          participants: Json | null
+          purpose: string | null
+          related_documentation: string | null
           signed_by: string | null
           signed_date: string | null
           status: string
@@ -1826,12 +1836,22 @@ export type Database = {
           client_id: string
           clinically_relevant?: boolean | null
           clinician_id: string
+          contact_method?: string | null
           created_by?: string | null
           created_date?: string | null
+          duration?: number | null
+          follow_up_date?: string | null
+          follow_up_plan?: string | null
+          follow_up_required?: boolean | null
           id?: string
+          location?: string | null
           note_content: string
           note_date: string
           note_type: string
+          outcome?: string | null
+          participants?: Json | null
+          purpose?: string | null
+          related_documentation?: string | null
           signed_by?: string | null
           signed_date?: string | null
           status?: string
@@ -1845,12 +1865,22 @@ export type Database = {
           client_id?: string
           clinically_relevant?: boolean | null
           clinician_id?: string
+          contact_method?: string | null
           created_by?: string | null
           created_date?: string | null
+          duration?: number | null
+          follow_up_date?: string | null
+          follow_up_plan?: string | null
+          follow_up_required?: boolean | null
           id?: string
+          location?: string | null
           note_content?: string
           note_date?: string
           note_type?: string
+          outcome?: string | null
+          participants?: Json | null
+          purpose?: string | null
+          related_documentation?: string | null
           signed_by?: string | null
           signed_date?: string | null
           status?: string

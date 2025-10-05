@@ -106,6 +106,29 @@ export default function MiscellaneousNote() {
     }));
   };
 
+  const addParticipant = () => {
+    setFormData(prev => ({
+      ...prev,
+      participants: [...prev.participants, { name: '', role: '' }]
+    }));
+  };
+
+  const updateParticipant = (index: number, field: 'name' | 'role', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      participants: prev.participants.map((p, i) => 
+        i === index ? { ...p, [field]: value } : p
+      )
+    }));
+  };
+
+  const removeParticipant = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      participants: prev.participants.filter((_, i) => i !== index)
+    }));
+  };
+
   const saveNote = async () => {
     if (!formData.clientId) {
       toast({
@@ -132,6 +155,16 @@ export default function MiscellaneousNote() {
         billing_code: formData.billingCode,
         status: formData.status,
         created_by: user?.id,
+        duration: formData.duration ? parseInt(formData.duration) : null,
+        participants: formData.participants.filter(p => p.name && p.role),
+        location: formData.location || null,
+        contact_method: formData.contactMethod || null,
+        purpose: formData.purpose || null,
+        outcome: formData.outcome || null,
+        follow_up_required: formData.followUpRequired,
+        follow_up_date: formData.followUpDate || null,
+        follow_up_plan: formData.followUpPlan || null,
+        related_documentation: formData.relatedDocumentation || null,
       };
 
       const { error } = await supabase
@@ -303,13 +336,36 @@ export default function MiscellaneousNote() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label>Note Type *</Label>
-                <Input
+                <Select
                   value={formData.noteType}
-                  onChange={(e) => setFormData(prev => ({ ...prev, noteType: e.target.value }))}
-                  placeholder="e.g., Phone Log, Email, Administrative"
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, noteType: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Phone Call">Phone Call</SelectItem>
+                    <SelectItem value="Email">Email</SelectItem>
+                    <SelectItem value="Administrative">Administrative</SelectItem>
+                    <SelectItem value="Coordination">Coordination of Care</SelectItem>
+                    <SelectItem value="Follow-up">Follow-up Activity</SelectItem>
+                    <SelectItem value="Documentation">Documentation Review</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Duration (minutes)</Label>
+                <Input
+                  type="number"
+                  value={formData.duration}
+                  onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+                  placeholder="e.g., 15"
+                  min="1"
                 />
               </div>
 
@@ -318,8 +374,111 @@ export default function MiscellaneousNote() {
                 <Input
                   value={formData.subject}
                   onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                  placeholder="Brief description of the note"
+                  placeholder="Brief description"
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label>Location</Label>
+                <Select
+                  value={formData.location}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, location: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Office">Office</SelectItem>
+                    <SelectItem value="Phone">Phone</SelectItem>
+                    <SelectItem value="Email">Email</SelectItem>
+                    <SelectItem value="Virtual">Virtual/Video</SelectItem>
+                    <SelectItem value="Home Visit">Home Visit</SelectItem>
+                    <SelectItem value="Community">Community Setting</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Contact Method</Label>
+                <Select
+                  value={formData.contactMethod}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, contactMethod: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="In Person">In Person</SelectItem>
+                    <SelectItem value="Phone Call">Phone Call</SelectItem>
+                    <SelectItem value="Email">Email</SelectItem>
+                    <SelectItem value="Text/SMS">Text/SMS</SelectItem>
+                    <SelectItem value="Video Call">Video Call</SelectItem>
+                    <SelectItem value="Written">Written Correspondence</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Purpose</Label>
+                <Select
+                  value={formData.purpose}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, purpose: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select purpose" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Follow-up Call">Follow-up Call</SelectItem>
+                    <SelectItem value="Coordination of Care">Coordination of Care</SelectItem>
+                    <SelectItem value="Administrative">Administrative</SelectItem>
+                    <SelectItem value="Documentation Review">Documentation Review</SelectItem>
+                    <SelectItem value="Information Gathering">Information Gathering</SelectItem>
+                    <SelectItem value="Crisis Intervention">Crisis Intervention</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label>Participants</Label>
+              <div className="space-y-2 mt-2">
+                {formData.participants.map((participant, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      placeholder="Name"
+                      value={participant.name}
+                      onChange={(e) => updateParticipant(index, 'name', e.target.value)}
+                      className="flex-1"
+                    />
+                    <Input
+                      placeholder="Role/Relationship"
+                      value={participant.role}
+                      onChange={(e) => updateParticipant(index, 'role', e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => removeParticipant(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addParticipant}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Participant
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -424,14 +583,36 @@ export default function MiscellaneousNote() {
         )}
 
         <Card>
-          <CardContent className="pt-6 space-y-6">
+          <CardHeader>
+            <CardTitle>Note Content & Outcomes</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <div>
               <Label>Note Content *</Label>
               <Textarea
                 value={formData.noteContent}
                 onChange={(e) => setFormData(prev => ({ ...prev, noteContent: e.target.value }))}
-                placeholder="Enter note content..."
-                rows={10}
+                placeholder="Enter detailed note content..."
+                rows={8}
+              />
+            </div>
+
+            <div>
+              <Label>Outcome/Results</Label>
+              <Textarea
+                value={formData.outcome}
+                onChange={(e) => setFormData(prev => ({ ...prev, outcome: e.target.value }))}
+                placeholder="Document the outcome or results of this activity..."
+                rows={4}
+              />
+            </div>
+
+            <div>
+              <Label>Related Documentation</Label>
+              <Input
+                value={formData.relatedDocumentation}
+                onChange={(e) => setFormData(prev => ({ ...prev, relatedDocumentation: e.target.value }))}
+                placeholder="Reference other notes, forms, or documentation"
               />
             </div>
 
@@ -501,6 +682,45 @@ export default function MiscellaneousNote() {
                 </div>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Follow-up</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="follow-up-required"
+                checked={formData.followUpRequired}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, followUpRequired: checked as boolean }))}
+              />
+              <Label htmlFor="follow-up-required">Follow-up Required</Label>
+            </div>
+
+            {formData.followUpRequired && (
+              <>
+                <div>
+                  <Label>Follow-up Date</Label>
+                  <Input
+                    type="date"
+                    value={formData.followUpDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, followUpDate: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <Label>Follow-up Plan</Label>
+                  <Textarea
+                    value={formData.followUpPlan}
+                    onChange={(e) => setFormData(prev => ({ ...prev, followUpPlan: e.target.value }))}
+                    placeholder="Describe the follow-up plan..."
+                    rows={4}
+                  />
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
