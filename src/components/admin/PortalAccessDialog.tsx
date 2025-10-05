@@ -46,7 +46,6 @@ export const PortalAccessDialog = ({
       if (enabled) {
         // Enable portal access
         let userId = portalUserId;
-        let tempPassword = '';
 
         if (!userId && email) {
           // Create portal user via edge function (requires service role)
@@ -62,9 +61,10 @@ export const PortalAccessDialog = ({
           if (!createResult?.success) throw new Error(createResult?.error || 'Failed to create portal user');
 
           userId = createResult.userId;
-          tempPassword = createResult.tempPassword;
 
           // Send invitation email if requested
+          // Note: Password is generated and sent directly by the create-portal-user function
+          // We just need to trigger the invitation email separately if needed
           if (sendInvite) {
             try {
               const { error: emailError } = await supabase.functions.invoke('send-portal-invitation', {
@@ -73,7 +73,6 @@ export const PortalAccessDialog = ({
                   email,
                   firstName: clientName.split(' ')[0],
                   lastName: clientName.split(' ').slice(1).join(' ') || '',
-                  tempPassword,
                 },
               });
 

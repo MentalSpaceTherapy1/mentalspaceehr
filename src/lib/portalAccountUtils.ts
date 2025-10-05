@@ -213,21 +213,20 @@ export async function logPortalAccess(
   failureReason?: string
 ): Promise<void> {
   try {
-    // Get IP address
-    const response = await fetch('https://api.ipify.org?format=json');
-    const { ip } = await response.json();
-
+    // SECURITY: Use 'client-side' instead of external IP API for HIPAA compliance
+    // IP logging should be done server-side via edge functions using request headers
     await supabase.from('portal_access_log').insert({
       client_id: clientId,
       portal_user_id: portalUserId,
       action,
       success,
       failure_reason: failureReason,
-      ip_address: ip,
+      ip_address: 'client-side',
       user_agent: navigator.userAgent
     });
   } catch (error) {
     console.error('Error logging portal access:', error);
+    // Never block portal access due to logging failures
   }
 }
 

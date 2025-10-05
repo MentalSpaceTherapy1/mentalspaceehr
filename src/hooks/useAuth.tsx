@@ -71,18 +71,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logLoginAttempt = async (email: string, success: boolean, failureReason?: string) => {
     try {
-      const response = await fetch('https://api.ipify.org?format=json');
-      const { ip } = await response.json();
-      
+      // SECURITY: Use 'client-side' instead of external IP API for HIPAA compliance
+      // IP logging should be done server-side via edge functions using request headers
       await supabase.from('login_attempts').insert({
         email,
         success,
         failure_reason: failureReason,
-        ip_address: ip,
+        ip_address: 'client-side',
         user_agent: navigator.userAgent,
       });
     } catch (error) {
       console.error('Failed to log login attempt:', error);
+      // Never block authentication due to logging failures
     }
   };
 

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -9,12 +10,38 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Validation schema
+const requestSchema = z.object({
+  userId: z.string().uuid('Invalid user ID format'),
+  tempPassword: z.string().min(8).max(100),
+});
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const rawBody = await req.json();
+    
+    // Validate input
+    const validation = requestSchema.safeParse(rawBody);
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid input',
+          details: validation.error.issues 
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const { userId, tempPassword } = validation.data;
+    console.log('Sending staff invitation for user:', userId);
+
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -25,10 +52,6 @@ serve(async (req) => {
         }
       }
     );
-
-    const { userId, tempPassword } = await req.json();
-
-    console.log('Sending staff invitation for user:', userId);
 
     // Get user details
     const { data: profile, error: profileError } = await supabaseAdmin

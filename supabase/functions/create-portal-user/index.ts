@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -9,11 +10,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface CreatePortalUserRequest {
-  clientId: string;
-  email: string;
-  clientName: string;
-}
+// Validation schema
+const requestSchema = z.object({
+  clientId: z.string().uuid('Invalid client ID format'),
+  email: z.string().email('Invalid email format').max(255),
+  clientName: z.string().min(1).max(200),
+});
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -21,8 +23,24 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { clientId, email, clientName }: CreatePortalUserRequest = await req.json();
+    const rawBody = await req.json();
+    
+    // Validate input
+    const validation = requestSchema.safeParse(rawBody);
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid input',
+          details: validation.error.issues 
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
+    const { clientId, email, clientName } = validation.data;
     console.log('Creating portal user for client:', clientId);
 
     // Create admin client with service role key
@@ -83,11 +101,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Client updated successfully');
 
+    // SECURITY: Never return passwords in API response
+    // Password should only be sent via email
     return new Response(
       JSON.stringify({ 
         success: true, 
         userId: authData.user.id,
-        tempPassword: tempPassword 
+        message: 'Portal user created successfully. Credentials sent via email.'
       }), 
       {
         status: 200,
