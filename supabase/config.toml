@@ -84,3 +84,7 @@ verify_jwt = true
 [functions.scan-uploaded-file]
 verify_jwt = true
 
+[functions.send-staff-invitation]
+verify_jwt = true
+
+

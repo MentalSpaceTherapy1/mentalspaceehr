@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
@@ -14,6 +15,7 @@ export default function CreateUser() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [sendInvitation, setSendInvitation] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
     first_name: '',
@@ -43,10 +45,42 @@ export default function CreateUser() {
 
       if (error) throw error;
 
-      toast({
-        title: 'Success',
-        description: `User created. Temporary password: ${tempPassword}`,
-      });
+      // Send invitation email if requested
+      if (sendInvitation && data?.user?.id) {
+        try {
+          const { error: inviteError } = await supabase.functions.invoke('send-staff-invitation', {
+            body: {
+              userId: data.user.id,
+              tempPassword: tempPassword,
+            },
+          });
+
+          if (inviteError) {
+            console.error('Failed to send invitation:', inviteError);
+            toast({
+              title: 'User Created',
+              description: `User created successfully but invitation email failed to send. Temporary password: ${tempPassword}`,
+              variant: 'destructive',
+            });
+          } else {
+            toast({
+              title: 'Success',
+              description: 'User created and invitation email sent successfully!',
+            });
+          }
+        } catch (inviteError) {
+          console.error('Invitation error:', inviteError);
+          toast({
+            title: 'User Created',
+            description: `User created. Temporary password: ${tempPassword}. Email invitation failed.`,
+          });
+        }
+      } else {
+        toast({
+          title: 'Success',
+          description: `User created. Temporary password: ${tempPassword}`,
+        });
+      }
 
       navigate('/admin/users');
     } catch (error) {
@@ -136,7 +170,21 @@ export default function CreateUser() {
               </div>
             </div>
 
-            <div className="flex gap-4 pt-4">
+            <div className="flex items-center space-x-2 pt-4 pb-2">
+              <Checkbox
+                id="send_invitation"
+                checked={sendInvitation}
+                onCheckedChange={(checked) => setSendInvitation(checked as boolean)}
+              />
+              <Label htmlFor="send_invitation" className="text-sm font-normal cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Send invitation email with login credentials
+                </div>
+              </Label>
+            </div>
+
+            <div className="flex gap-4 pt-2">
               <Button type="submit" disabled={loading}>
                 {loading ? 'Creating...' : 'Create User'}
               </Button>
