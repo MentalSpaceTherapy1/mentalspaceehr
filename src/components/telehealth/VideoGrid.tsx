@@ -131,10 +131,10 @@ export const VideoGrid = ({
     );
   }
 
-  // Grid layout
+  // Grid layout with mobile optimization
   return (
     <div className={cn(
-      "grid gap-4 h-full auto-rows-fr",
+      "grid gap-2 md:gap-4 h-full auto-rows-fr",
       getGridColumns()
     )}>
       <VideoTile participant={localParticipant} isLocal={true} />

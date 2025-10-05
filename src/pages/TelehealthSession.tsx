@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useAudioRecording } from '@/hooks/useAudioRecording';
+import { useConnectionMetrics } from '@/hooks/useConnectionMetrics';
 import { supabase } from '@/integrations/supabase/client';
 import { VideoGrid } from '@/components/telehealth/VideoGrid';
 import { SessionControls } from '@/components/telehealth/SessionControls';
@@ -12,6 +13,7 @@ import { ChatSidebar } from '@/components/telehealth/ChatSidebar';
 import { ScreenProtection } from '@/components/telehealth/ScreenProtection';
 import { PostSessionDialog } from '@/components/telehealth/PostSessionDialog';
 import { RecordingConsentDialog } from '@/components/telehealth/RecordingConsentDialog';
+import { SessionTimeoutWarning } from '@/components/telehealth/SessionTimeoutWarning';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Loader2, AlertCircle, Video as VideoIcon } from 'lucide-react';
@@ -35,6 +37,13 @@ export default function TelehealthSession() {
   const [showPostSessionDialog, setShowPostSessionDialog] = useState(false);
   const [recordingConsent, setRecordingConsent] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [participantCount, setParticipantCount] = useState(1);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
+  const [minutesRemaining, setMinutesRemaining] = useState(10);
+  
+  const timeoutCheckRef = useRef<NodeJS.Timeout | null>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
 
   const {
     localStream,
@@ -58,6 +67,9 @@ export default function TelehealthSession() {
     stopRecording,
     error: recordingError,
   } = useAudioRecording();
+
+  // Track connection metrics
+  useConnectionMetrics(session?.id, user?.id || '', peerConnectionRef.current);
 
   useEffect(() => {
     if (!user || !sessionId) return;
@@ -194,13 +206,21 @@ export default function TelehealthSession() {
 
       // If session is waiting and host joins, mark active
       if (sessionData.status === 'waiting' && isUserHost) {
+        const startTime = new Date();
         await supabase
           .from('telehealth_sessions')
           .update({
             status: 'active',
-            started_at: new Date().toISOString()
+            started_at: startTime.toISOString()
           })
           .eq('id', sessionData.id);
+        
+        setSessionStartTime(startTime);
+        startTimeoutMonitoring(startTime);
+      } else if (sessionData.status === 'active' && sessionData.started_at) {
+        const startTime = new Date(sessionData.started_at);
+        setSessionStartTime(startTime);
+        startTimeoutMonitoring(startTime);
       }
 
       setLoading(false);
@@ -285,6 +305,89 @@ export default function TelehealthSession() {
       startScreenShare();
     }
   };
+
+  // Session timeout monitoring (2-hour limit)
+  const startTimeoutMonitoring = (startTime: Date) => {
+    const SESSION_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 hours
+    const WARNING_TIME_MS = 10 * 60 * 1000; // 10 minutes before
+
+    timeoutCheckRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime.getTime();
+      const remaining = SESSION_TIMEOUT_MS - elapsed;
+      
+      // Show warning at 10 minutes
+      if (remaining <= WARNING_TIME_MS && remaining > 0 && !showTimeoutWarning) {
+        const mins = Math.ceil(remaining / (60 * 1000));
+        setMinutesRemaining(mins);
+        setShowTimeoutWarning(true);
+      }
+      
+      // Auto-end session at 2 hours
+      if (remaining <= 0) {
+        handleTimeoutEnd();
+      }
+    }, 60000); // Check every minute
+  };
+
+  const handleTimeoutEnd = async () => {
+    toast({
+      title: "Session Timeout",
+      description: "This session has reached the 2-hour limit and will now end.",
+      variant: "destructive"
+    });
+    await handleEndSession();
+  };
+
+  const handleExtendSession = () => {
+    setShowTimeoutWarning(false);
+    // Session continues until 2-hour hard limit
+  };
+
+  // Monitor participant count with realtime
+  useEffect(() => {
+    if (!session?.id) return;
+
+    const channel = supabase
+      .channel(`participants-${session.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'session_participants',
+          filter: `session_id=eq.${session.id}`
+        },
+        async () => {
+          // Fetch current participant count
+          const { data, error } = await supabase
+            .from('session_participants')
+            .select('id', { count: 'exact' })
+            .eq('session_id', session.id)
+            .eq('connection_state', 'connected');
+
+          if (!error && data) {
+            setParticipantCount(data.length);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session?.id]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutCheckRef.current) {
+        clearInterval(timeoutCheckRef.current);
+      }
+    };
+  }, []);
+
+  // Check participant limit before allowing joins
+  const canJoinSession = participantCount < 4;
 
   if (loading) {
     return (
@@ -435,6 +538,22 @@ export default function TelehealthSession() {
         appointmentId={session?.appointment_id}
         clientId={session?.appointments?.client_id || ''}
       />
+
+      <SessionTimeoutWarning
+        open={showTimeoutWarning}
+        minutesRemaining={minutesRemaining}
+        onExtend={handleExtendSession}
+        onEnd={handleEndSession}
+      />
+
+      {!canJoinSession && (
+        <Alert variant="destructive" className="fixed top-4 left-1/2 -translate-x-1/2 max-w-md z-50">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            This session has reached the maximum of 4 participants.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }

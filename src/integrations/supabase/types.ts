@@ -3044,6 +3044,53 @@ export type Database = {
         }
         Relationships: []
       }
+      session_connection_metrics: {
+        Row: {
+          bandwidth_kbps: number | null
+          connection_state: string | null
+          created_at: string | null
+          id: string
+          jitter_ms: number | null
+          latency_ms: number | null
+          packet_loss_percent: number | null
+          participant_id: string | null
+          recorded_at: string | null
+          session_id: string | null
+        }
+        Insert: {
+          bandwidth_kbps?: number | null
+          connection_state?: string | null
+          created_at?: string | null
+          id?: string
+          jitter_ms?: number | null
+          latency_ms?: number | null
+          packet_loss_percent?: number | null
+          participant_id?: string | null
+          recorded_at?: string | null
+          session_id?: string | null
+        }
+        Update: {
+          bandwidth_kbps?: number | null
+          connection_state?: string | null
+          created_at?: string | null
+          id?: string
+          jitter_ms?: number | null
+          latency_ms?: number | null
+          packet_loss_percent?: number | null
+          participant_id?: string | null
+          recorded_at?: string | null
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_connection_metrics_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "telehealth_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_participants: {
         Row: {
           connection_quality: Json | null
@@ -3722,8 +3769,10 @@ export type Database = {
           recording_url: string | null
           session_id: string
           session_metadata: Json | null
+          session_timeout_minutes: number | null
           started_at: string | null
           status: string
+          timeout_warning_shown: boolean | null
           transcript_enabled: boolean | null
           updated_at: string | null
           waiting_room_enabled: boolean | null
@@ -3742,8 +3791,10 @@ export type Database = {
           recording_url?: string | null
           session_id: string
           session_metadata?: Json | null
+          session_timeout_minutes?: number | null
           started_at?: string | null
           status?: string
+          timeout_warning_shown?: boolean | null
           transcript_enabled?: boolean | null
           updated_at?: string | null
           waiting_room_enabled?: boolean | null
@@ -3762,8 +3813,10 @@ export type Database = {
           recording_url?: string | null
           session_id?: string
           session_metadata?: Json | null
+          session_timeout_minutes?: number | null
           started_at?: string | null
           status?: string
+          timeout_warning_shown?: boolean | null
           transcript_enabled?: boolean | null
           updated_at?: string | null
           waiting_room_enabled?: boolean | null

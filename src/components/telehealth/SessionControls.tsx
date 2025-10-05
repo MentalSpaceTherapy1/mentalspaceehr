@@ -38,18 +38,18 @@ export const SessionControls = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
   return (
-    <Card className="p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-t">
-      <div className="flex items-center justify-center gap-2">
+    <Card className="p-2 md:p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-t">
+      <div className="flex items-center justify-center gap-1 md:gap-2 flex-wrap">
         <Button
           variant={isMuted ? "destructive" : "secondary"}
           size="lg"
           onClick={onToggleMute}
           className={cn(
-            "rounded-full h-14 w-14",
+            "rounded-full h-12 w-12 md:h-14 md:w-14 touch-manipulation",
             !isMuted && "hover:bg-secondary/80"
           )}
         >
-          {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          {isMuted ? <MicOff className="h-4 w-4 md:h-5 md:w-5" /> : <Mic className="h-4 w-4 md:h-5 md:w-5" />}
         </Button>
 
         <Button
@@ -57,29 +57,29 @@ export const SessionControls = ({
           size="lg"
           onClick={onToggleVideo}
           className={cn(
-            "rounded-full h-14 w-14",
+            "rounded-full h-12 w-12 md:h-14 md:w-14 touch-manipulation",
             isVideoEnabled && "hover:bg-secondary/80"
           )}
         >
-          {isVideoEnabled ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
+          {isVideoEnabled ? <Video className="h-4 w-4 md:h-5 md:w-5" /> : <VideoOff className="h-4 w-4 md:h-5 md:w-5" />}
         </Button>
 
         <Button
           variant={isScreenSharing ? "default" : "secondary"}
           size="lg"
           onClick={onToggleScreenShare}
-          className="rounded-full h-14 w-14"
+          className="rounded-full h-12 w-12 md:h-14 md:w-14 touch-manipulation hidden md:flex"
         >
-          {isScreenSharing ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
+          {isScreenSharing ? <MonitorOff className="h-4 w-4 md:h-5 md:w-5" /> : <Monitor className="h-4 w-4 md:h-5 md:w-5" />}
         </Button>
 
         <Button
           variant={isChatOpen ? "default" : "secondary"}
           size="lg"
           onClick={onToggleChat}
-          className="rounded-full h-14 w-14"
+          className="rounded-full h-12 w-12 md:h-14 md:w-14 touch-manipulation"
         >
-          <MessageSquare className="h-5 w-5" />
+          <MessageSquare className="h-4 w-4 md:h-5 md:w-5" />
         </Button>
 
         {onToggleRecording && (
@@ -87,7 +87,7 @@ export const SessionControls = ({
             onClick={onToggleRecording}
             variant={isRecording ? "destructive" : "secondary"}
             size="lg"
-            className="rounded-full h-14 px-4 gap-2 relative"
+            className="rounded-full h-12 md:h-14 px-3 md:px-4 gap-1 md:gap-2 relative touch-manipulation"
           >
             {isRecording && (
               <span className="absolute -top-1 -right-1 flex h-3 w-3">
@@ -95,20 +95,21 @@ export const SessionControls = ({
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
               </span>
             )}
-            <Mic className="h-5 w-5" />
-            {isRecording && <span className="text-sm">{formatDuration(recordingDuration)}</span>}
+            <Mic className="h-4 w-4 md:h-5 md:w-5" />
+            {isRecording && <span className="text-xs md:text-sm">{formatDuration(recordingDuration)}</span>}
           </Button>
         )}
 
-        <div className="ml-4 border-l pl-4">
+        <div className="ml-2 md:ml-4 border-l pl-2 md:pl-4">
           <Button
             variant="destructive"
             size="lg"
             onClick={onEndSession}
-            className="rounded-full h-14 px-8 gap-2"
+            className="rounded-full h-12 md:h-14 px-4 md:px-8 gap-1 md:gap-2 touch-manipulation"
           >
-            <Phone className="h-5 w-5 rotate-135" />
-            End Session
+            <Phone className="h-4 w-4 md:h-5 md:w-5 rotate-135" />
+            <span className="hidden md:inline">End Session</span>
+            <span className="md:hidden text-xs">End</span>
           </Button>
         </div>
       </div>

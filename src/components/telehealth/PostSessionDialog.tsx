@@ -23,6 +23,11 @@ interface PostSessionDialogProps {
   clientId: string;
 }
 
+interface BillingInfo {
+  billAsTelemedicine: boolean;
+  modifier: 'GT' | '95' | '';
+}
+
 export const PostSessionDialog = ({
   open,
   onOpenChange,
@@ -36,6 +41,10 @@ export const PostSessionDialog = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [billingInfo, setBillingInfo] = useState<BillingInfo>({
+    billAsTelemedicine: true,
+    modifier: 'GT'
+  });
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -100,14 +109,34 @@ export const PostSessionDialog = ({
     }
   };
 
-  const handleManualNote = () => {
+  const handleManualNote = async () => {
+    await updateBillingInfo();
     navigate(`/notes/new?clientId=${clientId}${appointmentId ? `&appointmentId=${appointmentId}` : ''}`);
     onOpenChange(false);
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
+    await updateBillingInfo();
     onOpenChange(false);
     navigate('/schedule');
+  };
+
+  const updateBillingInfo = async () => {
+    if (!appointmentId) return;
+
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .update({
+          telehealth_platform: 'integrated',
+          billing_status: billingInfo.billAsTelemedicine ? 'Ready to Bill' : 'Not Billed'
+        })
+        .eq('id', appointmentId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating billing info:', error);
+    }
   };
 
   return (
@@ -132,6 +161,45 @@ export const PostSessionDialog = ({
               </div>
             </div>
           )}
+
+          {/* Billing Section */}
+          <div className="space-y-3 p-4 border rounded-lg">
+            <h4 className="text-sm font-semibold">Billing Information</h4>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={billingInfo.billAsTelemedicine}
+                  onChange={(e) => setBillingInfo({ ...billingInfo, billAsTelemedicine: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <span className="text-sm">Bill as telemedicine session</span>
+              </label>
+              
+              {billingInfo.billAsTelemedicine && (
+                <div className="ml-6 space-y-1">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={billingInfo.modifier === 'GT'}
+                      onChange={() => setBillingInfo({ ...billingInfo, modifier: 'GT' })}
+                      className="text-primary"
+                    />
+                    <span className="text-sm">Modifier GT (Live video)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={billingInfo.modifier === '95'}
+                      onChange={() => setBillingInfo({ ...billingInfo, modifier: '95' })}
+                      className="text-primary"
+                    />
+                    <span className="text-sm">Modifier 95 (Synchronous)</span>
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
 
           <div className="space-y-2">
             {hasRecording && (

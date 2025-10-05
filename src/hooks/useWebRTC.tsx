@@ -33,20 +33,36 @@ export const useWebRTC = (sessionId: string, userId: string, role: 'host' | 'cli
   // WebRTC configuration with STUN/TURN servers
   const rtcConfig: WebRTCConfig = {
     iceServers: [
+      // STUN servers for NAT traversal
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' }
+      { urls: 'stun:stun2.l.google.com:19302' },
+      // TURN servers for restricted networks (fallback)
+      // Using Cloudflare's public TURN servers
+      {
+        urls: 'turn:turn.cloudflare.com:3478?transport=udp',
+        username: 'cloudflare',
+        credential: 'cloudflare'
+      },
+      {
+        urls: 'turn:turn.cloudflare.com:3478?transport=tcp',
+        username: 'cloudflare',
+        credential: 'cloudflare'
+      }
     ]
   };
 
-  // Initialize local media stream
+  // Initialize local media stream with mobile detection
   const initializeMedia = useCallback(async () => {
     try {
+      // Detect mobile device for adaptive bitrate
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          frameRate: { ideal: 30 }
+          width: { ideal: isMobile ? 1280 : 1920 },
+          height: { ideal: isMobile ? 720 : 1080 },
+          frameRate: { ideal: isMobile ? 24 : 30 }
         },
         audio: {
           echoCancellation: true,
