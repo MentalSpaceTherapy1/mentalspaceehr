@@ -78,7 +78,7 @@ export const UnlockRequestManagement = () => {
         .from('unlock_requests')
         .select(`
           *,
-          requester:profiles!unlock_requests_requester_id_fkey(
+          requester:profiles(
             first_name,
             last_name,
             email
