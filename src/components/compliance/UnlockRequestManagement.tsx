@@ -74,15 +74,11 @@ export const UnlockRequestManagement = () => {
     try {
       setLoading(true);
       
+      // Step 1: Fetch unlock requests without requester join
       const { data, error } = await supabase
         .from('unlock_requests')
         .select(`
           *,
-          requester:profiles(
-            first_name,
-            last_name,
-            email
-          ),
           compliance_status:note_compliance_status(
             client_id,
             session_date,
@@ -98,9 +94,30 @@ export const UnlockRequestManagement = () => {
 
       if (error) throw error;
 
+      // Step 2: Fetch requester profiles separately
+      const requesterIds = Array.from(
+        new Set((data || []).map(r => r.requester_id).filter(Boolean))
+      );
+      
+      let requesterMap: Record<string, { first_name: string; last_name: string; email: string }> = {};
+      
+      if (requesterIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email')
+          .in('id', requesterIds);
+        
+        if (!profilesError && profiles) {
+          requesterMap = Object.fromEntries(
+            profiles.map(p => [p.id, { first_name: p.first_name, last_name: p.last_name, email: p.email }])
+          );
+        }
+      }
+
+      // Step 3: Map results together
       const requestsWithDetails = (data || []).map(item => ({
         ...item,
-        requester: Array.isArray(item.requester) ? item.requester[0] : item.requester,
+        requester: requesterMap[item.requester_id] || null,
         compliance_status: {
           ...(Array.isArray(item.compliance_status) ? item.compliance_status[0] : item.compliance_status),
           clients: Array.isArray(item.compliance_status?.clients) 
@@ -334,7 +351,9 @@ export const UnlockRequestManagement = () => {
 
                       <div className="text-xs text-muted-foreground space-y-1">
                         <p>
-                          <strong>Requested by:</strong> {request.requester?.last_name}, {request.requester?.first_name}
+                          <strong>Requested by:</strong> {request.requester 
+                            ? `${request.requester.last_name}, ${request.requester.first_name}`
+                            : 'Unknown User'}
                         </p>
                         <p>
                           <strong>Session Date:</strong> {format(new Date(request.compliance_status?.session_date || ''), 'MMM d, yyyy')}
@@ -403,7 +422,9 @@ export const UnlockRequestManagement = () => {
                   <strong>Days Overdue:</strong> {selectedRequest.compliance_status?.days_overdue || 0} days
                 </p>
                 <p className="text-sm">
-                  <strong>Requested by:</strong> {selectedRequest.requester?.last_name}, {selectedRequest.requester?.first_name}
+                  <strong>Requested by:</strong> {selectedRequest.requester 
+                    ? `${selectedRequest.requester.last_name}, ${selectedRequest.requester.first_name}`
+                    : 'Unknown User'}
                 </p>
               </div>
 
