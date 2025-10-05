@@ -5,14 +5,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, FileCheck, FileX, User, Calendar, FileText, AlertTriangle, Clock } from "lucide-react";
+import { Loader2, FileCheck, FileX, User, Calendar, FileText, AlertTriangle, Clock, ClipboardCheck } from "lucide-react";
 import { format } from "date-fns";
 import { RequestRevisionsDialog } from "./RequestRevisionsDialog";
 import { RevisionHistoryViewer } from "./RevisionHistoryViewer";
 import { useReviewTimeTracking } from "@/hooks/useReviewTimeTracking";
+import { IncidentToBillingDialog, IncidentToBillingData } from "./IncidentToBillingDialog";
 
 interface CosignNoteDialogProps {
   open: boolean;
@@ -44,12 +44,27 @@ export function CosignNoteDialog({
   const [supervisorComments, setSupervisorComments] = useState('');
   const [signature, setSignature] = useState('');
   const [showRevisionsDialog, setShowRevisionsDialog] = useState(false);
+  const [showIncidentToDialog, setShowIncidentToDialog] = useState(false);
   
-  // Incident-to billing
-  const [isIncidentTo, setIsIncidentTo] = useState(false);
-  const [supervisorAttestation, setSupervisorAttestation] = useState(
-    "I attest that I was present during the provision of these services and provided direct supervision to the clinician. The services were rendered under my direct supervision in accordance with Medicare incident-to billing requirements."
-  );
+  // Incident-to billing data
+  const [incidentToBillingData, setIncidentToBillingData] = useState<IncidentToBillingData>({
+    isIncidentTo: false,
+    requirementsMet: {
+      initialServiceByProvider: false,
+      establishedPlanOfCare: false,
+      providerAvailableForSupervision: false,
+      clientEstablished: false,
+      superviseeQualified: false,
+    },
+    providerAttestation: {
+      wasAvailableForSupervision: false,
+      locationOfProvider: "",
+      establishedTreatmentPlan: false,
+      serviceProvidedPerPlan: false,
+      attested: false,
+    },
+    attestationText: ""
+  });
   
   // Time tracking
   const { startTracking, stopTracking, isTracking, elapsedMinutes } = useReviewTimeTracking(cosignatureId);
@@ -106,7 +121,7 @@ export function CosignNoteDialog({
       return;
     }
 
-    if (isIncidentTo && !supervisorAttestation.trim()) {
+    if (incidentToBillingData.isIncidentTo && !incidentToBillingData.attestationText.trim()) {
       toast.error("Please provide attestation for incident-to billing");
       return;
     }
@@ -124,8 +139,8 @@ export function CosignNoteDialog({
           supervisor_comments: supervisorComments || null,
           status: 'Approved',
           time_spent_reviewing: reviewTime,
-          is_incident_to: isIncidentTo,
-          supervisor_attestation: isIncidentTo ? supervisorAttestation : null,
+          is_incident_to: incidentToBillingData.isIncidentTo,
+          supervisor_attestation: incidentToBillingData.isIncidentTo ? incidentToBillingData.attestationText : null,
         })
         .eq('id', cosignatureId);
 
@@ -141,8 +156,8 @@ export function CosignNoteDialog({
           data: {
             comments: supervisorComments,
             timeSpent: reviewTime,
-            isIncidentTo,
-            attestation: isIncidentTo ? supervisorAttestation : null
+            isIncidentTo: incidentToBillingData.isIncidentTo,
+            attestation: incidentToBillingData.isIncidentTo ? incidentToBillingData.attestationText : null
           }
         }
       });
@@ -316,33 +331,38 @@ export function CosignNoteDialog({
 
               {/* Incident-to Billing */}
               <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="incident-to"
-                    checked={isIncidentTo}
-                    onCheckedChange={(checked) => setIsIncidentTo(checked as boolean)}
-                  />
-                  <Label htmlFor="incident-to" className="font-semibold cursor-pointer">
-                    This is Incident-to billing
-                  </Label>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Check this box if services were provided under Medicare incident-to billing rules
-                </p>
-
-                {isIncidentTo && (
-                  <div className="space-y-2 mt-4">
-                    <Label htmlFor="attestation">Supervisor Attestation *</Label>
-                    <Textarea
-                      id="attestation"
-                      rows={4}
-                      value={supervisorAttestation}
-                      onChange={(e) => setSupervisorAttestation(e.target.value)}
-                      className="bg-background"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Confirm you provided direct supervision during service provision
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold">Incident-to Billing</p>
+                    <p className="text-sm text-muted-foreground">
+                      Configure if this service qualifies for Medicare incident-to billing
                     </p>
+                  </div>
+                  {incidentToBillingData.isIncidentTo && (
+                    <Badge variant="default" className="bg-green-600">
+                      <ClipboardCheck className="mr-1 h-3 w-3" />
+                      Configured
+                    </Badge>
+                  )}
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowIncidentToDialog(true)}
+                >
+                  <ClipboardCheck className="mr-2 h-4 w-4" />
+                  {incidentToBillingData.isIncidentTo 
+                    ? "Review Incident-to Requirements" 
+                    : "Configure Incident-to Billing"}
+                </Button>
+
+                {incidentToBillingData.isIncidentTo && (
+                  <div className="text-xs text-muted-foreground space-y-1 pt-2">
+                    <p>✓ All requirements verified</p>
+                    <p>✓ Provider attestation completed</p>
+                    <p>✓ Location: {incidentToBillingData.providerAttestation.locationOfProvider}</p>
                   </div>
                 )}
               </div>
@@ -417,6 +437,14 @@ export function CosignNoteDialog({
             onOpenChange(false);
             onSuccess?.();
           }}
+        />
+
+        {/* Incident-to Billing Dialog */}
+        <IncidentToBillingDialog
+          open={showIncidentToDialog}
+          onOpenChange={setShowIncidentToDialog}
+          onConfirm={(data) => setIncidentToBillingData(data)}
+          initialData={incidentToBillingData}
         />
       </DialogContent>
     </Dialog>
