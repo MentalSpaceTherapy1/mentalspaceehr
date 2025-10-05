@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle2, XCircle, AlertTriangle, ClipboardCheck } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { CheckCircle2, XCircle, AlertTriangle, ClipboardCheck, HelpCircle, ExternalLink } from "lucide-react";
 
 interface IncidentToBillingDialogProps {
   open: boolean;
@@ -163,8 +164,22 @@ export function IncidentToBillingDialog({
                   }
                 />
                 <div className="flex-1">
-                  <Label htmlFor="req-initial-service" className="cursor-pointer font-medium">
+                  <Label htmlFor="req-initial-service" className="cursor-pointer font-medium flex items-center gap-2">
                     Initial service by supervising provider
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="font-semibold mb-1">What this means:</p>
+                          <p className="text-xs mb-2">The supervising provider must have performed the initial evaluation and established the diagnosis. Associates cannot see new patients under incident-to billing.</p>
+                          <p className="font-semibold mb-1 mt-2">Example:</p>
+                          <p className="text-xs">✅ Dr. Smith evaluated the client, then Associate Jones provides follow-up therapy</p>
+                          <p className="text-xs">❌ Client is new to practice and assigned directly to Associate Jones</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </Label>
                   <p className="text-xs text-muted-foreground mt-1">
                     The supervising provider must have performed the initial service and evaluated the client
@@ -201,8 +216,22 @@ export function IncidentToBillingDialog({
                   }
                 />
                 <div className="flex-1">
-                  <Label htmlFor="req-provider-available" className="cursor-pointer font-medium">
+                  <Label htmlFor="req-provider-available" className="cursor-pointer font-medium flex items-center gap-2">
                     Provider available for immediate assistance
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="font-semibold mb-1">What this means:</p>
+                          <p className="text-xs mb-2">The supervising provider must be physically present in the same office suite and immediately available to provide assistance if needed.</p>
+                          <p className="font-semibold mb-1 mt-2">Example:</p>
+                          <p className="text-xs">✅ Dr. Smith is in their office while Associate provides therapy</p>
+                          <p className="text-xs">❌ Dr. Smith is working from home or at another location</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </Label>
                   <p className="text-xs text-muted-foreground mt-1">
                     The supervising provider must have been physically present in the office suite and immediately available
@@ -251,8 +280,30 @@ export function IncidentToBillingDialog({
           </div>
 
           <Separator />
+          
+          {/* Learn More Section */}
+          <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
+            <h4 className="font-semibold text-sm flex items-center gap-2">
+              <ExternalLink className="h-4 w-4" />
+              Additional Resources
+            </h4>
+            <div className="space-y-2 text-xs">
+              <a 
+                href="https://www.cms.gov/Regulations-and-Guidance/Guidance/Manuals/Downloads/bp102c15.pdf" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-primary hover:underline"
+              >
+                <ExternalLink className="h-3 w-3" />
+                CMS Medicare Benefit Policy Manual - Chapter 15, Section 60
+              </a>
+              <p className="text-muted-foreground">
+                Official CMS guidance on incident-to billing requirements and compliance
+              </p>
+            </div>
+          </div>
 
-          {/* Provider Attestation */}
+          <Separator />
           <div className="space-y-4">
             <h4 className="font-semibold text-sm">Provider Attestation</h4>
 

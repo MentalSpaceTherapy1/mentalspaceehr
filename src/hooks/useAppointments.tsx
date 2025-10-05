@@ -27,6 +27,8 @@ export interface Appointment {
   parent_recurrence_id?: string;
   created_date: string;
   created_by: string;
+  is_incident_to?: boolean;
+  billed_under_provider_id?: string;
 }
 
 export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: string) => {

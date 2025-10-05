@@ -178,38 +178,26 @@ export function AppointmentDialog({
   useEffect(() => {
     fetchData();
   }, []);
-  
-  useEffect(() => {
-    if (clinicians.length > 0) {
-      fetchSupervisors();
-    }
-  }, [clinicians]);
 
   const fetchData = async () => {
-    const [clientsRes, cliniciansRes, locationsRes, serviceCodesRes] = await Promise.all([
-      supabase.from('clients').select('id, first_name, last_name, medical_record_number').eq('status', 'Active'),
-      supabase.from('profiles').select('id, first_name, last_name').eq('is_active', true),
-      supabase.from('practice_locations').select('*').eq('is_active', true),
-      supabase.from('service_codes').select('*').eq('is_active', true).order('service_type').order('code'),
-    ]);
+    try {
+      const [clientsRes, cliniciansRes, locationsRes, serviceCodesRes] = await Promise.all([
+        supabase.from('clients').select('id, first_name, last_name, medical_record_number').eq('status', 'Active'),
+        supabase.from('profiles').select('id, first_name, last_name').eq('is_active', true),
+        supabase.from('practice_locations').select('*').eq('is_active', true),
+        supabase.from('service_codes').select('*').eq('is_active', true).order('service_type').order('code'),
+      ]);
 
-    if (clientsRes.data) setClients(clientsRes.data);
-    if (cliniciansRes.data) setClinicians(cliniciansRes.data);
-    if (locationsRes.data) setLocations(locationsRes.data);
-    if (serviceCodesRes.data) setServiceCodes(serviceCodesRes.data);
-  };
-  
-  const fetchSupervisors = async () => {
-    const { data } = await supabase
-      .from('supervision_relationships')
-      .select('supervisor_id')
-      .eq('status', 'Active')
-      .eq('incident_to_billing_allowed', true);
-    
-    if (data && clinicians.length > 0) {
-      const supervisorIds = [...new Set(data.map((r: any) => r.supervisor_id))];
-      const supervisorProfiles = clinicians.filter((c: any) => supervisorIds.includes(c.id));
-      setSupervisors(supervisorProfiles);
+      if (clientsRes.data) setClients(clientsRes.data);
+      if (cliniciansRes.data) {
+        setClinicians(cliniciansRes.data);
+        // Use all clinicians as potential supervisors for simplicity
+        setSupervisors(cliniciansRes.data);
+      }
+      if (locationsRes.data) setLocations(locationsRes.data);
+      if (serviceCodesRes.data) setServiceCodes(serviceCodesRes.data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
     }
   };
 

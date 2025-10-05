@@ -113,15 +113,17 @@ export default function Schedule() {
     fetchClinicians();
   }, []);
 
-  // Convert appointments to calendar events
   const events = useMemo(() => {
-    return appointments.map((apt) => ({
-      id: apt.id,
-      title: `${apt.appointment_type}${isRecurringAppointment(apt) ? ' 🔁' : ''}`,
-      start: new Date(`${apt.appointment_date}T${apt.start_time}`),
-      end: new Date(`${apt.appointment_date}T${apt.end_time}`),
-      resource: apt,
-    }));
+    return appointments.map((apt) => {
+      const incidentToBadge = apt.is_incident_to ? ' 💼' : '';
+      return {
+        id: apt.id,
+        title: `${apt.appointment_type}${isRecurringAppointment(apt) ? ' 🔁' : ''}${incidentToBadge}`,
+        start: new Date(`${apt.appointment_date}T${apt.start_time}`),
+        end: new Date(`${apt.appointment_date}T${apt.end_time}`),
+        resource: apt,
+      };
+    });
   }, [appointments]);
 
   const handleSelectSlot = useCallback(({ start }: { start: Date }) => {
@@ -381,6 +383,10 @@ export default function Schedule() {
                 </Badge>
                 <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md">
                   No Show
+                </Badge>
+                <Badge variant="secondary" className="shadow-md flex items-center gap-1">
+                  <span>💼</span>
+                  Incident-to
                 </Badge>
               </div>
             </div>
