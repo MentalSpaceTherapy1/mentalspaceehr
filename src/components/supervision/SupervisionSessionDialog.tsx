@@ -358,7 +358,7 @@ export function SupervisionSessionDialog({
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-4">
               <GroupSuperviseesInput
-                groupSupervisees={formData.group_supervisees}
+                supervisees={formData.group_supervisees}
                 onChange={(newSupervisees) => setFormData({ ...formData, group_supervisees: newSupervisees })}
               />
             </CollapsibleContent>
@@ -377,38 +377,10 @@ export function SupervisionSessionDialog({
               <ChevronDown className={`h-4 w-4 transition-transform ${sectionsOpen.cases ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-4">
-              {formData.cases_discussed.map((caseDiscussion, index) => (
-                <CaseDiscussionInput
-                  key={index}
-                  caseDiscussion={caseDiscussion}
-                  onChange={(updatedCase) => {
-                    const updatedCases = [...formData.cases_discussed];
-                    updatedCases[index] = updatedCase;
-                    setFormData({ ...formData, cases_discussed: updatedCases });
-                  }}
-                  onDelete={() => {
-                    const updatedCases = [...formData.cases_discussed];
-                    updatedCases.splice(index, 1);
-                    setFormData({ ...formData, cases_discussed: updatedCases });
-                  }}
-                />
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setFormData({
-                  ...formData,
-                  cases_discussed: [...formData.cases_discussed, {
-                    client_id: '',
-                    discussion_summary: '',
-                    clinical_issues: [],
-                    interventions_recommended: []
-                  }]
-                })}
-              >
-                Add Case Discussion
-              </Button>
+              <CaseDiscussionInput
+                cases={formData.cases_discussed}
+                onChange={(cases) => setFormData({ ...formData, cases_discussed: cases })}
+              />
             </CollapsibleContent>
           </Collapsible>
 
@@ -494,7 +466,7 @@ export function SupervisionSessionDialog({
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-4">
               <ActionItemsList
-                actionItems={formData.action_items}
+                items={formData.action_items}
                 onChange={(newItems) => setFormData({ ...formData, action_items: newItems })}
               />
             </CollapsibleContent>
