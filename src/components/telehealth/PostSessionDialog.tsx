@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileText, Mic, X, Loader2 } from 'lucide-react';
+import { FileText, Circle, X, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -162,7 +162,7 @@ export const PostSessionDialog = ({
         <div className="space-y-4 py-4">
           {hasRecording && (
             <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-              <Mic className="h-4 w-4 text-primary" />
+              <Circle className="h-4 w-4 text-primary fill-current" />
               <div className="flex-1">
                 <p className="text-sm font-medium">Recording Available</p>
                 <p className="text-xs text-muted-foreground">
@@ -224,9 +224,9 @@ export const PostSessionDialog = ({
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     AI Processing...
                   </>
-                ) : (
+                 ) : (
                   <>
-                    <Mic className="mr-2 h-4 w-4" />
+                    <Circle className="mr-2 h-4 w-4 fill-current" />
                     AI: Generate Note from Recording
                   </>
                 )}

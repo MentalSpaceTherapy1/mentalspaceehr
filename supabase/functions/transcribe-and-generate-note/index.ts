@@ -115,35 +115,37 @@ Be professional, concise, and clinically appropriate. If information is missing,
         tools: [
           {
             type: 'function',
-            name: 'create_soap_note',
-            description: 'Create a structured SOAP note from session transcript',
-            parameters: {
-              type: 'object',
-              properties: {
-                subjective: {
-                  type: 'string',
-                  description: 'Client reported symptoms, concerns, and feelings'
+            function: {
+              name: 'create_soap_note',
+              description: 'Create a structured SOAP note from session transcript',
+              parameters: {
+                type: 'object',
+                properties: {
+                  subjective: {
+                    type: 'string',
+                    description: 'Client reported symptoms, concerns, and feelings'
+                  },
+                  objective: {
+                    type: 'string',
+                    description: 'Observable behaviors, mood, affect, appearance'
+                  },
+                  assessment: {
+                    type: 'string',
+                    description: 'Clinical impressions and diagnostic considerations'
+                  },
+                  plan: {
+                    type: 'string',
+                    description: 'Treatment recommendations and next steps'
+                  },
+                  interventions: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    description: 'List of interventions used during session'
+                  }
                 },
-                objective: {
-                  type: 'string',
-                  description: 'Observable behaviors, mood, affect, appearance'
-                },
-                assessment: {
-                  type: 'string',
-                  description: 'Clinical impressions and diagnostic considerations'
-                },
-                plan: {
-                  type: 'string',
-                  description: 'Treatment recommendations and next steps'
-                },
-                interventions: {
-                  type: 'array',
-                  items: { type: 'string' },
-                  description: 'List of interventions used during session'
-                }
-              },
-              required: ['subjective', 'objective', 'assessment', 'plan'],
-              additionalProperties: false
+                required: ['subjective', 'objective', 'assessment', 'plan'],
+                additionalProperties: false
+              }
             }
           }
         ],
@@ -154,6 +156,13 @@ Be professional, concise, and clinically appropriate. If information is missing,
     if (!noteGenerationResponse.ok) {
       const errorText = await noteGenerationResponse.text();
       console.error('Note generation error:', errorText);
+      
+      if (noteGenerationResponse.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again in a moment.');
+      } else if (noteGenerationResponse.status === 402) {
+        throw new Error('AI service credits depleted. Please contact your administrator.');
+      }
+      
       throw new Error(`Note generation failed: ${errorText}`);
     }
 
