@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { generateConsentPdf } from '@/lib/consentPdfGenerator';
 
 interface EmergencyContact {
   name: string;
@@ -99,6 +100,54 @@ export const useTelehealthConsent = () => {
         .single();
 
       if (error) throw error;
+
+      // Generate PDF
+      try {
+        const { data: clientData } = await supabase
+          .from('clients')
+          .select('first_name, last_name')
+          .eq('id', formData.clientId)
+          .single();
+        
+        const { data: clinicianData } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', user?.id)
+          .single();
+
+        const pdfPath = await generateConsentPdf({
+          clientName: `${clientData?.first_name} ${clientData?.last_name}`,
+          clinicianName: `${clinicianData?.first_name} ${clinicianData?.last_name}`,
+          consentDate: new Date().toLocaleDateString(),
+          clientId: formData.clientId,
+          understoodLimitations: formData.understoodLimitations,
+          understoodRisks: formData.understoodRisks,
+          understoodBenefits: formData.understoodBenefits,
+          understoodAlternatives: formData.understoodAlternatives,
+          risksAcknowledged: formData.risksAcknowledged,
+          emergencyContact: formData.emergencyContact,
+          currentPhysicalLocation: formData.currentPhysicalLocation,
+          localEmergencyNumber: formData.localEmergencyNumber,
+          privacyPolicyReviewed: formData.privacyPolicyReviewed,
+          confidentialityLimitsUnderstood: formData.confidentialityLimitsUnderstood,
+          clientStateOfResidence: formData.clientStateOfResidence,
+          clinicianLicensedInState: licensureValid ?? false,
+          adequateConnectionConfirmed: formData.adequateConnectionConfirmed,
+          privateLocationConfirmed: formData.privateLocationConfirmed,
+          consentsToRecording: formData.consentsToRecording,
+          signature: formData.signature,
+          expirationDate: expirationDate.toLocaleDateString(),
+        });
+
+        // Update consent record with PDF path
+        await supabase
+          .from('telehealth_consents')
+          .update({ pdf_document_url: pdfPath })
+          .eq('id', data.id);
+      } catch (pdfError) {
+        console.error('Error generating PDF:', pdfError);
+        // Don't fail the whole operation if PDF generation fails
+      }
 
       toast({
         title: 'Consent Created',

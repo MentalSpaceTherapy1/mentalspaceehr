@@ -3782,6 +3782,7 @@ export type Database = {
           expiration_date: string | null
           id: string
           local_emergency_number: string | null
+          pdf_document_url: string | null
           privacy_policy_reviewed: boolean | null
           private_location_confirmed: boolean | null
           renewal_notification_date: string | null
@@ -3819,6 +3820,7 @@ export type Database = {
           expiration_date?: string | null
           id?: string
           local_emergency_number?: string | null
+          pdf_document_url?: string | null
           privacy_policy_reviewed?: boolean | null
           private_location_confirmed?: boolean | null
           renewal_notification_date?: string | null
@@ -3856,6 +3858,7 @@ export type Database = {
           expiration_date?: string | null
           id?: string
           local_emergency_number?: string | null
+          pdf_document_url?: string | null
           privacy_policy_reviewed?: boolean | null
           private_location_confirmed?: boolean | null
           renewal_notification_date?: string | null

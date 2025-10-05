@@ -1,10 +1,13 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { Resend } from 'https://esm.sh/resend@4.0.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -60,15 +63,57 @@ serve(async (req) => {
     for (const consent of expiringConsents) {
       try {
         const clientEmail = consent.clients?.email;
+        const clinicianEmail = consent.profiles?.email;
         const clientName = `${consent.clients?.first_name} ${consent.clients?.last_name}`;
+        const clinicianName = `${consent.profiles?.first_name || ''} ${consent.profiles?.last_name || ''}`.trim();
         
         if (!clientEmail) {
           console.log(`No email for client ${clientName}, skipping notification`);
           continue;
         }
 
-        // Log notification (email sending would be configured separately)
-        console.log(`Would send renewal notification to ${clientEmail}`);
+        // Send email to client
+        const appUrl = Deno.env.get('APP_URL') || 'https://your-app-url.com';
+        
+        await resend.emails.send({
+          from: 'MentalSpace <noreply@resend.dev>',
+          to: [clientEmail],
+          subject: 'Telehealth Consent Renewal Required',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #333;">Telehealth Consent Renewal</h2>
+              <p>Hi ${consent.clients.first_name},</p>
+              <p>Your telehealth consent is expiring on <strong>${new Date(consent.expiration_date).toLocaleDateString()}</strong> (in 30 days).</p>
+              <p>To continue receiving telehealth services, please complete the renewal form before your next session.</p>
+              <p style="margin: 30px 0;">
+                <a href="${appUrl}/telehealth/consent-renewal/${consent.id}" 
+                   style="background-color: #0066cc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+                  Renew Consent Now
+                </a>
+              </p>
+              <p style="color: #666; font-size: 14px;">If you have any questions, please contact your clinician.</p>
+              <p>Best regards,<br>Your MentalSpace Team</p>
+            </div>
+          `,
+        });
+
+        // Send notification to clinician
+        if (clinicianEmail) {
+          await resend.emails.send({
+            from: 'MentalSpace <noreply@resend.dev>',
+            to: [clinicianEmail],
+            subject: `Client Consent Expiring: ${clientName}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #333;">Telehealth Consent Expiration Notice</h2>
+                <p>Hi ${clinicianName},</p>
+                <p>This is a reminder that <strong>${clientName}</strong>'s telehealth consent will expire on <strong>${new Date(consent.expiration_date).toLocaleDateString()}</strong>.</p>
+                <p>A renewal notification has been sent to the client. Please follow up if they have not renewed the consent before their next scheduled telehealth session.</p>
+                <p style="color: #666; font-size: 14px;">Client Email: ${clientEmail}</p>
+              </div>
+            `,
+          });
+        }
 
         // Mark as notified
         await supabase

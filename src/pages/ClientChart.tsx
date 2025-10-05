@@ -19,18 +19,30 @@ import {
   DollarSign, 
   History,
   ChevronRight,
-  ArrowLeft
+  ArrowLeft,
+  Video,
+  AlertTriangle,
+  FileCheck,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast, useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 import type { Database } from '@/integrations/supabase/types';
 import { InsuranceBillingSection } from '@/components/clients/insurance/InsuranceBillingSection';
 import { ClientAppointments } from '@/components/clients/ClientAppointments';
+import { useTelehealthConsent } from '@/hooks/useTelehealthConsent';
+import { RevokeConsentDialog } from '@/components/telehealth/RevokeConsentDialog';
+import { downloadConsentPdf } from '@/lib/consentPdfGenerator';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 
 const chartSections = [
   { id: 'demographics', label: 'Demographics', icon: User },
   { id: 'insurance-billing', label: 'Insurance & Billing', icon: CreditCard },
+  { id: 'telehealth-consent', label: 'Telehealth Consent', icon: Video },
   { 
     id: 'clinical-documents', 
     label: 'Clinical Documents', 
@@ -61,13 +73,21 @@ export default function ClientChart() {
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('demographics');
   const [expandedSections, setExpandedSections] = useState<string[]>(['clinical-documents']);
+  const [consent, setConsent] = useState<any>(null);
+  const [consentStatus, setConsentStatus] = useState<any>(null);
+  const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
+  const { checkConsentExpiration, revokeConsent, loading: consentLoading } = useTelehealthConsent();
+  const { toast: toastHook } = useToast();
 
   useEffect(() => {
     if (user && id) {
       fetchClient();
       trackRecentlyViewed();
+      if (activeSection === 'telehealth-consent') {
+        fetchConsent();
+      }
     }
-  }, [user, id]);
+  }, [user, id, activeSection]);
 
   const fetchClient = async () => {
     try {
@@ -97,6 +117,29 @@ export default function ClientChart() {
     }
   };
 
+  const fetchConsent = async () => {
+    if (!id) return;
+    
+    try {
+      const { data } = await supabase
+        .from('telehealth_consents')
+        .select('*')
+        .eq('client_id', id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      setConsent(data);
+      
+      if (data) {
+        const status = await checkConsentExpiration(id);
+        setConsentStatus(status);
+      }
+    } catch (error) {
+      console.error('Error fetching consent:', error);
+    }
+  };
+
   const trackRecentlyViewed = async () => {
     if (!user?.id || !id) return;
     
@@ -110,6 +153,16 @@ export default function ClientChart() {
         onConflict: 'user_id,client_id',
         ignoreDuplicates: false 
       });
+  };
+
+  const handleRevokeConsent = async (reason: string) => {
+    if (!consent) return;
+    
+    const { error } = await revokeConsent(consent.id, reason);
+    if (!error) {
+      setRevokeDialogOpen(false);
+      fetchConsent();
+    }
   };
 
   const toggleSection = (sectionId: string) => {
@@ -162,6 +215,138 @@ export default function ClientChart() {
         return <InsuranceBillingSection clientId={id!} />;
       case 'appointments':
         return <ClientAppointments clientId={id!} />;
+      case 'telehealth-consent':
+        return (
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle>Telehealth Consent Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {consent ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Status:</span>
+                      <Badge 
+                        variant={
+                          consentStatus?.status === 'active' ? 'default' :
+                          consentStatus?.status === 'expiring_soon' ? 'secondary' :
+                          'destructive'
+                        }
+                      >
+                        {consentStatus?.status === 'active' && <CheckCircle className="h-3 w-3 mr-1" />}
+                        {consentStatus?.status === 'expiring_soon' && <AlertTriangle className="h-3 w-3 mr-1" />}
+                        {consentStatus?.status === 'expired' && <XCircle className="h-3 w-3 mr-1" />}
+                        {consentStatus?.status === 'active' ? 'Active' :
+                         consentStatus?.status === 'expiring_soon' ? 'Expiring Soon' :
+                         'Expired'}
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-sm text-muted-foreground">Consent Date:</span>
+                        <p className="font-medium">{format(new Date(consent.consent_date), 'MMM d, yyyy')}</p>
+                      </div>
+                      
+                      <div>
+                        <span className="text-sm text-muted-foreground">Expiration Date:</span>
+                        <p className="font-medium">{format(new Date(consent.expiration_date), 'MMM d, yyyy')}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-sm text-muted-foreground">State of Residence:</span>
+                        <p className="font-medium">{consent.client_state_of_residence}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-sm text-muted-foreground">Recording Consent:</span>
+                        <p className="font-medium">{consent.consents_to_recording ? 'Yes' : 'No'}</p>
+                      </div>
+                    </div>
+                    
+                    {consentStatus?.status === 'expiring_soon' && (
+                      <Alert variant="default">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Expiring Soon</AlertTitle>
+                        <AlertDescription>
+                          Consent expires in {consentStatus.daysUntilExpiration} days. Please renew before the next telehealth session.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {consentStatus?.status === 'expired' && (
+                      <Alert variant="destructive">
+                        <XCircle className="h-4 w-4" />
+                        <AlertTitle>Consent Expired</AlertTitle>
+                        <AlertDescription>
+                          This consent has expired. The client must complete a new consent form before the next telehealth session.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    
+                    <div className="flex gap-2 flex-wrap">
+                      <Button 
+                        onClick={() => navigate(`/telehealth/consent-form/${id}`)}
+                        variant={consentStatus?.status === 'expired' ? 'default' : 'outline'}
+                      >
+                        {consentStatus?.status === 'expired' ? 'Complete New Consent' : 'Renew Consent'}
+                      </Button>
+                      
+                      {!consent.consent_revoked && (
+                        <Button 
+                          variant="destructive" 
+                          onClick={() => setRevokeDialogOpen(true)}
+                        >
+                          Revoke Consent
+                        </Button>
+                      )}
+                      
+                      {consent.pdf_document_url && (
+                        <Button 
+                          variant="ghost"
+                          onClick={async () => {
+                            try {
+                              await downloadConsentPdf(consent.pdf_document_url);
+                              toastHook({
+                                title: 'PDF Downloaded',
+                                description: 'Consent PDF has been downloaded.',
+                              });
+                            } catch (error) {
+                              toastHook({
+                                title: 'Download Failed',
+                                description: 'Could not download the PDF.',
+                                variant: 'destructive',
+                              });
+                            }
+                          }}
+                        >
+                          <FileCheck className="mr-2 h-4 w-4" />
+                          Download PDF
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground mb-4">No telehealth consent on file</p>
+                    <Button onClick={() => navigate(`/telehealth/consent-form/${id}`)}>
+                      Complete Consent Form
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            <RevokeConsentDialog
+              open={revokeDialogOpen}
+              onOpenChange={setRevokeDialogOpen}
+              onConfirm={handleRevokeConsent}
+              loading={consentLoading}
+            />
+          </>
+        );
       default:
         return (
           <Card>

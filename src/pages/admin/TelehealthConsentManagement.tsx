@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, FileText, AlertTriangle, CheckCircle2, Clock, Search } from 'lucide-react';
+import { Loader2, FileText, AlertTriangle, CheckCircle2, Clock, Search, Download } from 'lucide-react';
 import { format } from 'date-fns';
+import { downloadConsentPdf } from '@/lib/consentPdfGenerator';
 
 export default function TelehealthConsentManagement() {
   const [consents, setConsents] = useState<any[]>([]);
@@ -248,9 +249,34 @@ export default function TelehealthConsentManagement() {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <Button variant="ghost" size="sm">
-                                <FileText className="h-4 w-4" />
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button variant="ghost" size="sm">
+                                  <FileText className="h-4 w-4" />
+                                </Button>
+                                {consent.pdf_document_url && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={async () => {
+                                      try {
+                                        await downloadConsentPdf(consent.pdf_document_url);
+                                        toast({
+                                          title: 'PDF Downloaded',
+                                          description: 'Consent PDF has been downloaded.',
+                                        });
+                                      } catch (error) {
+                                        toast({
+                                          title: 'Download Failed',
+                                          description: 'Could not download the PDF.',
+                                          variant: 'destructive',
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
                             </TableCell>
                           </TableRow>
                         );
