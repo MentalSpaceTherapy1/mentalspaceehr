@@ -176,6 +176,38 @@ export const useBilling = () => {
     },
   });
 
+  // Fetch payments
+  const { data: payments = [], isLoading: paymentsLoading } = useQuery({
+    queryKey: ['insurance-payments'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('insurance_payments')
+        .select(`
+          *,
+          payer:insurance_companies(id, company_name),
+          posted_by:profiles!insurance_payments_posted_by_fkey(id, first_name, last_name),
+          payment_line_items(
+            id,
+            charge_entry_id,
+            payment_amount,
+            adjustment_amount,
+            charge_entry:charge_entries(
+              id,
+              service_date,
+              cpt_code,
+              cpt_description,
+              charge_amount,
+              client:clients(id, first_name, last_name)
+            )
+          )
+        `)
+        .order('payment_date', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   // Create charge mutation
   const createCharge = useMutation({
     mutationFn: async (charge: Partial<ChargeEntry>) => {
@@ -268,11 +300,96 @@ export const useBilling = () => {
     },
   });
 
+  // Post payment mutation
+  const postPayment = useMutation({
+    mutationFn: async (payment: {
+      paymentSource: 'Insurance' | 'Client';
+      payerId?: string;
+      checkNumber?: string;
+      paymentDate: string;
+      paymentAmount: number;
+      paymentMethod: string;
+      paymentNotes?: string;
+      lineItems: Array<{
+        chargeEntryId: string;
+        paymentAmount: number;
+        adjustmentAmount: number;
+      }>;
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Generate receipt number
+      const { data: receiptData, error: receiptError } = await supabase
+        .rpc('generate_receipt_number');
+      
+      if (receiptError) throw receiptError;
+
+      // Insert payment record
+      const { data: paymentData, error: paymentError } = await supabase
+        .from('insurance_payments')
+        .insert({
+          insurance_company_id: payment.payerId,
+          check_number: payment.checkNumber || '',
+          payment_date: payment.paymentDate,
+          check_amount: payment.paymentAmount,
+          notes: payment.paymentNotes,
+          receipt_number: receiptData,
+          posted_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (paymentError) throw paymentError;
+
+      // Update charge entries directly (skip payment_line_items for now)
+      for (const item of payment.lineItems) {
+        const { data: charge } = await supabase
+          .from('charge_entries')
+          .select('charge_amount, payment_amount')
+          .eq('id', item.chargeEntryId)
+          .single();
+
+        if (charge) {
+          const totalPaid = (charge.payment_amount || 0) + item.paymentAmount;
+          const newStatus = totalPaid >= charge.charge_amount ? 'Paid' : 'Partially Paid';
+
+          await supabase
+            .from('charge_entries')
+            .update({
+              payment_amount: totalPaid,
+              charge_status: newStatus,
+            })
+            .eq('id', item.chargeEntryId);
+        }
+      }
+
+
+      return paymentData;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['insurance-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['charge-entries'] });
+      toast({
+        title: "Payment posted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to post payment",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     charges,
     claims,
-    isLoading: chargesLoading || claimsLoading,
+    payments,
+    isLoading: chargesLoading || claimsLoading || paymentsLoading,
     createCharge: createCharge.mutateAsync,
     createClaim: createClaim.mutateAsync,
+    postPayment: postPayment.mutateAsync,
   };
 };

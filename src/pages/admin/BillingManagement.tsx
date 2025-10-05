@@ -5,14 +5,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, FileText, DollarSign, Receipt } from 'lucide-react';
+import { Plus, FileText, DollarSign, Receipt, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { useBilling } from '@/hooks/useBilling';
 import { ChargeEntryDialog } from '@/components/billing/ChargeEntryDialog';
+import { PaymentPostingDialog } from '@/components/billing/PaymentPostingDialog';
+import { PaymentDetailDialog } from '@/components/billing/PaymentDetailDialog';
 
 export default function BillingManagement() {
-  const { charges, claims, isLoading } = useBilling();
+  const { charges, claims, payments, isLoading } = useBilling();
   const [chargeDialogOpen, setChargeDialogOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<any>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -198,19 +202,80 @@ export default function BillingManagement() {
 
           <TabsContent value="payments" className="space-y-4">
             <Card>
-              <CardHeader className="border-b">
-                <CardTitle className="flex items-center gap-2">
-                  <Receipt className="h-5 w-5" />
-                  Payment History
-                </CardTitle>
-                <CardDescription>
-                  View and post insurance and client payments
-                </CardDescription>
+              <CardHeader className="border-b flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Receipt className="h-5 w-5" />
+                    Payment History
+                  </CardTitle>
+                  <CardDescription>
+                    View and post insurance and client payments
+                  </CardDescription>
+                </div>
+                <Button onClick={() => setPaymentDialogOpen(true)} className="gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Post Payment
+                </Button>
               </CardHeader>
               <CardContent className="pt-6">
-                <div className="text-center py-8 text-muted-foreground">
-                  No payments recorded yet.
-                </div>
+                {isLoading ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading payments...</div>
+                ) : payments && payments.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50 hover:bg-muted/50">
+                        <TableHead>Receipt #</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Payer</TableHead>
+                        <TableHead>Method</TableHead>
+                        <TableHead>Check #</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Posted By</TableHead>
+                        <TableHead className="text-center">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {payments.map((payment: any) => (
+                        <TableRow key={payment.id}>
+                          <TableCell className="font-mono text-sm">
+                            {payment.receipt_number}
+                          </TableCell>
+                          <TableCell>{format(new Date(payment.payment_date), 'MMM d, yyyy')}</TableCell>
+                          <TableCell>{payment.payer?.name || 'Self-Pay'}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{payment.payment_method}</Badge>
+                          </TableCell>
+                          <TableCell>{payment.check_number || '—'}</TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatCurrency(payment.payment_amount)}
+                          </TableCell>
+                          <TableCell>
+                            {payment.posted_by
+                              ? `${payment.posted_by.first_name} ${payment.posted_by.last_name}`
+                              : 'Unknown'}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedPayment(payment)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-4">No payments recorded yet</p>
+                    <Button onClick={() => setPaymentDialogOpen(true)} className="gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      Post First Payment
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -219,6 +284,17 @@ export default function BillingManagement() {
         <ChargeEntryDialog
           open={chargeDialogOpen}
           onOpenChange={setChargeDialogOpen}
+        />
+
+        <PaymentPostingDialog
+          open={paymentDialogOpen}
+          onOpenChange={setPaymentDialogOpen}
+        />
+
+        <PaymentDetailDialog
+          open={!!selectedPayment}
+          onOpenChange={(open) => !open && setSelectedPayment(null)}
+          payment={selectedPayment}
         />
       </div>
     </DashboardLayout>

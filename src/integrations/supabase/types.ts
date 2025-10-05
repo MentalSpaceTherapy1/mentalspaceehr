@@ -2947,10 +2947,12 @@ export type Database = {
           notes: string | null
           payment_date: string
           payment_method: string
+          payment_notes: string | null
           payment_number: string
           payment_status: string
           posted_by: string | null
           posted_date: string | null
+          receipt_number: string | null
           trace_number: string | null
           updated_at: string | null
         }
@@ -2965,10 +2967,12 @@ export type Database = {
           notes?: string | null
           payment_date: string
           payment_method?: string
+          payment_notes?: string | null
           payment_number: string
           payment_status?: string
           posted_by?: string | null
           posted_date?: string | null
+          receipt_number?: string | null
           trace_number?: string | null
           updated_at?: string | null
         }
@@ -2983,10 +2987,12 @@ export type Database = {
           notes?: string | null
           payment_date?: string
           payment_method?: string
+          payment_notes?: string | null
           payment_number?: string
           payment_status?: string
           posted_by?: string | null
           posted_date?: string | null
+          receipt_number?: string | null
           trace_number?: string | null
           updated_at?: string | null
         }
@@ -6476,6 +6482,10 @@ export type Database = {
         Returns: string
       }
       generate_mrn: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_receipt_number: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
