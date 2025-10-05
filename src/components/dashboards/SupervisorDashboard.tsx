@@ -7,11 +7,14 @@ import { UnlockRequestManagement } from "../compliance/UnlockRequestManagement";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupervisionRelationships } from "@/hooks/useSupervisionRelationships";
 import { useNoteCosignatures } from "@/hooks/useNoteCosignatures";
+import { useSupervisionSessions } from "@/hooks/useSupervisionSessions";
 import { SupervisionRelationshipDialog } from "../supervision/SupervisionRelationshipDialog";
 import { SupervisionSessionDialog } from "../supervision/SupervisionSessionDialog";
 import { CosignNoteDialog } from "../supervision/CosignNoteDialog";
 import { CompetenciesDialog } from "../supervision/CompetenciesDialog";
 import { RelationshipStatusDialog } from "../supervision/RelationshipStatusDialog";
+import { RecentSessionsCard } from "../supervision/RecentSessionsCard";
+import { ActionItemsCard } from "../supervision/ActionItemsCard";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -30,6 +33,10 @@ export function SupervisorDashboard() {
 
   const activeRelationships = relationships.filter(r => r.status === 'Active');
   const pendingCosigns = cosignatures.length;
+  
+  // For showing recent sessions, we'll use the first active relationship
+  const firstActiveRelationship = activeRelationships[0];
+  const { sessions: recentSessions } = useSupervisionSessions(firstActiveRelationship?.id);
   
   const totalHoursCompleted = relationships.reduce((sum, r) => sum + (r.completed_hours || 0), 0);
   
@@ -239,6 +246,26 @@ export function SupervisorDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Recent Supervision Sessions */}
+        {recentSessions && recentSessions.length > 0 && (
+          <RecentSessionsCard 
+            sessions={recentSessions}
+            title="Recent Supervision Sessions"
+            description="Latest documented sessions"
+            maxSessions={10}
+          />
+        )}
+
+        {/* Action Items from Supervision */}
+        {recentSessions && recentSessions.length > 0 && (
+          <ActionItemsCard
+            sessions={recentSessions}
+            title="Pending Action Items"
+            description="Tasks and follow-ups from supervision sessions"
+            showCompleted={false}
+          />
+        )}
 
         {/* Supervision Hours Summary */}
         <Card>

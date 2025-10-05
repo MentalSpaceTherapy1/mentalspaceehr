@@ -13,6 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import { SupervisionSessionDialog } from "@/components/supervision/SupervisionSessionDialog";
 import { CompetenciesDialog } from "@/components/supervision/CompetenciesDialog";
 import { SupervisionHoursChart } from "@/components/supervision/SupervisionHoursChart";
+import { RecentSessionsCard } from "@/components/supervision/RecentSessionsCard";
+import { ActionItemsCard } from "@/components/supervision/ActionItemsCard";
 import { 
   GraduationCap, 
   FileSignature, 
@@ -401,6 +403,74 @@ export function AssociateDashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Recent Supervision Sessions & Action Items */}
+      {relationship && (
+        <div className="grid gap-6 md:grid-cols-2">
+          <RecentSessionsCard 
+            sessions={sessions}
+            title="Recent Supervision Sessions"
+            description="Your latest supervision sessions"
+            maxSessions={5}
+          />
+
+          <ActionItemsCard
+            sessions={sessions}
+            title="My Action Items"
+            description="Tasks and follow-ups assigned during supervision"
+            showCompleted={false}
+          />
+        </div>
+      )}
+
+      {/* Next Scheduled Supervision */}
+      {relationship && sessions.some(s => s.next_session_scheduled && s.next_session_date) && (
+        <Card className="border-primary/50 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              Next Supervision Session
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(() => {
+              const nextSession = sessions
+                .filter(s => s.next_session_scheduled && s.next_session_date)
+                .sort((a, b) => new Date(a.next_session_date!).getTime() - new Date(b.next_session_date!).getTime())[0];
+              
+              if (!nextSession) return null;
+              
+              const daysUntil = Math.ceil(
+                (new Date(nextSession.next_session_date!).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+              );
+
+              return (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-lg font-semibold">
+                        {format(new Date(nextSession.next_session_date!), 'EEEE, MMMM dd, yyyy')}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        With {relationship.supervisee?.first_name} {relationship.supervisee?.last_name}
+                      </p>
+                    </div>
+                    <Badge variant="default" className="text-lg px-4 py-2">
+                      {daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `In ${daysUntil} days`}
+                    </Badge>
+                  </div>
+                  <Button className="w-full" variant="outline" asChild>
+                    <a href={`mailto:${relationship.supervisee?.email}`}>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Contact Supervisor
+                    </a>
+                  </Button>
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+      )}
 
       {relationship && (
         <>
