@@ -8,11 +8,18 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSupervisionRelationships } from "@/hooks/useSupervisionRelationships";
 import { useNoteCosignatures } from "@/hooks/useNoteCosignatures";
 import { SupervisionRelationshipDialog } from "../supervision/SupervisionRelationshipDialog";
+import { SupervisionSessionDialog } from "../supervision/SupervisionSessionDialog";
+import { CosignNoteDialog } from "../supervision/CosignNoteDialog";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function SupervisorDashboard() {
   const { user } = useAuth();
   const [showNewRelationship, setShowNewRelationship] = useState(false);
+  const [showSessionDialog, setShowSessionDialog] = useState(false);
+  const [selectedRelationship, setSelectedRelationship] = useState<any>(null);
+  const [showCosignDialog, setShowCosignDialog] = useState(false);
+  const [selectedCosignature, setSelectedCosignature] = useState<any>(null);
   
   const { relationships, loading: loadingRel } = useSupervisionRelationships(user?.id);
   const { cosignatures, loading: loadingCosig } = useNoteCosignatures(user?.id, 'Pending');
@@ -166,7 +173,7 @@ export function SupervisorDashboard() {
                 <div className="space-y-3">
                   {cosignatures.slice(0, 5).map((cosig) => (
                     <div key={cosig.id} className="flex items-center justify-between border-b pb-2">
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium text-sm">
                           {cosig.client?.first_name} {cosig.client?.last_name || 'Unknown Client'}
                         </p>
@@ -174,15 +181,26 @@ export function SupervisorDashboard() {
                           By {cosig.clinician?.first_name} {cosig.clinician?.last_name}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <Badge variant="outline" className="text-xs">
-                          {cosig.note_type}
-                        </Badge>
-                        {cosig.due_date && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Due: {new Date(cosig.due_date).toLocaleDateString()}
-                          </p>
-                        )}
+                      <div className="flex items-center gap-2">
+                        <div className="text-right">
+                          <Badge variant="outline" className="text-xs">
+                            {cosig.note_type}
+                          </Badge>
+                          {cosig.due_date && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Due: {new Date(cosig.due_date).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setSelectedCosignature(cosig);
+                            setShowCosignDialog(true);
+                          }}
+                        >
+                          Review
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -244,7 +262,18 @@ export function SupervisorDashboard() {
                 <Calendar className="h-5 w-5" />
                 <span className="text-sm">Schedule Meeting</span>
               </Button>
-              <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+              <Button 
+                variant="outline" 
+                className="h-auto flex flex-col gap-2 p-4"
+                onClick={() => {
+                  if (activeRelationships.length > 0) {
+                    setSelectedRelationship(activeRelationships[0]);
+                    setShowSessionDialog(true);
+                  } else {
+                    toast.error("No active supervision relationships");
+                  }
+                }}
+              >
                 <Clock className="h-5 w-5" />
                 <span className="text-sm">Log Hours</span>
               </Button>
@@ -265,6 +294,35 @@ export function SupervisorDashboard() {
         }}
         supervisorId={user?.id || ''}
       />
+
+      {selectedRelationship && (
+        <SupervisionSessionDialog
+          open={showSessionDialog}
+          onOpenChange={setShowSessionDialog}
+          relationshipId={selectedRelationship.id}
+          supervisorId={user?.id || ''}
+          superviseeId={selectedRelationship.supervisee_id}
+          onSuccess={() => {
+            // Refresh happens automatically via subscription
+          }}
+        />
+      )}
+
+      {selectedCosignature && (
+        <CosignNoteDialog
+          open={showCosignDialog}
+          onOpenChange={setShowCosignDialog}
+          cosignatureId={selectedCosignature.id}
+          noteId={selectedCosignature.note_id}
+          noteType={selectedCosignature.note_type}
+          clientName={`${selectedCosignature.client?.first_name} ${selectedCosignature.client?.last_name}`}
+          clinicianName={`${selectedCosignature.clinician?.first_name} ${selectedCosignature.clinician?.last_name}`}
+          createdDate={selectedCosignature.created_date}
+          onSuccess={() => {
+            // Refresh happens automatically via subscription
+          }}
+        />
+      )}
     </>
   );
 }

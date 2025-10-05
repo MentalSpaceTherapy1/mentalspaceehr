@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAssociateSupervision } from "@/hooks/useAssociateSupervision";
 import { useAssociateCosignatures } from "@/hooks/useAssociateCosignatures";
@@ -9,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { SupervisionSessionDialog } from "@/components/supervision/SupervisionSessionDialog";
 import { 
   GraduationCap, 
   FileSignature, 
@@ -25,6 +27,7 @@ import {
 } from "lucide-react";
 import { format, isToday, differenceInDays, parseISO } from "date-fns";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 export function AssociateDashboard() {
   const { user } = useAuth();
@@ -32,6 +35,8 @@ export function AssociateDashboard() {
   const { cosignatures, loading: loadingCosig } = useAssociateCosignatures(user?.id);
   const { sessions, hours, loading: loadingSessions } = useSupervisionSessions(relationship?.id);
   const { appointments } = useAppointments(undefined, undefined, user?.id || '');
+  
+  const [showSessionDialog, setShowSessionDialog] = useState(false);
 
   const todayAppointments = appointments.filter(apt => {
     const aptDate = new Date(apt.appointment_date);
@@ -438,6 +443,20 @@ export function AssociateDashboard() {
                   View Clients
                 </Link>
               </Button>
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => {
+                  if (relationship) {
+                    setShowSessionDialog(true);
+                  } else {
+                    toast.error("No active supervision relationship");
+                  }
+                }}
+              >
+                <Clock className="mr-2 h-4 w-4" />
+                Log Supervision Hours
+              </Button>
               {relationship && (
                 <Button className="w-full" variant="outline" asChild>
                   <a href={`mailto:${relationship.supervisee?.email}`}>
@@ -450,6 +469,19 @@ export function AssociateDashboard() {
           </Card>
         </div>
       </div>
+
+      {relationship && (
+        <SupervisionSessionDialog
+          open={showSessionDialog}
+          onOpenChange={setShowSessionDialog}
+          relationshipId={relationship.id}
+          supervisorId={relationship.supervisor_id}
+          superviseeId={user?.id || ''}
+          onSuccess={() => {
+            // Refresh happens automatically via subscription
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -74,9 +74,16 @@ export const useSupervisionRelationships = (supervisorId?: string) => {
 
         if (profilesError) throw profilesError;
 
-        // For now, we'll calculate hours directly without the view
-        // TODO: Add RPC function to get hours summary
-        const hoursData = null;
+        // Query the supervision_hours_summary view for actual hours
+        const relationshipIds = relationshipsData.map(r => r.id);
+        const { data: hoursData, error: hoursError } = await supabase
+          .from('supervision_hours_summary')
+          .select('*')
+          .in('relationship_id', relationshipIds);
+
+        if (hoursError) {
+          console.error('Error fetching hours summary:', hoursError);
+        }
 
         const combined = relationshipsData.map(rel => {
           const supervisee = profiles?.find(p => p.id === rel.supervisee_id);
@@ -89,7 +96,7 @@ export const useSupervisionRelationships = (supervisorId?: string) => {
             direct_hours_completed: hours?.direct_hours_completed || 0,
             indirect_hours_completed: hours?.indirect_hours_completed || 0,
             group_hours_completed: hours?.group_hours_completed || 0,
-            remaining_hours: hours?.remaining_hours || rel.required_supervision_hours,
+            remaining_hours: rel.required_supervision_hours - (hours?.completed_hours || 0),
           };
         });
 
