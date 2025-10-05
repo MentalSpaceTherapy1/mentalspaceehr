@@ -869,6 +869,259 @@ export type Database = {
           },
         ]
       }
+      charge_entries: {
+        Row: {
+          adjustment_amount: number | null
+          allowed_amount: number | null
+          appeal_date: string | null
+          appeal_filed: boolean | null
+          appointment_id: string | null
+          billed_date: string | null
+          charge_amount: number
+          charge_status: string
+          claim_id: string | null
+          claim_status: string | null
+          client_id: string
+          client_responsibility: number | null
+          cpt_code: string
+          cpt_description: string
+          created_by: string | null
+          created_date: string | null
+          denial_code: string | null
+          denial_reason: string | null
+          diagnosis_codes: Json
+          id: string
+          location_id: string | null
+          modifiers: string[] | null
+          note_id: string | null
+          payment_amount: number | null
+          payments: Json | null
+          place_of_service: string
+          primary_insurance_id: string | null
+          provider_id: string
+          secondary_insurance_id: string | null
+          service_date: string
+          supervising_provider_id: string | null
+          units: number
+          updated_at: string | null
+          write_off_amount: number | null
+          write_off_date: string | null
+          write_off_reason: string | null
+        }
+        Insert: {
+          adjustment_amount?: number | null
+          allowed_amount?: number | null
+          appeal_date?: string | null
+          appeal_filed?: boolean | null
+          appointment_id?: string | null
+          billed_date?: string | null
+          charge_amount: number
+          charge_status?: string
+          claim_id?: string | null
+          claim_status?: string | null
+          client_id: string
+          client_responsibility?: number | null
+          cpt_code: string
+          cpt_description: string
+          created_by?: string | null
+          created_date?: string | null
+          denial_code?: string | null
+          denial_reason?: string | null
+          diagnosis_codes?: Json
+          id?: string
+          location_id?: string | null
+          modifiers?: string[] | null
+          note_id?: string | null
+          payment_amount?: number | null
+          payments?: Json | null
+          place_of_service?: string
+          primary_insurance_id?: string | null
+          provider_id: string
+          secondary_insurance_id?: string | null
+          service_date: string
+          supervising_provider_id?: string | null
+          units?: number
+          updated_at?: string | null
+          write_off_amount?: number | null
+          write_off_date?: string | null
+          write_off_reason?: string | null
+        }
+        Update: {
+          adjustment_amount?: number | null
+          allowed_amount?: number | null
+          appeal_date?: string | null
+          appeal_filed?: boolean | null
+          appointment_id?: string | null
+          billed_date?: string | null
+          charge_amount?: number
+          charge_status?: string
+          claim_id?: string | null
+          claim_status?: string | null
+          client_id?: string
+          client_responsibility?: number | null
+          cpt_code?: string
+          cpt_description?: string
+          created_by?: string | null
+          created_date?: string | null
+          denial_code?: string | null
+          denial_reason?: string | null
+          diagnosis_codes?: Json
+          id?: string
+          location_id?: string | null
+          modifiers?: string[] | null
+          note_id?: string | null
+          payment_amount?: number | null
+          payments?: Json | null
+          place_of_service?: string
+          primary_insurance_id?: string | null
+          provider_id?: string
+          secondary_insurance_id?: string | null
+          service_date?: string
+          supervising_provider_id?: string | null
+          units?: number
+          updated_at?: string | null
+          write_off_amount?: number | null
+          write_off_date?: string | null
+          write_off_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "charge_entries_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charge_entries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charge_entries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charge_entries_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charge_entries_primary_insurance_id_fkey"
+            columns: ["primary_insurance_id"]
+            isOneToOne: false
+            referencedRelation: "client_insurance"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charge_entries_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charge_entries_secondary_insurance_id_fkey"
+            columns: ["secondary_insurance_id"]
+            isOneToOne: false
+            referencedRelation: "client_insurance"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charge_entries_supervising_provider_id_fkey"
+            columns: ["supervising_provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_charge_claim"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_claims"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claim_line_items: {
+        Row: {
+          adjustment_amount: number | null
+          allowed_amount: number | null
+          charge_amount: number
+          charge_entry_id: string
+          claim_id: string
+          cpt_code: string
+          created_at: string | null
+          diagnosis_pointers: number[]
+          id: string
+          line_number: number
+          line_status: string | null
+          modifiers: string[] | null
+          paid_amount: number | null
+          place_of_service: string
+          service_date: string
+          units: number
+        }
+        Insert: {
+          adjustment_amount?: number | null
+          allowed_amount?: number | null
+          charge_amount: number
+          charge_entry_id: string
+          claim_id: string
+          cpt_code: string
+          created_at?: string | null
+          diagnosis_pointers: number[]
+          id?: string
+          line_number: number
+          line_status?: string | null
+          modifiers?: string[] | null
+          paid_amount?: number | null
+          place_of_service: string
+          service_date: string
+          units: number
+        }
+        Update: {
+          adjustment_amount?: number | null
+          allowed_amount?: number | null
+          charge_amount?: number
+          charge_entry_id?: string
+          claim_id?: string
+          cpt_code?: string
+          created_at?: string | null
+          diagnosis_pointers?: number[]
+          id?: string
+          line_number?: number
+          line_status?: string | null
+          modifiers?: string[] | null
+          paid_amount?: number | null
+          place_of_service?: string
+          service_date?: string
+          units?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_line_items_charge_entry_id_fkey"
+            columns: ["charge_entry_id"]
+            isOneToOne: false
+            referencedRelation: "charge_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_line_items_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_claims"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_documents: {
         Row: {
           client_id: string
@@ -2279,6 +2532,36 @@ export type Database = {
           },
         ]
       }
+      icd_10_codes: {
+        Row: {
+          category: string | null
+          code: string
+          created_at: string | null
+          description: string
+          id: string
+          is_active: boolean | null
+          is_billable: boolean | null
+        }
+        Insert: {
+          category?: string | null
+          code: string
+          created_at?: string | null
+          description: string
+          id?: string
+          is_active?: boolean | null
+          is_billable?: boolean | null
+        }
+        Update: {
+          category?: string | null
+          code?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          is_active?: boolean | null
+          is_billable?: boolean | null
+        }
+        Relationships: []
+      }
       incident_to_audit_log: {
         Row: {
           action_timestamp: string
@@ -2440,6 +2723,191 @@ export type Database = {
           },
         ]
       }
+      insurance_claims: {
+        Row: {
+          accepted_date: string | null
+          adjudication_date: string | null
+          billing_provider_id: string
+          claim_date: string
+          claim_number: string
+          claim_status: string
+          clearinghouse_id: string | null
+          client_id: string
+          corrected_claim_id: string | null
+          created_at: string | null
+          created_by: string | null
+          denial_code: string | null
+          denial_reason: string | null
+          edi_batch_id: string | null
+          edi_control_number: string | null
+          id: string
+          is_corrected_claim: boolean | null
+          notes: string | null
+          original_claim_id: string | null
+          paid_date: string | null
+          patient_responsibility: number | null
+          primary_insurance_id: string
+          rendering_provider_id: string
+          secondary_insurance_id: string | null
+          service_date_from: string
+          service_date_to: string
+          submission_method: string | null
+          submitted_by: string | null
+          submitted_date: string | null
+          supervising_provider_id: string | null
+          total_adjustment_amount: number | null
+          total_allowed_amount: number | null
+          total_charge_amount: number
+          total_paid_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_date?: string | null
+          adjudication_date?: string | null
+          billing_provider_id: string
+          claim_date?: string
+          claim_number: string
+          claim_status?: string
+          clearinghouse_id?: string | null
+          client_id: string
+          corrected_claim_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          denial_code?: string | null
+          denial_reason?: string | null
+          edi_batch_id?: string | null
+          edi_control_number?: string | null
+          id?: string
+          is_corrected_claim?: boolean | null
+          notes?: string | null
+          original_claim_id?: string | null
+          paid_date?: string | null
+          patient_responsibility?: number | null
+          primary_insurance_id: string
+          rendering_provider_id: string
+          secondary_insurance_id?: string | null
+          service_date_from: string
+          service_date_to: string
+          submission_method?: string | null
+          submitted_by?: string | null
+          submitted_date?: string | null
+          supervising_provider_id?: string | null
+          total_adjustment_amount?: number | null
+          total_allowed_amount?: number | null
+          total_charge_amount: number
+          total_paid_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_date?: string | null
+          adjudication_date?: string | null
+          billing_provider_id?: string
+          claim_date?: string
+          claim_number?: string
+          claim_status?: string
+          clearinghouse_id?: string | null
+          client_id?: string
+          corrected_claim_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          denial_code?: string | null
+          denial_reason?: string | null
+          edi_batch_id?: string | null
+          edi_control_number?: string | null
+          id?: string
+          is_corrected_claim?: boolean | null
+          notes?: string | null
+          original_claim_id?: string | null
+          paid_date?: string | null
+          patient_responsibility?: number | null
+          primary_insurance_id?: string
+          rendering_provider_id?: string
+          secondary_insurance_id?: string | null
+          service_date_from?: string
+          service_date_to?: string
+          submission_method?: string | null
+          submitted_by?: string | null
+          submitted_date?: string | null
+          supervising_provider_id?: string | null
+          total_adjustment_amount?: number | null
+          total_allowed_amount?: number | null
+          total_charge_amount?: number
+          total_paid_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_claims_billing_provider_id_fkey"
+            columns: ["billing_provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_corrected_claim_id_fkey"
+            columns: ["corrected_claim_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_original_claim_id_fkey"
+            columns: ["original_claim_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_primary_insurance_id_fkey"
+            columns: ["primary_insurance_id"]
+            isOneToOne: false
+            referencedRelation: "client_insurance"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_rendering_provider_id_fkey"
+            columns: ["rendering_provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_secondary_insurance_id_fkey"
+            columns: ["secondary_insurance_id"]
+            isOneToOne: false
+            referencedRelation: "client_insurance"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_supervising_provider_id_fkey"
+            columns: ["supervising_provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       insurance_companies: {
         Row: {
           claims_address: Json | null
@@ -2466,6 +2934,85 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      insurance_payments: {
+        Row: {
+          check_amount: number
+          check_number: string | null
+          created_at: string | null
+          era_file_id: string | null
+          id: string
+          insurance_company_id: string | null
+          insurance_id: string | null
+          notes: string | null
+          payment_date: string
+          payment_method: string
+          payment_number: string
+          payment_status: string
+          posted_by: string | null
+          posted_date: string | null
+          trace_number: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          check_amount: number
+          check_number?: string | null
+          created_at?: string | null
+          era_file_id?: string | null
+          id?: string
+          insurance_company_id?: string | null
+          insurance_id?: string | null
+          notes?: string | null
+          payment_date: string
+          payment_method?: string
+          payment_number: string
+          payment_status?: string
+          posted_by?: string | null
+          posted_date?: string | null
+          trace_number?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          check_amount?: number
+          check_number?: string | null
+          created_at?: string | null
+          era_file_id?: string | null
+          id?: string
+          insurance_company_id?: string | null
+          insurance_id?: string | null
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          payment_number?: string
+          payment_status?: string
+          posted_by?: string | null
+          posted_date?: string | null
+          trace_number?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_payments_insurance_company_id_fkey"
+            columns: ["insurance_company_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_payments_insurance_id_fkey"
+            columns: ["insurance_id"]
+            isOneToOne: false
+            referencedRelation: "client_insurance"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_payments_posted_by_fkey"
+            columns: ["posted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       journal_entries: {
         Row: {
@@ -3021,6 +3568,92 @@ export type Database = {
             columns: ["note_id"]
             isOneToOne: false
             referencedRelation: "clinical_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_line_items: {
+        Row: {
+          adjustment_amount: number | null
+          adjustment_codes: Json | null
+          allowed_amount: number | null
+          charge_amount: number
+          charge_entry_id: string
+          claim_id: string
+          client_id: string
+          coinsurance_amount: number | null
+          copay_amount: number | null
+          created_at: string | null
+          deductible_amount: number | null
+          id: string
+          notes: string | null
+          paid_amount: number
+          payment_id: string
+          remark_codes: string[] | null
+        }
+        Insert: {
+          adjustment_amount?: number | null
+          adjustment_codes?: Json | null
+          allowed_amount?: number | null
+          charge_amount: number
+          charge_entry_id: string
+          claim_id: string
+          client_id: string
+          coinsurance_amount?: number | null
+          copay_amount?: number | null
+          created_at?: string | null
+          deductible_amount?: number | null
+          id?: string
+          notes?: string | null
+          paid_amount: number
+          payment_id: string
+          remark_codes?: string[] | null
+        }
+        Update: {
+          adjustment_amount?: number | null
+          adjustment_codes?: Json | null
+          allowed_amount?: number | null
+          charge_amount?: number
+          charge_entry_id?: string
+          claim_id?: string
+          client_id?: string
+          coinsurance_amount?: number | null
+          copay_amount?: number | null
+          created_at?: string | null
+          deductible_amount?: number | null
+          id?: string
+          notes?: string | null
+          paid_amount?: number
+          payment_id?: string
+          remark_codes?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_line_items_charge_entry_id_fkey"
+            columns: ["charge_entry_id"]
+            isOneToOne: false
+            referencedRelation: "charge_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_line_items_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_line_items_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_line_items_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_payments"
             referencedColumns: ["id"]
           },
         ]
