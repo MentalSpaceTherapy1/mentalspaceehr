@@ -44,6 +44,8 @@ import CancellationNote from "./pages/CancellationNote";
 import ContactNote from "./pages/ContactNote";
 import ConsultationNote from "./pages/ConsultationNote";
 import MiscellaneousNote from "./pages/MiscellaneousNote";
+import ComplianceRules from "./pages/admin/ComplianceRules";
+import ComplianceDashboard from "./pages/admin/ComplianceDashboard";
 
 const queryClient = new QueryClient();
 
@@ -105,6 +107,22 @@ const App = () => (
               element={
                 <AdminRoute>
                   <ServiceCodes />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/compliance-dashboard" 
+              element={
+                <AdminRoute>
+                  <ComplianceDashboard />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/compliance-rules" 
+              element={
+                <AdminRoute>
+                  <ComplianceRules />
                 </AdminRoute>
               } 
             />

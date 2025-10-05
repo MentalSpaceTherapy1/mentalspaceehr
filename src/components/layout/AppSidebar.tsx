@@ -18,6 +18,8 @@ import {
   Mail,
   Sparkles,
   Brain,
+  FileCheck,
+  AlertTriangle,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
@@ -64,6 +66,8 @@ export function AppSidebar() {
     { title: 'Practice Settings', url: '/admin/practice-settings', icon: Building2, color: 'from-primary to-success' },
     { title: 'Service Codes', url: '/admin/service-codes', icon: DollarSign, color: 'from-success to-primary' },
     { title: 'Locations', url: '/admin/locations', icon: MapPin, color: 'from-accent to-secondary' },
+    { title: 'Compliance Dashboard', url: '/admin/compliance-dashboard', icon: AlertTriangle, color: 'from-red-400 to-orange-400' },
+    { title: 'Compliance Rules', url: '/admin/compliance-rules', icon: FileCheck, color: 'from-orange-400 to-amber-400' },
     { title: 'Reminder Settings', url: '/admin/reminder-settings', icon: Bell, color: 'from-blue-400 to-purple-400' },
     { title: 'Appointment Notifications', url: '/admin/appointment-notifications', icon: Mail, color: 'from-purple-400 to-pink-400' },
     { title: 'AI Clinical Notes', url: '/admin/ai-notes', icon: Sparkles, color: 'from-cyan-400 to-blue-400' },

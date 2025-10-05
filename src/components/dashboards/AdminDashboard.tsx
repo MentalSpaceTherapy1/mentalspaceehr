@@ -121,48 +121,61 @@ export const AdminDashboard = () => {
       <UnlockRequestManagement />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Compliance Alerts */}
+        {/* Compliance Quick View */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5" />
-              Compliance Alerts
-            </CardTitle>
-            <CardDescription>Items requiring immediate attention</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5" />
+                  Compliance Quick View
+                </CardTitle>
+                <CardDescription>System-wide documentation status</CardDescription>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/admin/compliance-dashboard')}
+              >
+                View Full Dashboard
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                onClick={() => navigate('/admin/compliance-dashboard')}>
                 <div className="flex items-center gap-3">
                   <FileText className="h-4 w-4 text-warning" />
                   <div>
-                    <p className="text-sm font-medium">Overdue Notes</p>
-                    <p className="text-xs text-muted-foreground">0 notes past due date</p>
+                    <p className="text-sm font-medium">Documentation Alerts</p>
+                    <p className="text-xs text-muted-foreground">View all overdue notes</p>
                   </div>
                 </div>
-                <Badge variant="secondary">0</Badge>
+                <Badge variant="secondary">View</Badge>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                onClick={() => navigate('/admin/compliance-rules')}>
                 <div className="flex items-center gap-3">
-                  <Clock className="h-4 w-4 text-warning" />
+                  <Clock className="h-4 w-4 text-primary" />
                   <div>
-                    <p className="text-sm font-medium">License Expirations</p>
-                    <p className="text-xs text-muted-foreground">Within 90 days</p>
+                    <p className="text-sm font-medium">Compliance Rules</p>
+                    <p className="text-xs text-muted-foreground">Manage documentation policies</p>
                   </div>
                 </div>
-                <Badge variant="secondary">0</Badge>
+                <Badge variant="secondary">Manage</Badge>
               </div>
 
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <AlertCircle className="h-4 w-4 text-destructive" />
                   <div>
-                    <p className="text-sm font-medium">Unlocking Requests</p>
-                    <p className="text-xs text-muted-foreground">Pending approval</p>
+                    <p className="text-sm font-medium">Unlock Requests</p>
+                    <p className="text-xs text-muted-foreground">See below for pending approvals</p>
                   </div>
                 </div>
-                <Badge variant="secondary">0</Badge>
+                <Badge variant="secondary">↓</Badge>
               </div>
             </div>
           </CardContent>
