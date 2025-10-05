@@ -10,12 +10,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
-  Loader2, Calendar, Clock, Users, ChevronDown, 
+  Loader2, Calendar, Clock, ChevronDown, 
   FileText, Lightbulb, CheckSquare, CalendarPlus, 
-  MessageSquare, PenTool, Video, Phone, Building
+  MessageSquare, PenTool, Video, Phone, Building, Users
 } from "lucide-react";
 import { format } from "date-fns";
 import { CaseDiscussion, ActionItem, GroupSupervisee } from "@/hooks/useSupervisionSessions";
+import { CaseDiscussionInput } from "./CaseDiscussionInput";
+import { ActionItemsList } from "./ActionItemsList";
+import { GroupSuperviseesInput } from "./GroupSuperviseesInput";
 
 interface SupervisionSessionDialogProps {
   open: boolean;
@@ -170,53 +173,6 @@ export function SupervisionSessionDialog({
     }
   };
 
-  const addCaseDiscussion = () => {
-    setFormData({
-      ...formData,
-      cases_discussed: [...formData.cases_discussed, {
-        client_id: '',
-        discussion_summary: '',
-        clinical_issues: [],
-        interventions_recommended: []
-      }]
-    });
-  };
-
-  const removeCaseDiscussion = (index: number) => {
-    setFormData({
-      ...formData,
-      cases_discussed: formData.cases_discussed.filter((_, i) => i !== index)
-    });
-  };
-
-  const updateCaseDiscussion = (index: number, field: keyof CaseDiscussion, value: any) => {
-    const updated = [...formData.cases_discussed];
-    updated[index] = { ...updated[index], [field]: value };
-    setFormData({ ...formData, cases_discussed: updated });
-  };
-
-  const addActionItem = () => {
-    setFormData({
-      ...formData,
-      action_items: [...formData.action_items, {
-        item: '',
-        completed: false
-      }]
-    });
-  };
-
-  const removeActionItem = (index: number) => {
-    setFormData({
-      ...formData,
-      action_items: formData.action_items.filter((_, i) => i !== index)
-    });
-  };
-
-  const updateActionItem = (index: number, field: keyof ActionItem, value: any) => {
-    const updated = [...formData.action_items];
-    updated[index] = { ...updated[index], [field]: value };
-    setFormData({ ...formData, action_items: updated });
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -369,6 +325,28 @@ export function SupervisionSessionDialog({
             </CollapsibleContent>
           </Collapsible>
 
+          {/* Group Supervision */}
+          {formData.session_type === 'Group' && (
+            <Collapsible 
+              open={sectionsOpen.group}
+              onOpenChange={(open) => setSectionsOpen({ ...sectionsOpen, group: open })}
+            >
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-muted rounded-lg hover:bg-muted/80">
+                <div className="flex items-center gap-2 font-semibold">
+                  <Users className="h-4 w-4" />
+                  Group Supervisees ({formData.group_supervisees.length})
+                </div>
+                <ChevronDown className={`h-4 w-4 transition-transform ${sectionsOpen.group ? 'rotate-180' : ''}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-4">
+                <GroupSuperviseesInput 
+                  supervisees={formData.group_supervisees}
+                  onChange={(supervisees) => setFormData({ ...formData, group_supervisees: supervisees })}
+                />
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
           {/* Cases Discussed */}
           <Collapsible 
             open={sectionsOpen.cases}
@@ -382,73 +360,10 @@ export function SupervisionSessionDialog({
               <ChevronDown className={`h-4 w-4 transition-transform ${sectionsOpen.cases ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-4">
-              {formData.cases_discussed.map((caseItem, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">Case {index + 1}</h4>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeCaseDiscussion(index)}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Client ID</Label>
-                    <Input
-                      placeholder="Enter client identifier"
-                      value={caseItem.client_id}
-                      onChange={(e) => updateCaseDiscussion(index, 'client_id', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Discussion Summary</Label>
-                    <Textarea
-                      placeholder="Summary of what was discussed about this case"
-                      rows={2}
-                      value={caseItem.discussion_summary}
-                      onChange={(e) => updateCaseDiscussion(index, 'discussion_summary', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Clinical Issues (one per line)</Label>
-                    <Textarea
-                      placeholder="Enter clinical issues, one per line"
-                      rows={2}
-                      value={caseItem.clinical_issues.join('\n')}
-                      onChange={(e) => updateCaseDiscussion(index, 'clinical_issues', 
-                        e.target.value.split('\n').filter(t => t.trim())
-                      )}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Interventions Recommended (one per line)</Label>
-                    <Textarea
-                      placeholder="Enter recommended interventions, one per line"
-                      rows={2}
-                      value={caseItem.interventions_recommended.join('\n')}
-                      onChange={(e) => updateCaseDiscussion(index, 'interventions_recommended',
-                        e.target.value.split('\n').filter(t => t.trim())
-                      )}
-                    />
-                  </div>
-                </div>
-              ))}
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addCaseDiscussion}
-                className="w-full"
-              >
-                + Add Case Discussion
-              </Button>
+              <CaseDiscussionInput 
+                cases={formData.cases_discussed}
+                onChange={(cases) => setFormData({ ...formData, cases_discussed: cases })}
+              />
             </CollapsibleContent>
           </Collapsible>
 
@@ -529,49 +444,11 @@ export function SupervisionSessionDialog({
               <ChevronDown className={`h-4 w-4 transition-transform ${sectionsOpen.actions ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 pt-4">
-              {formData.action_items.map((action, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">Action Item {index + 1}</h4>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeActionItem(index)}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Action Item Description</Label>
-                    <Textarea
-                      placeholder="Describe the action item or task"
-                      rows={2}
-                      value={action.item}
-                      onChange={(e) => updateActionItem(index, 'item', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Due Date (optional)</Label>
-                    <Input
-                      type="date"
-                      value={action.due_date || ''}
-                      onChange={(e) => updateActionItem(index, 'due_date', e.target.value || undefined)}
-                    />
-                  </div>
-                </div>
-              ))}
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addActionItem}
-                className="w-full"
-              >
-                + Add Action Item
-              </Button>
+              <ActionItemsList 
+                items={formData.action_items}
+                onChange={(items) => setFormData({ ...formData, action_items: items })}
+                showCompleted={false}
+              />
             </CollapsibleContent>
           </Collapsible>
 
