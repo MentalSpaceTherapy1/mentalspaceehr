@@ -6,11 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Users, UserPlus, TrendingUp, AlertCircle, FileText, Download, Search } from 'lucide-react';
+import { Users, UserPlus, TrendingUp, AlertCircle, FileText, Download, Search, BarChart3, Bell } from 'lucide-react';
 import { SupervisionRelationshipDialog } from '@/components/supervision/SupervisionRelationshipDialog';
 import { RelationshipStatusDialog } from '@/components/supervision/RelationshipStatusDialog';
+import { CosignMetricsDashboard } from '@/components/supervision/CosignMetricsDashboard';
+import { DetailedNotificationLog } from '@/components/supervision/DetailedNotificationLog';
 import { formatDistanceToNow } from 'date-fns';
 import { Progress } from '@/components/ui/progress';
 
@@ -455,6 +458,33 @@ export default function SupervisionManagement() {
             }}
           />
         )}
+
+        {/* Metrics and Notifications Tabs */}
+        <Tabs defaultValue="overview" className="mt-6">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="metrics">
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Metrics & Analytics
+            </TabsTrigger>
+            <TabsTrigger value="notifications">
+              <Bell className="mr-2 h-4 w-4" />
+              Notification Log
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
+            {/* This is where the existing content stays */}
+          </TabsContent>
+
+          <TabsContent value="metrics" className="mt-6">
+            <CosignMetricsDashboard />
+          </TabsContent>
+
+          <TabsContent value="notifications" className="mt-6">
+            <DetailedNotificationLog />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

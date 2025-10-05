@@ -7,10 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, FileCheck, FileX, User, Calendar, FileText, AlertTriangle } from "lucide-react";
+import { Loader2, FileCheck, FileX, User, Calendar, FileText, AlertTriangle, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { RequestRevisionsDialog } from "./RequestRevisionsDialog";
 import { RevisionHistoryViewer } from "./RevisionHistoryViewer";
+import { useReviewTimeTracking } from "@/hooks/useReviewTimeTracking";
 
 interface CosignNoteDialogProps {
   open: boolean;
@@ -42,11 +43,23 @@ export function CosignNoteDialog({
   const [supervisorComments, setSupervisorComments] = useState('');
   const [signature, setSignature] = useState('');
   const [showRevisionsDialog, setShowRevisionsDialog] = useState(false);
+  
+  // Time tracking
+  const { startTracking, stopTracking, isTracking, elapsedMinutes } = useReviewTimeTracking(cosignatureId);
 
   useEffect(() => {
     if (open && noteId) {
       loadNoteContent();
+      // Start tracking time when dialog opens
+      startTracking();
     }
+    
+    // Stop tracking when dialog closes
+    return () => {
+      if (isTracking) {
+        stopTracking();
+      }
+    };
   }, [open, noteId]);
 
   const loadNoteContent = async () => {
@@ -88,13 +101,17 @@ export function CosignNoteDialog({
 
     setLoading(true);
     try {
+      // Stop time tracking and get total review time
+      const reviewTime = await stopTracking();
+
       const { error } = await supabase
         .from('note_cosignatures')
         .update({
           supervisor_signature: signature,
           supervisor_signed_date: new Date().toISOString(),
           supervisor_comments: supervisorComments || null,
-          status: 'Approved'
+          status: 'Approved',
+          time_spent_reviewing: reviewTime,
         })
         .eq('id', cosignatureId);
 
@@ -144,13 +161,23 @@ export function CosignNoteDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileCheck className="h-5 w-5" />
-            Co-Sign Clinical Note
-          </DialogTitle>
-          <DialogDescription>
-            Review and co-sign this clinical note
-          </DialogDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="flex items-center gap-2">
+                <FileCheck className="h-5 w-5" />
+                Co-Sign Clinical Note
+              </DialogTitle>
+              <DialogDescription>
+                Review and co-sign this clinical note
+              </DialogDescription>
+            </div>
+            {isTracking && (
+              <Badge variant="outline" className="flex items-center gap-2">
+                <Clock className="h-3 w-3 animate-pulse" />
+                Reviewing: {elapsedMinutes}m
+              </Badge>
+            )}
+          </div>
         </DialogHeader>
 
         {loadingNote ? (
