@@ -205,9 +205,13 @@ export default function UserProfile() {
 
     setSendingPasswordReset(true);
     try {
-      // Use built-in Auth email to avoid Resend domain restrictions
-      const { error } = await supabase.auth.resetPasswordForEmail(profile.email, {
-        redirectTo: `${window.location.origin}/confirm-password-reset`,
+      // Call edge function to generate and send password reset email
+      const { error } = await supabase.functions.invoke('send-admin-password-reset', {
+        body: {
+          email: profile.email,
+          firstName: profile.first_name,
+          redirectUrl: `${window.location.origin}/confirm-password-reset`,
+        },
       });
 
       if (error) throw error;
