@@ -69,6 +69,7 @@ import TelehealthSettings from "./pages/admin/TelehealthSettings";
 import CreateTestPortalUser from "./pages/admin/CreateTestPortalUser";
 import PortalManagement from "./pages/admin/PortalManagement";
 import InsuranceClaims from "./pages/admin/InsuranceClaims";
+import ClientStatements from "./pages/admin/ClientStatements";
 import BillingManagement from "./pages/admin/BillingManagement";
 
 const queryClient = new QueryClient();
@@ -355,6 +356,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <InsuranceClaims />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/client-statements" 
+              element={
+                <AdminRoute>
+                  <ClientStatements />
                 </AdminRoute>
               } 
             />

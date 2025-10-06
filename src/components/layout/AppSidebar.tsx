@@ -83,6 +83,7 @@ export function AppSidebar() {
         { title: 'Practice Settings', url: '/admin/practice-settings', icon: Building2, color: 'from-primary to-success' },
         { title: 'BAA Management', url: '/admin/baa-management', icon: Shield, color: 'from-green-400 to-emerald-400' },
         { title: 'Insurance Claims', url: '/admin/insurance-claims', icon: FileText, color: 'from-cyan-400 to-blue-400' },
+        { title: 'Client Statements', url: '/admin/client-statements', icon: FileText, color: 'from-blue-400 to-indigo-400' },
       ]
     },
     {

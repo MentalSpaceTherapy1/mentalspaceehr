@@ -1496,6 +1496,110 @@ export type Database = {
           },
         ]
       }
+      client_statements: {
+        Row: {
+          adjustments: number
+          aging_120: number
+          aging_30: number
+          aging_60: number
+          aging_90: number
+          charges: Json
+          client_id: string
+          collection_agency: string | null
+          collection_date: string | null
+          created_date: string
+          current_aging: number
+          current_balance: number
+          current_charges: number
+          due_date: string | null
+          id: string
+          in_collections: boolean | null
+          payments: number
+          payments_received: Json
+          previous_balance: number
+          sent_date: string | null
+          sent_method: string
+          statement_date: string
+          statement_id: string
+          statement_message: string | null
+          statement_period_end: string
+          statement_period_start: string
+          statement_status: string
+          viewed_date: string | null
+          viewed_in_portal: boolean | null
+        }
+        Insert: {
+          adjustments?: number
+          aging_120?: number
+          aging_30?: number
+          aging_60?: number
+          aging_90?: number
+          charges?: Json
+          client_id: string
+          collection_agency?: string | null
+          collection_date?: string | null
+          created_date?: string
+          current_aging?: number
+          current_balance?: number
+          current_charges?: number
+          due_date?: string | null
+          id?: string
+          in_collections?: boolean | null
+          payments?: number
+          payments_received?: Json
+          previous_balance?: number
+          sent_date?: string | null
+          sent_method?: string
+          statement_date: string
+          statement_id: string
+          statement_message?: string | null
+          statement_period_end: string
+          statement_period_start: string
+          statement_status?: string
+          viewed_date?: string | null
+          viewed_in_portal?: boolean | null
+        }
+        Update: {
+          adjustments?: number
+          aging_120?: number
+          aging_30?: number
+          aging_60?: number
+          aging_90?: number
+          charges?: Json
+          client_id?: string
+          collection_agency?: string | null
+          collection_date?: string | null
+          created_date?: string
+          current_aging?: number
+          current_balance?: number
+          current_charges?: number
+          due_date?: string | null
+          id?: string
+          in_collections?: boolean | null
+          payments?: number
+          payments_received?: Json
+          previous_balance?: number
+          sent_date?: string | null
+          sent_method?: string
+          statement_date?: string
+          statement_id?: string
+          statement_message?: string | null
+          statement_period_end?: string
+          statement_period_start?: string
+          statement_status?: string
+          viewed_date?: string | null
+          viewed_in_portal?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_statements_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           accessibility_needs: string[] | null
@@ -6493,6 +6597,10 @@ export type Database = {
         Returns: string
       }
       generate_receipt_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_statement_id: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
