@@ -31,17 +31,10 @@ export const usePortalAccount = () => {
 
       console.log('[usePortalAccount] Fetching context for user:', user.id);
 
-      // Fetch client record
+      // Fetch client record (no cross-table joins to avoid RLS issues)
       const { data: client, error: clientError } = await supabase
         .from('clients')
-        .select(`
-          *,
-          primary_therapist:profiles!clients_primary_therapist_id_fkey(
-            id,
-            first_name,
-            last_name
-          )
-        `)
+        .select(`*`)
         .eq('portal_user_id', user.id)
         .maybeSingle();
 
@@ -85,18 +78,9 @@ export const usePortalAccount = () => {
         .eq('client_id', client.id)
         .maybeSingle();
 
-      // Create default preferences if they don't exist
-      if (!preferences && !prefError) {
-        const { data: newPrefs, error: createError } = await supabase
-          .from('portal_preferences')
-          .insert({
-            client_id: client.id
-          })
-          .select()
-          .single();
-
-        if (createError) throw createError;
-        preferences = newPrefs;
+      // If none, use in-memory defaults; do not auto-insert to avoid RLS issues
+      if (!preferences) {
+        console.warn('[usePortalAccount] No portal_preferences row found; using defaults');
       }
 
       // Fetch security settings
@@ -106,19 +90,9 @@ export const usePortalAccount = () => {
         .eq('client_id', client.id)
         .maybeSingle();
 
-      // Create default security settings if they don't exist
-      if (!security && !secError) {
-        const { data: newSecurity, error: createSecError } = await supabase
-          .from('portal_account_security')
-          .insert({
-            client_id: client.id,
-            portal_user_id: user.id
-          })
-          .select()
-          .single();
-
-        if (createSecError) throw createSecError;
-        security = newSecurity;
+      // If none, use in-memory defaults; do not auto-insert to avoid RLS issues
+      if (!security) {
+        console.warn('[usePortalAccount] No portal_account_security row found; using defaults');
       }
 
       // Fetch guardian relationships if this is a guardian account
@@ -168,11 +142,7 @@ export const usePortalAccount = () => {
           email: client.email,
           phone: client.primary_phone,
           medicalRecordNumber: client.medical_record_number,
-          primaryTherapist: client.primary_therapist ? {
-            id: client.primary_therapist.id,
-            firstName: client.primary_therapist.first_name,
-            lastName: client.primary_therapist.last_name
-          } : undefined,
+          primaryTherapist: undefined,
           status: client.status
         },
         preferences: preferences ? mapPreferences(preferences) : getDefaultPreferences(client.id),
