@@ -70,10 +70,10 @@ export function ClientProvidersPharmacy({ formData, setFormData }: ClientProvide
         <div className="space-y-2">
           <Label htmlFor="primaryTherapist">Primary Therapist</Label>
           <Select
-            value={formData.primaryTherapistId || ''}
+            value={formData.primaryTherapistId || 'none'}
             onValueChange={(value) => setFormData({
               ...formData,
-              primaryTherapistId: value || undefined
+              primaryTherapistId: value === 'none' ? undefined : value
             })}
             disabled={loading}
           >
@@ -81,7 +81,7 @@ export function ClientProvidersPharmacy({ formData, setFormData }: ClientProvide
               <SelectValue placeholder="Select therapist" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {clinicians.map(clinician => (
                 <SelectItem key={clinician.id} value={clinician.id}>
                   {clinician.name} ({clinician.role})
@@ -94,10 +94,10 @@ export function ClientProvidersPharmacy({ formData, setFormData }: ClientProvide
         <div className="space-y-2">
           <Label htmlFor="psychiatrist">Psychiatrist</Label>
           <Select
-            value={formData.psychiatristId || ''}
+            value={formData.psychiatristId || 'none'}
             onValueChange={(value) => setFormData({
               ...formData,
-              psychiatristId: value || undefined
+              psychiatristId: value === 'none' ? undefined : value
             })}
             disabled={loading}
           >
@@ -105,7 +105,7 @@ export function ClientProvidersPharmacy({ formData, setFormData }: ClientProvide
               <SelectValue placeholder="Select psychiatrist" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {clinicians.map(clinician => (
                 <SelectItem key={clinician.id} value={clinician.id}>
                   {clinician.name} ({clinician.role})
@@ -118,10 +118,10 @@ export function ClientProvidersPharmacy({ formData, setFormData }: ClientProvide
         <div className="space-y-2">
           <Label htmlFor="caseManager">Case Manager</Label>
           <Select
-            value={formData.caseManagerId || ''}
+            value={formData.caseManagerId || 'none'}
             onValueChange={(value) => setFormData({
               ...formData,
-              caseManagerId: value || undefined
+              caseManagerId: value === 'none' ? undefined : value
             })}
             disabled={loading}
           >
@@ -129,7 +129,7 @@ export function ClientProvidersPharmacy({ formData, setFormData }: ClientProvide
               <SelectValue placeholder="Select case manager" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {clinicians.map(clinician => (
                 <SelectItem key={clinician.id} value={clinician.id}>
                   {clinician.name} ({clinician.role})
