@@ -192,6 +192,9 @@ export default function Auth() {
         <div className="hidden lg:block space-y-6 text-foreground">
           <div className="flex items-center gap-3 mb-8">
             <img src={logo} alt="MentalSpace" className="h-16" />
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-[hsl(190,95%,45%)] to-[hsl(170,85%,50%)] bg-clip-text text-transparent">
+              MentalSpace EHR
+            </h1>
           </div>
           
           <h2 className="text-3xl font-semibold">
@@ -233,8 +236,11 @@ export default function Auth() {
         <Card className="w-full shadow-xl">
           <Tabs defaultValue="signin" className="w-full">
             <CardHeader>
-              <div className="flex justify-center lg:hidden mb-4">
+              <div className="flex flex-col items-center lg:hidden mb-4 gap-2">
                 <img src={logo} alt="MentalSpace" className="h-12" />
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-[hsl(190,95%,45%)] to-[hsl(170,85%,50%)] bg-clip-text text-transparent">
+                  MentalSpace EHR
+                </h1>
               </div>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>

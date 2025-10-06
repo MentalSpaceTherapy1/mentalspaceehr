@@ -26,7 +26,7 @@ const Index = () => {
             <img src={logo} alt="MentalSpace" className="h-12" />
           </div>
           <Button onClick={() => navigate('/auth')}>
-            Get Started
+            Login
           </Button>
         </nav>
       </header>
@@ -46,7 +46,7 @@ const Index = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
             <Button size="lg" onClick={() => navigate('/auth')}>
-              Start Free Trial
+              Login
             </Button>
             <Button size="lg" variant="outline">
               Schedule Demo
@@ -110,7 +110,7 @@ const Index = () => {
             Join mental health professionals who trust MentalSpace EHR
           </p>
           <Button size="lg" onClick={() => navigate('/auth')}>
-            Get Started Today
+            Login
           </Button>
         </div>
       </section>
