@@ -18,17 +18,45 @@ export default function PortalResetPassword() {
   const [validSession, setValidSession] = useState(false);
 
   useEffect(() => {
-    // Check if we have a valid recovery session
+    // SEO
+    document.title = 'Portal Reset Password | MentalSpace';
+
+    const hash = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : window.location.hash;
+    const params = new URLSearchParams(hash);
+    const type = params.get('type');
+    const access_token = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
+
+    const handleInvalid = () => {
+      toast({
+        title: 'Invalid or expired link',
+        description: 'Please request a new password reset.',
+        variant: 'destructive',
+      });
+      navigate('/portal/forgot-password');
+    };
+
+    if (type === 'recovery' && access_token && refresh_token) {
+      supabase.auth.setSession({ access_token, refresh_token })
+        .then(({ data, error }) => {
+          if (!error && data.session) {
+            setValidSession(true);
+            // Clean URL
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          } else {
+            handleInvalid();
+          }
+        })
+        .catch(() => handleInvalid());
+      return;
+    }
+
+    // Fallback: check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setValidSession(true);
       } else {
-        toast({
-          title: 'Invalid or expired link',
-          description: 'Please request a new password reset.',
-          variant: 'destructive',
-        });
-        navigate('/portal/forgot-password');
+        handleInvalid();
       }
     });
   }, [navigate]);
