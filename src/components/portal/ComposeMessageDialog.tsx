@@ -56,27 +56,34 @@ export const ComposeMessageDialog = ({ open, onOpenChange, replyTo }: ComposeMes
   const loadClinicians = async () => {
     try {
       setLoadingClinicians(true);
-      
-      // First get user IDs with clinician roles
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .in('role', ['therapist', 'supervisor', 'administrator']);
 
-      if (roleError) throw roleError;
-
-      const userIds = roleData?.map(r => r.user_id) || [];
-
-      if (userIds.length === 0) {
+      if (!portalContext?.account.clientId) {
         setClinicians([]);
         return;
       }
 
-      // Then get profiles for those users
+      // Load only the clinicians assigned to this client (primary therapist, psychiatrist, case manager)
+      const { data: client, error: clientError } = await supabase
+        .from('clients')
+        .select('primary_therapist_id, psychiatrist_id, case_manager_id')
+        .eq('id', portalContext.account.clientId)
+        .maybeSingle();
+
+      if (clientError) throw clientError;
+
+      const assignedIds = [client?.primary_therapist_id, client?.psychiatrist_id, client?.case_manager_id]
+        .filter(Boolean) as string[];
+
+      if (assignedIds.length === 0) {
+        setClinicians([]);
+        return;
+      }
+
+      // Fetch profiles for assigned clinicians (RLS allows viewing assigned clinicians only)
       const { data, error } = await supabase
         .from('profiles')
         .select('id, first_name, last_name')
-        .in('id', userIds)
+        .in('id', assignedIds)
         .order('last_name');
 
       if (error) throw error;
