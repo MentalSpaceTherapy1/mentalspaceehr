@@ -136,12 +136,12 @@ export function AppSidebar() {
   const getNavCls = (isActive: boolean, colorGradient: string) =>
     isActive 
       ? `bg-gradient-to-r ${colorGradient} text-white hover:opacity-90 shadow-md border-l-4 border-l-white/50` 
-      : 'hover:bg-gradient-to-r hover:from-sidebar-accent/50 hover:to-sidebar-accent/30 transition-all duration-200 hover:border-l-4 hover:border-l-primary/40 text-sidebar-foreground';
+      : 'hover:bg-gradient-to-r hover:from-sidebar-accent/50 hover:to-sidebar-accent/30 transition-all duration-200 hover:border-l-4 hover:border-l-primary/40 text-foreground';
 
   const getCategoryHeaderCls = (isExpanded: boolean) =>
     isExpanded
       ? 'bg-gradient-to-r from-primary/20 to-accent/20 text-foreground font-semibold border-l-4 border-l-primary shadow-sm'
-      : 'hover:bg-gradient-to-r hover:from-primary/10 hover:to-accent/10 text-sidebar-foreground font-medium';
+      : 'hover:bg-gradient-to-r hover:from-primary/10 hover:to-accent/10 text-foreground font-medium';
 
   return (
     <Sidebar collapsible="icon" className="border-r shadow-lg">
@@ -165,9 +165,9 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end>
                       {({ isActive }) => (
-                        <div className={`flex items-center gap-3 w-full px-3 py-2 rounded-md ${getNavCls(isActive, item.color)}`}>
-                          <item.icon className="h-4 w-4 shrink-0" />
-                          {!collapsed && <span className={isActive ? "text-white font-semibold" : "text-sidebar-foreground font-medium"}>{item.title}</span>}
+                      <div className={`flex items-center gap-3 w-full px-3 py-2 rounded-md ${getNavCls(isActive, item.color)}`}>
+                          <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-foreground'}`} />
+                          {!collapsed && <span className={isActive ? "text-white font-semibold" : "text-foreground font-medium"}>{item.title}</span>}
                         </div>
                       )}
                     </NavLink>
@@ -215,10 +215,10 @@ export function AppSidebar() {
                                   <NavLink to={item.url}>
                                     {({ isActive }) => (
                                       <div className={`flex items-center gap-2 w-full px-3 py-2 rounded-md transition-all duration-200 ${getNavCls(isActive, item.color)}`}>
-                                        <div className={`p-1 rounded ${isActive ? 'bg-white/20' : 'bg-gradient-to-br ' + item.color.replace('from-', 'from-') + '/20'}`}>
-                                          <item.icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-white' : ''}`} />
+                                <div className={`p-1 rounded ${isActive ? 'bg-white/20' : 'bg-gradient-to-br ' + item.color.replace('from-', 'from-') + '/20'}`}>
+                                          <item.icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-white' : 'text-foreground'}`} />
                                         </div>
-                                        {!collapsed && <span className={`${isActive ? "text-white font-semibold" : "text-sidebar-foreground font-medium"} text-sm`}>{item.title}</span>}
+                                        {!collapsed && <span className={`${isActive ? "text-white font-semibold" : "text-foreground font-medium"} text-sm`}>{item.title}</span>}
                                       </div>
                                     )}
                                   </NavLink>
@@ -248,8 +248,8 @@ export function AppSidebar() {
                     <NavLink to={item.url}>
                       {({ isActive }) => (
                         <div className={`flex items-center gap-3 w-full px-3 py-2 rounded-md ${getNavCls(isActive, item.color)}`}>
-                          <item.icon className="h-4 w-4 shrink-0" />
-                          {!collapsed && <span className={isActive ? "text-white font-semibold" : "text-sidebar-foreground font-medium"}>{item.title}</span>}
+                          <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-foreground'}`} />
+                          {!collapsed && <span className={isActive ? "text-white font-semibold" : "text-foreground font-medium"}>{item.title}</span>}
                         </div>
                       )}
                     </NavLink>
