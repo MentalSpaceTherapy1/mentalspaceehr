@@ -46,7 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="content">
               <p>Hello${firstName ? ` ${firstName}` : ''},</p>
               
-              <p>We received a request to reset your client portal password. Click the button below to create a new password:</p>
+              <p>We received a request to reset your password. Click the button below to create a new password:</p>
 
               <div style="text-align: center;">
                 <a href="${resetUrl}" class="button">Reset Password</a>
@@ -81,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "CHC Therapy Support <support@chctherapy.com>",
       to: [email],
-      subject: "Reset Your Client Portal Password",
+      subject: "Reset Your Password",
       html: emailHtml,
     });
 
