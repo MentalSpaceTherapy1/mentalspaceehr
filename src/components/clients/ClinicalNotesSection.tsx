@@ -76,7 +76,7 @@ export function ClinicalNotesSection({ clientId, noteType }: ClinicalNotesSectio
             .select('*')
             .eq('client_id', clientId)
             .eq('note_type', 'progress_note')
-            .order('created_date', { ascending: false });
+            .order('created_at', { ascending: false });
           data = progressResult.data || [];
           error = progressResult.error;
           break;
@@ -87,7 +87,7 @@ export function ClinicalNotesSection({ clientId, noteType }: ClinicalNotesSectio
             .select('*')
             .eq('client_id', clientId)
             .eq('note_type', 'intake_assessment')
-            .order('created_date', { ascending: false });
+            .order('created_at', { ascending: false });
           data = intakeResult.data || [];
           error = intakeResult.error;
           break;
@@ -119,7 +119,7 @@ export function ClinicalNotesSection({ clientId, noteType }: ClinicalNotesSectio
             .from('clinical_notes')
             .select('*')
             .eq('client_id', clientId)
-            .order('created_date', { ascending: false });
+            .order('created_at', { ascending: false });
           data = otherResult.data || [];
           error = otherResult.error;
           break;
@@ -200,7 +200,7 @@ export function ClinicalNotesSection({ clientId, noteType }: ClinicalNotesSectio
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-medium">
-                      {note.session_date || note.evaluation_date || note.plan_date || note.assessment_date || note.consultation_date || format(new Date(note.created_date), 'MMM d, yyyy')}
+                      {note.session_date || note.evaluation_date || note.plan_date || note.assessment_date || note.consultation_date || format(new Date(note.created_at || note.created_date), 'MMM d, yyyy')}
                     </h4>
                     <Badge variant={getStatusBadgeVariant(note.status)}>
                       {note.status}
@@ -209,7 +209,7 @@ export function ClinicalNotesSection({ clientId, noteType }: ClinicalNotesSectio
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {format(new Date(note.created_date), 'MMM d, yyyy')}
+                      {format(new Date(note.created_at || note.created_date), 'MMM d, yyyy')}
                     </span>
                     {note.clinician_name && (
                       <span>Clinician: {note.clinician_name}</span>
