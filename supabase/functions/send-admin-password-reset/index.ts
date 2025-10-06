@@ -26,22 +26,45 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Email is required');
     }
 
+    // Get authorization token from request
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('No authorization header provided');
+      return new Response(JSON.stringify({ error: 'Unauthorized: No authorization header' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
     // Verify caller is an administrator
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: req.headers.get('Authorization') || '' } } }
+      { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: authData, error: authErr } = await supabaseUser.auth.getUser();
-    if (authErr || !authData?.user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    const { data: { user }, error: authErr } = await supabaseUser.auth.getUser();
+    if (authErr) {
+      console.error('Auth error:', authErr);
+      return new Response(JSON.stringify({ error: 'Unauthorized: ' + authErr.message }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+    
+    if (!user) {
+      console.error('No user found from token');
+      return new Response(JSON.stringify({ error: 'Unauthorized: Invalid token' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
-    const { data: isAdmin, error: roleErr } = await supabaseUser.rpc('has_role', { _user_id: authData.user.id, _role: 'administrator' });
-    if (roleErr || !isAdmin) {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    console.log('User authenticated:', user.id);
+
+    const { data: isAdmin, error: roleErr } = await supabaseUser.rpc('has_role', { _user_id: user.id, _role: 'administrator' });
+    if (roleErr) {
+      console.error('Role check error:', roleErr);
+      return new Response(JSON.stringify({ error: 'Error checking permissions: ' + roleErr.message }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
+    
+    if (!isAdmin) {
+      console.error('User is not an administrator');
+      return new Response(JSON.stringify({ error: 'Forbidden: Administrator role required' }), { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
+    console.log('Administrator access verified');
 
     // Create Supabase admin client with service role key
     const supabaseAdmin = createClient(
