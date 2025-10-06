@@ -34,6 +34,7 @@ import Profile from "./pages/Profile";
 import MFASetup from "./pages/MFASetup";
 import TrustedDevices from "./pages/TrustedDevices";
 import Tasks from "./pages/Tasks";
+import StaffMessages from "./pages/StaffMessages";
 import Clients from "./pages/Clients";
 import ClientRegistration from "./pages/ClientRegistration";
 import ClientChart from "./pages/ClientChart";
@@ -208,6 +209,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/messages" 
+              element={
+                <ProtectedRoute>
+                  <StaffMessages />
+                </ProtectedRoute>
+              } 
+            />
+            <Route
               path="/clients" 
               element={
                 <ProtectedRoute>

@@ -23,6 +23,7 @@ import {
   GraduationCap,
   Video,
   ChevronDown,
+  MessageSquare,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
@@ -48,6 +49,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import logo from '@/assets/mentalspace-logo.png';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { useStaffMessages } from '@/hooks/useStaffMessages';
 
 export function AppSidebar() {
   const { open } = useSidebar();
@@ -56,11 +59,13 @@ export function AppSidebar() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const userIsAdmin = isAdmin(roles);
+  const { unreadCount } = useStaffMessages();
 
   const mainItems = [
     { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard, roles: ['all'], color: 'from-primary to-accent' },
     { title: 'Schedule', url: '/schedule', icon: Calendar, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-secondary to-primary' },
     { title: 'Clients', url: '/clients', icon: Users, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-accent to-primary' },
+    { title: 'Client Messages', url: '/messages', icon: MessageSquare, roles: ['therapist', 'associate_trainee', 'supervisor'], color: 'from-blue-400 to-cyan-400', badge: unreadCount },
     { title: 'Waitlist', url: '/waitlist', icon: ListOrdered, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-purple-400 to-pink-400' },
     { title: 'Clinical Notes', url: '/notes', icon: FileText, roles: ['therapist', 'associate_trainee', 'supervisor'], color: 'from-warning to-accent' },
     { title: 'Tasks', url: '/tasks', icon: CheckSquare, roles: ['all'], color: 'from-blue-400 to-purple-400' },
@@ -167,7 +172,16 @@ export function AppSidebar() {
                       {({ isActive }) => (
                       <div className={`flex items-center gap-3 w-full px-3 py-2 rounded-md ${getNavCls(isActive, item.color)}`}>
                           <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-foreground'}`} />
-                          {!collapsed && <span className={isActive ? "text-white font-semibold" : "text-foreground font-medium"}>{item.title}</span>}
+                          {!collapsed && (
+                            <div className="flex items-center justify-between flex-1">
+                              <span className={isActive ? "text-white font-semibold" : "text-foreground font-medium"}>{item.title}</span>
+                              {item.badge && item.badge > 0 && (
+                                <Badge variant={isActive ? "secondary" : "default"} className="ml-auto text-xs">
+                                  {item.badge}
+                                </Badge>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </NavLink>
