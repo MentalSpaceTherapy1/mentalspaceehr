@@ -3907,6 +3907,212 @@ export type Database = {
           },
         ]
       }
+      payroll_sessions: {
+        Row: {
+          appointment_id: string | null
+          approved_by: string | null
+          approved_date: string | null
+          approved_for_payroll: boolean
+          billed_amount: number | null
+          client_id: string
+          clinician_id: string
+          count_toward_productivity: boolean
+          created_date: string
+          id: string
+          is_salaried: boolean
+          note_completed: boolean
+          note_signed: boolean
+          notes: string | null
+          paid: boolean
+          paid_amount: number | null
+          payment_check_number: string | null
+          payment_date: string | null
+          payroll_amount: number
+          payroll_period_end_date: string
+          payroll_period_id: string | null
+          payroll_period_start_date: string
+          payroll_rate: number
+          session_completed: boolean
+          session_date: string
+          session_duration: number
+          session_end_time: string
+          session_start_time: string
+          session_type: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          approved_by?: string | null
+          approved_date?: string | null
+          approved_for_payroll?: boolean
+          billed_amount?: number | null
+          client_id: string
+          clinician_id: string
+          count_toward_productivity?: boolean
+          created_date?: string
+          id?: string
+          is_salaried?: boolean
+          note_completed?: boolean
+          note_signed?: boolean
+          notes?: string | null
+          paid?: boolean
+          paid_amount?: number | null
+          payment_check_number?: string | null
+          payment_date?: string | null
+          payroll_amount: number
+          payroll_period_end_date: string
+          payroll_period_id?: string | null
+          payroll_period_start_date: string
+          payroll_rate: number
+          session_completed?: boolean
+          session_date: string
+          session_duration: number
+          session_end_time: string
+          session_start_time: string
+          session_type: string
+        }
+        Update: {
+          appointment_id?: string | null
+          approved_by?: string | null
+          approved_date?: string | null
+          approved_for_payroll?: boolean
+          billed_amount?: number | null
+          client_id?: string
+          clinician_id?: string
+          count_toward_productivity?: boolean
+          created_date?: string
+          id?: string
+          is_salaried?: boolean
+          note_completed?: boolean
+          note_signed?: boolean
+          notes?: string | null
+          paid?: boolean
+          paid_amount?: number | null
+          payment_check_number?: string | null
+          payment_date?: string | null
+          payroll_amount?: number
+          payroll_period_end_date?: string
+          payroll_period_id?: string | null
+          payroll_period_start_date?: string
+          payroll_rate?: number
+          session_completed?: boolean
+          session_date?: string
+          session_duration?: number
+          session_end_time?: string
+          session_start_time?: string
+          session_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_sessions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_sessions_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_sessions_clinician_id_fkey"
+            columns: ["clinician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_summaries: {
+        Row: {
+          approved_by: string | null
+          approved_date: string | null
+          bonuses: number | null
+          check_number: string | null
+          clinician_id: string
+          deductions: number | null
+          generated_date: string
+          id: string
+          net_earnings: number
+          paid_date: string | null
+          payment_method: string
+          payroll_period_id: string
+          period_end_date: string
+          period_start_date: string
+          session_breakdown: Json
+          status: string
+          total_earnings: number
+          total_hours: number
+          total_sessions: number
+        }
+        Insert: {
+          approved_by?: string | null
+          approved_date?: string | null
+          bonuses?: number | null
+          check_number?: string | null
+          clinician_id: string
+          deductions?: number | null
+          generated_date?: string
+          id?: string
+          net_earnings?: number
+          paid_date?: string | null
+          payment_method?: string
+          payroll_period_id: string
+          period_end_date: string
+          period_start_date: string
+          session_breakdown?: Json
+          status?: string
+          total_earnings?: number
+          total_hours?: number
+          total_sessions?: number
+        }
+        Update: {
+          approved_by?: string | null
+          approved_date?: string | null
+          bonuses?: number | null
+          check_number?: string | null
+          clinician_id?: string
+          deductions?: number | null
+          generated_date?: string
+          id?: string
+          net_earnings?: number
+          paid_date?: string | null
+          payment_method?: string
+          payroll_period_id?: string
+          period_end_date?: string
+          period_start_date?: string
+          session_breakdown?: Json
+          status?: string
+          total_earnings?: number
+          total_hours?: number
+          total_sessions?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_summaries_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_summaries_clinician_id_fkey"
+            columns: ["clinician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portal_access_log: {
         Row: {
           action: string

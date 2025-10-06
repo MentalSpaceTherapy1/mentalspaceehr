@@ -86,6 +86,7 @@ export function AppSidebar() {
         { title: 'Client Statements', url: '/admin/client-statements', icon: FileText, color: 'from-blue-400 to-indigo-400' },
         { title: 'Fee Schedules', url: '/admin/fee-schedules', icon: DollarSign, color: 'from-indigo-400 to-purple-400' },
         { title: 'Eligibility Verification', url: '/admin/eligibility-verification', icon: CheckSquare, color: 'from-purple-400 to-pink-400' },
+        { title: 'Payroll Management', url: '/admin/payroll', icon: DollarSign, color: 'from-pink-400 to-rose-400' },
       ]
     },
     {

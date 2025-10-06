@@ -57,6 +57,7 @@ import ConfirmPasswordReset from "./pages/ConfirmPasswordReset";
 import ClientStatements from "@/pages/admin/ClientStatements";
 import FeeSchedules from "@/pages/admin/FeeSchedules";
 import EligibilityVerification from "@/pages/admin/EligibilityVerification";
+import PayrollManagement from "@/pages/admin/PayrollManagement";
 import NotFound from "./pages/NotFound";
 import ProgressNote from "./pages/ProgressNote";
 import TreatmentPlan from "./pages/TreatmentPlan";
@@ -382,6 +383,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <EligibilityVerification />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/payroll" 
+              element={
+                <AdminRoute>
+                  <PayrollManagement />
                 </AdminRoute>
               } 
             />
