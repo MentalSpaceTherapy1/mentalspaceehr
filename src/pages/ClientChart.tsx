@@ -39,6 +39,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { PortalAccessDialog } from '@/components/admin/PortalAccessDialog';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
+import { DocumentManagementPanel } from '@/components/documents/DocumentManagementPanel';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 
@@ -368,6 +369,8 @@ export default function ClientChart() {
             />
           </>
         );
+      case 'documents-forms':
+        return <DocumentManagementPanel clientId={id!} />;
       default:
         return (
           <Card>

@@ -2,18 +2,23 @@ import { useState } from 'react';
 import { PortalLayout } from '@/components/portal/PortalLayout';
 import { usePortalAccount } from '@/hooks/usePortalAccount';
 import { usePortalForms } from '@/hooks/usePortalForms';
+import { useClientDocuments } from '@/hooks/useClientDocuments';
 import { FormRenderer } from '@/components/portal/forms/FormRenderer';
+import { DocumentViewer } from '@/components/documents/DocumentViewer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, FileText, CheckCircle2, Clock, AlertCircle, Calendar } from 'lucide-react';
+import { Loader2, FileText, CheckCircle2, Clock, AlertCircle, Calendar, Download, Eye, FolderOpen } from 'lucide-react';
 import { FormWithResponse } from '@/types/forms';
 import { format } from 'date-fns';
 
 export default function PortalDocuments() {
   const { portalContext } = usePortalAccount();
   const [selectedForm, setSelectedForm] = useState<FormWithResponse | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [documentUrl, setDocumentUrl] = useState<string | null>(null);
 
   const {
     forms,
@@ -25,6 +30,13 @@ export default function PortalDocuments() {
     isSaving,
     isSubmitting,
   } = usePortalForms(portalContext?.account.clientId);
+
+  const {
+    documents,
+    isLoading: docsLoading,
+    downloadDocument,
+    getDocumentUrl,
+  } = useClientDocuments(portalContext?.account.clientId);
 
   const handleStartForm = (form: FormWithResponse) => {
     if (!form.response) {
@@ -55,6 +67,22 @@ export default function PortalDocuments() {
       setSelectedForm(null);
     }
   };
+
+  const handleViewDocument = async (doc: any) => {
+    setSelectedDocument(doc);
+    setViewerOpen(true);
+    const url = await getDocumentUrl(doc);
+    setDocumentUrl(url);
+  };
+
+  const handleDownloadDocument = (doc: any) => {
+    downloadDocument(doc);
+  };
+
+  // Filter for shared documents only
+  const sharedDocuments = documents.filter(doc => 
+    doc.shared_with_client || doc.shared_via_portal
+  );
 
   if (isLoading) {
     return (
@@ -121,10 +149,13 @@ export default function PortalDocuments() {
         <Tabs defaultValue="pending" className="space-y-4">
           <TabsList>
             <TabsTrigger value="pending">
-              Pending ({pendingForms.length})
+              Pending Forms ({pendingForms.length})
             </TabsTrigger>
             <TabsTrigger value="completed">
-              Completed ({completedForms.length})
+              Completed Forms ({completedForms.length})
+            </TabsTrigger>
+            <TabsTrigger value="documents">
+              My Documents ({sharedDocuments.length})
             </TabsTrigger>
           </TabsList>
 
@@ -247,7 +278,95 @@ export default function PortalDocuments() {
               ))
             )}
           </TabsContent>
+
+          <TabsContent value="documents" className="space-y-4">
+            {docsLoading ? (
+              <Card>
+                <CardContent className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </CardContent>
+              </Card>
+            ) : sharedDocuments.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <FolderOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-lg font-medium">No documents available</p>
+                  <p className="text-sm text-muted-foreground">
+                    Your therapist hasn't shared any documents with you yet.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {sharedDocuments.map(doc => (
+                  <Card key={doc.id} className="hover:border-primary transition-colors">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1 flex-1">
+                          <CardTitle className="flex items-center gap-2">
+                            <FileText className="h-5 w-5" />
+                            {doc.title}
+                          </CardTitle>
+                          {doc.description && (
+                            <CardDescription>{doc.description}</CardDescription>
+                          )}
+                        </div>
+                        <Badge variant="secondary">{doc.document_type}</Badge>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>Shared: {format(new Date(doc.shared_date || doc.created_at), 'MMM d, yyyy')}</span>
+                        </div>
+                        {doc.file_size_bytes && (
+                          <span>{(doc.file_size_bytes / 1024 / 1024).toFixed(2)} MB</span>
+                        )}
+                      </div>
+
+                      {doc.tags && doc.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {doc.tags.map((tag: string) => (
+                            <Badge key={tag} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleViewDocument(doc)}
+                          variant="default"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
+                        <Button
+                          onClick={() => handleDownloadDocument(doc)}
+                          variant="outline"
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
+
+        <DocumentViewer
+          open={viewerOpen}
+          onOpenChange={setViewerOpen}
+          document={selectedDocument}
+          documentUrl={documentUrl}
+          onDownload={() => selectedDocument && handleDownloadDocument(selectedDocument)}
+        />
       </div>
     </PortalLayout>
   );
