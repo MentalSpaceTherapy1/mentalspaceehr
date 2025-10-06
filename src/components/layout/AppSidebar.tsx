@@ -25,6 +25,8 @@ import {
   ChevronDown,
   MessageSquare,
   BarChart3,
+  Library,
+  FolderOpen,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
@@ -108,6 +110,15 @@ export function AppSidebar() {
         { title: 'Supervision Management', url: '/admin/supervision-management', icon: GraduationCap, color: 'from-indigo-400 to-purple-400' },
         { title: 'AI Clinical Notes', url: '/admin/ai-notes', icon: Sparkles, color: 'from-cyan-400 to-blue-400' },
         { title: 'AI Quality Metrics', url: '/admin/ai-quality-metrics', icon: Brain, color: 'from-blue-400 to-cyan-400' },
+      ]
+    },
+    {
+      title: 'Documents & Assessments',
+      icon: Library,
+      items: [
+        { title: 'Document Library', url: '/admin/document-library', icon: Library, color: 'from-purple-400 to-violet-400' },
+        { title: 'Clinical Assessments', url: '/admin/assessments', icon: ClipboardList, color: 'from-violet-400 to-indigo-400' },
+        { title: 'Document Management', url: '/admin/document-management', icon: FolderOpen, color: 'from-indigo-400 to-blue-400' },
       ]
     },
     {

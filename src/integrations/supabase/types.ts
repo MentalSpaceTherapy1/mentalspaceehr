@@ -689,6 +689,136 @@ export type Database = {
           },
         ]
       }
+      assessment_administrations: {
+        Row: {
+          added_to_chart: boolean | null
+          administered_by: string | null
+          administered_via: string | null
+          administration_date: string | null
+          assessment_id: string
+          chart_note_id: string | null
+          client_id: string
+          clinical_recommendations: string | null
+          completion_status: string | null
+          created_at: string | null
+          id: string
+          interpretation_notes: string | null
+          interpreted_severity: string | null
+          raw_score: number | null
+          responses: Json
+          time_taken_seconds: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          added_to_chart?: boolean | null
+          administered_by?: string | null
+          administered_via?: string | null
+          administration_date?: string | null
+          assessment_id: string
+          chart_note_id?: string | null
+          client_id: string
+          clinical_recommendations?: string | null
+          completion_status?: string | null
+          created_at?: string | null
+          id?: string
+          interpretation_notes?: string | null
+          interpreted_severity?: string | null
+          raw_score?: number | null
+          responses: Json
+          time_taken_seconds?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          added_to_chart?: boolean | null
+          administered_by?: string | null
+          administered_via?: string | null
+          administration_date?: string | null
+          assessment_id?: string
+          chart_note_id?: string | null
+          client_id?: string
+          clinical_recommendations?: string | null
+          completion_status?: string | null
+          created_at?: string | null
+          id?: string
+          interpretation_notes?: string | null
+          interpreted_severity?: string | null
+          raw_score?: number | null
+          responses?: Json
+          time_taken_seconds?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_administrations_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_administrations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessment_score_history: {
+        Row: {
+          administration_date: string
+          administration_id: string
+          assessment_id: string
+          client_id: string
+          created_at: string | null
+          id: string
+          score: number
+          severity_level: string | null
+        }
+        Insert: {
+          administration_date: string
+          administration_id: string
+          assessment_id: string
+          client_id: string
+          created_at?: string | null
+          id?: string
+          score: number
+          severity_level?: string | null
+        }
+        Update: {
+          administration_date?: string
+          administration_id?: string
+          assessment_id?: string
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          score?: number
+          severity_level?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_score_history_administration_id_fkey"
+            columns: ["administration_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_administrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_score_history_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_score_history_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blocked_times: {
         Row: {
           block_type: string
@@ -1935,6 +2065,57 @@ export type Database = {
           },
         ]
       }
+      clinical_assessments: {
+        Row: {
+          acronym: string
+          assessment_name: string
+          category: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          estimated_minutes: number | null
+          id: string
+          is_active: boolean | null
+          is_custom: boolean | null
+          scoring_algorithm: Json
+          total_items: number
+          updated_at: string | null
+          version: string | null
+        }
+        Insert: {
+          acronym: string
+          assessment_name: string
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_custom?: boolean | null
+          scoring_algorithm: Json
+          total_items: number
+          updated_at?: string | null
+          version?: string | null
+        }
+        Update: {
+          acronym?: string
+          assessment_name?: string
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_custom?: boolean | null
+          scoring_algorithm?: Json
+          total_items?: number
+          updated_at?: string | null
+          version?: string | null
+        }
+        Relationships: []
+      }
       clinical_notes: {
         Row: {
           ai_confidence_score: number | null
@@ -2425,6 +2606,51 @@ export type Database = {
           },
         ]
       }
+      custom_assessments: {
+        Row: {
+          assessment_name: string
+          category: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          interpretation_ranges: Json
+          is_active: boolean | null
+          items: Json
+          practice_id: string | null
+          scoring_rules: Json
+          updated_at: string | null
+        }
+        Insert: {
+          assessment_name: string
+          category?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          interpretation_ranges: Json
+          is_active?: boolean | null
+          items: Json
+          practice_id?: string | null
+          scoring_rules: Json
+          updated_at?: string | null
+        }
+        Update: {
+          assessment_name?: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          interpretation_ranges?: Json
+          is_active?: boolean | null
+          items?: Json
+          practice_id?: string | null
+          scoring_rules?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       custom_reports: {
         Row: {
           aggregations: Json | null
@@ -2523,6 +2749,140 @@ export type Database = {
             columns: ["last_run_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_library: {
+        Row: {
+          auto_assign_on_intake: boolean | null
+          category_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size_bytes: number | null
+          id: string
+          is_active: boolean | null
+          last_used_at: string | null
+          mime_type: string | null
+          previous_version_id: string | null
+          requires_signature: boolean | null
+          subcategory: string | null
+          tags: string[] | null
+          target_client_types: string[] | null
+          title: string
+          updated_at: string | null
+          usage_count: number | null
+          version: number | null
+        }
+        Insert: {
+          auto_assign_on_intake?: boolean | null
+          category_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size_bytes?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          mime_type?: string | null
+          previous_version_id?: string | null
+          requires_signature?: boolean | null
+          subcategory?: string | null
+          tags?: string[] | null
+          target_client_types?: string[] | null
+          title: string
+          updated_at?: string | null
+          usage_count?: number | null
+          version?: number | null
+        }
+        Update: {
+          auto_assign_on_intake?: boolean | null
+          category_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size_bytes?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          mime_type?: string | null
+          previous_version_id?: string | null
+          requires_signature?: boolean | null
+          subcategory?: string | null
+          tags?: string[] | null
+          target_client_types?: string[] | null
+          title?: string
+          updated_at?: string | null
+          usage_count?: number | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_library_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "document_library_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_library_previous_version_id_fkey"
+            columns: ["previous_version_id"]
+            isOneToOne: false
+            referencedRelation: "document_library"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_library_categories: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          parent_category_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          parent_category_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          parent_category_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_library_categories_parent_category_id_fkey"
+            columns: ["parent_category_id"]
+            isOneToOne: false
+            referencedRelation: "document_library_categories"
             referencedColumns: ["id"]
           },
         ]
