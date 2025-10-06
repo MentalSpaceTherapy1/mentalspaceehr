@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useStaffMessages } from '@/hooks/useStaffMessages';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function StaffMessages() {
   const { messages, loading, unreadCount, markAsRead, sendMessage } = useStaffMessages();
@@ -23,10 +24,36 @@ export default function StaffMessages() {
   const [replyContent, setReplyContent] = useState('');
   const [replySubject, setReplySubject] = useState('');
   const [replyPriority, setReplyPriority] = useState('normal');
+  const [newMessageOpen, setNewMessageOpen] = useState(false);
+  const [newMessageClientId, setNewMessageClientId] = useState('');
+  const [newMessageSubject, setNewMessageSubject] = useState('');
+  const [newMessageContent, setNewMessageContent] = useState('');
+  const [newMessagePriority, setNewMessagePriority] = useState('normal');
+  const [clients, setClients] = useState<any[]>([]);
 
   const unreadMessages = messages.filter(msg => !msg.isRead && msg.senderType === 'Client');
   const urgentMessages = messages.filter(msg => msg.priority === 'urgent');
   const requiresResponseMessages = messages.filter(msg => msg.requiresResponse && !msg.respondedTo);
+
+  // Fetch clients for new message dialog
+  useEffect(() => {
+    const fetchClients = async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, first_name, last_name, portal_enabled, portal_user_id')
+        .eq('portal_enabled', true)
+        .not('portal_user_id', 'is', null)
+        .order('last_name');
+      
+      if (!error && data) {
+        setClients(data);
+      }
+    };
+    
+    if (newMessageOpen) {
+      fetchClients();
+    }
+  }, [newMessageOpen]);
 
   const handleMessageClick = async (message: any) => {
     setSelectedMessage(message);
@@ -78,6 +105,43 @@ export default function StaffMessages() {
     }
   };
 
+  const handleSendNewMessage = async () => {
+    if (!newMessageClientId || !newMessageSubject.trim() || !newMessageContent.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in all fields',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      await sendMessage({
+        clientId: newMessageClientId,
+        subject: newMessageSubject,
+        message: newMessageContent,
+        priority: newMessagePriority,
+      });
+
+      toast({
+        title: 'Success',
+        description: 'Message sent successfully',
+      });
+
+      setNewMessageOpen(false);
+      setNewMessageClientId('');
+      setNewMessageSubject('');
+      setNewMessageContent('');
+      setNewMessagePriority('normal');
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to send message',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -97,9 +161,15 @@ export default function StaffMessages() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Client Messages</h1>
-          <p className="text-muted-foreground">View and respond to client messages</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Client Messages</h1>
+            <p className="text-muted-foreground">View and respond to client messages</p>
+          </div>
+          <Button onClick={() => setNewMessageOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Message
+          </Button>
         </div>
 
         {/* Summary Cards */}
@@ -381,6 +451,78 @@ export default function StaffMessages() {
               </Button>
               <Button onClick={handleSendReply}>
                 Send Reply
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Message Dialog */}
+      <Dialog open={newMessageOpen} onOpenChange={setNewMessageOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>New Message to Client</DialogTitle>
+            <DialogDescription>
+              Send a message to a client with portal access
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-client">Select Client</Label>
+              <Select value={newMessageClientId} onValueChange={setNewMessageClientId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a client..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.last_name}, {client.first_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="new-subject">Subject</Label>
+              <Input
+                id="new-subject"
+                value={newMessageSubject}
+                onChange={(e) => setNewMessageSubject(e.target.value)}
+                placeholder="Message subject..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="new-priority">Priority</Label>
+              <Select value={newMessagePriority} onValueChange={setNewMessagePriority}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="new-message">Message</Label>
+              <Textarea
+                id="new-message"
+                rows={8}
+                value={newMessageContent}
+                onChange={(e) => setNewMessageContent(e.target.value)}
+                placeholder="Type your message..."
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setNewMessageOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSendNewMessage}>
+                Send Message
               </Button>
             </div>
           </div>
