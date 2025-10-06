@@ -241,13 +241,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      
+      // Ignore session-related errors - these are expected when session already expired
+      if (error && !error.message?.toLowerCase().includes('session')) {
+        throw error;
+      }
+      
+      // Clear local state regardless of API response
+      setUser(null);
+      setSession(null);
       
       toast.success('Signed out successfully');
       navigate('/auth');
     } catch (error) {
       const err = error as Error;
+      // Still clear state even if there was an error
+      setUser(null);
+      setSession(null);
       toast.error(err.message || 'Failed to sign out');
+      navigate('/auth');
     }
   };
 
