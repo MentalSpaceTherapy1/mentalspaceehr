@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCustomReports } from '@/hooks/useCustomReports';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import {
   Plus,
   FileText,
@@ -87,6 +88,18 @@ export default function Reports() {
       setDeleteDialogOpen(false);
       setReportToDelete(null);
     }
+  };
+
+  const handleRunPrebuiltReport = (reportName: string) => {
+    toast.info(`Generating ${reportName}...`, {
+      description: 'This feature is coming soon. The report will include data visualization and export options.',
+    });
+  };
+
+  const handleRunCustomReport = (reportId: string, reportName: string) => {
+    toast.info(`Running ${reportName}...`, {
+      description: 'This feature is coming soon. Custom reports will be generated based on your saved criteria.',
+    });
   };
 
   return (
@@ -194,7 +207,10 @@ export default function Reports() {
                     <CardDescription>{report.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button className="w-full">
+                    <Button 
+                      className="w-full"
+                      onClick={() => handleRunPrebuiltReport(report.name)}
+                    >
                       <Play className="w-4 h-4 mr-2" />
                       Run Report
                     </Button>
@@ -213,7 +229,10 @@ export default function Reports() {
                     <CardDescription>{report.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button className="w-full">
+                    <Button 
+                      className="w-full"
+                      onClick={() => handleRunPrebuiltReport(report.name)}
+                    >
                       <Play className="w-4 h-4 mr-2" />
                       Run Report
                     </Button>
@@ -232,7 +251,10 @@ export default function Reports() {
                     <CardDescription>{report.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button className="w-full">
+                    <Button 
+                      className="w-full"
+                      onClick={() => handleRunPrebuiltReport(report.name)}
+                    >
                       <Play className="w-4 h-4 mr-2" />
                       Run Report
                     </Button>
@@ -251,7 +273,10 @@ export default function Reports() {
                     <CardDescription>{report.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button className="w-full">
+                    <Button 
+                      className="w-full"
+                      onClick={() => handleRunPrebuiltReport(report.name)}
+                    >
                       <Play className="w-4 h-4 mr-2" />
                       Run Report
                     </Button>
@@ -330,16 +355,27 @@ export default function Reports() {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="icon">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  onClick={() => handleRunCustomReport(report.id, report.report_name)}
+                                  title="Run report"
+                                >
                                   <Play className="w-4 h-4" />
                                 </Button>
-                                <Button variant="ghost" size="icon">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  onClick={() => toast.info('Edit functionality coming soon')}
+                                  title="Edit report"
+                                >
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => handleDelete(report.id)}
+                                  title="Delete report"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
