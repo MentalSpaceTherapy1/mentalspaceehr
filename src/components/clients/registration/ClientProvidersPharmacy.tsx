@@ -1,12 +1,15 @@
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ClientProvidersPharmacyProps {
   formData: any;
@@ -14,9 +17,130 @@ interface ClientProvidersPharmacyProps {
 }
 
 export function ClientProvidersPharmacy({ formData, setFormData }: ClientProvidersPharmacyProps) {
+  const [clinicians, setClinicians] = useState<Array<{ id: string; name: string; role: string }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchClinicians();
+  }, []);
+
+  const fetchClinicians = async () => {
+    try {
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .order('last_name');
+
+      if (error) throw error;
+
+      if (profiles) {
+        // Get roles for each profile
+        const { data: userRoles } = await supabase
+          .from('user_roles')
+          .select('user_id, role')
+          .in('user_id', profiles.map(p => p.id));
+
+        const cliniciansWithRoles = profiles.map(profile => {
+          const roles = userRoles?.filter(ur => ur.user_id === profile.id).map(ur => ur.role) || [];
+          const roleLabel = roles.includes('therapist') ? 'Therapist' : 
+                          roles.includes('supervisor') ? 'Supervisor' :
+                          roles.includes('administrator') ? 'Administrator' : 
+                          'Staff';
+          
+          return {
+            id: profile.id,
+            name: `${profile.first_name} ${profile.last_name}`,
+            role: roleLabel
+          };
+        });
+
+        setClinicians(cliniciansWithRoles);
+      }
+    } catch (error) {
+      console.error('Error fetching clinicians:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Primary Care Provider</h3>
+      <h3 className="text-lg font-semibold">Treatment Team</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg">
+        <div className="space-y-2">
+          <Label htmlFor="primaryTherapist">Primary Therapist</Label>
+          <Select
+            value={formData.primaryTherapistId || ''}
+            onValueChange={(value) => setFormData({
+              ...formData,
+              primaryTherapistId: value || undefined
+            })}
+            disabled={loading}
+          >
+            <SelectTrigger id="primaryTherapist">
+              <SelectValue placeholder="Select therapist" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">None</SelectItem>
+              {clinicians.map(clinician => (
+                <SelectItem key={clinician.id} value={clinician.id}>
+                  {clinician.name} ({clinician.role})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="psychiatrist">Psychiatrist</Label>
+          <Select
+            value={formData.psychiatristId || ''}
+            onValueChange={(value) => setFormData({
+              ...formData,
+              psychiatristId: value || undefined
+            })}
+            disabled={loading}
+          >
+            <SelectTrigger id="psychiatrist">
+              <SelectValue placeholder="Select psychiatrist" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">None</SelectItem>
+              {clinicians.map(clinician => (
+                <SelectItem key={clinician.id} value={clinician.id}>
+                  {clinician.name} ({clinician.role})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="caseManager">Case Manager</Label>
+          <Select
+            value={formData.caseManagerId || ''}
+            onValueChange={(value) => setFormData({
+              ...formData,
+              caseManagerId: value || undefined
+            })}
+            disabled={loading}
+          >
+            <SelectTrigger id="caseManager">
+              <SelectValue placeholder="Select case manager" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">None</SelectItem>
+              {clinicians.map(clinician => (
+                <SelectItem key={clinician.id} value={clinician.id}>
+                  {clinician.name} ({clinician.role})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <h3 className="text-lg font-semibold pt-4">Primary Care Provider</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg">
         <div className="space-y-2">
           <Label htmlFor="pcpName">Provider Name</Label>
