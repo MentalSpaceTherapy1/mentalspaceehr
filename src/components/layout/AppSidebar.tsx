@@ -84,6 +84,8 @@ export function AppSidebar() {
         { title: 'BAA Management', url: '/admin/baa-management', icon: Shield, color: 'from-green-400 to-emerald-400' },
         { title: 'Insurance Claims', url: '/admin/insurance-claims', icon: FileText, color: 'from-cyan-400 to-blue-400' },
         { title: 'Client Statements', url: '/admin/client-statements', icon: FileText, color: 'from-blue-400 to-indigo-400' },
+        { title: 'Fee Schedules', url: '/admin/fee-schedules', icon: DollarSign, color: 'from-indigo-400 to-purple-400' },
+        { title: 'Eligibility Verification', url: '/admin/eligibility-verification', icon: CheckSquare, color: 'from-purple-400 to-pink-400' },
       ]
     },
     {

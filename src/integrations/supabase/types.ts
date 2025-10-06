@@ -2403,6 +2403,85 @@ export type Database = {
         }
         Relationships: []
       }
+      eligibility_checks: {
+        Row: {
+          check_date: string
+          check_performed_by: string | null
+          client_id: string
+          coverage_details: Json
+          created_date: string
+          eligibility_status: string
+          errors: Json | null
+          id: string
+          insurance_id: string
+          provider_in_network: boolean
+          provider_npi: string | null
+          service_date: string
+          service_type: string
+          source: string
+          valid_until: string
+          warning_messages: Json | null
+        }
+        Insert: {
+          check_date: string
+          check_performed_by?: string | null
+          client_id: string
+          coverage_details?: Json
+          created_date?: string
+          eligibility_status: string
+          errors?: Json | null
+          id?: string
+          insurance_id: string
+          provider_in_network?: boolean
+          provider_npi?: string | null
+          service_date: string
+          service_type: string
+          source: string
+          valid_until: string
+          warning_messages?: Json | null
+        }
+        Update: {
+          check_date?: string
+          check_performed_by?: string | null
+          client_id?: string
+          coverage_details?: Json
+          created_date?: string
+          eligibility_status?: string
+          errors?: Json | null
+          id?: string
+          insurance_id?: string
+          provider_in_network?: boolean
+          provider_npi?: string | null
+          service_date?: string
+          service_type?: string
+          source?: string
+          valid_until?: string
+          warning_messages?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eligibility_checks_check_performed_by_fkey"
+            columns: ["check_performed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eligibility_checks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eligibility_checks_insurance_id_fkey"
+            columns: ["insurance_id"]
+            isOneToOne: false
+            referencedRelation: "client_insurance"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergency_contacts: {
         Row: {
           address: string | null
@@ -2484,6 +2563,69 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fee_schedules: {
+        Row: {
+          applicable_to: string
+          contract_number: string | null
+          created_by: string | null
+          created_date: string
+          effective_date: string
+          end_date: string | null
+          fees: Json
+          id: string
+          insurance_company_id: string | null
+          insurance_company_name: string | null
+          is_default_schedule: boolean
+          schedule_name: string
+          schedule_type: string
+        }
+        Insert: {
+          applicable_to: string
+          contract_number?: string | null
+          created_by?: string | null
+          created_date?: string
+          effective_date: string
+          end_date?: string | null
+          fees?: Json
+          id?: string
+          insurance_company_id?: string | null
+          insurance_company_name?: string | null
+          is_default_schedule?: boolean
+          schedule_name: string
+          schedule_type: string
+        }
+        Update: {
+          applicable_to?: string
+          contract_number?: string | null
+          created_by?: string | null
+          created_date?: string
+          effective_date?: string
+          end_date?: string | null
+          fees?: Json
+          id?: string
+          insurance_company_id?: string | null
+          insurance_company_name?: string | null
+          is_default_schedule?: boolean
+          schedule_name?: string
+          schedule_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_schedules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_schedules_insurance_company_id_fkey"
+            columns: ["insurance_company_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_companies"
             referencedColumns: ["id"]
           },
         ]

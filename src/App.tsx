@@ -54,6 +54,9 @@ import IntakeAssessment from "./pages/IntakeAssessment";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ConfirmPasswordReset from "./pages/ConfirmPasswordReset";
+import ClientStatements from "@/pages/admin/ClientStatements";
+import FeeSchedules from "@/pages/admin/FeeSchedules";
+import EligibilityVerification from "@/pages/admin/EligibilityVerification";
 import NotFound from "./pages/NotFound";
 import ProgressNote from "./pages/ProgressNote";
 import TreatmentPlan from "./pages/TreatmentPlan";
@@ -69,7 +72,6 @@ import TelehealthSettings from "./pages/admin/TelehealthSettings";
 import CreateTestPortalUser from "./pages/admin/CreateTestPortalUser";
 import PortalManagement from "./pages/admin/PortalManagement";
 import InsuranceClaims from "./pages/admin/InsuranceClaims";
-import ClientStatements from "./pages/admin/ClientStatements";
 import BillingManagement from "./pages/admin/BillingManagement";
 
 const queryClient = new QueryClient();
@@ -364,6 +366,22 @@ const App = () => (
               element={
                 <AdminRoute>
                   <ClientStatements />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/fee-schedules" 
+              element={
+                <AdminRoute>
+                  <FeeSchedules />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/eligibility-verification" 
+              element={
+                <AdminRoute>
+                  <EligibilityVerification />
                 </AdminRoute>
               } 
             />
