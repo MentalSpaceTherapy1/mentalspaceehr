@@ -62,6 +62,8 @@ const handler = async (req: Request): Promise<Response> => {
                 <ul style="margin: 10px 0;">
                   <li>This link expires in 1 hour</li>
                   <li>You can only use this link once</li>
+                  <li><strong>Important:</strong> Click the button above directly - don't forward this email</li>
+                  <li>If the link doesn't work, it may have been pre-scanned by your email client</li>
                   <li>If you didn't request this reset, please ignore this email</li>
                   <li>Your password won't change until you create a new one</li>
                 </ul>

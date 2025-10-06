@@ -52,6 +52,7 @@ import NoteEditor from "./pages/NoteEditor";
 import IntakeAssessment from "./pages/IntakeAssessment";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import ConfirmPasswordReset from "./pages/ConfirmPasswordReset";
 import NotFound from "./pages/NotFound";
 import ProgressNote from "./pages/ProgressNote";
 import TreatmentPlan from "./pages/TreatmentPlan";
@@ -84,7 +85,8 @@ const App = () => (
           <Route path="/portal/forgot-password" element={<PortalForgotPassword />} />
           <Route path="/portal/reset-password" element={<PortalResetPassword />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/confirm-password-reset" element={<ConfirmPasswordReset />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
             <Route 
               path="/dashboard" 
               element={
