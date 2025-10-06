@@ -1118,60 +1118,123 @@ export type Database = {
       client_documents: {
         Row: {
           client_id: string
+          client_viewed_date: string | null
           created_at: string | null
           description: string | null
+          document_category: string | null
+          document_date: string | null
+          document_source: string | null
           document_type: string
           expires_at: string | null
+          external_provider: string | null
+          extracted_text: string | null
+          file_name: string | null
           file_path: string
           file_size_bytes: number | null
+          form_responses: Json | null
           id: string
+          is_embedded_form: boolean | null
+          latest_version: boolean | null
           mime_type: string | null
+          ocr_processed: boolean | null
+          previous_version_id: string | null
           requires_signature: boolean | null
+          shared_date: string | null
+          shared_via_portal: boolean | null
+          shared_with_client: boolean | null
           signature_data: string | null
+          signatures: Json | null
           signed_at: string | null
           signed_by: string | null
           status: string | null
+          tags: string[] | null
           title: string
           updated_at: string | null
           uploaded_by: string | null
+          uploaded_date: string | null
+          uploaded_method: string | null
+          version_number: number | null
+          viewed_by: Json | null
         }
         Insert: {
           client_id: string
+          client_viewed_date?: string | null
           created_at?: string | null
           description?: string | null
+          document_category?: string | null
+          document_date?: string | null
+          document_source?: string | null
           document_type: string
           expires_at?: string | null
+          external_provider?: string | null
+          extracted_text?: string | null
+          file_name?: string | null
           file_path: string
           file_size_bytes?: number | null
+          form_responses?: Json | null
           id?: string
+          is_embedded_form?: boolean | null
+          latest_version?: boolean | null
           mime_type?: string | null
+          ocr_processed?: boolean | null
+          previous_version_id?: string | null
           requires_signature?: boolean | null
+          shared_date?: string | null
+          shared_via_portal?: boolean | null
+          shared_with_client?: boolean | null
           signature_data?: string | null
+          signatures?: Json | null
           signed_at?: string | null
           signed_by?: string | null
           status?: string | null
+          tags?: string[] | null
           title: string
           updated_at?: string | null
           uploaded_by?: string | null
+          uploaded_date?: string | null
+          uploaded_method?: string | null
+          version_number?: number | null
+          viewed_by?: Json | null
         }
         Update: {
           client_id?: string
+          client_viewed_date?: string | null
           created_at?: string | null
           description?: string | null
+          document_category?: string | null
+          document_date?: string | null
+          document_source?: string | null
           document_type?: string
           expires_at?: string | null
+          external_provider?: string | null
+          extracted_text?: string | null
+          file_name?: string | null
           file_path?: string
           file_size_bytes?: number | null
+          form_responses?: Json | null
           id?: string
+          is_embedded_form?: boolean | null
+          latest_version?: boolean | null
           mime_type?: string | null
+          ocr_processed?: boolean | null
+          previous_version_id?: string | null
           requires_signature?: boolean | null
+          shared_date?: string | null
+          shared_via_portal?: boolean | null
+          shared_with_client?: boolean | null
           signature_data?: string | null
+          signatures?: Json | null
           signed_at?: string | null
           signed_by?: string | null
           status?: string | null
+          tags?: string[] | null
           title?: string
           updated_at?: string | null
           uploaded_by?: string | null
+          uploaded_date?: string | null
+          uploaded_method?: string | null
+          version_number?: number | null
+          viewed_by?: Json | null
         }
         Relationships: [
           {
@@ -1179,6 +1242,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_documents_previous_version_id_fkey"
+            columns: ["previous_version_id"]
+            isOneToOne: false
+            referencedRelation: "client_documents"
             referencedColumns: ["id"]
           },
         ]
@@ -2451,6 +2521,62 @@ export type Database = {
           {
             foreignKeyName: "custom_reports_last_run_by_fkey"
             columns: ["last_run_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_templates: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          file_path: string
+          file_type: string
+          id: string
+          is_active: boolean | null
+          requires_client_signature: boolean | null
+          requires_clinician_signature: boolean | null
+          template_name: string
+          template_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_path: string
+          file_type: string
+          id?: string
+          is_active?: boolean | null
+          requires_client_signature?: boolean | null
+          requires_clinician_signature?: boolean | null
+          template_name: string
+          template_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          file_path?: string
+          file_type?: string
+          id?: string
+          is_active?: boolean | null
+          requires_client_signature?: boolean | null
+          requires_clinician_signature?: boolean | null
+          template_name?: string
+          template_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_templates_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -7085,6 +7211,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_document_version: {
+        Args: {
+          new_file_name: string
+          new_file_path: string
+          new_file_size: number
+          original_document_id: string
+          uploaded_by_id: string
+        }
+        Returns: string
+      }
       find_matching_slots: {
         Args: { _waitlist_id: string }
         Returns: {
@@ -7132,6 +7268,10 @@ export type Database = {
       is_session_participant: {
         Args: { _session_id: string; _user_id: string }
         Returns: boolean
+      }
+      track_document_view: {
+        Args: { document_id: string; viewer_id: string }
+        Returns: undefined
       }
       validate_telehealth_licensure: {
         Args: { _client_id: string; _clinician_id: string }
