@@ -208,17 +208,17 @@ export function AppSidebar() {
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <SidebarMenuSub className="ml-2 border-l-2 border-primary/20 pl-2 space-y-1">
+                          <SidebarMenuSub className="ml-1 border-l-2 border-primary/20 pl-1 space-y-1">
                             {category.items.map((item) => (
                               <SidebarMenuSubItem key={item.title}>
                                 <SidebarMenuSubButton asChild>
                                   <NavLink to={item.url}>
                                     {({ isActive }) => (
-                                      <div className={`flex items-center gap-2 w-full px-3 py-2 rounded-md transition-all duration-200 ${getNavCls(isActive, item.color)}`}>
-                                        <div className={`p-1 rounded flex-shrink-0 ${isActive ? 'bg-white/20' : 'bg-gradient-to-br ' + item.color.replace('from-', 'from-') + '/20'}`}>
-                                          <item.icon className={`h-3.5 w-3.5 ${isActive ? 'text-white' : 'text-foreground'}`} />
+                                      <div className={`flex items-center gap-1.5 w-full px-2 py-1.5 rounded-md transition-all duration-200 ${getNavCls(isActive, item.color)}`}>
+                                        <div className={`p-0.5 rounded flex-shrink-0 ${isActive ? 'bg-white/20' : 'bg-gradient-to-br ' + item.color.replace('from-', 'from-') + '/20'}`}>
+                                          <item.icon className={`h-3 w-3 ${isActive ? 'text-white' : 'text-foreground'}`} />
                                         </div>
-                                        {!collapsed && <span className={`${isActive ? "text-white font-semibold" : "text-foreground font-medium"} text-sm leading-tight break-words`}>{item.title}</span>}
+                                        {!collapsed && <span className={`${isActive ? "text-white font-semibold" : "text-foreground font-medium"} text-xs leading-tight`}>{item.title}</span>}
                                       </div>
                                     )}
                                   </NavLink>
