@@ -51,44 +51,77 @@ const handler = async (req: Request): Promise<Response> => {
       }
     });
 
-    // Generate temporary password
-    const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!1A`;
+    // Check if user already exists
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = existingUsers?.users.find(u => u.email === email);
 
-    // Create auth user
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: tempPassword,
-      email_confirm: false,
-      user_metadata: {
-        client_id: clientId,
-        is_portal_user: true,
-      },
-    });
+    let userId: string;
+    let isNewUser = false;
 
-    if (authError) {
-      console.error('Auth error:', authError);
-      throw authError;
+    if (existingUser) {
+      console.log('User already exists:', existingUser.id);
+      userId = existingUser.id;
+      
+      // Update metadata to mark as portal user
+      await supabaseAdmin.auth.admin.updateUserById(userId, {
+        user_metadata: {
+          ...existingUser.user_metadata,
+          client_id: clientId,
+          is_portal_user: true,
+        },
+      });
+    } else {
+      // Generate temporary password
+      const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!1A`;
+
+      // Create auth user
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: tempPassword,
+        email_confirm: false,
+        user_metadata: {
+          client_id: clientId,
+          is_portal_user: true,
+        },
+      });
+
+      if (authError) {
+        console.error('Auth error:', authError);
+        throw authError;
+      }
+
+      console.log('User created:', authData.user.id);
+      userId = authData.user.id;
+      isNewUser = true;
     }
 
-    console.log('User created:', authData.user.id);
-
-    // Assign client_user role
-    const { error: roleError } = await supabaseAdmin
+    // Assign client_user role (check if it exists first)
+    const { data: existingRole } = await supabaseAdmin
       .from('user_roles')
-      .insert({ user_id: authData.user.id, role: 'client_user' });
+      .select('*')
+      .eq('user_id', userId)
+      .eq('role', 'client_user')
+      .single();
 
-    if (roleError) {
-      console.error('Role assignment error:', roleError);
-      throw roleError;
+    if (!existingRole) {
+      const { error: roleError } = await supabaseAdmin
+        .from('user_roles')
+        .insert({ user_id: userId, role: 'client_user' });
+
+      if (roleError) {
+        console.error('Role assignment error:', roleError);
+        throw roleError;
+      }
+      console.log('Role assigned successfully');
+    } else {
+      console.log('Role already exists for user');
     }
-
-    console.log('Role assigned successfully');
 
     // Update client with portal_user_id
     const { error: updateError } = await supabaseAdmin
       .from('clients')
       .update({ 
-        portal_user_id: authData.user.id, 
+        portal_user_id: userId, 
         portal_enabled: true,
         email: email
       })
@@ -106,8 +139,11 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        userId: authData.user.id,
-        message: 'Portal user created successfully. Credentials sent via email.'
+        userId: userId,
+        isNewUser: isNewUser,
+        message: isNewUser 
+          ? 'Portal user created successfully. Credentials sent via email.'
+          : 'Portal access enabled for existing user.'
       }), 
       {
         status: 200,
