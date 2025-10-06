@@ -128,7 +128,7 @@ export const usePortalMessages = (clientId?: string) => {
           sender_id: user?.id,
           subject: messageData.subject,
           message: messageData.message,
-          priority: messageData.priority || 'Normal',
+          priority: (messageData.priority || 'Normal').toLowerCase(),
           requires_response: messageData.requiresResponse || false,
           thread_id: messageData.threadId,
           status: 'Sent',

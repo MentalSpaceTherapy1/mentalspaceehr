@@ -10,6 +10,7 @@ import { format, isPast, isWithinInterval, addMinutes, subMinutes } from 'date-f
 import { AppointmentDetailsDialog } from '@/components/portal/AppointmentDetailsDialog';
 import { RequestAppointmentChangeDialog } from '@/components/portal/RequestAppointmentChangeDialog';
 import { CancelAppointmentDialog } from '@/components/portal/CancelAppointmentDialog';
+import { RequestAppointmentDialog } from '@/components/portal/RequestAppointmentDialog';
 import { useNavigate } from 'react-router-dom';
 
 export default function PortalAppointments() {
@@ -20,6 +21,7 @@ export default function PortalAppointments() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [requestChangeOpen, setRequestChangeOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [requestNewOpen, setRequestNewOpen] = useState(false);
 
   const clientAppointments = appointments.filter(
     apt => apt.client_id === portalContext?.client.id
@@ -105,7 +107,13 @@ export default function PortalAppointments() {
   return (
     <PortalLayout>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Appointments</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Appointments</h1>
+          <Button onClick={() => setRequestNewOpen(true)}>
+            <Calendar className="mr-2 h-4 w-4" />
+            Request Appointment
+          </Button>
+        </div>
 
         {/* Upcoming Appointments */}
         <div className="space-y-4">
@@ -235,6 +243,11 @@ export default function PortalAppointments() {
         open={cancelOpen}
         onOpenChange={setCancelOpen}
         appointment={selectedAppointment}
+      />
+
+      <RequestAppointmentDialog
+        open={requestNewOpen}
+        onOpenChange={setRequestNewOpen}
       />
     </PortalLayout>
   );

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { usePortalMessages } from '@/hooks/usePortalMessages';
 import { MessageAttachmentUpload } from './MessageAttachmentUpload';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ComposeMessageDialogProps {
   open: boolean;
@@ -28,7 +29,10 @@ export const ComposeMessageDialog = ({ open, onOpenChange, replyTo }: ComposeMes
   const { portalContext } = usePortalAccount();
   const { sendMessage } = usePortalMessages();
   const [sending, setSending] = useState(false);
+  const [clinicians, setClinicians] = useState<any[]>([]);
+  const [loadingClinicians, setLoadingClinicians] = useState(true);
   const [formData, setFormData] = useState({
+    clinicianId: replyTo?.recipientId || '',
     subject: replyTo ? `Re: ${replyTo.subject}` : '',
     message: replyTo ? `\n\n---\nOriginal message:\n${replyTo.originalMessage}` : '',
     priority: 'Normal' as 'Normal' | 'Urgent',
@@ -36,11 +40,65 @@ export const ComposeMessageDialog = ({ open, onOpenChange, replyTo }: ComposeMes
   });
   const [attachments, setAttachments] = useState<File[]>([]);
 
+  useEffect(() => {
+    if (open) {
+      loadClinicians();
+      // Set clinician ID from replyTo if provided
+      if (replyTo?.recipientId) {
+        setFormData(prev => ({
+          ...prev,
+          clinicianId: replyTo.recipientId
+        }));
+      }
+    }
+  }, [open, replyTo]);
+
+  const loadClinicians = async () => {
+    try {
+      setLoadingClinicians(true);
+      
+      // First get user IDs with clinician roles
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .in('role', ['therapist', 'supervisor', 'administrator']);
+
+      if (roleError) throw roleError;
+
+      const userIds = roleData?.map(r => r.user_id) || [];
+
+      if (userIds.length === 0) {
+        setClinicians([]);
+        return;
+      }
+
+      // Then get profiles for those users
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .in('id', userIds)
+        .order('last_name');
+
+      if (error) throw error;
+      setClinicians(data || []);
+    } catch (error) {
+      console.error('Error loading clinicians:', error);
+      toast.error('Failed to load clinicians');
+    } finally {
+      setLoadingClinicians(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!portalContext?.client.id || !portalContext.client.primaryTherapist?.id) {
-      toast.error('Unable to send message');
+    if (!portalContext?.client.id) {
+      toast.error('Unable to send message - client not found');
+      return;
+    }
+
+    if (!formData.clinicianId) {
+      toast.error('Please select a clinician');
       return;
     }
 
@@ -64,7 +122,7 @@ export const ComposeMessageDialog = ({ open, onOpenChange, replyTo }: ComposeMes
 
       await sendMessage({
         clientId: portalContext.client.id,
-        clinicianId: portalContext.client.primaryTherapist.id,
+        clinicianId: formData.clinicianId,
         subject: formData.subject,
         message: formData.message,
         priority: formData.priority,
@@ -77,6 +135,7 @@ export const ComposeMessageDialog = ({ open, onOpenChange, replyTo }: ComposeMes
       
       // Reset form
       setFormData({
+        clinicianId: '',
         subject: '',
         message: '',
         priority: 'Normal',
@@ -107,14 +166,23 @@ export const ComposeMessageDialog = ({ open, onOpenChange, replyTo }: ComposeMes
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="recipient">To</Label>
-            <Input
-              id="recipient"
-              value={portalContext?.client.primaryTherapist 
-                ? `${portalContext.client.primaryTherapist.firstName} ${portalContext.client.primaryTherapist.lastName}`
-                : 'Your clinician'}
-              disabled
-            />
+            <Label htmlFor="recipient">To *</Label>
+            <Select
+              value={formData.clinicianId}
+              onValueChange={(value) => setFormData({ ...formData, clinicianId: value })}
+              disabled={sending || loadingClinicians || !!replyTo}
+            >
+              <SelectTrigger id="recipient">
+                <SelectValue placeholder="Select a clinician" />
+              </SelectTrigger>
+              <SelectContent>
+                {clinicians.map((clinician) => (
+                  <SelectItem key={clinician.id} value={clinician.id}>
+                    {clinician.first_name} {clinician.last_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
