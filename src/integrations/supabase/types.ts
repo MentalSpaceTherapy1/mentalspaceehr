@@ -2355,6 +2355,108 @@ export type Database = {
           },
         ]
       }
+      custom_reports: {
+        Row: {
+          aggregations: Json | null
+          chart_type: string | null
+          columns: Json
+          created_by: string
+          created_date: string
+          custom_date_range: Json | null
+          data_source: string
+          date_range_type: string
+          filters: Json
+          group_by: Json | null
+          id: string
+          include_chart: boolean
+          is_scheduled: boolean
+          is_shared: boolean
+          last_run_by: string | null
+          last_run_date: string | null
+          report_category: string
+          report_name: string
+          schedule_day_of_week: string | null
+          schedule_frequency: string | null
+          schedule_time: string | null
+          send_to: Json | null
+          shared_with: Json | null
+          sort_by: string | null
+          sort_direction: string | null
+          updated_at: string
+        }
+        Insert: {
+          aggregations?: Json | null
+          chart_type?: string | null
+          columns?: Json
+          created_by: string
+          created_date?: string
+          custom_date_range?: Json | null
+          data_source: string
+          date_range_type?: string
+          filters?: Json
+          group_by?: Json | null
+          id?: string
+          include_chart?: boolean
+          is_scheduled?: boolean
+          is_shared?: boolean
+          last_run_by?: string | null
+          last_run_date?: string | null
+          report_category: string
+          report_name: string
+          schedule_day_of_week?: string | null
+          schedule_frequency?: string | null
+          schedule_time?: string | null
+          send_to?: Json | null
+          shared_with?: Json | null
+          sort_by?: string | null
+          sort_direction?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aggregations?: Json | null
+          chart_type?: string | null
+          columns?: Json
+          created_by?: string
+          created_date?: string
+          custom_date_range?: Json | null
+          data_source?: string
+          date_range_type?: string
+          filters?: Json
+          group_by?: Json | null
+          id?: string
+          include_chart?: boolean
+          is_scheduled?: boolean
+          is_shared?: boolean
+          last_run_by?: string | null
+          last_run_date?: string | null
+          report_category?: string
+          report_name?: string
+          schedule_day_of_week?: string | null
+          schedule_frequency?: string | null
+          schedule_time?: string | null
+          send_to?: Json | null
+          shared_with?: Json | null
+          sort_by?: string | null
+          sort_direction?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_reports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_reports_last_run_by_fkey"
+            columns: ["last_run_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       educational_resources: {
         Row: {
           content: string | null
@@ -5262,6 +5364,66 @@ export type Database = {
             columns: ["practice_id"]
             isOneToOne: false
             referencedRelation: "practice_settings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_runs: {
+        Row: {
+          date_range_end: string | null
+          date_range_start: string | null
+          error_message: string | null
+          execution_time_ms: number | null
+          filters_applied: Json | null
+          id: string
+          report_id: string
+          results_cache: Json | null
+          row_count: number | null
+          run_by: string
+          run_date: string
+          status: string
+        }
+        Insert: {
+          date_range_end?: string | null
+          date_range_start?: string | null
+          error_message?: string | null
+          execution_time_ms?: number | null
+          filters_applied?: Json | null
+          id?: string
+          report_id: string
+          results_cache?: Json | null
+          row_count?: number | null
+          run_by: string
+          run_date?: string
+          status?: string
+        }
+        Update: {
+          date_range_end?: string | null
+          date_range_start?: string | null
+          error_message?: string | null
+          execution_time_ms?: number | null
+          filters_applied?: Json | null
+          id?: string
+          report_id?: string
+          results_cache?: Json | null
+          row_count?: number | null
+          run_by?: string
+          run_date?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_runs_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "custom_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_runs_run_by_fkey"
+            columns: ["run_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

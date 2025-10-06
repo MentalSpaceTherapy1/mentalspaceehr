@@ -24,6 +24,7 @@ import {
   Video,
   ChevronDown,
   MessageSquare,
+  BarChart3,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
@@ -87,6 +88,7 @@ export function AppSidebar() {
         { title: 'Fee Schedules', url: '/admin/fee-schedules', icon: DollarSign, color: 'from-indigo-400 to-purple-400' },
         { title: 'Eligibility Verification', url: '/admin/eligibility-verification', icon: CheckSquare, color: 'from-purple-400 to-pink-400' },
         { title: 'Payroll Management', url: '/admin/payroll', icon: DollarSign, color: 'from-pink-400 to-rose-400' },
+        { title: 'Reports & Analytics', url: '/admin/reports', icon: BarChart3, color: 'from-rose-400 to-red-400' },
       ]
     },
     {

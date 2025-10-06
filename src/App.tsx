@@ -58,6 +58,7 @@ import ClientStatements from "@/pages/admin/ClientStatements";
 import FeeSchedules from "@/pages/admin/FeeSchedules";
 import EligibilityVerification from "@/pages/admin/EligibilityVerification";
 import PayrollManagement from "@/pages/admin/PayrollManagement";
+import Reports from "@/pages/admin/Reports";
 import NotFound from "./pages/NotFound";
 import ProgressNote from "./pages/ProgressNote";
 import TreatmentPlan from "./pages/TreatmentPlan";
@@ -391,6 +392,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <PayrollManagement />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/reports" 
+              element={
+                <AdminRoute>
+                  <Reports />
                 </AdminRoute>
               } 
             />
