@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -78,19 +79,19 @@ export function PersonalInformationSection({ clientData, onUpdate }: PersonalInf
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <FormLabel>Full Name</FormLabel>
+              <Label>Full Name</Label>
               <Input value={`${clientData?.first_name} ${clientData?.middle_name || ''} ${clientData?.last_name}`} disabled />
             </div>
             <div>
-              <FormLabel>Preferred Name</FormLabel>
+              <Label>Preferred Name</Label>
               <Input value={clientData?.preferred_name || 'N/A'} disabled />
             </div>
             <div>
-              <FormLabel>Date of Birth</FormLabel>
+              <Label>Date of Birth</Label>
               <Input value={clientData?.date_of_birth || 'N/A'} disabled />
             </div>
             <div>
-              <FormLabel>Medical Record Number</FormLabel>
+              <Label>Medical Record Number</Label>
               <Input value={clientData?.medical_record_number || 'N/A'} disabled />
             </div>
           </div>
