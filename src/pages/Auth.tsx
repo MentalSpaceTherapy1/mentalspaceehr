@@ -71,7 +71,7 @@ export default function Auth() {
     try {
       signInSchema.parse(data);
       
-      // Check if user has MFA enabled
+      // Attempt to sign in
       const { data: { user: authUser }, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -81,7 +81,7 @@ export default function Auth() {
         if (error.message.includes('MFA')) {
           // Check if device is trusted - skip MFA if it is
           if (authUser && await checkTrustedDevice(authUser.id)) {
-            await signIn(data.email, data.password);
+            // Device is trusted, user is already signed in from the call above
             return;
           }
           setShowMFA(true);
@@ -107,8 +107,8 @@ export default function Auth() {
         }
       }
 
-      await signIn(data.email, data.password);
-    } catch (error) {
+      // User is now signed in - the useEffect will handle redirect
+    } catch (error: any) {
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
         error.errors.forEach((err) => {
@@ -117,6 +117,8 @@ export default function Auth() {
           }
         });
         setErrors(fieldErrors);
+      } else {
+        setErrors({ email: error.message || 'Invalid email or password' });
       }
     } finally {
       setLoading(false);
