@@ -29,6 +29,8 @@ export const usePortalAccount = () => {
     try {
       setLoading(true);
 
+      console.log('[usePortalAccount] Fetching context for user:', user.id);
+
       // Fetch client record
       const { data: client, error: clientError } = await supabase
         .from('clients')
@@ -41,11 +43,38 @@ export const usePortalAccount = () => {
           )
         `)
         .eq('portal_user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (clientError) throw clientError;
+      console.log('[usePortalAccount] Client query result:', { client, error: clientError });
+
+      if (clientError) {
+        console.error('[usePortalAccount] Client query error:', clientError);
+        throw new Error(`Database error: ${clientError.message}`);
+      }
+      
       if (!client) {
-        toast.error('Client record not found');
+        console.error('[usePortalAccount] No client found for portal_user_id:', user.id);
+        // Check if user has staff roles - they might be logged in with wrong account
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+        
+        const isStaff = roles?.some(r => 
+          ['administrator', 'supervisor', 'therapist', 'front_desk', 'billing_staff'].includes(r.role)
+        );
+        
+        if (isStaff) {
+          toast.error('You are logged in with a staff account. Please sign out and log in with your client portal credentials.');
+        } else {
+          toast.error('Your portal account is not properly configured. Please contact your therapist.');
+        }
+        return;
+      }
+
+      if (!client.portal_enabled) {
+        console.error('[usePortalAccount] Portal access not enabled for client:', client.id);
+        toast.error('Portal access is not enabled for your account. Please contact your therapist.');
         return;
       }
 
