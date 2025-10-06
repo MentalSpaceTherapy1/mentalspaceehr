@@ -87,4 +87,10 @@ verify_jwt = true
 [functions.send-staff-invitation]
 verify_jwt = true
 
+[functions.send-admin-password-reset]
+verify_jwt = true
+
+[functions.reset-user-password]
+verify_jwt = true
+
 
