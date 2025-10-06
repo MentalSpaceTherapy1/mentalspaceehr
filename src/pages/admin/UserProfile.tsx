@@ -205,28 +205,15 @@ export default function UserProfile() {
 
     setSendingPasswordReset(true);
     try {
-      // Generate password reset link using Supabase Auth
-      const { data, error } = await supabase.auth.admin.generateLink({
-        type: 'recovery',
-        email: profile.email,
-      });
-
-      if (error) throw error;
-
-      if (!data.properties?.action_link) {
-        throw new Error('Failed to generate reset link');
-      }
-
-      // Send email with the reset link
-      const { error: emailError } = await supabase.functions.invoke('send-password-reset', {
+      // Call edge function to generate and send password reset email
+      const { error } = await supabase.functions.invoke('send-admin-password-reset', {
         body: {
           email: profile.email,
-          resetUrl: data.properties.action_link,
           firstName: profile.first_name,
         },
       });
 
-      if (emailError) throw emailError;
+      if (error) throw error;
 
       toast.success('Password reset email sent successfully!');
     } catch (error) {
@@ -240,7 +227,7 @@ export default function UserProfile() {
   const handleManualPasswordReset = async () => {
     if (!id || !profile || !newPassword) return;
 
-    // Validate password complexity
+    // Validate password complexity client-side
     if (newPassword.length < 12) {
       toast.error('Password must be at least 12 characters long');
       return;
@@ -264,9 +251,12 @@ export default function UserProfile() {
 
     setResettingPassword(true);
     try {
-      // Update user password using admin API
-      const { error } = await supabase.auth.admin.updateUserById(id, {
-        password: newPassword,
+      // Call edge function to reset password
+      const { error } = await supabase.functions.invoke('reset-user-password', {
+        body: {
+          userId: id,
+          newPassword: newPassword,
+        },
       });
 
       if (error) throw error;
