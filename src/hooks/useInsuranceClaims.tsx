@@ -75,7 +75,7 @@ export function useInsuranceClaims() {
   });
 
   const createClaim = useMutation({
-    mutationFn: async (claim: Partial<InsuranceClaim>) => {
+    mutationFn: async (claim: any) => {
       const { data, error } = await supabase
         .from('insurance_claims')
         .insert([claim])

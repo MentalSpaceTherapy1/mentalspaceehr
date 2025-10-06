@@ -5,13 +5,16 @@ import { toast } from 'sonner';
 export function useBilling() {
   const queryClient = useQueryClient();
 
-  // Fetch charge entries
+  // Fetch charge entries with client info
   const { data: charges = [], isLoading: chargesLoading } = useQuery({
     queryKey: ['billing-charges'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('charge_entries')
-        .select('*')
+        .select(`
+          *,
+          client:clients(id, first_name, last_name, medical_record_number)
+        `)
         .order('service_date', { ascending: false });
 
       if (error) throw error;

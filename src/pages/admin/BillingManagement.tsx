@@ -103,27 +103,27 @@ export default function BillingManagement() {
                       {charges.map((charge) => (
                         <TableRow key={charge.id}>
                           <TableCell>
-                            {format(new Date(charge.serviceDate), 'MMM d, yyyy')}
+                            {format(new Date(charge.service_date), 'MMM d, yyyy')}
                           </TableCell>
                           <TableCell>
                             {charge.client?.first_name} {charge.client?.last_name}
                           </TableCell>
                           <TableCell>
                             <code className="text-sm text-green-700 dark:text-green-400">
-                              {charge.cptCode}
+                              {charge.cpt_code}
                             </code>
                           </TableCell>
                           <TableCell className="text-right font-medium">
-                            {formatCurrency(charge.chargeAmount)}
+                            {formatCurrency(charge.charge_amount)}
                           </TableCell>
                           <TableCell>
-                            <Badge variant={getStatusColor(charge.chargeStatus)}>
-                              {charge.chargeStatus}
+                            <Badge variant={getStatusColor(charge.charge_status)}>
+                              {charge.charge_status}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
                             {formatCurrency(
-                              charge.chargeAmount - charge.paymentAmount - charge.adjustmentAmount
+                              charge.charge_amount - charge.payment_amount - charge.adjustment_amount
                             )}
                           </TableCell>
                         </TableRow>
@@ -169,26 +169,25 @@ export default function BillingManagement() {
                       {claims.map((claim) => (
                         <TableRow key={claim.id}>
                           <TableCell className="font-mono text-sm">
-                            {claim.claimNumber}
+                            {claim.claim_id}
                           </TableCell>
                           <TableCell>
-                            {claim.client?.first_name} {claim.client?.last_name}
+                            N/A
                           </TableCell>
                           <TableCell className="text-sm">
-                            {format(new Date(claim.serviceDateFrom), 'MMM d')} -{' '}
-                            {format(new Date(claim.serviceDateTo), 'MMM d, yyyy')}
+                            {format(new Date(claim.claim_created_date), 'MMM d, yyyy')}
                           </TableCell>
                           <TableCell className="text-right font-medium">
-                            {formatCurrency(claim.totalChargeAmount)}
+                            {formatCurrency(claim.total_charge_amount)}
                           </TableCell>
                           <TableCell>
-                            <Badge variant={getStatusColor(claim.claimStatus)}>
-                              {claim.claimStatus}
+                            <Badge variant={getStatusColor(claim.claim_status)}>
+                              {claim.claim_status}
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {claim.submittedDate
-                              ? format(new Date(claim.submittedDate), 'MMM d, yyyy')
+                            {claim.claim_submitted_date
+                              ? format(new Date(claim.claim_submitted_date), 'MMM d, yyyy')
                               : '—'}
                           </TableCell>
                         </TableRow>

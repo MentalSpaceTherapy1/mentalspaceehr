@@ -2882,7 +2882,22 @@ export type Database = {
           submission_method?: string | null
           total_charge_amount?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "insurance_claims_billing_provider_id_fkey"
+            columns: ["billing_provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_claims_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       insurance_companies: {
         Row: {
