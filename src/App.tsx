@@ -427,7 +427,9 @@ const App = () => (
               path="/portal/appointments"
               element={
                 <ClientPortalRoute>
-                  <PortalAppointments />
+                  <PortalLayout>
+                    <PortalAppointments />
+                  </PortalLayout>
                 </ClientPortalRoute>
               }
             />
@@ -435,7 +437,9 @@ const App = () => (
               path="/portal/documents"
               element={
                 <ClientPortalRoute>
-                  <PortalDocuments />
+                  <PortalLayout>
+                    <PortalDocuments />
+                  </PortalLayout>
                 </ClientPortalRoute>
               }
             />
@@ -443,7 +447,9 @@ const App = () => (
               path="/portal/billing"
               element={
                 <ClientPortalRoute>
-                  <PortalBilling />
+                  <PortalLayout>
+                    <PortalBilling />
+                  </PortalLayout>
                 </ClientPortalRoute>
               }
             />
@@ -451,7 +457,9 @@ const App = () => (
               path="/portal/progress"
               element={
                 <ClientPortalRoute>
-                  <PortalProgress />
+                  <PortalLayout>
+                    <PortalProgress />
+                  </PortalLayout>
                 </ClientPortalRoute>
               }
             />
@@ -459,7 +467,9 @@ const App = () => (
               path="/portal/messages"
               element={
                 <ClientPortalRoute>
-                  <PortalMessages />
+                  <PortalLayout>
+                    <PortalMessages />
+                  </PortalLayout>
                 </ClientPortalRoute>
               }
             />
@@ -467,7 +477,9 @@ const App = () => (
               path="/portal/profile"
               element={
                 <ClientPortalRoute>
-                  <PortalProfile />
+                  <PortalLayout>
+                    <PortalProfile />
+                  </PortalLayout>
                 </ClientPortalRoute>
               }
             />
@@ -475,7 +487,9 @@ const App = () => (
               path="/portal/resources"
               element={
                 <ClientPortalRoute>
-                  <PortalResources />
+                  <PortalLayout>
+                    <PortalResources />
+                  </PortalLayout>
                 </ClientPortalRoute>
               }
             />
@@ -483,7 +497,9 @@ const App = () => (
               path="/portal/notifications"
               element={
                 <ClientPortalRoute>
-                  <PortalNotifications />
+                  <PortalLayout>
+                    <PortalNotifications />
+                  </PortalLayout>
                 </ClientPortalRoute>
               }
             />
