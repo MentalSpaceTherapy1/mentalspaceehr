@@ -9,7 +9,6 @@ const corsHeaders = {
 interface PasswordResetEmailRequest {
   email: string;
   firstName?: string;
-  redirectUrl?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -18,7 +17,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, firstName, redirectUrl }: PasswordResetEmailRequest = await req.json();
+    const { email, firstName }: PasswordResetEmailRequest = await req.json();
 
     console.log('Generating password reset link for:', email);
 
@@ -82,11 +81,8 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     // Prepare redirect URL to take user straight to the Reset Password page
-    let finalRedirect = redirectUrl || '';
     const site = Deno.env.get("SITE_URL") ?? '';
-    if (!finalRedirect) {
-      finalRedirect = site ? `${site.replace(/\/$/, '')}/reset-password` : '';
-    }
+    const finalRedirect = site ? `${site.replace(/\/$/, '')}/reset-password` : '';
 
     // Generate password reset link using admin API
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({

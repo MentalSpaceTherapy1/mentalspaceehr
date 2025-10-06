@@ -210,7 +210,6 @@ export default function UserProfile() {
         body: {
           email: profile.email,
           firstName: profile.first_name,
-          redirectUrl: `${window.location.origin}/reset-password`,
         },
       });
 
