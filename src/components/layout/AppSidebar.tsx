@@ -136,7 +136,12 @@ export function AppSidebar() {
   const getNavCls = (isActive: boolean, colorGradient: string) =>
     isActive 
       ? `bg-gradient-to-r ${colorGradient} text-white hover:opacity-90 shadow-md border-l-4 border-l-white/50` 
-      : 'hover:bg-sidebar-accent transition-all duration-200 hover:border-l-4 hover:border-l-sidebar-primary/30';
+      : 'hover:bg-gradient-to-r hover:from-sidebar-accent/50 hover:to-sidebar-accent/30 transition-all duration-200 hover:border-l-4 hover:border-l-primary/40 text-sidebar-foreground';
+
+  const getCategoryHeaderCls = (isExpanded: boolean) =>
+    isExpanded
+      ? 'bg-gradient-to-r from-primary/20 to-accent/20 text-foreground font-semibold border-l-4 border-l-primary shadow-sm'
+      : 'hover:bg-gradient-to-r hover:from-primary/10 hover:to-accent/10 text-sidebar-foreground font-medium';
 
   return (
     <Sidebar collapsible="icon" className="border-r shadow-lg">
@@ -178,7 +183,7 @@ export function AppSidebar() {
           <>
             <Separator className="my-2" />
             <SidebarGroup>
-              <SidebarGroupLabel className="text-foreground font-semibold text-sm">
+              <SidebarGroupLabel className="text-foreground font-semibold text-sm bg-gradient-to-r from-primary/10 to-accent/10 px-3 py-2 rounded-md">
                 <Shield className="h-4 w-4 mr-2 inline text-primary" />
                 {!collapsed && 'Administration'}
               </SidebarGroupLabel>
@@ -188,22 +193,32 @@ export function AppSidebar() {
                     <Collapsible key={category.title} defaultOpen className="group/collapsible">
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
-                          <SidebarMenuButton className="hover:bg-sidebar-accent">
-                            <category.icon className="h-4 w-4 shrink-0" />
-                            {!collapsed && <span className="font-medium">{category.title}</span>}
-                            {!collapsed && <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />}
+                          <SidebarMenuButton className={`${getCategoryHeaderCls(false)} transition-all duration-200 my-1`}>
+                            <div className="flex items-center gap-2 w-full">
+                              <div className="p-1 rounded-md bg-gradient-to-br from-primary/20 to-accent/20">
+                                <category.icon className="h-4 w-4 shrink-0 text-primary" />
+                              </div>
+                              {!collapsed && (
+                                <>
+                                  <span className="font-semibold text-sm">{category.title}</span>
+                                  <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180 text-primary" />
+                                </>
+                              )}
+                            </div>
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <SidebarMenuSub>
+                          <SidebarMenuSub className="ml-2 border-l-2 border-primary/20 pl-2 space-y-1">
                             {category.items.map((item) => (
                               <SidebarMenuSubItem key={item.title}>
                                 <SidebarMenuSubButton asChild>
                                   <NavLink to={item.url}>
                                     {({ isActive }) => (
-                                      <div className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-md ${getNavCls(isActive, item.color)}`}>
-                                        <item.icon className="h-3.5 w-3.5 shrink-0" />
-                                        {!collapsed && <span className={isActive ? "text-white text-sm" : "text-sidebar-foreground text-sm"}>{item.title}</span>}
+                                      <div className={`flex items-center gap-2 w-full px-3 py-2 rounded-md transition-all duration-200 ${getNavCls(isActive, item.color)}`}>
+                                        <div className={`p-1 rounded ${isActive ? 'bg-white/20' : 'bg-gradient-to-br ' + item.color.replace('from-', 'from-') + '/20'}`}>
+                                          <item.icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-white' : ''}`} />
+                                        </div>
+                                        {!collapsed && <span className={`${isActive ? "text-white font-semibold" : "text-sidebar-foreground font-medium"} text-sm`}>{item.title}</span>}
                                       </div>
                                     )}
                                   </NavLink>
