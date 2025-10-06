@@ -5,6 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const siteUrl = Deno.env.get('SITE_URL') || 'https://98017cf1-a287-4c75-90bf-f5c01f7922ab.lovableproject.com';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Sending portal invitation to:', email);
 
-    const portalUrl = `${supabaseUrl.replace('supabase.co', 'lovable.app')}/portal/login`;
+    const portalUrl = `${siteUrl}/portal/login`;
 
     const emailHtml = `
       <!DOCTYPE html>
