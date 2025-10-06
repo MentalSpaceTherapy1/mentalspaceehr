@@ -69,7 +69,7 @@ export function AppSidebar() {
     { title: 'Waitlist', url: '/waitlist', icon: ListOrdered, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-purple-400 to-pink-400' },
     { title: 'Clinical Notes', url: '/notes', icon: FileText, roles: ['therapist', 'associate_trainee', 'supervisor'], color: 'from-warning to-accent' },
     { title: 'Tasks', url: '/tasks', icon: CheckSquare, roles: ['all'], color: 'from-blue-400 to-purple-400' },
-    { title: 'Billing', url: '/billing', icon: DollarSign, roles: ['billing_staff', 'administrator'], color: 'from-success to-accent' },
+    
     { title: 'Front Desk', url: '/front-desk', icon: ClipboardList, roles: ['front_desk'], color: 'from-primary to-secondary' },
   ];
 
@@ -81,6 +81,14 @@ export function AppSidebar() {
         { title: 'User Management', url: '/admin/users', icon: UserCog, color: 'from-secondary to-accent' },
         { title: 'Practice Settings', url: '/admin/practice-settings', icon: Building2, color: 'from-primary to-success' },
         { title: 'BAA Management', url: '/admin/baa-management', icon: Shield, color: 'from-green-400 to-emerald-400' },
+      ]
+    },
+    {
+      title: 'Billing',
+      icon: DollarSign,
+      items: [
+        { title: 'Billing Dashboard', url: '/billing', icon: DollarSign, color: 'from-success to-primary' },
+        { title: 'Insurance Claims', url: '/admin/insurance-claims', icon: FileText, color: 'from-cyan-400 to-blue-400' },
       ]
     },
     {

@@ -68,6 +68,8 @@ import TelehealthConsentManagement from "./pages/admin/TelehealthConsentManageme
 import TelehealthSettings from "./pages/admin/TelehealthSettings";
 import CreateTestPortalUser from "./pages/admin/CreateTestPortalUser";
 import PortalManagement from "./pages/admin/PortalManagement";
+import InsuranceClaims from "./pages/admin/InsuranceClaims";
+import BillingManagement from "./pages/admin/BillingManagement";
 
 const queryClient = new QueryClient();
 
@@ -337,6 +339,22 @@ const App = () => (
               element={
                 <AdminRoute>
                   <CreateTestPortalUser />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/billing" 
+              element={
+                <AdminRoute>
+                  <BillingManagement />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/insurance-claims" 
+              element={
+                <AdminRoute>
+                  <InsuranceClaims />
                 </AdminRoute>
               } 
             />
