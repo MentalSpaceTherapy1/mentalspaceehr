@@ -63,31 +63,44 @@ export const PaymentPostingDialog = ({ open, onOpenChange }: PaymentPostingDialo
     enabled: paymentSource === 'Client',
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!payerId || !paymentAmount || allocations.length === 0) {
       return;
     }
 
-    postPayment({
-      paymentSource,
-      payerId,
-      checkNumber,
-      paymentDate,
-      paymentAmount: parseFloat(paymentAmount),
-      paymentMethod,
-      paymentNotes,
-      lineItems: allocations,
-    }, {
-      onSuccess: () => {
-        // Reset form
-        setPayerId("");
-        setCheckNumber("");
-        setPaymentAmount("");
-        setPaymentNotes("");
-        setAllocations([]);
-        onOpenChange(false);
-      }
-    });
+    try {
+      await createPayment.mutateAsync({
+        client_id: paymentSource === 'Client' ? payerId : undefined,
+        payment_source: paymentSource,
+        payment_method: paymentMethod as any,
+        check_number: checkNumber || undefined,
+        payment_date: paymentDate,
+        payment_amount: parseFloat(paymentAmount),
+        notes: paymentNotes || undefined,
+        applied_payments: allocations.map(a => ({
+          chargeId: a.chargeEntryId,
+          amountApplied: a.paymentAmount,
+          serviceDate: '',
+          cptCode: '',
+        })),
+        adjustments: allocations.map(a => ({
+          adjustmentAmount: a.adjustmentAmount,
+          adjustmentReason: 'Payment allocation',
+        })),
+        unapplied_amount: parseFloat(paymentAmount) - allocations.reduce((sum, a) => sum + a.paymentAmount, 0),
+        payment_status: 'Posted',
+      });
+
+      // Reset form
+      setPayerId("");
+      setCheckNumber("");
+      setPaymentAmount("");
+      setPaymentNotes("");
+      setAllocations([]);
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Failed to post payment:', error);
+    }
   };
 
   const totalAllocated = allocations.reduce((sum, item) => sum + item.paymentAmount, 0);
