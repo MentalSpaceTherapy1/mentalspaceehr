@@ -215,10 +215,10 @@ export function AppSidebar() {
                                   <NavLink to={item.url}>
                                     {({ isActive }) => (
                                       <div className={`flex items-center gap-2 w-full px-3 py-2 rounded-md transition-all duration-200 ${getNavCls(isActive, item.color)}`}>
-                                <div className={`p-1 rounded ${isActive ? 'bg-white/20' : 'bg-gradient-to-br ' + item.color.replace('from-', 'from-') + '/20'}`}>
-                                          <item.icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-white' : 'text-foreground'}`} />
+                                        <div className={`p-1 rounded flex-shrink-0 ${isActive ? 'bg-white/20' : 'bg-gradient-to-br ' + item.color.replace('from-', 'from-') + '/20'}`}>
+                                          <item.icon className={`h-3.5 w-3.5 ${isActive ? 'text-white' : 'text-foreground'}`} />
                                         </div>
-                                        {!collapsed && <span className={`${isActive ? "text-white font-semibold" : "text-foreground font-medium"} text-sm`}>{item.title}</span>}
+                                        {!collapsed && <span className={`${isActive ? "text-white font-semibold" : "text-foreground font-medium"} text-sm leading-tight break-words`}>{item.title}</span>}
                                       </div>
                                     )}
                                   </NavLink>
