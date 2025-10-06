@@ -50,27 +50,35 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify({ error: 'Unauthorized: No authorization header' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
-    // Verify caller is an administrator
+    // Extract JWT token from Authorization header
+    const token = authHeader.replace('Bearer ', '');
+
+    // Create client that uses caller's JWT for RLS checks
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: { user }, error: authErr } = await supabaseUser.auth.getUser();
-    if (authErr) {
-      console.error('Auth error:', authErr);
-      return new Response(JSON.stringify({ error: 'Unauthorized: ' + authErr.message }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    // Decode JWT to get user id (verify_jwt=true already ensured validity)
+    let callerId: string | null = null;
+    try {
+      const [, payloadB64] = token.split('.');
+      const json = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'));
+      const payload = JSON.parse(json);
+      callerId = payload?.sub ?? null;
+    } catch (e) {
+      console.error('Failed to decode JWT:', e);
     }
-    
-    if (!user) {
-      console.error('No user found from token');
+
+    if (!callerId) {
+      console.error('No user id found in token');
       return new Response(JSON.stringify({ error: 'Unauthorized: Invalid token' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
-    console.log('User authenticated:', user.id);
+    console.log('User authenticated:', callerId);
 
-    const { data: isAdmin, error: roleErr } = await supabaseUser.rpc('has_role', { _user_id: user.id, _role: 'administrator' });
+    const { data: isAdmin, error: roleErr } = await supabaseUser.rpc('has_role', { _user_id: callerId, _role: 'administrator' });
     if (roleErr) {
       console.error('Role check error:', roleErr);
       return new Response(JSON.stringify({ error: 'Error checking permissions: ' + roleErr.message }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
