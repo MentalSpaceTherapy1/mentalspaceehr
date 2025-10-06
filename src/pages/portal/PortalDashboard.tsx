@@ -50,7 +50,7 @@ export default function PortalDashboard() {
         .from('clients')
         .select('id')
         .eq('portal_user_id', user?.id)
-        .single();
+        .maybeSingle();
 
       if (!client) {
         toast.error('Client record not found');

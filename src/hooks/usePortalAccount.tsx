@@ -38,15 +38,15 @@ export const usePortalAccount = () => {
         .eq('portal_user_id', user.id)
         .maybeSingle();
 
-      console.log('[usePortalAccount] Client query result:', { client, error: clientError });
+      console.log('[usePortalAccount] Client query result:', { client, clientError });
 
       if (clientError) {
-        console.error('[usePortalAccount] Client query error:', clientError);
-        throw new Error(`Database error: ${clientError.message}`);
+        console.error('[usePortalAccount] Error fetching client:', clientError);
+        throw clientError;
       }
-      
+
       if (!client) {
-        console.error('[usePortalAccount] No client found for portal_user_id:', user.id);
+        console.error('[usePortalAccount] No client record found for portal user');
         // Check if user has staff roles - they might be logged in with wrong account
         const { data: roles } = await supabase
           .from('user_roles')
@@ -62,6 +62,7 @@ export const usePortalAccount = () => {
         } else {
           toast.error('Your portal account is not properly configured. Please contact your therapist.');
         }
+        setLoading(false);
         return;
       }
 
@@ -72,11 +73,17 @@ export const usePortalAccount = () => {
       }
 
       // Fetch preferences
-      let { data: preferences, error: prefError } = await supabase
+      const { data: preferences, error: prefError } = await supabase
         .from('portal_preferences')
         .select('*')
         .eq('client_id', client.id)
         .maybeSingle();
+
+      console.log('[usePortalAccount] Preferences query result:', { preferences, prefError });
+
+      if (prefError) {
+        console.error('[usePortalAccount] Error fetching preferences:', prefError);
+      }
 
       // If none, use in-memory defaults; do not auto-insert to avoid RLS issues
       if (!preferences) {
@@ -84,11 +91,17 @@ export const usePortalAccount = () => {
       }
 
       // Fetch security settings
-      let { data: security, error: secError } = await supabase
+      const { data: security, error: secError } = await supabase
         .from('portal_account_security')
         .select('*')
         .eq('client_id', client.id)
         .maybeSingle();
+
+      console.log('[usePortalAccount] Security query result:', { security, secError });
+
+      if (secError) {
+        console.error('[usePortalAccount] Error fetching security:', secError);
+      }
 
       // If none, use in-memory defaults; do not auto-insert to avoid RLS issues
       if (!security) {
@@ -96,7 +109,7 @@ export const usePortalAccount = () => {
       }
 
       // Fetch guardian relationships if this is a guardian account
-      const { data: guardianRelationships } = await supabase
+      const { data: guardianRelationships, error: guardianError } = await supabase
         .from('guardian_relationships')
         .select(`
           *,
@@ -110,6 +123,8 @@ export const usePortalAccount = () => {
         `)
         .eq('guardian_client_id', client.id)
         .eq('status', 'active');
+
+      console.log('[usePortalAccount] Guardian relationships query result:', { guardianRelationships, guardianError });
 
       // Build portal context
       const context: ClientPortalContext = {
@@ -160,11 +175,19 @@ export const usePortalAccount = () => {
 
       setPortalContext(context);
 
-      // Update last login
-      await supabase
-        .from('clients')
-        .update({ portal_last_login: new Date().toISOString() })
-        .eq('id', client.id);
+      // Update last login timestamp (suppress RLS errors if client can't update own row)
+      try {
+        const { error: updateError } = await supabase
+          .from('clients')
+          .update({ portal_last_login: new Date().toISOString() })
+          .eq('id', client.id);
+
+        if (updateError) {
+          console.warn('[usePortalAccount] Could not update last login (likely RLS):', updateError);
+        }
+      } catch (err) {
+        console.warn('[usePortalAccount] Exception updating last login:', err);
+      }
 
     } catch (error) {
       console.error('Error fetching portal context:', error);

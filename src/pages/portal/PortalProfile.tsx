@@ -8,21 +8,25 @@ import { SecuritySettingsSection } from '@/components/portal/profile/SecuritySet
 import { usePortalAccount } from '@/hooks/usePortalAccount';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function PortalProfile() {
   const { portalContext, loading, updatePreferences, updateSecurity, refreshContext } = usePortalAccount();
   const [insuranceData, setInsuranceData] = useState<any[]>([]);
-  const [loadingInsurance, setLoadingInsurance] = useState(true);
+  const [loadingInsurance, setLoadingInsurance] = useState(false);
+  const [activeTab, setActiveTab] = useState('personal');
 
   useEffect(() => {
-    if (portalContext?.client?.id) {
+    // Only load insurance data when Insurance tab is active and context is ready
+    if (activeTab === 'insurance' && portalContext?.client?.id && insuranceData.length === 0) {
       loadInsuranceData();
     }
-  }, [portalContext?.client?.id]);
+  }, [activeTab, portalContext?.client?.id]);
 
   const loadInsuranceData = async () => {
     if (!portalContext?.client?.id) return;
 
+    setLoadingInsurance(true);
     try {
       const { data, error } = await supabase
         .from('client_insurance')
@@ -30,10 +34,15 @@ export default function PortalProfile() {
         .eq('client_id', portalContext.client.id)
         .order('rank');
 
-      if (error) throw error;
+      if (error) {
+        console.error('[PortalProfile] Error loading insurance:', error);
+        toast.error('Unable to load insurance information');
+        return;
+      }
       setInsuranceData(data || []);
     } catch (error) {
-      console.error('Error loading insurance data:', error);
+      console.error('[PortalProfile] Exception loading insurance:', error);
+      toast.error('Unable to load insurance information');
     } finally {
       setLoadingInsurance(false);
     }
@@ -44,7 +53,7 @@ export default function PortalProfile() {
     loadInsuranceData();
   };
 
-  if (loading || loadingInsurance) {
+  if (loading) {
     return (
       <PortalLayout>
         <div className="flex items-center justify-center h-64">
@@ -72,7 +81,7 @@ export default function PortalProfile() {
           <p className="text-muted-foreground">Manage your personal information and account preferences</p>
         </div>
 
-        <Tabs defaultValue="personal" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="personal">Personal Info</TabsTrigger>
             <TabsTrigger value="insurance">Insurance</TabsTrigger>
@@ -88,11 +97,17 @@ export default function PortalProfile() {
           </TabsContent>
 
           <TabsContent value="insurance">
-            <InsuranceSection
-              clientData={portalContext.client}
-              insuranceData={insuranceData}
-              onUpdate={handleUpdate}
-            />
+            {loadingInsurance ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : (
+              <InsuranceSection
+                clientData={portalContext.client}
+                insuranceData={insuranceData}
+                onUpdate={handleUpdate}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="preferences">
