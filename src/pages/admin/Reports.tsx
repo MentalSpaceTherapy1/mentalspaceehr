@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCustomReports } from '@/hooks/useCustomReports';
+import { useReportGeneration } from '@/hooks/useReportGeneration';
+import { ReportResultsDialog } from '@/components/admin/reports/ReportResultsDialog';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import {
@@ -74,8 +76,11 @@ const categoryIcons = {
 export default function Reports() {
   const [activeTab, setActiveTab] = useState('overview');
   const { reports, isLoading, deleteReport } = useCustomReports();
+  const { generateReport, reportData, isLoading: isGenerating, clearReportData } = useReportGeneration();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reportToDelete, setReportToDelete] = useState<string | null>(null);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [currentReportName, setCurrentReportName] = useState('');
 
   const handleDelete = (id: string) => {
     setReportToDelete(id);
@@ -90,16 +95,21 @@ export default function Reports() {
     }
   };
 
-  const handleRunPrebuiltReport = (reportName: string) => {
-    toast.info(`Generating ${reportName}...`, {
-      description: 'This feature is coming soon. The report will include data visualization and export options.',
-    });
+  const handleRunPrebuiltReport = async (reportName: string) => {
+    setCurrentReportName(reportName);
+    setReportDialogOpen(true);
+    await generateReport(reportName);
   };
 
   const handleRunCustomReport = (reportId: string, reportName: string) => {
     toast.info(`Running ${reportName}...`, {
-      description: 'This feature is coming soon. Custom reports will be generated based on your saved criteria.',
+      description: 'Custom report builder coming soon. This will allow you to create reports with custom filters and criteria.',
     });
+  };
+
+  const handleCloseReportDialog = () => {
+    setReportDialogOpen(false);
+    clearReportData();
   };
 
   return (
@@ -392,6 +402,14 @@ export default function Reports() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <ReportResultsDialog
+        open={reportDialogOpen}
+        onOpenChange={handleCloseReportDialog}
+        reportName={currentReportName}
+        reportData={reportData}
+        isLoading={isGenerating}
+      />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
