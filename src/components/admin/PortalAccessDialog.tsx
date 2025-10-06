@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
-import { Loader2, UserCheck, UserX, Mail } from 'lucide-react';
+import { Loader2, UserCheck, UserX, Mail, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { enablePortalAccess, disablePortalAccess, sendPortalInvitation } from '@/lib/portalAccountUtils';
@@ -34,6 +34,30 @@ export const PortalAccessDialog = ({
   const [enabled, setEnabled] = useState(portalEnabled);
   const [email, setEmail] = useState(currentEmail || '');
   const [sendInvite, setSendInvite] = useState(!portalUserId);
+  const [sendingReset, setSendingReset] = useState(false);
+
+  const handleSendPasswordReset = async () => {
+    if (!email || !portalUserId) {
+      toast.error("Client must have a portal account to reset password");
+      return;
+    }
+
+    setSendingReset(true);
+    try {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/portal/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast.success(`Password reset email sent to ${email}`);
+    } catch (error: any) {
+      console.error('Error sending password reset:', error);
+      toast.error(error.message || 'Failed to send password reset email');
+    } finally {
+      setSendingReset(false);
+    }
+  };
 
   const handleSave = async () => {
     if (enabled && !email) {
@@ -176,15 +200,31 @@ export const PortalAccessDialog = ({
 
               {/* Account status */}
               {portalUserId && (
-                <div className="rounded-md bg-muted p-3">
-                  <div className="flex items-center gap-2">
-                    <UserCheck className="h-4 w-4 text-success" />
-                    <span className="text-sm font-medium">Portal Account Active</span>
+                <>
+                  <div className="rounded-md bg-muted p-3">
+                    <div className="flex items-center gap-2">
+                      <UserCheck className="h-4 w-4 text-success" />
+                      <span className="text-sm font-medium">Portal Account Active</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Client has completed portal setup
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Client has completed portal setup
-                  </p>
-                </div>
+                  
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleSendPasswordReset}
+                    disabled={sendingReset}
+                  >
+                    {sendingReset ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <KeyRound className="h-4 w-4 mr-2" />
+                    )}
+                    Send Password Reset Email
+                  </Button>
+                </>
               )}
             </>
           )}
