@@ -6,15 +6,26 @@ import { Button } from '@/components/ui/button';
 import { Shield, Users, FileText, Calendar } from 'lucide-react';
 import { useEffect } from 'react';
 import logo from '@/assets/mentalspace-logo.png';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
-    }
+    const checkAndRedirect = async () => {
+      if (user) {
+        // Check if user is a portal user (client)
+        const { data: authData } = await supabase.auth.getUser();
+        if (authData.user?.user_metadata?.is_portal_user) {
+          navigate('/portal');
+        } else {
+          navigate('/dashboard');
+        }
+      }
+    };
+    
+    checkAndRedirect();
   }, [user, navigate]);
 
   return (

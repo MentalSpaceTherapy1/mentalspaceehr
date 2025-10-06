@@ -48,9 +48,19 @@ export default function Auth() {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
-    }
+    const checkAndRedirect = async () => {
+      if (user) {
+        // Check if user is a portal user (client)
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser?.user_metadata?.is_portal_user) {
+          navigate('/portal');
+        } else {
+          navigate('/dashboard');
+        }
+      }
+    };
+    
+    checkAndRedirect();
   }, [user, navigate]);
 
   if (user) {
@@ -107,7 +117,12 @@ export default function Auth() {
         }
       }
 
-      // User is now signed in - the useEffect will handle redirect
+      // Redirect based on user type
+      if (authUser?.user_metadata?.is_portal_user) {
+        navigate('/portal');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
@@ -168,10 +183,19 @@ export default function Auth() {
 
   // Show MFA verification if needed
   if (showMFA) {
+    const handleMFAVerified = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser?.user_metadata?.is_portal_user) {
+        navigate('/portal');
+      } else {
+        navigate('/dashboard');
+      }
+    };
+    
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--gradient-hero)' }}>
         <MFAVerification
-          onVerified={() => navigate('/dashboard')}
+          onVerified={handleMFAVerified}
           onCancel={() => setShowMFA(false)}
         />
       </div>
