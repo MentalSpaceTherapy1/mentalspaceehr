@@ -43,6 +43,23 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Password must contain at least one special character');
     }
 
+    // Verify caller is an administrator
+    const supabaseUser = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: req.headers.get('Authorization') || '' } } }
+    );
+
+    const { data: authData, error: authErr } = await supabaseUser.auth.getUser();
+    if (authErr || !authData?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
+    const { data: isAdmin, error: roleErr } = await supabaseUser.rpc('has_role', { _user_id: authData.user.id, _role: 'administrator' });
+    if (roleErr || !isAdmin) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
     // Create Supabase admin client with service role key
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
