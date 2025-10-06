@@ -24,13 +24,13 @@ export default function PortalForgotPassword() {
 
       if (error) throw error;
 
-      // Call edge function to send custom branded email
-      await supabase.functions.invoke('send-password-reset', {
-        body: {
-          email,
-          resetUrl: `${window.location.origin}/portal/reset-password`,
-        },
-      });
+      // Using built-in reset email only; custom Resend email disabled to avoid invalid links
+      // await supabase.functions.invoke('send-password-reset', {
+      //   body: {
+      //     email,
+      //     resetUrl: `${window.location.origin}/portal/reset-password`,
+      //   },
+      // });
 
       setEmailSent(true);
       toast({

@@ -81,11 +81,11 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    // Prepare redirect URL for password reset confirmation page (interstitial to prevent email scanners)
+    // Prepare redirect URL to take user straight to the Reset Password page
     let finalRedirect = redirectUrl || '';
     const site = Deno.env.get("SITE_URL") ?? '';
     if (!finalRedirect) {
-      finalRedirect = site ? `${site.replace(/\/$/, '')}/confirm-password-reset` : '';
+      finalRedirect = site ? `${site.replace(/\/$/, '')}/reset-password` : '';
     }
 
     // Generate password reset link using admin API
