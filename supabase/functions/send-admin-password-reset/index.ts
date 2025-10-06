@@ -33,6 +33,9 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify({ error: 'Unauthorized: No authorization header' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
+    // Extract JWT token from Authorization header
+    const token = authHeader.replace('Bearer ', '');
+
     // Verify caller is an administrator
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -40,7 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: { user }, error: authErr } = await supabaseUser.auth.getUser();
+    const { data: { user }, error: authErr } = await supabaseUser.auth.getUser(token);
     if (authErr) {
       console.error('Auth error:', authErr);
       return new Response(JSON.stringify({ error: 'Unauthorized: ' + authErr.message }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
