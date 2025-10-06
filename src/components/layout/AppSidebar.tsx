@@ -65,7 +65,7 @@ export function AppSidebar() {
     { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard, roles: ['all'], color: 'from-primary to-accent' },
     { title: 'Schedule', url: '/schedule', icon: Calendar, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-secondary to-primary' },
     { title: 'Clients', url: '/clients', icon: Users, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-accent to-primary' },
-    { title: 'Client Messages', url: '/messages', icon: MessageSquare, roles: ['therapist', 'associate_trainee', 'supervisor'], color: 'from-blue-400 to-cyan-400', badge: unreadCount },
+    { title: 'Messages', url: '/messages', icon: MessageSquare, roles: ['therapist', 'associate_trainee', 'supervisor'], color: 'from-blue-400 to-cyan-400', badge: unreadCount },
     { title: 'Waitlist', url: '/waitlist', icon: ListOrdered, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-purple-400 to-pink-400' },
     { title: 'Clinical Notes', url: '/notes', icon: FileText, roles: ['therapist', 'associate_trainee', 'supervisor'], color: 'from-warning to-accent' },
     { title: 'Tasks', url: '/tasks', icon: CheckSquare, roles: ['all'], color: 'from-blue-400 to-purple-400' },
