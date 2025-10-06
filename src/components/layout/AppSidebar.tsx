@@ -75,6 +75,7 @@ export function AppSidebar() {
     { title: 'Front Desk', url: '/front-desk', icon: ClipboardList, roles: ['front_desk'], color: 'from-primary to-secondary' },
   ];
 
+  // Admin navigation categories
   const adminCategories = [
     {
       title: 'System & Users',
