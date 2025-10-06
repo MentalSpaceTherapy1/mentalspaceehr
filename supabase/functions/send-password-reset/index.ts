@@ -87,6 +87,17 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
+    if (emailResponse?.error) {
+      console.error("Resend error sending password reset:", emailResponse.error);
+      return new Response(
+        JSON.stringify({ success: false, error: emailResponse.error.message || "Email send failed" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     console.log("Password reset email sent successfully:", emailResponse);
 
     return new Response(JSON.stringify({ success: true, emailResponse }), {
