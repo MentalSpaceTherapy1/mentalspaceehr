@@ -40,6 +40,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { PortalAccessDialog } from '@/components/admin/PortalAccessDialog';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { DocumentManagementPanel } from '@/components/documents/DocumentManagementPanel';
+import { ClinicalNotesSection } from '@/components/clients/ClinicalNotesSection';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 
@@ -237,6 +238,13 @@ export default function ClientChart() {
         return <InsuranceBillingSection clientId={id!} />;
       case 'appointments':
         return <ClientAppointments clientId={id!} />;
+      case 'progress-notes':
+      case 'intake-assessment':
+      case 'treatment-plans':
+      case 'psychiatric-evaluations':
+      case 'testing-assessments':
+      case 'consultation-notes':
+        return <ClinicalNotesSection clientId={id!} noteType={activeSection as any} />;
       case 'telehealth-consent':
         return (
           <>
