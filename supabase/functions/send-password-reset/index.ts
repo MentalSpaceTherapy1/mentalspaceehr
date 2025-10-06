@@ -81,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "CHC Therapy Support <support@chctherapy.com>",
+      from: "MentalSpace Support <onboarding@resend.dev>",
       to: [email],
       subject: "Reset Your Password",
       html: emailHtml,

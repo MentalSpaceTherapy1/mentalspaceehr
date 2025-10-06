@@ -76,7 +76,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.send-password-reset]
-verify_jwt = true
+verify_jwt = false
 
 [functions.create-test-portal-user]
 verify_jwt = true
