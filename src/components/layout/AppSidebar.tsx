@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   GraduationCap,
   Video,
+  ChevronDown,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
@@ -36,7 +37,11 @@ import {
   SidebarHeader,
   SidebarFooter,
   useSidebar,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { isAdmin } from '@/lib/roleUtils';
 import { useAuth } from '@/hooks/useAuth';
@@ -63,22 +68,58 @@ export function AppSidebar() {
     { title: 'Front Desk', url: '/front-desk', icon: ClipboardList, roles: ['front_desk'], color: 'from-primary to-secondary' },
   ];
 
-  const adminItems = [
-    { title: 'User Management', url: '/admin/users', icon: UserCog, color: 'from-secondary to-accent' },
-    { title: 'Practice Settings', url: '/admin/practice-settings', icon: Building2, color: 'from-primary to-success' },
-    { title: 'Client Portal', url: '/admin/portal-management', icon: Users, color: 'from-violet-400 to-purple-400' },
-    { title: 'Service Codes', url: '/admin/service-codes', icon: DollarSign, color: 'from-success to-primary' },
-    { title: 'Locations', url: '/admin/locations', icon: MapPin, color: 'from-accent to-secondary' },
-    { title: 'Supervision Management', url: '/admin/supervision-management', icon: GraduationCap, color: 'from-indigo-400 to-purple-400' },
-    { title: 'Compliance Dashboard', url: '/admin/compliance-dashboard', icon: AlertTriangle, color: 'from-red-400 to-orange-400' },
-    { title: 'Compliance Rules', url: '/admin/compliance-rules', icon: FileCheck, color: 'from-orange-400 to-amber-400' },
-    { title: 'Telehealth Settings', url: '/admin/telehealth-settings', icon: Video, color: 'from-blue-400 to-teal-400' },
-    { title: 'Telehealth Consents', url: '/admin/telehealth-consents', icon: Shield, color: 'from-teal-400 to-cyan-400' },
-    { title: 'Reminder Settings', url: '/admin/reminder-settings', icon: Bell, color: 'from-blue-400 to-purple-400' },
-    { title: 'Appointment Notifications', url: '/admin/appointment-notifications', icon: Mail, color: 'from-purple-400 to-pink-400' },
-    { title: 'AI Clinical Notes', url: '/admin/ai-notes', icon: Sparkles, color: 'from-cyan-400 to-blue-400' },
-    { title: 'AI Quality Metrics', url: '/admin/ai-quality-metrics', icon: Brain, color: 'from-blue-400 to-cyan-400' },
-    { title: 'BAA Management', url: '/admin/baa-management', icon: Shield, color: 'from-green-400 to-emerald-400' },
+  const adminCategories = [
+    {
+      title: 'System & Users',
+      icon: UserCog,
+      items: [
+        { title: 'User Management', url: '/admin/users', icon: UserCog, color: 'from-secondary to-accent' },
+        { title: 'Practice Settings', url: '/admin/practice-settings', icon: Building2, color: 'from-primary to-success' },
+        { title: 'BAA Management', url: '/admin/baa-management', icon: Shield, color: 'from-green-400 to-emerald-400' },
+      ]
+    },
+    {
+      title: 'Client Services',
+      icon: Users,
+      items: [
+        { title: 'Client Portal', url: '/admin/portal-management', icon: Users, color: 'from-violet-400 to-purple-400' },
+        { title: 'Service Codes', url: '/admin/service-codes', icon: DollarSign, color: 'from-success to-primary' },
+        { title: 'Locations', url: '/admin/locations', icon: MapPin, color: 'from-accent to-secondary' },
+      ]
+    },
+    {
+      title: 'Clinical Operations',
+      icon: GraduationCap,
+      items: [
+        { title: 'Supervision Management', url: '/admin/supervision-management', icon: GraduationCap, color: 'from-indigo-400 to-purple-400' },
+        { title: 'AI Clinical Notes', url: '/admin/ai-notes', icon: Sparkles, color: 'from-cyan-400 to-blue-400' },
+        { title: 'AI Quality Metrics', url: '/admin/ai-quality-metrics', icon: Brain, color: 'from-blue-400 to-cyan-400' },
+      ]
+    },
+    {
+      title: 'Compliance & Security',
+      icon: AlertTriangle,
+      items: [
+        { title: 'Compliance Dashboard', url: '/admin/compliance-dashboard', icon: AlertTriangle, color: 'from-red-400 to-orange-400' },
+        { title: 'Compliance Rules', url: '/admin/compliance-rules', icon: FileCheck, color: 'from-orange-400 to-amber-400' },
+      ]
+    },
+    {
+      title: 'Communications',
+      icon: Bell,
+      items: [
+        { title: 'Reminder Settings', url: '/admin/reminder-settings', icon: Bell, color: 'from-blue-400 to-purple-400' },
+        { title: 'Appointment Notifications', url: '/admin/appointment-notifications', icon: Mail, color: 'from-purple-400 to-pink-400' },
+      ]
+    },
+    {
+      title: 'Telehealth',
+      icon: Video,
+      items: [
+        { title: 'Telehealth Settings', url: '/admin/telehealth-settings', icon: Video, color: 'from-blue-400 to-teal-400' },
+        { title: 'Telehealth Consents', url: '/admin/telehealth-consents', icon: Shield, color: 'from-teal-400 to-cyan-400' },
+      ]
+    },
   ];
 
   const settingsItems = [
@@ -143,19 +184,36 @@ export function AppSidebar() {
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {adminItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
-                        <NavLink to={item.url}>
-                          {({ isActive }) => (
-                            <div className={`flex items-center gap-3 w-full px-3 py-2 rounded-md ${getNavCls(isActive, item.color)}`}>
-                              <item.icon className="h-4 w-4 shrink-0" />
-                              {!collapsed && <span className={isActive ? "text-white font-semibold" : "text-sidebar-foreground font-medium"}>{item.title}</span>}
-                            </div>
-                          )}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                  {adminCategories.map((category) => (
+                    <Collapsible key={category.title} defaultOpen className="group/collapsible">
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton className="hover:bg-sidebar-accent">
+                            <category.icon className="h-4 w-4 shrink-0" />
+                            {!collapsed && <span className="font-medium">{category.title}</span>}
+                            {!collapsed && <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />}
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {category.items.map((item) => (
+                              <SidebarMenuSubItem key={item.title}>
+                                <SidebarMenuSubButton asChild>
+                                  <NavLink to={item.url}>
+                                    {({ isActive }) => (
+                                      <div className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-md ${getNavCls(isActive, item.color)}`}>
+                                        <item.icon className="h-3.5 w-3.5 shrink-0" />
+                                        {!collapsed && <span className={isActive ? "text-white text-sm" : "text-sidebar-foreground text-sm"}>{item.title}</span>}
+                                      </div>
+                                    )}
+                                  </NavLink>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
                   ))}
                 </SidebarMenu>
               </SidebarGroupContent>
