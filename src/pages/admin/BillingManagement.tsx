@@ -8,12 +8,14 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, FileText, DollarSign, Receipt, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { useBilling } from '@/hooks/useBilling';
+import { usePayments } from '@/hooks/usePayments';
 import { ChargeEntryDialog } from '@/components/billing/ChargeEntryDialog';
 import { PaymentPostingDialog } from '@/components/billing/PaymentPostingDialog';
 import { PaymentDetailDialog } from '@/components/billing/PaymentDetailDialog';
 
 export default function BillingManagement() {
-  const { charges, claims, payments, isLoading } = useBilling();
+  const { charges, claims, isLoading } = useBilling();
+  const { payments } = usePayments();
   const [chargeDialogOpen, setChargeDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<any>(null);

@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { PaymentAllocationTable } from "./PaymentAllocationTable";
-import { useBilling } from "@/hooks/useBilling";
+import { usePayments } from "@/hooks/usePayments";
 
 interface PaymentPostingDialogProps {
   open: boolean;
@@ -18,7 +18,7 @@ interface PaymentPostingDialogProps {
 }
 
 export const PaymentPostingDialog = ({ open, onOpenChange }: PaymentPostingDialogProps) => {
-  const { postPayment } = useBilling();
+  const { createPayment } = usePayments();
   const [paymentSource, setPaymentSource] = useState<"Insurance" | "Client">("Insurance");
   const [payerId, setPayerId] = useState<string>("");
   const [checkNumber, setCheckNumber] = useState("");

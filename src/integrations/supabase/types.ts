@@ -2926,91 +2926,6 @@ export type Database = {
         }
         Relationships: []
       }
-      insurance_payments: {
-        Row: {
-          check_amount: number
-          check_number: string | null
-          created_at: string | null
-          era_file_id: string | null
-          id: string
-          insurance_company_id: string | null
-          insurance_id: string | null
-          notes: string | null
-          payment_date: string
-          payment_method: string
-          payment_notes: string | null
-          payment_number: string
-          payment_status: string
-          posted_by: string | null
-          posted_date: string | null
-          receipt_number: string | null
-          trace_number: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          check_amount: number
-          check_number?: string | null
-          created_at?: string | null
-          era_file_id?: string | null
-          id?: string
-          insurance_company_id?: string | null
-          insurance_id?: string | null
-          notes?: string | null
-          payment_date: string
-          payment_method?: string
-          payment_notes?: string | null
-          payment_number: string
-          payment_status?: string
-          posted_by?: string | null
-          posted_date?: string | null
-          receipt_number?: string | null
-          trace_number?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          check_amount?: number
-          check_number?: string | null
-          created_at?: string | null
-          era_file_id?: string | null
-          id?: string
-          insurance_company_id?: string | null
-          insurance_id?: string | null
-          notes?: string | null
-          payment_date?: string
-          payment_method?: string
-          payment_notes?: string | null
-          payment_number?: string
-          payment_status?: string
-          posted_by?: string | null
-          posted_date?: string | null
-          receipt_number?: string | null
-          trace_number?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "insurance_payments_insurance_company_id_fkey"
-            columns: ["insurance_company_id"]
-            isOneToOne: false
-            referencedRelation: "insurance_companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "insurance_payments_insurance_id_fkey"
-            columns: ["insurance_id"]
-            isOneToOne: false
-            referencedRelation: "client_insurance"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "insurance_payments_posted_by_fkey"
-            columns: ["posted_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       journal_entries: {
         Row: {
           client_id: string
@@ -3639,11 +3554,109 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      payment_records: {
+        Row: {
+          adjustments: Json
+          applied_payments: Json
+          card_last_4: string | null
+          check_number: string | null
+          claim_number: string | null
+          client_id: string
+          created_date: string
+          deposit_date: string | null
+          deposit_id: string | null
+          eob_attachment: string | null
+          eob_date: string | null
+          id: string
+          notes: string | null
+          overpayment_amount: number | null
+          payment_amount: number
+          payment_date: string
+          payment_id: string
+          payment_method: string
+          payment_source: string
+          payment_status: string
+          posted_by: string | null
+          posted_date: string
+          refund_amount: number | null
+          refund_date: string | null
+          refund_issued: boolean | null
+          transaction_id: string | null
+          unapplied_amount: number
+        }
+        Insert: {
+          adjustments?: Json
+          applied_payments?: Json
+          card_last_4?: string | null
+          check_number?: string | null
+          claim_number?: string | null
+          client_id: string
+          created_date?: string
+          deposit_date?: string | null
+          deposit_id?: string | null
+          eob_attachment?: string | null
+          eob_date?: string | null
+          id?: string
+          notes?: string | null
+          overpayment_amount?: number | null
+          payment_amount: number
+          payment_date: string
+          payment_id: string
+          payment_method: string
+          payment_source: string
+          payment_status?: string
+          posted_by?: string | null
+          posted_date?: string
+          refund_amount?: number | null
+          refund_date?: string | null
+          refund_issued?: boolean | null
+          transaction_id?: string | null
+          unapplied_amount?: number
+        }
+        Update: {
+          adjustments?: Json
+          applied_payments?: Json
+          card_last_4?: string | null
+          check_number?: string | null
+          claim_number?: string | null
+          client_id?: string
+          created_date?: string
+          deposit_date?: string | null
+          deposit_id?: string | null
+          eob_attachment?: string | null
+          eob_date?: string | null
+          id?: string
+          notes?: string | null
+          overpayment_amount?: number | null
+          payment_amount?: number
+          payment_date?: string
+          payment_id?: string
+          payment_method?: string
+          payment_source?: string
+          payment_status?: string
+          posted_by?: string | null
+          posted_date?: string
+          refund_amount?: number | null
+          refund_date?: string | null
+          refund_issued?: boolean | null
+          transaction_id?: string | null
+          unapplied_amount?: number
+        }
+        Relationships: [
           {
-            foreignKeyName: "payment_line_items_payment_id_fkey"
-            columns: ["payment_id"]
+            foreignKeyName: "payment_records_client_id_fkey"
+            columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "insurance_payments"
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_records_posted_by_fkey"
+            columns: ["posted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -6472,6 +6485,10 @@ export type Database = {
         Returns: string
       }
       generate_mrn: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_payment_id: {
         Args: Record<PropertyKey, never>
         Returns: string
       }

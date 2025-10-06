@@ -29,21 +29,7 @@ export function useBilling() {
       const { data, error } = await supabase
         .from('insurance_claims')
         .select('*')
-        .order('claim_created_date', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  // Fetch insurance payments
-  const { data: payments = [], isLoading: paymentsLoading } = useQuery({
-    queryKey: ['billing-payments'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('insurance_payments')
-        .select('*')
-        .order('payment_date', { ascending: false });
+        .order('claim_created_date', { ascending: false});
 
       if (error) throw error;
       return data || [];
@@ -112,40 +98,15 @@ export function useBilling() {
     },
   });
 
-  // Post payment
-  const postPayment = useMutation({
-    mutationFn: async (payment: any) => {
-      const { data, error } = await supabase
-        .from('insurance_payments')
-        .insert([payment])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['billing-payments'] });
-      queryClient.invalidateQueries({ queryKey: ['billing-charges'] });
-      toast.success('Payment posted successfully');
-    },
-    onError: (error: any) => {
-      toast.error('Failed to post payment: ' + error.message);
-    },
-  });
-
   return {
     charges,
     claims,
-    payments,
-    isLoading: chargesLoading || claimsLoading || paymentsLoading,
+    isLoading: chargesLoading || claimsLoading,
     createCharge: createCharge.mutate,
     updateCharge: updateCharge.mutate,
     deleteCharge: deleteCharge.mutate,
-    postPayment: postPayment.mutate,
     isCreating: createCharge.isPending,
     isUpdating: updateCharge.isPending,
     isDeleting: deleteCharge.isPending,
-    isPosting: postPayment.isPending,
   };
 }

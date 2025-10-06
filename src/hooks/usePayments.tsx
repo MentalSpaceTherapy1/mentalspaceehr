@@ -59,7 +59,7 @@ export function usePayments(clientId?: string) {
     queryKey: ['payments', clientId],
     queryFn: async () => {
       let query = supabase
-        .from('insurance_payments')
+        .from('payment_records')
         .select(`
           *,
           client:clients(id, first_name, last_name, medical_record_number)
@@ -73,15 +73,15 @@ export function usePayments(clientId?: string) {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data as PaymentRecord[];
+      return data as any;
     },
   });
 
   // Generate payment ID
   const generatePaymentId = async (): Promise<string> => {
-    const { data, error } = await supabase.rpc('generate_payment_id');
+    const { data, error } = await supabase.rpc('generate_payment_id' as any);
     if (error) throw error;
-    return data;
+    return data as string;
   };
 
   // Create payment
@@ -90,12 +90,12 @@ export function usePayments(clientId?: string) {
       const paymentId = await generatePaymentId();
       
       const { data, error } = await supabase
-        .from('insurance_payments')
+        .from('payment_records')
         .insert({
           ...payment,
           payment_id: paymentId,
           posted_by: (await supabase.auth.getUser()).data.user?.id,
-        })
+        } as any)
         .select()
         .single();
 
@@ -115,8 +115,8 @@ export function usePayments(clientId?: string) {
   const updatePayment = useMutation({
     mutationFn: async ({ id, ...payment }: Partial<PaymentRecord> & { id: string }) => {
       const { data, error } = await supabase
-        .from('insurance_payments')
-        .update(payment)
+        .from('payment_records')
+        .update(payment as any)
         .eq('id', id)
         .select()
         .single();
@@ -137,7 +137,7 @@ export function usePayments(clientId?: string) {
   const reversePayment = useMutation({
     mutationFn: async (paymentId: string) => {
       const { data, error } = await supabase
-        .from('insurance_payments')
+        .from('payment_records')
         .update({ payment_status: 'Reversed' })
         .eq('id', paymentId)
         .select()
@@ -167,7 +167,7 @@ export function usePayments(clientId?: string) {
       refundDate: string;
     }) => {
       const { data, error } = await supabase
-        .from('insurance_payments')
+        .from('payment_records')
         .update({
           refund_issued: true,
           refund_amount: refundAmount,
