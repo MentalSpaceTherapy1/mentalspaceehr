@@ -42,7 +42,7 @@ const handler = async (req: Request): Promise<Response> => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: { user }, error: authErr } = await supabaseUser.auth.getUser(token);
+    const { data: { user }, error: authErr } = await supabaseUser.auth.getUser();
     if (authErr) {
       console.error('Auth error:', authErr);
       return new Response(JSON.stringify({ error: 'Unauthorized: ' + authErr.message }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
