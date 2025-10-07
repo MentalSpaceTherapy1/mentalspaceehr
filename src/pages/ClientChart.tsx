@@ -47,36 +47,62 @@ import { ClientAuditLog } from '@/components/clients/ClientAuditLog';
 type Client = Database['public']['Tables']['clients']['Row'];
 
 const chartSections = [
-  { id: 'demographics', label: 'Demographics', icon: User },
-  { id: 'insurance-billing', label: 'Insurance & Billing', icon: CreditCard },
-  { id: 'telehealth-consent', label: 'Telehealth Consent', icon: Video },
-  { 
-    id: 'client-portal', 
-    label: 'Client Portal', 
-    icon: UserCog
-  },
-  { 
-    id: 'clinical-documents', 
-    label: 'Clinical Documents', 
-    icon: FileText,
-    subsections: [
-      { id: 'intake-assessment', label: 'Intake Assessment' },
-      { id: 'progress-notes', label: 'Progress Notes' },
-      { id: 'treatment-plans', label: 'Treatment Plans' },
-      { id: 'psychiatric-evaluations', label: 'Psychiatric Evaluations' },
-      { id: 'testing-assessments', label: 'Testing/Assessments' },
-      { id: 'consultation-notes', label: 'Consultation Notes' },
-      { id: 'contact-notes', label: 'Contact Notes' },
-      { id: 'miscellaneous-notes', label: 'Miscellaneous Notes' },
-      { id: 'cancellation-notes', label: 'Cancellation Notes' },
-      { id: 'clinical-notes', label: 'Clinical Notes' },
-      { id: 'termination-notes', label: 'Termination Notes' },
+  {
+    group: 'CLIENT INFORMATION',
+    groupIcon: User,
+    sections: [
+      { id: 'demographics', label: 'Demographics', icon: User },
+      { id: 'insurance-billing', label: 'Insurance & Billing', icon: CreditCard },
     ]
   },
-  { id: 'appointments', label: 'Appointments', icon: Calendar },
-  { id: 'documents-forms', label: 'Documents & Forms', icon: FolderOpen },
-  { id: 'messages', label: 'Messages', icon: MessageSquare },
-  { id: 'audit-log', label: 'Audit Log', icon: History },
+  {
+    group: 'CLINICAL RECORDS',
+    groupIcon: FileText,
+    sections: [
+      { 
+        id: 'clinical-documents', 
+        label: 'Clinical Documents', 
+        icon: FileText,
+        subsections: [
+          { id: 'intake-assessment', label: 'Intake Assessment' },
+          { id: 'progress-notes', label: 'Progress Notes' },
+          { id: 'treatment-plans', label: 'Treatment Plans' },
+          { id: 'psychiatric-evaluations', label: 'Psychiatric Evaluations' },
+          { id: 'testing-assessments', label: 'Testing/Assessments' },
+          { id: 'consultation-notes', label: 'Consultation Notes' },
+          { id: 'contact-notes', label: 'Contact Notes' },
+          { id: 'miscellaneous-notes', label: 'Miscellaneous Notes' },
+          { id: 'cancellation-notes', label: 'Cancellation Notes' },
+          { id: 'clinical-notes', label: 'Clinical Notes' },
+          { id: 'termination-notes', label: 'Termination Notes' },
+        ]
+      },
+      { id: 'documents-forms', label: 'Documents & Forms', icon: FolderOpen },
+    ]
+  },
+  {
+    group: 'SCHEDULING',
+    groupIcon: Calendar,
+    sections: [
+      { id: 'appointments', label: 'Appointments', icon: Calendar },
+    ]
+  },
+  {
+    group: 'COMMUNICATION',
+    groupIcon: MessageSquare,
+    sections: [
+      { id: 'client-portal', label: 'Client Portal', icon: UserCog },
+      { id: 'messages', label: 'Messages', icon: MessageSquare },
+    ]
+  },
+  {
+    group: 'COMPLIANCE',
+    groupIcon: Video,
+    sections: [
+      { id: 'telehealth-consent', label: 'Telehealth Consent', icon: Video },
+      { id: 'audit-log', label: 'Audit Log', icon: History },
+    ]
+  },
 ];
 
 export default function ClientChart() {
@@ -406,10 +432,14 @@ export default function ClientChart() {
       case 'documents-forms':
         return <DocumentManagementPanel clientId={id!} />;
       default:
+        const currentSection = chartSections
+          .flatMap(g => g.sections)
+          .find(s => s.id === activeSection);
+        
         return (
           <Card>
             <CardHeader>
-              <CardTitle>{chartSections.find(s => s.id === activeSection)?.label}</CardTitle>
+              <CardTitle>{currentSection?.label}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">Content for {activeSection} will be implemented in future phases.</p>
@@ -457,47 +487,73 @@ export default function ClientChart() {
           </div>
           
           <ScrollArea className="h-[calc(100vh-200px)]">
-            <nav className="p-2 space-y-1">
-              {chartSections.map((section) => {
-                const Icon = section.icon;
-                const isExpanded = expandedSections.includes(section.id);
-                const hasSubsections = section.subsections && section.subsections.length > 0;
+            <nav className="p-2 space-y-3">
+              {chartSections.map((group, groupIndex) => {
+                const GroupIcon = group.groupIcon;
                 
                 return (
-                  <div key={section.id}>
-                    <Button
-                      variant={activeSection === section.id ? 'secondary' : 'ghost'}
-                      className="w-full justify-start"
-                      onClick={() => {
-                        if (hasSubsections) {
-                          toggleSection(section.id);
-                        }
-                        setActiveSection(section.id);
-                      }}
-                    >
-                      <Icon className="h-4 w-4 mr-2" />
-                      {section.label}
-                      {hasSubsections && (
-                        <ChevronRight 
-                          className={`h-4 w-4 ml-auto transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-                        />
-                      )}
-                    </Button>
-                    
-                    {hasSubsections && isExpanded && (
-                      <div className="ml-6 mt-1 space-y-1">
-                        {section.subsections.map((subsection) => (
-                          <Button
-                            key={subsection.id}
-                            variant={activeSection === subsection.id ? 'secondary' : 'ghost'}
-                            size="sm"
-                            className="w-full justify-start"
-                            onClick={() => setActiveSection(subsection.id)}
-                          >
-                            {subsection.label}
-                          </Button>
-                        ))}
+                  <div key={group.group}>
+                    {/* Group Header */}
+                    <div className="px-3 py-2 mb-1">
+                      <div className="flex items-center gap-2">
+                        <GroupIcon className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-xs font-semibold text-muted-foreground tracking-wide">
+                          {group.group}
+                        </span>
                       </div>
+                    </div>
+                    
+                    {/* Group Sections */}
+                    <div className="space-y-1">
+                      {group.sections.map((section) => {
+                        const Icon = section.icon;
+                        const isExpanded = expandedSections.includes(section.id);
+                        const hasSubsections = section.subsections && section.subsections.length > 0;
+                        
+                        return (
+                          <div key={section.id}>
+                            <Button
+                              variant={activeSection === section.id ? 'secondary' : 'ghost'}
+                              className="w-full justify-start"
+                              onClick={() => {
+                                if (hasSubsections) {
+                                  toggleSection(section.id);
+                                }
+                                setActiveSection(section.id);
+                              }}
+                            >
+                              <Icon className="h-4 w-4 mr-2" />
+                              {section.label}
+                              {hasSubsections && (
+                                <ChevronRight 
+                                  className={`h-4 w-4 ml-auto transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                                />
+                              )}
+                            </Button>
+                            
+                            {hasSubsections && isExpanded && (
+                              <div className="ml-6 mt-1 space-y-1">
+                                {section.subsections.map((subsection) => (
+                                  <Button
+                                    key={subsection.id}
+                                    variant={activeSection === subsection.id ? 'secondary' : 'ghost'}
+                                    size="sm"
+                                    className="w-full justify-start"
+                                    onClick={() => setActiveSection(subsection.id)}
+                                  >
+                                    {subsection.label}
+                                  </Button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Separator between groups (except last) */}
+                    {groupIndex < chartSections.length - 1 && (
+                      <Separator className="my-3" />
                     )}
                   </div>
                 );
