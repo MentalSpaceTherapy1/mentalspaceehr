@@ -41,7 +41,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const { clientId, email, clientName } = validation.data;
-    console.log('Creating portal user for client:', clientId);
 
     // Create admin client with service role key
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -59,7 +58,6 @@ const handler = async (req: Request): Promise<Response> => {
     let isNewUser = false;
 
     if (existingUser) {
-      console.log('User already exists:', existingUser.id);
       userId = existingUser.id;
       
       // Update metadata to mark as portal user
@@ -85,12 +83,8 @@ const handler = async (req: Request): Promise<Response> => {
         },
       });
 
-      if (authError) {
-        console.error('Auth error:', authError);
-        throw authError;
-      }
+      if (authError) throw authError;
 
-      console.log('User created:', authData.user.id);
       userId = authData.user.id;
       isNewUser = true;
     }
@@ -108,13 +102,7 @@ const handler = async (req: Request): Promise<Response> => {
         .from('user_roles')
         .insert({ user_id: userId, role: 'client_user' });
 
-      if (roleError) {
-        console.error('Role assignment error:', roleError);
-        throw roleError;
-      }
-      console.log('Role assigned successfully');
-    } else {
-      console.log('Role already exists for user');
+      if (roleError) throw roleError;
     }
 
     // Update client with portal_user_id
@@ -127,12 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
       })
       .eq('id', clientId);
 
-    if (updateError) {
-      console.error('Client update error:', updateError);
-      throw updateError;
-    }
-
-    console.log('Client updated successfully');
+    if (updateError) throw updateError;
 
     // SECURITY: Never return passwords in API response
     // Password should only be sent via email
@@ -151,9 +134,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error creating portal user:", error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Failed to create portal user' }),
+      JSON.stringify({ error: 'Failed to create portal user' }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

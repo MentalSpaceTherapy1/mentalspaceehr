@@ -27,8 +27,6 @@ Deno.serve(async (req) => {
 
     const { action, cosignatureId, noteId, userId, data }: WorkflowEvent = await req.json();
 
-    console.log(`Processing workflow action: ${action} for cosignature ${cosignatureId}`);
-
     // Fetch current cosignature
     const { data: cosignature, error: fetchError } = await supabaseClient
       .from('note_cosignatures')
@@ -178,11 +176,6 @@ Deno.serve(async (req) => {
         .from('clinical_notes')
         .update(noteUpdates)
         .eq('id', noteId);
-
-      if (noteError) {
-        console.error('Failed to update note:', noteError);
-        // Don't throw - cosignature update is more critical
-      }
     }
 
     // Send notification if needed
@@ -195,12 +188,9 @@ Deno.serve(async (req) => {
           }
         });
       } catch (notifError) {
-        console.error('Failed to send notification:', notifError);
-        // Don't throw - workflow update is more critical
+        // Notification failures are non-critical
       }
     }
-
-    console.log(`Workflow action ${action} completed successfully`);
 
     return new Response(
       JSON.stringify({ 
@@ -216,12 +206,10 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in cosignature workflow:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: errorMessage
+        error: 'Workflow action failed'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

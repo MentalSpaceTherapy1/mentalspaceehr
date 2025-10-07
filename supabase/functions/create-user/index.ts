@@ -25,8 +25,6 @@ serve(async (req) => {
 
     const { email, password, profile } = await req.json();
 
-    console.log('Creating user:', email);
-
     // Create user in auth
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -38,12 +36,7 @@ serve(async (req) => {
       }
     });
 
-    if (authError) {
-      console.error('Auth error:', authError);
-      throw authError;
-    }
-
-    console.log('User created in auth:', authData.user.id);
+    if (authError) throw authError;
 
     // Update profile with additional data
     const { error: profileError } = await supabaseAdmin
@@ -54,12 +47,7 @@ serve(async (req) => {
       })
       .eq('id', authData.user.id);
 
-    if (profileError) {
-      console.error('Profile error:', profileError);
-      throw profileError;
-    }
-
-    console.log('Profile updated successfully');
+    if (profileError) throw profileError;
 
     return new Response(
       JSON.stringify({ 
@@ -72,10 +60,8 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in create-user function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Failed to create user' }),
       {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

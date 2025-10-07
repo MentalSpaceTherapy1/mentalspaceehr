@@ -16,8 +16,6 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('Starting compliance check...');
-
     // Get active compliance rules
     const { data: rules, error: rulesError } = await supabase
       .from('compliance_rules')
@@ -29,8 +27,6 @@ serve(async (req) => {
     const results = [];
 
     for (const rule of rules || []) {
-      console.log(`Checking compliance for rule: ${rule.rule_name}`);
-
       // Check clinical notes
       const { data: clinicalNotes, error: clinicalError } = await supabase
         .from('clinical_notes')
@@ -112,8 +108,6 @@ serve(async (req) => {
                       delivered: true,
                       delivery_date: new Date().toISOString()
                     });
-
-                  console.log(`Warning sent for note ${note.id}, ${warningDay} days until due`);
                 }
               }
             }
@@ -130,8 +124,6 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Compliance check completed. Checked ${results.length} notes.`);
-
     return new Response(
       JSON.stringify({
         success: true,
@@ -143,9 +135,8 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error('Error in check-compliance function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Compliance check failed' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

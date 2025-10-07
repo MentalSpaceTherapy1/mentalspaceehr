@@ -81,9 +81,8 @@ serve(async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in confirm-appointment:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Confirmation failed' }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

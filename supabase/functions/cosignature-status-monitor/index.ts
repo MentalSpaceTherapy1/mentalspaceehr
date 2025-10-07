@@ -29,8 +29,6 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('Starting cosignature status monitoring...');
-
     const now = new Date();
     const statusUpdates: { id: string; updates: any }[] = [];
     const notifications: any[] = [];
@@ -42,12 +40,7 @@ Deno.serve(async (req) => {
       .in('status', ['Pending', 'Pending Review', 'Under Review', 'Revisions Requested'])
       .order('created_date', { ascending: true });
 
-    if (fetchError) {
-      console.error('Error fetching cosignatures:', fetchError);
-      throw fetchError;
-    }
-
-    console.log(`Found ${cosignatures?.length || 0} cosignatures to check`);
+    if (fetchError) throw fetchError;
 
     if (!cosignatures || cosignatures.length === 0) {
       return new Response(
@@ -82,7 +75,6 @@ Deno.serve(async (req) => {
           updates.status = 'Overdue';
           needsUpdate = true;
           overdueCount++;
-          console.log(`Marking cosignature ${cosig.id} as overdue`);
 
           // Add notification for overdue status
           notifications.push({
@@ -100,7 +92,6 @@ Deno.serve(async (req) => {
           updates.escalated_date = now.toISOString();
           needsUpdate = true;
           escalatedCount++;
-          console.log(`Escalating cosignature ${cosig.id} (${daysSinceDue} days overdue)`);
 
           // Add escalation notification
           notifications.push({
@@ -134,24 +125,16 @@ Deno.serve(async (req) => {
 
     // Apply all status updates in batch
     if (statusUpdates.length > 0) {
-      console.log(`Applying ${statusUpdates.length} status updates...`);
-      
       for (const { id, updates } of statusUpdates) {
         const { error: updateError } = await supabaseClient
           .from('note_cosignatures')
           .update(updates)
           .eq('id', id);
-
-        if (updateError) {
-          console.error(`Error updating cosignature ${id}:`, updateError);
-        }
       }
     }
 
     // Send notifications via the supervision-notifications function
     if (notifications.length > 0) {
-      console.log(`Sending ${notifications.length} notifications...`);
-      
       for (const notification of notifications) {
         try {
           const { error: notifError } = await supabaseClient.functions.invoke(
@@ -167,12 +150,8 @@ Deno.serve(async (req) => {
               }
             }
           );
-
-          if (notifError) {
-            console.error('Error sending notification:', notifError);
-          }
         } catch (err) {
-          console.error('Failed to invoke notification function:', err);
+          // Notification failures are non-critical
         }
       }
     }
@@ -187,8 +166,6 @@ Deno.serve(async (req) => {
       message: `Checked ${cosignatures.length} cosignatures, marked ${overdueCount} as overdue, escalated ${escalatedCount}, sent ${notifications.length} notifications`
     };
 
-    console.log('Monitoring complete:', summary);
-
     return new Response(
       JSON.stringify(summary),
       { 
@@ -198,12 +175,10 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in cosignature status monitor:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: errorMessage
+        error: 'Monitoring failed'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -23,8 +23,6 @@ serve(async (req) => {
 
     const { administrationId }: CheckCriticalItemsRequest = await req.json();
 
-    console.log("Checking critical items for administration:", administrationId);
-
     // Fetch administration with assessment details
     const { data: administration, error: adminError } = await supabase
       .from("assessment_administrations")
@@ -41,7 +39,6 @@ serve(async (req) => {
     const criticalItems = assessment.critical_items || [];
 
     if (criticalItems.length === 0) {
-      console.log("No critical items configured for this assessment");
       return new Response(
         JSON.stringify({ success: true, alertsCreated: 0 }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -83,8 +80,6 @@ serve(async (req) => {
           action_required: action,
           alert_status: "Active",
         });
-
-        console.log(`Critical item triggered: ${itemText} (${response})`);
       }
     }
 
@@ -111,7 +106,6 @@ serve(async (req) => {
       ].filter(Boolean);
 
       // TODO: Send notifications (email, dashboard alerts)
-      console.log(`Created ${alerts.length} critical alerts, notifying:`, usersToNotify);
     }
 
     return new Response(
@@ -125,9 +119,8 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error("Error checking critical items:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Failed to check critical items' }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

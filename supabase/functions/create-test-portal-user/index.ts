@@ -97,9 +97,8 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error creating test portal user:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error occurred' }),
+      JSON.stringify({ error: 'Failed to create test user' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,

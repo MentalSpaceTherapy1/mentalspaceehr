@@ -25,8 +25,6 @@ serve(async (req) => {
 
     const { templateId, clientId, customData = {} }: GenerateDocumentRequest = await req.json();
 
-    console.log("Generating document:", { templateId, clientId });
-
     // Fetch template
     const { data: template, error: templateError } = await supabase
       .from("document_templates")
@@ -113,8 +111,6 @@ serve(async (req) => {
 
     if (docError) throw docError;
 
-    console.log("Document generated successfully:", document.id);
-
     return new Response(
       JSON.stringify({
         success: true,
@@ -127,9 +123,8 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error("Error generating document:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Document generation failed' }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
