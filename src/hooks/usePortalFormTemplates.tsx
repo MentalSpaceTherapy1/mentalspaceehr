@@ -115,7 +115,7 @@ export const usePortalFormTemplates = () => {
 
   // Assign form to client
   const assignForm = useMutation({
-    mutationFn: async (assignment: Omit<FormAssignment, 'id' | 'created_at' | 'updated_at' | 'status_updated_at' | 'assigned_date'>) => {
+    mutationFn: async (assignment: Omit<FormAssignment, 'id' | 'created_at' | 'updated_at' | 'status_updated_at' | 'assigned_date' | 'assigned_by'>) => {
       const { data: userData } = await supabase.auth.getUser();
       
       const { data, error } = await supabase

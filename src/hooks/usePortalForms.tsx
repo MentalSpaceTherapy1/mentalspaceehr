@@ -199,14 +199,72 @@ export const usePortalForms = (clientId?: string) => {
     },
   });
 
+  // Cancel assignment mutation
+  const cancelAssignmentMutation = useMutation({
+    mutationFn: async (assignmentId: string) => {
+      const { error } = await supabase
+        .from('portal_form_assignments')
+        .update({
+          status: 'cancelled',
+          status_updated_at: new Date().toISOString(),
+        })
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['portal-form-assignments', clientId] });
+      toast({
+        title: 'Assignment cancelled',
+        description: 'The form assignment has been cancelled.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error cancelling assignment',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Resend notification mutation
+  const resendNotificationMutation = useMutation({
+    mutationFn: async (assignmentId: string) => {
+      // Call edge function to resend notification
+      const { error } = await supabase.functions.invoke('send-portal-form-notification', {
+        body: { assignmentId },
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Notification sent',
+        description: 'A reminder has been sent to the client.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error sending notification',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   return {
     forms: formsWithResponses,
     isLoading,
     startForm: startFormMutation.mutate,
     saveProgress: saveProgressMutation.mutate,
     submitForm: submitFormMutation.mutate,
+    cancelAssignment: cancelAssignmentMutation.mutate,
+    resendNotification: resendNotificationMutation.mutate,
     isStarting: startFormMutation.isPending,
     isSaving: saveProgressMutation.isPending,
     isSubmitting: submitFormMutation.isPending,
+    isCancelling: cancelAssignmentMutation.isPending,
+    isResending: resendNotificationMutation.isPending,
   };
 };
