@@ -76,6 +76,13 @@ export interface FormResponse {
   flagged_for_followup: boolean;
   created_at: string;
   updated_at: string;
+  approval_status?: 'pending' | 'approved' | 'rejected' | 'needs_revision';
+  approved_by?: string;
+  approved_at?: string;
+  rejection_reason?: string;
+  data_imported_to_chart?: boolean;
+  imported_at?: string;
+  imported_by?: string;
 }
 
 export interface FormWithResponse extends FormAssignment {

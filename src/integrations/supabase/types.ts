@@ -5024,15 +5024,22 @@ export type Database = {
       }
       portal_form_responses: {
         Row: {
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
           assignment_id: string
           client_id: string
           client_signature: string | null
           completed_at: string | null
           created_at: string
+          data_imported_to_chart: boolean | null
           flagged_for_followup: boolean
           id: string
+          imported_at: string | null
+          imported_by: string | null
           last_saved_at: string | null
           progress_percentage: number
+          rejection_reason: string | null
           responses: Json
           review_notes: string | null
           reviewed_at: string | null
@@ -5043,15 +5050,22 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           assignment_id: string
           client_id: string
           client_signature?: string | null
           completed_at?: string | null
           created_at?: string
+          data_imported_to_chart?: boolean | null
           flagged_for_followup?: boolean
           id?: string
+          imported_at?: string | null
+          imported_by?: string | null
           last_saved_at?: string | null
           progress_percentage?: number
+          rejection_reason?: string | null
           responses?: Json
           review_notes?: string | null
           reviewed_at?: string | null
@@ -5062,15 +5076,22 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           assignment_id?: string
           client_id?: string
           client_signature?: string | null
           completed_at?: string | null
           created_at?: string
+          data_imported_to_chart?: boolean | null
           flagged_for_followup?: boolean
           id?: string
+          imported_at?: string | null
+          imported_by?: string | null
           last_saved_at?: string | null
           progress_percentage?: number
+          rejection_reason?: string | null
           responses?: Json
           review_notes?: string | null
           reviewed_at?: string | null

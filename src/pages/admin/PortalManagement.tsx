@@ -7,6 +7,7 @@ import { PortalEmailTemplates } from '@/components/admin/portal/PortalEmailTempl
 import { PortalSettings } from '@/components/admin/portal/PortalSettings';
 import { PortalFormsManagement } from '@/components/admin/portal/PortalFormsManagement';
 import { PortalResourcesManagement } from '@/components/admin/portal/PortalResourcesManagement';
+import { PendingFormResponsesTable } from '@/components/admin/portal/PendingFormResponsesTable';
 
 export default function PortalManagement() {
   return (
@@ -48,8 +49,16 @@ export default function PortalManagement() {
               <PortalClientsTable />
             </TabsContent>
 
-            <TabsContent value="forms">
-              <PortalFormsManagement />
+            <TabsContent value="forms" className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Pending Form Reviews</h3>
+                <PendingFormResponsesTable />
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Form Templates</h3>
+                <PortalFormsManagement />
+              </div>
             </TabsContent>
 
             <TabsContent value="resources">
