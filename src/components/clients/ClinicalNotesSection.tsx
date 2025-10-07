@@ -10,7 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 
 interface ClinicalNotesSectionProps {
   clientId: string;
-  noteType: 'progress-notes' | 'intake-assessment' | 'treatment-plans' | 'psychiatric-evaluations' | 'testing-assessments' | 'consultation-notes';
+  noteType: 'progress-notes' | 'intake-assessment' | 'treatment-plans' | 'psychiatric-evaluations' | 
+            'testing-assessments' | 'consultation-notes' | 'contact-notes' | 'miscellaneous-notes' | 
+            'cancellation-notes' | 'clinical-notes' | 'termination-notes';
 }
 
 const noteTypeConfig = {
@@ -49,6 +51,36 @@ const noteTypeConfig = {
     title: 'Consultation Notes',
     createPath: (clientId: string) => `/consultation-note/${clientId}`,
     viewPath: (clientId: string, noteId: string) => `/consultation-note/${clientId}/${noteId}`,
+  },
+  'contact-notes': {
+    tableName: 'contact_notes',
+    title: 'Contact Notes',
+    createPath: (clientId: string) => `/contact-note/${clientId}`,
+    viewPath: (clientId: string, noteId: string) => `/contact-note/${clientId}/${noteId}`,
+  },
+  'miscellaneous-notes': {
+    tableName: 'miscellaneous_notes',
+    title: 'Miscellaneous Notes',
+    createPath: (clientId: string) => `/miscellaneous-note/${clientId}`,
+    viewPath: (clientId: string, noteId: string) => `/miscellaneous-note/${clientId}/${noteId}`,
+  },
+  'cancellation-notes': {
+    tableName: 'cancellation_notes',
+    title: 'Cancellation Notes',
+    createPath: (clientId: string) => `/cancellation-note/${clientId}`,
+    viewPath: (clientId: string, noteId: string) => `/cancellation-note/${clientId}/${noteId}`,
+  },
+  'clinical-notes': {
+    tableName: 'clinical_notes',
+    title: 'Clinical Notes',
+    createPath: (clientId: string) => `/clinical-note/${clientId}`,
+    viewPath: (clientId: string, noteId: string) => `/clinical-note/${clientId}/${noteId}`,
+  },
+  'termination-notes': {
+    tableName: 'termination_notes',
+    title: 'Termination Notes',
+    createPath: (clientId: string) => `/termination-note/${clientId}`,
+    viewPath: (clientId: string, noteId: string) => `/termination-note/${clientId}/${noteId}`,
   },
 };
 

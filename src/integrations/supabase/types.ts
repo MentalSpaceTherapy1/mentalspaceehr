@@ -7405,6 +7405,185 @@ export type Database = {
           },
         ]
       }
+      termination_notes: {
+        Row: {
+          barriers_addressed: string | null
+          billing_notes: string | null
+          client_id: string
+          client_strengths: string | null
+          clinician_id: string
+          cosigned_by: string | null
+          cosigned_date: string | null
+          created_by: string | null
+          created_date: string | null
+          crisis_plan: string | null
+          current_functioning: string | null
+          discharge_plan: string | null
+          final_assessment: string | null
+          final_diagnoses: Json | null
+          follow_up_instructions: string | null
+          goals_status: string | null
+          id: string
+          last_modified: string | null
+          last_modified_by: string | null
+          last_session_date: string | null
+          locked: boolean | null
+          locked_by: string | null
+          locked_date: string | null
+          medications_at_termination: string | null
+          outstanding_issues: string | null
+          presenting_problems: string | null
+          prognosis: string | null
+          progress_achieved: string | null
+          recommendations: string | null
+          referral_contacts: Json | null
+          referrals_provided: string | null
+          relapse_prevention_plan: string | null
+          signed_by: string | null
+          signed_date: string | null
+          status: string
+          termination_date: string
+          termination_reason: string
+          termination_type: string
+          total_sessions_completed: number | null
+          treatment_summary: string | null
+        }
+        Insert: {
+          barriers_addressed?: string | null
+          billing_notes?: string | null
+          client_id: string
+          client_strengths?: string | null
+          clinician_id: string
+          cosigned_by?: string | null
+          cosigned_date?: string | null
+          created_by?: string | null
+          created_date?: string | null
+          crisis_plan?: string | null
+          current_functioning?: string | null
+          discharge_plan?: string | null
+          final_assessment?: string | null
+          final_diagnoses?: Json | null
+          follow_up_instructions?: string | null
+          goals_status?: string | null
+          id?: string
+          last_modified?: string | null
+          last_modified_by?: string | null
+          last_session_date?: string | null
+          locked?: boolean | null
+          locked_by?: string | null
+          locked_date?: string | null
+          medications_at_termination?: string | null
+          outstanding_issues?: string | null
+          presenting_problems?: string | null
+          prognosis?: string | null
+          progress_achieved?: string | null
+          recommendations?: string | null
+          referral_contacts?: Json | null
+          referrals_provided?: string | null
+          relapse_prevention_plan?: string | null
+          signed_by?: string | null
+          signed_date?: string | null
+          status?: string
+          termination_date: string
+          termination_reason: string
+          termination_type: string
+          total_sessions_completed?: number | null
+          treatment_summary?: string | null
+        }
+        Update: {
+          barriers_addressed?: string | null
+          billing_notes?: string | null
+          client_id?: string
+          client_strengths?: string | null
+          clinician_id?: string
+          cosigned_by?: string | null
+          cosigned_date?: string | null
+          created_by?: string | null
+          created_date?: string | null
+          crisis_plan?: string | null
+          current_functioning?: string | null
+          discharge_plan?: string | null
+          final_assessment?: string | null
+          final_diagnoses?: Json | null
+          follow_up_instructions?: string | null
+          goals_status?: string | null
+          id?: string
+          last_modified?: string | null
+          last_modified_by?: string | null
+          last_session_date?: string | null
+          locked?: boolean | null
+          locked_by?: string | null
+          locked_date?: string | null
+          medications_at_termination?: string | null
+          outstanding_issues?: string | null
+          presenting_problems?: string | null
+          prognosis?: string | null
+          progress_achieved?: string | null
+          recommendations?: string | null
+          referral_contacts?: Json | null
+          referrals_provided?: string | null
+          relapse_prevention_plan?: string | null
+          signed_by?: string | null
+          signed_date?: string | null
+          status?: string
+          termination_date?: string
+          termination_reason?: string
+          termination_type?: string
+          total_sessions_completed?: number | null
+          treatment_summary?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "termination_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "termination_notes_clinician_id_fkey"
+            columns: ["clinician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "termination_notes_cosigned_by_fkey"
+            columns: ["cosigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "termination_notes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "termination_notes_last_modified_by_fkey"
+            columns: ["last_modified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "termination_notes_locked_by_fkey"
+            columns: ["locked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "termination_notes_signed_by_fkey"
+            columns: ["signed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       treatment_plans: {
         Row: {
           anticipated_discharge_date: string | null

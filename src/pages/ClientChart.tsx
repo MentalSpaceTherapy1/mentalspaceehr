@@ -49,6 +49,16 @@ const chartSections = [
   { id: 'insurance-billing', label: 'Insurance & Billing', icon: CreditCard },
   { id: 'telehealth-consent', label: 'Telehealth Consent', icon: Video },
   { 
+    id: 'client-portal', 
+    label: 'Client Portal', 
+    icon: UserCog,
+    subsections: [
+      { id: 'portal-forms-assigned', label: 'Assigned Forms' },
+      { id: 'portal-forms-completed', label: 'Completed Forms' },
+      { id: 'portal-messages', label: 'Portal Messages' },
+    ]
+  },
+  { 
     id: 'clinical-documents', 
     label: 'Clinical Documents', 
     icon: FileText,
@@ -59,6 +69,11 @@ const chartSections = [
       { id: 'psychiatric-evaluations', label: 'Psychiatric Evaluations' },
       { id: 'testing-assessments', label: 'Testing/Assessments' },
       { id: 'consultation-notes', label: 'Consultation Notes' },
+      { id: 'contact-notes', label: 'Contact Notes' },
+      { id: 'miscellaneous-notes', label: 'Miscellaneous Notes' },
+      { id: 'cancellation-notes', label: 'Cancellation Notes' },
+      { id: 'clinical-notes', label: 'Clinical Notes' },
+      { id: 'termination-notes', label: 'Termination Notes' },
     ]
   },
   { id: 'medications', label: 'Medications', icon: Pill },
@@ -244,7 +259,25 @@ export default function ClientChart() {
       case 'psychiatric-evaluations':
       case 'testing-assessments':
       case 'consultation-notes':
+      case 'contact-notes':
+      case 'miscellaneous-notes':
+      case 'cancellation-notes':
+      case 'clinical-notes':
+      case 'termination-notes':
         return <ClinicalNotesSection clientId={id!} noteType={activeSection as any} />;
+      case 'portal-forms-assigned':
+      case 'portal-forms-completed':
+      case 'portal-messages':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Client Portal - {activeSection === 'portal-forms-assigned' ? 'Assigned Forms' : activeSection === 'portal-forms-completed' ? 'Completed Forms' : 'Portal Messages'}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Client portal integration will be fully implemented in the next phase.</p>
+            </CardContent>
+          </Card>
+        );
       case 'telehealth-consent':
         return (
           <>

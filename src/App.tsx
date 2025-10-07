@@ -66,6 +66,8 @@ import CancellationNote from "./pages/CancellationNote";
 import ContactNote from "./pages/ContactNote";
 import ConsultationNote from "./pages/ConsultationNote";
 import MiscellaneousNote from "./pages/MiscellaneousNote";
+import ClinicalNote from "./pages/ClinicalNote";
+import TerminationNote from "./pages/TerminationNote";
 import ComplianceRules from "./pages/admin/ComplianceRules";
 import ComplianceDashboard from "./pages/admin/ComplianceDashboard";
 import SupervisionManagement from "./pages/admin/SupervisionManagement";
@@ -516,6 +518,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <MiscellaneousNote />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/clinical-note/:clientId/:noteId?" 
+              element={
+                <ProtectedRoute>
+                  <ClinicalNote />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/termination-note/:clientId/:noteId?" 
+              element={
+                <ProtectedRoute>
+                  <TerminationNote />
                 </ProtectedRoute>
               } 
             />
