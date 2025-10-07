@@ -2889,9 +2889,11 @@ export type Database = {
       }
       document_templates: {
         Row: {
+          auto_generate_pdf: boolean | null
           category: string | null
           created_at: string | null
           created_by: string | null
+          default_file_name: string | null
           description: string | null
           file_path: string
           file_type: string
@@ -2899,14 +2901,20 @@ export type Database = {
           is_active: boolean | null
           requires_client_signature: boolean | null
           requires_clinician_signature: boolean | null
+          signature_fields: Json | null
+          template_category: string | null
+          template_content: string | null
           template_name: string
           template_type: string
           updated_at: string | null
+          variables: Json | null
         }
         Insert: {
+          auto_generate_pdf?: boolean | null
           category?: string | null
           created_at?: string | null
           created_by?: string | null
+          default_file_name?: string | null
           description?: string | null
           file_path: string
           file_type: string
@@ -2914,14 +2922,20 @@ export type Database = {
           is_active?: boolean | null
           requires_client_signature?: boolean | null
           requires_clinician_signature?: boolean | null
+          signature_fields?: Json | null
+          template_category?: string | null
+          template_content?: string | null
           template_name: string
           template_type: string
           updated_at?: string | null
+          variables?: Json | null
         }
         Update: {
+          auto_generate_pdf?: boolean | null
           category?: string | null
           created_at?: string | null
           created_by?: string | null
+          default_file_name?: string | null
           description?: string | null
           file_path?: string
           file_type?: string
@@ -2929,9 +2943,13 @@ export type Database = {
           is_active?: boolean | null
           requires_client_signature?: boolean | null
           requires_clinician_signature?: boolean | null
+          signature_fields?: Json | null
+          template_category?: string | null
+          template_content?: string | null
           template_name?: string
           template_type?: string
           updated_at?: string | null
+          variables?: Json | null
         }
         Relationships: [
           {
