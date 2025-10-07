@@ -81,7 +81,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user_agent: navigator.userAgent,
       });
     } catch (error) {
-      console.error('Failed to log login attempt:', error);
       // Never block authentication due to logging failures
     }
   };
@@ -110,7 +109,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return { isLocked: false, minutesRemaining: 0 };
     } catch (error) {
-      console.error('Failed to check account lockout:', error);
       return { isLocked: false, minutesRemaining: 0 };
     }
   };

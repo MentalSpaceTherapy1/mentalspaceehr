@@ -106,7 +106,7 @@ export default function TelehealthSession() {
           ai_note_generation_enabled: !!tele.ai_note_generation_enabled,
         });
       } catch (e) {
-        console.warn('Failed to load telehealth flags', e);
+        // Silently fail - use default flags
       }
     };
     fetchTele();
@@ -115,8 +115,6 @@ export default function TelehealthSession() {
   const loadSession = async () => {
     try {
       setLoading(true);
-      console.log('[Telehealth] Loading session for route param:', sessionId);
-      console.log('[Telehealth] Current user:', user?.id);
 
       // Build tolerant candidates for session_id matching
       const raw = (sessionId || '').trim();
@@ -126,7 +124,6 @@ export default function TelehealthSession() {
 
       // unique candidates in priority order
       const candidates = Array.from(new Set([noColon, withPrefix, withoutPrefix]));
-      console.log('[Telehealth] Session ID candidates:', candidates);
 
       // 1) Try to fetch existing session by any candidate
       const { data: foundSessions, error: findErr } = await supabase
@@ -150,7 +147,6 @@ export default function TelehealthSession() {
 
       // 2) If not found, allow the host to auto-bootstrap a session
       if (!sessionData) {
-        console.warn('[Telehealth] No session found. Attempting host bootstrap.');
 
         // Try to find an appointment referring to any candidate in its telehealth_link
         const orFilters = candidates.map((c) => `telehealth_link.ilike.%${c}%`).join(',');
@@ -164,7 +160,6 @@ export default function TelehealthSession() {
         const hostAppointment = (appts || []).find((a: any) => a.clinician_id === user?.id);
         if (hostAppointment && user?.id) {
           const canonicalId = withPrefix; // enforce canonical prefix
-          console.log('[Telehealth] Bootstrapping session with id:', canonicalId, 'for appointment:', hostAppointment.id);
 
           const { data: created, error: insertErr } = await supabase
             .from('telehealth_sessions')
@@ -198,13 +193,11 @@ export default function TelehealthSession() {
 
           // Redirect to canonical route if needed
           if (noColon !== canonicalId) {
-            console.log('[Telehealth] Redirecting to canonical route:', canonicalLink);
             navigate(canonicalLink, { replace: true });
           }
 
           toast({ title: 'Session initialized', description: 'A new session was created for this link.' });
         } else {
-          console.error('[Telehealth] Session not found and user is not the host of a matching appointment.');
           setError('Session not found or access denied');
           setLoading(false);
           return;
@@ -213,7 +206,6 @@ export default function TelehealthSession() {
         // If we found a session and its session_id differs from the URL, normalize the route
         if (sessionData.session_id !== noColon) {
           const canonicalLink = `/telehealth/session/${sessionData.session_id}`;
-          console.log('[Telehealth] Normalizing route to:', canonicalLink);
           navigate(canonicalLink, { replace: true });
         }
       }
@@ -260,8 +252,8 @@ export default function TelehealthSession() {
             // Send notification to clinician
             supabase.functions.invoke('send-waiting-room-notification', {
               body: { waitingRoomId: newWaitingRoom.id }
-            }).catch(error => {
-              console.error('Failed to send waiting room notification:', error);
+            }).catch(() => {
+              // Silently fail - notification not critical
             });
             
             return;
@@ -305,7 +297,7 @@ export default function TelehealthSession() {
           user_agent: navigator.userAgent
         });
       } catch (e) {
-        console.warn('[Telehealth] Participant insert warning (possibly duplicate):', e);
+        // Silently handle duplicate participant entries
       }
 
       // If session is waiting and host joins, mark active
@@ -393,7 +385,6 @@ export default function TelehealthSession() {
       // Show post-session dialog
       setShowPostSessionDialog(true);
     } catch (err) {
-      console.error('Error ending session:', err);
       toast({
         title: "Error",
         description: "Failed to end session properly",

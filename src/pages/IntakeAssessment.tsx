@@ -132,19 +132,7 @@ export default function IntakeAssessment() {
     wasAIAssisted: false
   });
 
-  // Debug logging
-  useEffect(() => {
-    console.log('Intake Form State:', {
-      noteId,
-      clientId,
-      isSignedNote: metadata.signedDate !== null,
-      signedDate: metadata.signedDate,
-      loading,
-      saving,
-      signatureDialogOpen,
-      supervisorDialogOpen
-    });
-  }, [noteId, clientId, metadata.signedDate, loading, saving, signatureDialogOpen, supervisorDialogOpen]);
+  // Debug logging removed for HIPAA compliance
 
   useEffect(() => {
     loadAvailableClients();
@@ -205,7 +193,6 @@ export default function IntakeAssessment() {
       if (error) throw error;
       setAvailableClients(data || []);
     } catch (error) {
-      console.error('Error loading clients:', error);
       toast({
         title: 'Error',
         description: 'Failed to load client list',
@@ -227,7 +214,6 @@ export default function IntakeAssessment() {
       if (error) throw error;
       setClientData(data);
     } catch (error) {
-      console.error('Error loading client:', error);
       toast({
         title: 'Error',
         description: 'Failed to load client information',
@@ -284,7 +270,6 @@ export default function IntakeAssessment() {
         }));
       }
     } catch (error) {
-      console.error('Error loading appointment details:', error);
       toast({
         title: 'Error',
         description: 'Failed to load appointment details',
@@ -368,7 +353,6 @@ export default function IntakeAssessment() {
       if (supervisorsError) throw supervisorsError;
       setSupervisors(supervisorsList || []);
     } catch (error) {
-      console.error('Error loading user profile and roles:', error);
       toast({
         title: 'Error',
         description: 'Failed to load user profile information',
@@ -429,7 +413,6 @@ export default function IntakeAssessment() {
         }
       }
     } catch (error) {
-      console.error('Error loading note:', error);
       toast({
         title: 'Error',
         description: 'Failed to load intake assessment',
@@ -487,7 +470,6 @@ export default function IntakeAssessment() {
         });
       }
     } catch (error: any) {
-      console.error('Error generating AI content:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to generate AI assessment',

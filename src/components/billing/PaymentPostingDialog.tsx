@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { PaymentAllocationTable } from "./PaymentAllocationTable";
 import { usePayments } from "@/hooks/usePayments";
 
@@ -99,7 +100,7 @@ export const PaymentPostingDialog = ({ open, onOpenChange }: PaymentPostingDialo
       setAllocations([]);
       onOpenChange(false);
     } catch (error) {
-      console.error('Failed to post payment:', error);
+      toast.error('Failed to post payment. Please try again.');
     }
   };
 

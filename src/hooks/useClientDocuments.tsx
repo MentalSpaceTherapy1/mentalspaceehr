@@ -64,7 +64,6 @@ export function useClientDocuments(clientId?: string) {
       if (error) throw error;
       setDocuments((data || []) as ClientDocument[]);
     } catch (error: any) {
-      console.error('Error fetching documents:', error);
       toast.error('Failed to load documents');
     } finally {
       setIsLoading(false);
@@ -124,7 +123,6 @@ export function useClientDocuments(clientId?: string) {
       fetchDocuments();
       return data;
     } catch (error: any) {
-      console.error('Error uploading document:', error);
       toast.error('Failed to upload document: ' + error.message);
       return null;
     }
@@ -154,7 +152,6 @@ export function useClientDocuments(clientId?: string) {
       link.click();
       URL.revokeObjectURL(url);
     } catch (error: any) {
-      console.error('Error downloading document:', error);
       toast.error('Failed to download document');
     }
   };
@@ -177,7 +174,6 @@ export function useClientDocuments(clientId?: string) {
 
       return data.signedUrl;
     } catch (error: any) {
-      console.error('Error getting document URL:', error);
       toast.error('Failed to load document');
       return null;
     }
@@ -199,7 +195,6 @@ export function useClientDocuments(clientId?: string) {
       toast.success('Document shared with client');
       fetchDocuments();
     } catch (error: any) {
-      console.error('Error sharing document:', error);
       toast.error('Failed to share document');
     }
   };
@@ -239,7 +234,6 @@ export function useClientDocuments(clientId?: string) {
       toast.success('Signature added successfully');
       fetchDocuments();
     } catch (error: any) {
-      console.error('Error adding signature:', error);
       toast.error('Failed to add signature');
     }
   };
@@ -274,7 +268,6 @@ export function useClientDocuments(clientId?: string) {
       fetchDocuments();
       return data;
     } catch (error: any) {
-      console.error('Error creating new version:', error);
       toast.error('Failed to create new version');
       return null;
     }
@@ -292,7 +285,6 @@ export function useClientDocuments(clientId?: string) {
       toast.success('Document deleted');
       fetchDocuments();
     } catch (error: any) {
-      console.error('Error deleting document:', error);
       toast.error('Failed to delete document');
     }
   };
@@ -309,7 +301,6 @@ export function useClientDocuments(clientId?: string) {
       toast.success('Tags updated');
       fetchDocuments();
     } catch (error: any) {
-      console.error('Error updating tags:', error);
       toast.error('Failed to update tags');
     }
   };
