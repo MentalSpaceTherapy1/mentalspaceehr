@@ -126,9 +126,10 @@ export function AppSidebar() {
       icon: AlertTriangle,
       items: [
         { title: 'Compliance Dashboard', url: '/admin/compliance-dashboard', icon: AlertTriangle, color: 'from-red-400 to-orange-400' },
-        { title: 'Compliance Rules', url: '/admin/compliance-rules', icon: FileCheck, color: 'from-orange-400 to-amber-400' },
-      ]
-    },
+      { title: 'Compliance Rules', url: '/admin/compliance-rules', icon: FileCheck, color: 'from-orange-400 to-amber-400' },
+      { title: 'Audit Logs', url: '/admin/audit-logs', icon: Shield, color: 'from-amber-400 to-yellow-400' },
+    ]
+  },
     {
       title: 'Communications',
       icon: Bell,

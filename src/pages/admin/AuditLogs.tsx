@@ -53,14 +53,7 @@ export default function AuditLogs() {
 
       let query = supabase
         .from('audit_logs')
-        .select(`
-          *,
-          user_profile:profiles (
-            first_name,
-            last_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(500);
 
@@ -81,10 +74,28 @@ export default function AuditLogs() {
         query = query.lte('created_at', dateRange.to.toISOString());
       }
 
-      const { data, error } = await query;
+      const { data: logsData, error } = await query;
 
       if (error) throw error;
-      setLogs(data || []);
+
+      // Fetch user profiles separately
+      if (logsData && logsData.length > 0) {
+        const userIds = [...new Set(logsData.map(log => log.user_id))];
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email')
+          .in('id', userIds);
+
+        // Merge profiles with logs
+        const logsWithProfiles = logsData.map(log => ({
+          ...log,
+          user_profile: profilesData?.find(p => p.id === log.user_id)
+        }));
+
+        setLogs(logsWithProfiles as any);
+      } else {
+        setLogs([]);
+      }
     } catch (error) {
       toast({
         title: 'Error',

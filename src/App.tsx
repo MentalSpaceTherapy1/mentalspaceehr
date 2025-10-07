@@ -81,6 +81,7 @@ import AssessmentAdministration from "./pages/admin/AssessmentAdministration";
 import DocumentManagement from "./pages/admin/DocumentManagement";
 import InsuranceClaims from "./pages/admin/InsuranceClaims";
 import BillingManagement from "./pages/admin/BillingManagement";
+import AuditLogs from "./pages/admin/AuditLogs";
 
 const queryClient = new QueryClient();
 
@@ -182,7 +183,15 @@ const App = () => (
               } 
             />
             <Route 
-              path="/admin/supervision-management" 
+              path="/admin/audit-logs" 
+              element={
+                <AdminRoute>
+                  <AuditLogs />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/supervision-management"
               element={
                 <AdminRoute>
                   <SupervisionManagement />

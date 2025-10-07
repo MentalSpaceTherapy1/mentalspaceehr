@@ -44,6 +44,7 @@ import { ClientPortalFormsSection } from '@/components/clients/ClientPortalForms
 import { ClientMessagesSection } from '@/components/clients/ClientMessagesSection';
 import { ClientPaymentHistory } from '@/components/clients/ClientPaymentHistory';
 import { ClientAuditLog } from '@/components/clients/ClientAuditLog';
+import { logPHIAccess } from '@/lib/auditLogger';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 
@@ -126,11 +127,29 @@ export default function ClientChart() {
     if (user && id) {
       fetchClient();
       trackRecentlyViewed();
+      
+      // HIPAA COMPLIANCE: Log PHI access
+      logPHIAccess(
+        user.id,
+        id,
+        'client_chart',
+        'Viewed client chart',
+        { section: activeSection }
+      );
+      
       if (activeSection === 'telehealth-consent') {
         fetchConsent();
       }
     }
   }, [user, id, activeSection]);
+
+  
+  // Fetch consent data when needed
+  useEffect(() => {
+    if (activeSection === 'telehealth-consent' && id) {
+      fetchConsent();
+    }
+  }, [activeSection, id]);
 
   const fetchClient = async () => {
     try {
@@ -149,7 +168,6 @@ export default function ClientChart() {
       if (error) throw error;
       setClient(data);
     } catch (error) {
-      console.error('Error fetching client:', error);
       toast({
         title: 'Error',
         description: 'Failed to load client information',
