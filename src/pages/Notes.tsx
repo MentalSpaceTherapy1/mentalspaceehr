@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Brain, Lock, AlertTriangle, Target, Calendar, Phone, Users, Search, Plus, ClipboardList, Clock, FileCheck, UserCheck, AlertCircle } from 'lucide-react';
+import { FileText, Brain, Lock, AlertTriangle, Target, Calendar, Phone, Users, Search, Plus, ClipboardList, Clock, FileCheck, UserCheck, AlertCircle, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 
@@ -199,6 +199,22 @@ export default function Notes() {
       duration: '10-15 min',
       description: 'Document other clinical activities and observations',
       route: '/miscellaneous-note'
+    },
+    {
+      name: 'Clinical Note',
+      icon: ClipboardList,
+      color: 'bg-indigo-500',
+      duration: '15-20 min',
+      description: 'General clinical documentation and observations',
+      route: '/clinical-note'
+    },
+    {
+      name: 'Termination Note',
+      icon: LogOut,
+      color: 'bg-red-500',
+      duration: '30-40 min',
+      description: 'Document treatment termination and discharge summary',
+      route: '/termination-note'
     }
   ];
 
@@ -426,6 +442,10 @@ export default function Notes() {
                                     navigate(`/intake-assessment?noteId=${note.id}`);
                                   } else if (note.note_type === 'progress_note') {
                                     navigate(`/progress-note?noteId=${note.id}`);
+                                  } else if (note.note_type === 'clinical_note') {
+                                    navigate(`/clinical-note/${note.client_id}/${note.id}`);
+                                  } else if (note.note_type === 'termination_note') {
+                                    navigate(`/termination-note/${note.client_id}/${note.id}`);
                                   } else {
                                     navigate(`/notes/${note.id}`);
                                   }
