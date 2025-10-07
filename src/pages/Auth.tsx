@@ -113,7 +113,7 @@ export default function Auth() {
         try {
           await addTrustedDevice(authUser.id);
         } catch (err) {
-          console.error('Failed to add trusted device:', err);
+          // Device registration failed - non-critical
         }
       }
 

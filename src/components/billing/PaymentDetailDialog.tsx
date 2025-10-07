@@ -15,7 +15,6 @@ export const PaymentDetailDialog = ({ open, onOpenChange, payment }: PaymentDeta
 
   const handlePrintReceipt = () => {
     // TODO: Implement receipt printing
-    console.log("Print receipt for payment:", payment.id);
   };
 
   const totalPayment = payment.payment_line_items?.reduce(

@@ -321,7 +321,6 @@ export default function TelehealthSession() {
 
       setLoading(false);
     } catch (err) {
-      console.error('[Telehealth] Error loading session:', err);
       setError(err instanceof Error ? err.message : 'Failed to load session');
       setLoading(false);
     }

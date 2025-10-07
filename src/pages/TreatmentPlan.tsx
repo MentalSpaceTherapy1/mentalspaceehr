@@ -265,7 +265,6 @@ export default function TreatmentPlan() {
           description: `${diagnoses.length} diagnosis(es) imported from intake assessment`,
         });
       } else {
-        console.log('No diagnoses found in intake assessment');
         toast({
           title: 'No Diagnoses Found',
           description: 'No diagnoses were found in the intake assessment. Please complete an intake assessment first.',
@@ -362,7 +361,6 @@ export default function TreatmentPlan() {
           description: `${diagnoses.length} diagnosis(es) imported from intake assessment`,
         });
       } else {
-        console.log('No diagnoses found in intake assessment');
         toast({
           title: 'No Diagnoses Found',
           description: 'No diagnoses were found in the intake assessment. Please complete an intake assessment first.',

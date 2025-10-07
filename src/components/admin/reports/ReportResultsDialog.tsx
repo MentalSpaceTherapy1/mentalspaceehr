@@ -19,7 +19,6 @@ const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accen
 export function ReportResultsDialog({ open, onOpenChange, reportName, reportData, isLoading }: ReportResultsDialogProps) {
   const exportToPDF = () => {
     // TODO: Implement PDF export
-    console.log('Exporting to PDF...');
   };
 
   const exportToCSV = () => {
@@ -43,7 +42,6 @@ export function ReportResultsDialog({ open, onOpenChange, reportName, reportData
 
   const exportToExcel = () => {
     // TODO: Implement Excel export
-    console.log('Exporting to Excel...');
   };
 
   if (isLoading) {

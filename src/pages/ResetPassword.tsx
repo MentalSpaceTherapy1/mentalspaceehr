@@ -40,64 +40,36 @@ export default function ResetPassword() {
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute('content', 'Reset your MentalSpace account password securely.');
 
-    console.log('[ResetPassword] Initializing password reset flow');
-
     // Parse tokens from both hash and search params
-    const hash = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : window.location.hash;
-    const hashParams = new URLSearchParams(hash);
-    const searchParams = new URLSearchParams(window.location.search);
-
-    // Try to get tokens from either source
-    const type = hashParams.get('type') || searchParams.get('type');
-    const access_token = hashParams.get('access_token') || searchParams.get('access_token');
-    const refresh_token = hashParams.get('refresh_token') || searchParams.get('refresh_token');
-
-    console.log('[ResetPassword] Token discovery:', { 
-      type, 
-      hasAccessToken: !!access_token, 
-      hasRefreshToken: !!refresh_token,
-      source: hashParams.get('access_token') ? 'hash' : 'search'
-    });
 
     const finalize = (ok: boolean) => {
-      console.log('[ResetPassword] Session validation complete:', ok);
       setValidSession(ok);
       setChecking(false);
       // Clear URL parameters after successful session hydration
       if (ok && (window.location.hash || window.location.search.includes('access_token'))) {
-        console.log('[ResetPassword] Clearing URL parameters');
         window.history.replaceState(null, '', window.location.pathname);
       }
     };
 
     if (type === 'recovery' && access_token && refresh_token) {
-      console.log('[ResetPassword] Attempting to set session with recovery tokens');
       // Store tokens for potential retry on form submission
       setStoredTokens({ access_token, refresh_token });
       
       supabase.auth.setSession({ access_token, refresh_token })
         .then(({ data, error }) => {
-          console.log('[ResetPassword] setSession result:', { 
-            hasSession: !!data.session, 
-            error: error?.message 
-          });
           finalize(!error && !!data.session);
         })
-        .catch((err) => {
-          console.error('[ResetPassword] setSession error:', err);
+        .catch(() => {
           finalize(false);
         });
       return;
     }
 
-    console.log('[ResetPassword] No recovery tokens found, checking existing session');
     supabase.auth.getSession()
       .then(({ data }) => {
-        console.log('[ResetPassword] getSession result:', { hasSession: !!data.session });
         finalize(!!data.session);
       })
-      .catch((err) => {
-        console.error('[ResetPassword] getSession error:', err);
+      .catch(() => {
         finalize(false);
       });
   }, []);
@@ -110,23 +82,14 @@ export default function ResetPassword() {
     try {
       const validatedData = passwordSchema.parse({ password, confirmPassword });
       
-      console.log('[ResetPassword] Form submitted, checking session before update');
-      
       // Check for active session
       const { data: sessionData } = await supabase.auth.getSession();
-      console.log('[ResetPassword] Current session status:', { hasSession: !!sessionData.session });
 
       // If no session but we have stored tokens, retry setSession
       if (!sessionData.session && storedTokens) {
-        console.log('[ResetPassword] No session found, retrying setSession with stored tokens');
         const { data: retryData, error: retryError } = await supabase.auth.setSession(storedTokens);
-        console.log('[ResetPassword] Retry setSession result:', { 
-          hasSession: !!retryData.session, 
-          error: retryError?.message 
-        });
         
         if (retryError || !retryData.session) {
-          console.error('[ResetPassword] Failed to establish session for password update');
           setErrors({ 
             password: 'Your reset link has expired or is invalid. Please request a new password reset link.' 
           });
@@ -134,7 +97,6 @@ export default function ResetPassword() {
           return;
         }
       } else if (!sessionData.session) {
-        console.error('[ResetPassword] No session and no stored tokens available');
         setErrors({ 
           password: 'Your reset link has expired or is invalid. Please request a new password reset link.' 
         });
@@ -142,17 +104,12 @@ export default function ResetPassword() {
         return;
       }
       
-      console.log('[ResetPassword] Session confirmed, proceeding with password update');
       const { error } = await updatePassword(validatedData.password);
       
       if (!error) {
-        console.log('[ResetPassword] Password updated successfully');
         navigate('/dashboard');
-      } else {
-        console.error('[ResetPassword] Password update failed:', error);
       }
     } catch (error) {
-      console.error('[ResetPassword] Form submission error:', error);
       if (error instanceof z.ZodError) {
         const fieldErrors: { [key: string]: string } = {};
         error.errors.forEach((err) => {

@@ -74,7 +74,6 @@ export const useWebRTC = (sessionId: string, userId: string, role: 'host' | 'cli
       setLocalStream(stream);
       return stream;
     } catch (error) {
-      console.error('Error accessing media devices:', error);
       throw error;
     }
   }, []);
@@ -112,7 +111,6 @@ export const useWebRTC = (sessionId: string, userId: string, role: 'host' | 'cli
     // Monitor connection state
     pc.onconnectionstatechange = () => {
       setConnectionState(pc.connectionState);
-      console.log('Connection state:', pc.connectionState);
     };
 
     // Create data channel for chat/metadata
@@ -212,7 +210,7 @@ export const useWebRTC = (sessionId: string, userId: string, role: 'host' | 'cli
         stopScreenShare();
       };
     } catch (error) {
-      console.error('Error starting screen share:', error);
+      // Screen share failed - non-critical
     }
   }, [localStream]);
 
@@ -244,7 +242,7 @@ export const useWebRTC = (sessionId: string, userId: string, role: 'host' | 'cli
 
       setIsScreenSharing(false);
     } catch (error) {
-      console.error('Error stopping screen share:', error);
+      // Stop screen share failed - non-critical
     }
   }, [localStream]);
 

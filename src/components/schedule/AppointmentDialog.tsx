@@ -197,7 +197,11 @@ export function AppointmentDialog({
       if (locationsRes.data) setLocations(locationsRes.data);
       if (serviceCodesRes.data) setServiceCodes(serviceCodesRes.data);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load appointment data",
+        variant: "destructive"
+      });
     }
   };
 
@@ -215,7 +219,6 @@ export function AppointmentDialog({
   const onSubmit = async (data: AppointmentFormData) => {
     try {
       setSaving(true);
-      console.log('Form data being submitted:', data);
       
       const startNormalized = data.start_time.length === 5 ? `${data.start_time}:00` : data.start_time;
       const [hours, minutes] = startNormalized.split(':').map(Number);
@@ -241,8 +244,6 @@ export function AppointmentDialog({
         appointment_notes: data.appointment_notes || null,
         client_notes: data.client_notes || null,
       } as Partial<Appointment>;
-
-      console.log('Processed appointment data:', appointmentData);
       
       await onSave(appointmentData, editSeries);
       
@@ -250,7 +251,6 @@ export function AppointmentDialog({
       form.reset();
       setIsRecurring(false);
     } catch (error) {
-      console.error('Error saving appointment:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to save appointment",

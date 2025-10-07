@@ -118,7 +118,6 @@ export function generateRecurringSeries(
 
     // Safety check to prevent infinite loops
     if (occurrenceCount > 1000) {
-      console.warn('Generated over 1000 occurrences, stopping');
       break;
     }
   }
