@@ -1,5 +1,8 @@
 project_id = "fpzuxwynuivqdyltpydj"
 
+[functions.cleanup-rate-limits]
+verify_jwt = false
+
 [functions.transcribe-session]
 verify_jwt = true
 

@@ -922,6 +922,51 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action_description: string
+          action_details: Json | null
+          action_type: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          resource_id: string | null
+          resource_type: string
+          session_id: string | null
+          severity: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action_description: string
+          action_details?: Json | null
+          action_type: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type: string
+          session_id?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action_description?: string
+          action_details?: Json | null
+          action_type?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          resource_id?: string | null
+          resource_type?: string
+          session_id?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       blocked_times: {
         Row: {
           block_type: string
@@ -5986,6 +6031,42 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          first_attempt: string
+          id: string
+          last_attempt: string
+          operation: string
+          updated_at: string
+          user_id: string
+          window_expires_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          first_attempt?: string
+          id?: string
+          last_attempt?: string
+          operation: string
+          updated_at?: string
+          user_id: string
+          window_expires_at: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          first_attempt?: string
+          id?: string
+          last_attempt?: string
+          operation?: string
+          updated_at?: string
+          user_id?: string
+          window_expires_at?: string
+        }
+        Relationships: []
+      }
       recently_viewed_clients: {
         Row: {
           client_id: string
@@ -8013,9 +8094,26 @@ export type Database = {
           status: string
         }[]
       }
+      check_rate_limit: {
+        Args: {
+          p_max_attempts?: number
+          p_operation: string
+          p_user_id: string
+          p_window_minutes?: number
+        }
+        Returns: {
+          is_limited: boolean
+          remaining_attempts: number
+          reset_time: string
+        }[]
+      }
       cleanup_expired_devices: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      cleanup_expired_rate_limits: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       create_document_version: {
         Args: {
@@ -8074,6 +8172,18 @@ export type Database = {
       is_session_participant: {
         Args: { _session_id: string; _user_id: string }
         Returns: boolean
+      }
+      log_audit_event: {
+        Args: {
+          p_action_description: string
+          p_action_details?: Json
+          p_action_type: string
+          p_resource_id: string
+          p_resource_type: string
+          p_severity?: string
+          p_user_id: string
+        }
+        Returns: string
       }
       track_document_view: {
         Args: { document_id: string; viewer_id: string }

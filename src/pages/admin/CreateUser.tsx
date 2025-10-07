@@ -31,7 +31,7 @@ export default function CreateUser() {
     if (!user) return;
 
     // SECURITY: Rate limit user creation to 10 per hour
-    const rateLimit = checkRateLimit(user.id, 'create_user', 10, 60 * 60 * 1000);
+    const rateLimit = await checkRateLimit(user.id, 'create_user', 10, 60);
     if (rateLimit.isLimited) {
       toast({
         title: 'Rate Limit Exceeded',

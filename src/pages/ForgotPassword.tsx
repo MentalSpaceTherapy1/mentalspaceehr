@@ -20,7 +20,7 @@ export default function ForgotPassword() {
     e.preventDefault();
     
     // SECURITY: Rate limit password reset attempts
-    const rateLimit = checkRateLimit(email, 'password_reset', 3, 60 * 60 * 1000);
+    const rateLimit = await checkRateLimit(email, 'password_reset', 3, 60);
     if (rateLimit.isLimited) {
       toast.error(`Too many password reset attempts. Please try again after ${rateLimit.resetTime?.toLocaleTimeString()}`);
       return;

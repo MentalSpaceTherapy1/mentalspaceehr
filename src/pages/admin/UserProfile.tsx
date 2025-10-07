@@ -164,7 +164,7 @@ export default function UserProfile() {
     if (!id || !profile) return;
 
     // SECURITY: Rate limit invitation sending to 10 per hour
-    const rateLimit = checkRateLimit(profile.id, 'send_invitation', 10, 60 * 60 * 1000);
+    const rateLimit = await checkRateLimit(profile.id, 'send_invitation', 10, 60);
     if (rateLimit.isLimited) {
       toast.error(`Too many invitation attempts. Please try again after ${rateLimit.resetTime?.toLocaleTimeString()}`);
       return;
@@ -197,7 +197,7 @@ export default function UserProfile() {
     if (!id || !profile) return;
 
     // SECURITY: Rate limit password reset requests to 5 per hour
-    const rateLimit = checkRateLimit(profile.id, 'password_reset_email', 5, 60 * 60 * 1000);
+    const rateLimit = await checkRateLimit(profile.id, 'password_reset_email', 5, 60);
     if (rateLimit.isLimited) {
       toast.error(`Too many password reset attempts. Please try again after ${rateLimit.resetTime?.toLocaleTimeString()}`);
       return;
