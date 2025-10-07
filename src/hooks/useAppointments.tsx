@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from '@/hooks/use-toast';
 import { generateRecurringSeries } from '@/lib/recurringAppointments';
+import { format, addMinutes, parse } from 'date-fns';
 
 export interface Appointment {
   id: string;
@@ -101,8 +102,108 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
     }
   };
 
+  const validateAgainstSchedule = async (
+    clinicianId: string,
+    appointmentDate: string,
+    startTime: string,
+    endTime: string
+  ): Promise<{ valid: boolean; reason?: string }> => {
+    try {
+      // Call the database function to validate
+      const { data, error } = await supabase.rpc('validate_appointment_schedule', {
+        p_clinician_id: clinicianId,
+        p_appointment_date: appointmentDate,
+        p_start_time: startTime,
+        p_end_time: endTime,
+      });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        return {
+          valid: data[0].is_valid,
+          reason: data[0].reason,
+        };
+      }
+
+      return { valid: true };
+    } catch (err) {
+      console.error('Schedule validation error:', err);
+      // Don't block appointment creation on validation errors (backward compatibility)
+      return { valid: true };
+    }
+  };
+
+  const checkCapacity = async (
+    clinicianId: string,
+    appointmentDate: string
+  ): Promise<{ withinLimit: boolean; current: number; max?: number }> => {
+    try {
+      // Get clinician schedule to check max appointments
+      const { data: schedule } = await supabase
+        .from('clinician_schedules')
+        .select('max_appointments_per_day')
+        .eq('clinician_id', clinicianId)
+        .lte('effective_start_date', appointmentDate)
+        .or(`effective_end_date.is.null,effective_end_date.gte.${appointmentDate}`)
+        .order('effective_start_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!schedule?.max_appointments_per_day) {
+        return { withinLimit: true, current: 0 };
+      }
+
+      // Count existing appointments for that day
+      const { data: existingAppts, error } = await supabase
+        .from('appointments')
+        .select('id')
+        .eq('clinician_id', clinicianId)
+        .eq('appointment_date', appointmentDate)
+        .not('status', 'in', '("Cancelled","No Show")');
+
+      if (error) throw error;
+
+      const current = existingAppts?.length || 0;
+      const withinLimit = current < schedule.max_appointments_per_day;
+
+      return {
+        withinLimit,
+        current,
+        max: schedule.max_appointments_per_day,
+      };
+    } catch (err) {
+      console.error('Capacity check error:', err);
+      return { withinLimit: true, current: 0 };
+    }
+  };
+
   const createAppointment = async (appointment: any) => {
     try {
+      // Validate against clinician schedule
+      const scheduleValidation = await validateAgainstSchedule(
+        appointment.clinician_id,
+        appointment.appointment_date,
+        appointment.start_time,
+        appointment.end_time
+      );
+
+      if (!scheduleValidation.valid) {
+        throw new Error(`Schedule conflict: ${scheduleValidation.reason}`);
+      }
+
+      // Check capacity limits
+      const capacityCheck = await checkCapacity(
+        appointment.clinician_id,
+        appointment.appointment_date
+      );
+
+      if (!capacityCheck.withinLimit) {
+        throw new Error(
+          `Daily appointment limit reached (${capacityCheck.current}/${capacityCheck.max}). Please choose a different date.`
+        );
+      }
+
       // Handle telehealth session creation for Internal platform
       let telehealthLink = appointment.telehealth_link;
       if (appointment.service_location === 'Telehealth' && appointment.telehealth_platform === 'Internal') {

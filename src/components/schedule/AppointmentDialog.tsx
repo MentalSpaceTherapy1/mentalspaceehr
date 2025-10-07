@@ -3,13 +3,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format, isToday, isPast } from 'date-fns';
-import { Calendar as CalendarIcon, Sparkles, Repeat, Video, DollarSign } from 'lucide-react';
+import { Calendar as CalendarIcon, Sparkles, Repeat, Video, DollarSign, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { TimeSlotPicker } from './TimeSlotPicker';
 import { RecurringAppointmentForm } from './RecurringAppointmentForm';
 import { GroupSessionParticipants } from './GroupSessionParticipants';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAvailableSlots } from '@/hooks/useAvailableSlots';
 import {
   Dialog,
   DialogContent,
@@ -107,6 +109,9 @@ export function AppointmentDialog({
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Watch form values for schedule integration - need to define form first
+  const [capacityInfo, setCapacityInfo] = useState<{ current: number; max?: number } | null>(null);
+
   const getMaxDays = (frequency: string) => {
     if (frequency === 'Weekly') return 1;
     if (frequency === 'TwiceWeekly') return 2;
@@ -142,6 +147,18 @@ export function AppointmentDialog({
       start_time: '09:00', // Add default start time
     },
   });
+
+  // Watch form values for schedule integration
+  const selectedClinicianId = form.watch('clinician_id');
+  const selectedDate = form.watch('appointment_date');
+  const selectedDuration = form.watch('duration');
+
+  // Fetch available slots based on clinician, date, and duration
+  const { availableSlots, loading: slotsLoading } = useAvailableSlots(
+    selectedClinicianId,
+    selectedDate,
+    selectedDuration || 50
+  );
 
   useEffect(() => {
     if (appointment) {
@@ -286,6 +303,22 @@ export function AppointmentDialog({
               </p>
             </div>
           )}
+          {capacityInfo && capacityInfo.max && (
+            <Alert className="mt-2">
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                {capacityInfo.current >= capacityInfo.max ? (
+                  <span className="text-destructive font-medium">
+                    Daily limit reached ({capacityInfo.current}/{capacityInfo.max} appointments)
+                  </span>
+                ) : (
+                  <span>
+                    {capacityInfo.current}/{capacityInfo.max} appointments scheduled for this day
+                  </span>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
         </DialogHeader>
 
         <Form {...form}>
@@ -390,9 +423,16 @@ export function AppointmentDialog({
                       <TimeSlotPicker
                         value={field.value}
                         onChange={field.onChange}
+                        availableSlots={availableSlots}
+                        showUnavailable={true}
                       />
                     </FormControl>
                     <FormMessage />
+                    {slotsLoading && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Loading available times...
+                      </p>
+                    )}
                   </FormItem>
                 )}
               />
