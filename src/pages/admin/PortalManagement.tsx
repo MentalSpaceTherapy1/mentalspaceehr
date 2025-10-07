@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Mail, Settings } from 'lucide-react';
+import { Users, Mail, Settings, FileText } from 'lucide-react';
 import { PortalClientsTable } from '@/components/admin/portal/PortalClientsTable';
 import { PortalEmailTemplates } from '@/components/admin/portal/PortalEmailTemplates';
 import { PortalSettings } from '@/components/admin/portal/PortalSettings';
+import { PortalFormsManagement } from '@/components/admin/portal/PortalFormsManagement';
 
 export default function PortalManagement() {
   return (
@@ -24,6 +25,10 @@ export default function PortalManagement() {
                 <Users className="h-4 w-4 mr-2" />
                 Client Access
               </TabsTrigger>
+              <TabsTrigger value="forms">
+                <FileText className="h-4 w-4 mr-2" />
+                Forms
+              </TabsTrigger>
               <TabsTrigger value="templates">
                 <Mail className="h-4 w-4 mr-2" />
                 Email Templates
@@ -36,6 +41,10 @@ export default function PortalManagement() {
 
             <TabsContent value="clients">
               <PortalClientsTable />
+            </TabsContent>
+
+            <TabsContent value="forms">
+              <PortalFormsManagement />
             </TabsContent>
 
             <TabsContent value="templates">
