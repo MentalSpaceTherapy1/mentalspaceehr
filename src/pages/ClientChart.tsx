@@ -75,7 +75,6 @@ const chartSections = [
   { id: 'appointments', label: 'Appointments', icon: Calendar },
   { id: 'documents-forms', label: 'Documents & Forms', icon: FolderOpen },
   { id: 'messages', label: 'Messages', icon: MessageSquare },
-  { id: 'payment-history', label: 'Payment History', icon: DollarSign },
   { id: 'audit-log', label: 'Audit Log', icon: History },
 ];
 
