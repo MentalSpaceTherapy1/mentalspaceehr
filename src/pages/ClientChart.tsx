@@ -41,6 +41,7 @@ import { DocumentManagementPanel } from '@/components/documents/DocumentManageme
 import { ClinicalNotesSection } from '@/components/clients/ClinicalNotesSection';
 import { ClientPortalFormsSection } from '@/components/clients/ClientPortalFormsSection';
 import { ClientMessagesSection } from '@/components/clients/ClientMessagesSection';
+import { ClientPaymentHistory } from '@/components/clients/ClientPaymentHistory';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 
@@ -246,7 +247,12 @@ export default function ClientChart() {
           </Card>
         );
       case 'insurance-billing':
-        return <InsuranceBillingSection clientId={id!} />;
+        return (
+          <div className="space-y-6">
+            <InsuranceBillingSection clientId={id!} />
+            <ClientPaymentHistory clientId={id!} />
+          </div>
+        );
       case 'appointments':
         return <ClientAppointments clientId={id!} />;
       case 'progress-notes':
