@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 
 export default function PortalResetPassword() {
   const navigate = useNavigate();
@@ -23,8 +24,6 @@ export default function PortalResetPassword() {
     // SEO
     document.title = 'Portal Reset Password | MentalSpace';
 
-    console.log('[PortalResetPassword] Initializing password reset flow');
-
     // Parse tokens from both hash and search params
     const hash = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : window.location.hash;
     const hashParams = new URLSearchParams(hash);
@@ -35,15 +34,7 @@ export default function PortalResetPassword() {
     const access_token = hashParams.get('access_token') || searchParams.get('access_token');
     const refresh_token = hashParams.get('refresh_token') || searchParams.get('refresh_token');
 
-    console.log('[PortalResetPassword] Token discovery:', { 
-      type, 
-      hasAccessToken: !!access_token, 
-      hasRefreshToken: !!refresh_token,
-      source: hashParams.get('access_token') ? 'hash' : 'search'
-    });
-
     const handleInvalid = () => {
-      console.log('[PortalResetPassword] Invalid or expired link detected');
       toast({
         title: 'Invalid or expired link',
         description: 'Please request a new password reset.',
@@ -53,12 +44,10 @@ export default function PortalResetPassword() {
     };
 
     const finalize = (ok: boolean) => {
-      console.log('[PortalResetPassword] Session validation complete:', ok);
       setValidSession(ok);
       setChecking(false);
       // Clear URL parameters after successful session hydration
       if (ok && (window.location.hash || window.location.search.includes('access_token'))) {
-        console.log('[PortalResetPassword] Clearing URL parameters');
         window.history.replaceState(null, '', window.location.pathname);
       }
       if (!ok) {
@@ -67,31 +56,22 @@ export default function PortalResetPassword() {
     };
 
     if (type === 'recovery' && access_token && refresh_token) {
-      console.log('[PortalResetPassword] Attempting to set session with recovery tokens');
       // Store tokens for potential retry on form submission
       setStoredTokens({ access_token, refresh_token });
       
       supabase.auth.setSession({ access_token, refresh_token })
         .then(({ data, error }) => {
-          console.log('[PortalResetPassword] setSession result:', { 
-            hasSession: !!data.session, 
-            error: error?.message 
-          });
           finalize(!error && !!data.session);
         })
-        .catch((err) => {
-          console.error('[PortalResetPassword] setSession error:', err);
+        .catch(() => {
           finalize(false);
         });
       return;
     }
 
-    console.log('[PortalResetPassword] No recovery tokens found, checking existing session');
     supabase.auth.getSession().then(({ data }) => {
-      console.log('[PortalResetPassword] getSession result:', { hasSession: !!data.session });
       finalize(!!data.session);
-    }).catch((err) => {
-      console.error('[PortalResetPassword] getSession error:', err);
+    }).catch(() => {
       finalize(false);
     });
   }, [navigate]);
@@ -131,23 +111,14 @@ export default function PortalResetPassword() {
     setLoading(true);
 
     try {
-      console.log('[PortalResetPassword] Form submitted, checking session before update');
-      
       // Check for active session
       const { data: sessionData } = await supabase.auth.getSession();
-      console.log('[PortalResetPassword] Current session status:', { hasSession: !!sessionData.session });
 
       // If no session but we have stored tokens, retry setSession
       if (!sessionData.session && storedTokens) {
-        console.log('[PortalResetPassword] No session found, retrying setSession with stored tokens');
         const { data: retryData, error: retryError } = await supabase.auth.setSession(storedTokens);
-        console.log('[PortalResetPassword] Retry setSession result:', { 
-          hasSession: !!retryData.session, 
-          error: retryError?.message 
-        });
         
         if (retryError || !retryData.session) {
-          console.error('[PortalResetPassword] Failed to establish session for password update');
           toast({
             title: 'Session expired',
             description: 'Your reset link has expired. Please request a new password reset link.',
@@ -158,7 +129,6 @@ export default function PortalResetPassword() {
           return;
         }
       } else if (!sessionData.session) {
-        console.error('[PortalResetPassword] No session and no stored tokens available');
         toast({
           title: 'Session expired',
           description: 'Your reset link has expired. Please request a new password reset link.',
@@ -169,14 +139,12 @@ export default function PortalResetPassword() {
         return;
       }
 
-      console.log('[PortalResetPassword] Session confirmed, proceeding with password update');
       const { error } = await supabase.auth.updateUser({
         password: password,
       });
 
       if (error) throw error;
 
-      console.log('[PortalResetPassword] Password updated successfully');
       toast({
         title: 'Password updated successfully',
         description: 'You can now sign in with your new password.',
@@ -186,7 +154,7 @@ export default function PortalResetPassword() {
       await supabase.auth.signOut();
       navigate('/portal/login');
     } catch (error: any) {
-      console.error('[PortalResetPassword] Password update error:', error);
+      logger.error('Password update failed', { context: 'PortalResetPassword' });
       toast({
         title: 'Error',
         description: error.message || 'Failed to update password. Please try again.',

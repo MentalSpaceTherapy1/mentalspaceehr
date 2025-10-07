@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { logger } from '@/lib/logger';
 
 export interface MessageAttachment {
   id: string;
@@ -104,7 +105,7 @@ export const usePortalMessages = (clientId?: string) => {
 
       setMessages(mappedMessages);
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      logger.error('Failed to fetch portal messages', { context: 'usePortalMessages' });
     } finally {
       setLoading(false);
     }
@@ -142,7 +143,7 @@ export const usePortalMessages = (clientId?: string) => {
       await fetchMessages();
       return data;
     } catch (error) {
-      console.error('Error sending message:', error);
+      logger.error('Failed to send portal message', { context: 'usePortalMessages' });
       throw error;
     }
   };
@@ -161,7 +162,7 @@ export const usePortalMessages = (clientId?: string) => {
 
       await fetchMessages();
     } catch (error) {
-      console.error('Error marking message as read:', error);
+      logger.error('Failed to mark message as read', { context: 'usePortalMessages' });
       throw error;
     }
   };

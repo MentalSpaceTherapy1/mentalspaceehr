@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { logger } from '@/lib/logger';
 
 export interface ProgressTrackerEntry {
   id: string;
@@ -99,7 +100,7 @@ export const usePortalProgress = (clientId?: string) => {
 
       setTrackers(mappedTrackers);
     } catch (error) {
-      console.error('Error fetching trackers:', error);
+      logger.error('Failed to fetch progress trackers', { context: 'usePortalProgress' });
     } finally {
       setLoading(false);
     }
@@ -129,7 +130,7 @@ export const usePortalProgress = (clientId?: string) => {
       await fetchTrackers();
       return data;
     } catch (error) {
-      console.error('Error adding entry:', error);
+      logger.error('Failed to add progress tracker entry', { context: 'usePortalProgress' });
       throw error;
     }
   };
@@ -148,7 +149,7 @@ export const usePortalProgress = (clientId?: string) => {
 
       await fetchTrackers();
     } catch (error) {
-      console.error('Error updating entry:', error);
+      logger.error('Failed to update progress tracker entry', { context: 'usePortalProgress' });
       throw error;
     }
   };

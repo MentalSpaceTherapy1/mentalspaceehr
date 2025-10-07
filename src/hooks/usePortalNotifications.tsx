@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePortalAccount } from './usePortalAccount';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface PortalNotification {
   id: string;
@@ -50,7 +51,7 @@ export const usePortalNotifications = () => {
       setUnreadCount(mappedNotifications.filter(n => !n.isRead).length);
 
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      logger.error('Failed to fetch portal notifications', { context: 'usePortalNotifications' });
       toast.error('Failed to load notifications');
     } finally {
       setLoading(false);
@@ -95,7 +96,7 @@ export const usePortalNotifications = () => {
 
       await fetchNotifications();
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      logger.error('Failed to mark notification as read', { context: 'usePortalNotifications' });
       toast.error('Failed to update notification');
     }
   };
@@ -118,7 +119,7 @@ export const usePortalNotifications = () => {
       toast.success('All notifications marked as read');
       await fetchNotifications();
     } catch (error) {
-      console.error('Error marking all as read:', error);
+      logger.error('Failed to mark all notifications as read', { context: 'usePortalNotifications' });
       toast.error('Failed to update notifications');
     }
   };
@@ -135,7 +136,7 @@ export const usePortalNotifications = () => {
       toast.success('Notification archived');
       await fetchNotifications();
     } catch (error) {
-      console.error('Error archiving notification:', error);
+      logger.error('Failed to archive notification', { context: 'usePortalNotifications' });
       toast.error('Failed to archive notification');
     }
   };

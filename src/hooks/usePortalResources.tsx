@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { logger } from '@/lib/logger';
 
 export interface Resource {
   id: string;
@@ -109,7 +110,7 @@ export const usePortalResources = (clientId?: string) => {
       setRecommendedResources(mappedAssignedResources);
       setResources(mappedPublicResources);
     } catch (error) {
-      console.error('Error fetching resources:', error);
+      logger.error('Failed to fetch portal resources', { context: 'usePortalResources' });
     } finally {
       setLoading(false);
     }
@@ -128,7 +129,7 @@ export const usePortalResources = (clientId?: string) => {
 
       await fetchResources();
     } catch (error) {
-      console.error('Error marking resource as viewed:', error);
+      logger.error('Failed to mark resource as viewed', { context: 'usePortalResources' });
       throw error;
     }
   };
@@ -146,7 +147,7 @@ export const usePortalResources = (clientId?: string) => {
 
       await fetchResources();
     } catch (error) {
-      console.error('Error marking resource as completed:', error);
+      logger.error('Failed to mark resource as completed', { context: 'usePortalResources' });
       throw error;
     }
   };

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
-import type { 
+import { logger } from '@/lib/logger';
+import type {
   PortalAccount, 
   PortalPreferences, 
   PortalAccountSecurity,
@@ -29,8 +30,6 @@ export const usePortalAccount = () => {
     try {
       setLoading(true);
 
-      console.log('[usePortalAccount] Fetching context for user:', user.id);
-
       // Fetch client record (no cross-table joins to avoid RLS issues)
       const { data: client, error: clientError } = await supabase
         .from('clients')
@@ -38,15 +37,12 @@ export const usePortalAccount = () => {
         .eq('portal_user_id', user.id)
         .maybeSingle();
 
-      console.log('[usePortalAccount] Client query result:', { client, clientError });
-
       if (clientError) {
-        console.error('[usePortalAccount] Error fetching client:', clientError);
+        logger.error('Failed to fetch client record', { context: 'usePortalAccount' });
         throw clientError;
       }
 
       if (!client) {
-        console.error('[usePortalAccount] No client record found for portal user');
         // Check if user has staff roles - they might be logged in with wrong account
         const { data: roles } = await supabase
           .from('user_roles')
@@ -67,7 +63,6 @@ export const usePortalAccount = () => {
       }
 
       if (!client.portal_enabled) {
-        console.error('[usePortalAccount] Portal access not enabled for client:', client.id);
         toast.error('Portal access is not enabled for your account. Please contact your therapist.');
         return;
       }
@@ -79,15 +74,8 @@ export const usePortalAccount = () => {
         .eq('client_id', client.id)
         .maybeSingle();
 
-      console.log('[usePortalAccount] Preferences query result:', { preferences, prefError });
-
       if (prefError) {
-        console.error('[usePortalAccount] Error fetching preferences:', prefError);
-      }
-
-      // If none, use in-memory defaults; do not auto-insert to avoid RLS issues
-      if (!preferences) {
-        console.warn('[usePortalAccount] No portal_preferences row found; using defaults');
+        logger.error('Failed to fetch portal preferences', { context: 'usePortalAccount' });
       }
 
       // Fetch security settings
@@ -97,15 +85,8 @@ export const usePortalAccount = () => {
         .eq('client_id', client.id)
         .maybeSingle();
 
-      console.log('[usePortalAccount] Security query result:', { security, secError });
-
       if (secError) {
-        console.error('[usePortalAccount] Error fetching security:', secError);
-      }
-
-      // If none, use in-memory defaults; do not auto-insert to avoid RLS issues
-      if (!security) {
-        console.warn('[usePortalAccount] No portal_account_security row found; using defaults');
+        logger.error('Failed to fetch portal security settings', { context: 'usePortalAccount' });
       }
 
       // Fetch guardian relationships if this is a guardian account
@@ -123,8 +104,6 @@ export const usePortalAccount = () => {
         `)
         .eq('guardian_client_id', client.id)
         .eq('status', 'active');
-
-      console.log('[usePortalAccount] Guardian relationships query result:', { guardianRelationships, guardianError });
 
       // Build portal context
       const context: ClientPortalContext = {
@@ -177,20 +156,16 @@ export const usePortalAccount = () => {
 
       // Update last login timestamp (suppress RLS errors if client can't update own row)
       try {
-        const { error: updateError } = await supabase
+        await supabase
           .from('clients')
           .update({ portal_last_login: new Date().toISOString() })
           .eq('id', client.id);
-
-        if (updateError) {
-          console.warn('[usePortalAccount] Could not update last login (likely RLS):', updateError);
-        }
       } catch (err) {
-        console.warn('[usePortalAccount] Exception updating last login:', err);
+        // Silently fail - not critical for user experience
       }
 
     } catch (error) {
-      console.error('Error fetching portal context:', error);
+      logger.error('Failed to load portal context', { context: 'usePortalAccount' });
       toast.error('Failed to load portal information');
     } finally {
       setLoading(false);
@@ -211,7 +186,7 @@ export const usePortalAccount = () => {
       toast.success('Preferences updated successfully');
       await fetchPortalContext();
     } catch (error) {
-      console.error('Error updating preferences:', error);
+      logger.error('Failed to update portal preferences', { context: 'usePortalAccount' });
       toast.error('Failed to update preferences');
     }
   };
@@ -230,7 +205,7 @@ export const usePortalAccount = () => {
       toast.success('Security settings updated');
       await fetchPortalContext();
     } catch (error) {
-      console.error('Error updating security:', error);
+      logger.error('Failed to update portal security settings', { context: 'usePortalAccount' });
       toast.error('Failed to update security settings');
     }
   };
@@ -248,7 +223,7 @@ export const usePortalAccount = () => {
         user_agent: navigator.userAgent
       });
     } catch (error) {
-      console.error('Error logging portal access:', error);
+      // Silently fail - logging should not disrupt user experience
     }
   };
 
