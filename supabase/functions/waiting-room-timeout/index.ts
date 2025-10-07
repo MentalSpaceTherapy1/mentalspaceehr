@@ -17,8 +17,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('[Waiting Room Timeout] Checking for timed out waiting rooms...');
-
     // Get timeout setting from practice settings
     const { data: settings } = await supabaseClient
       .from('practice_settings')
@@ -26,7 +24,6 @@ serve(async (req) => {
       .single();
 
     const timeoutMinutes = (settings?.telehealth_settings as any)?.waiting_room_timeout_minutes || 30;
-    console.log(`[Waiting Room Timeout] Timeout set to ${timeoutMinutes} minutes`);
 
     // Calculate timeout threshold
     const timeoutThreshold = new Date();
@@ -47,7 +44,6 @@ serve(async (req) => {
       .lt('client_arrived_time', timeoutThreshold.toISOString());
 
     if (fetchError) {
-      console.error('[Waiting Room Timeout] Error fetching waiting rooms:', fetchError);
       throw fetchError;
     }
 
@@ -65,7 +61,6 @@ serve(async (req) => {
     const totalRooms = (timedOutRooms?.length || 0) + (staleHeartbeatRooms?.length || 0);
 
     if (totalRooms === 0) {
-      console.log('[Waiting Room Timeout] No timed out or disconnected waiting rooms found');
       return new Response(
         JSON.stringify({ message: 'No timed out waiting rooms', count: 0 }),
         {
@@ -74,8 +69,6 @@ serve(async (req) => {
         }
       );
     }
-
-    console.log(`[Waiting Room Timeout] Found ${timedOutRooms?.length || 0} timed out and ${staleHeartbeatRooms?.length || 0} disconnected waiting rooms`);
 
     // Update timed out waiting rooms
     if (timedOutRooms && timedOutRooms.length > 0) {
@@ -89,7 +82,7 @@ serve(async (req) => {
         .in('id', timedOutRooms.map(room => room.id));
 
       if (updateError) {
-        console.error('[Waiting Room Timeout] Error updating timed out rooms:', updateError);
+        // Continue processing
       }
     }
 
@@ -104,11 +97,9 @@ serve(async (req) => {
         .in('id', staleHeartbeatRooms.map(room => room.id));
 
       if (leftError) {
-        console.error('[Waiting Room Timeout] Error updating left rooms:', leftError);
+        // Continue processing
       }
     }
-
-    console.log(`[Waiting Room Timeout] Successfully processed ${totalRooms} waiting rooms`);
 
     return new Response(
       JSON.stringify({
@@ -123,9 +114,8 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('[Waiting Room Timeout] Error:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: 'Timeout processing failed' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,

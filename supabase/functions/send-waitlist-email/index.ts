@@ -93,8 +93,6 @@ serve(async (req) => {
       html,
     });
 
-    console.log("Email sent via Resend:", emailResult);
-
     // Update entry as notified
     await supabase
       .from("appointment_waitlist")
@@ -106,9 +104,8 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
-    console.error("send-waitlist-email error:", error);
     return new Response(
-      JSON.stringify({ success: false, error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ success: false, error: 'Email failed' }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }

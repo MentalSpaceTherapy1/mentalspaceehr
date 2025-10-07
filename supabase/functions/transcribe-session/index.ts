@@ -25,8 +25,6 @@ serve(async (req) => {
       throw new Error('Session ID and audio are required');
     }
 
-    console.log(`Processing transcription for session: ${sessionId}`);
-
     // Convert base64 to binary in chunks to prevent memory issues
     const processBase64Chunks = (base64String: string, chunkSize = 32768) => {
       const chunks: Uint8Array[] = [];
@@ -58,7 +56,6 @@ serve(async (req) => {
     };
 
     const binaryAudio = processBase64Chunks(audio);
-    console.log(`Audio size: ${binaryAudio.length} bytes`);
 
     // Prepare form data for transcription
     const formData = new FormData();
@@ -74,7 +71,6 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not configured');
     }
 
-    console.log('Transcribing with OpenAI Whisper');
     const transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
@@ -85,12 +81,10 @@ serve(async (req) => {
 
     if (!transcriptionResponse.ok) {
       const errorText = await transcriptionResponse.text();
-      console.error('Transcription API error:', errorText);
-      throw new Error(`Transcription failed: ${errorText}`);
+      throw new Error('Transcription failed');
     }
 
     const transcriptionResult = await transcriptionResponse.json();
-    console.log('Transcription completed successfully');
 
     // Process transcript with basic speaker diarization
     // In a production system, you'd use a more sophisticated diarization model
@@ -149,7 +143,6 @@ serve(async (req) => {
     );
 
     // Resolve the canonical session ID to the actual UUID
-    console.log('Looking up session UUID for:', sessionId);
     const { data: sessionData, error: sessionError } = await supabase
       .from('telehealth_sessions')
       .select('id')
@@ -157,15 +150,12 @@ serve(async (req) => {
       .maybeSingle();
 
     if (sessionError || !sessionData) {
-      console.error('Error finding session:', sessionError);
-      throw new Error(`Session not found: ${sessionId}`);
+      throw new Error('Session not found');
     }
 
     const sessionUuid = sessionData.id;
-    console.log('Resolved session UUID:', sessionUuid);
 
     // Store transcript in database
-    console.log('Storing transcript for session UUID:', sessionUuid);
     const { error: insertError } = await supabase
       .from('session_transcripts')
       .insert({
@@ -176,11 +166,8 @@ serve(async (req) => {
       });
 
     if (insertError) {
-      console.error('Error storing transcript:', insertError);
       throw insertError;
     }
-
-    console.log('Transcript stored successfully');
 
     return new Response(
       JSON.stringify({
@@ -195,10 +182,9 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in transcribe-session function:', error);
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: 'Transcription failed',
       }),
       {
         status: 500,

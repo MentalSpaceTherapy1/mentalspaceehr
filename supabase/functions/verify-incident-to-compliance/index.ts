@@ -34,8 +34,6 @@ Deno.serve(async (req) => {
       throw new Error('incident_to_billing_id is required');
     }
 
-    console.log(`Verifying compliance for incident-to billing: ${incidentToBillingId}`);
-
     // Fetch incident-to billing record
     const { data: billingRecord, error: fetchError } = await supabaseClient
       .from('incident_to_billing')
@@ -165,9 +163,6 @@ Deno.serve(async (req) => {
       details,
     };
 
-    console.log(`Compliance check result: ${compliant ? 'COMPLIANT' : 'NON-COMPLIANT'}`);
-    console.log(`Issues: ${issues.length}, Warnings: ${warnings.length}`);
-
     return new Response(
       JSON.stringify(result),
       {
@@ -175,10 +170,9 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in verify-incident-to-compliance:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Compliance check failed' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

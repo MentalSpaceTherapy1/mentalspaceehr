@@ -16,8 +16,6 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('Starting Sunday lockout process...');
-
     // Get active compliance rules
     const { data: rules, error: rulesError } = await supabase
       .from('compliance_rules')
@@ -27,13 +25,9 @@ serve(async (req) => {
 
     if (rulesError) throw rulesError;
 
-    console.log(`Found ${rules?.length || 0} active compliance rules`);
-
     const results = [];
     
     for (const rule of rules || []) {
-      console.log(`Processing rule: ${rule.rule_name}`);
-      
       // Find all unsigned notes that are overdue
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - rule.days_allowed_for_documentation);
@@ -46,10 +40,8 @@ serve(async (req) => {
         .lte('date_of_service', cutoffDate.toISOString().split('T')[0]);
 
       if (clinicalError) {
-        console.error('Error fetching clinical notes:', clinicalError);
+        // Continue with next rule
       } else {
-        console.log(`Found ${clinicalNotes?.length || 0} unsigned clinical notes to lock`);
-        
         for (const note of clinicalNotes || []) {
           // Check if compliance status exists
           const { data: existingStatus } = await supabase
@@ -60,7 +52,6 @@ serve(async (req) => {
             .single();
 
           if (existingStatus && existingStatus.is_locked) {
-            console.log(`Note ${note.id} already locked, skipping`);
             continue;
           }
 
@@ -109,8 +100,6 @@ serve(async (req) => {
             note_type: 'clinical_note',
             locked: true
           });
-
-          console.log(`Locked note ${note.id}`);
         }
       }
 
@@ -130,8 +119,6 @@ serve(async (req) => {
           .lte(noteType.dateField, cutoffDate.toISOString().split('T')[0]);
 
         if (!error && notes) {
-          console.log(`Found ${notes.length} unsigned ${noteType.type} notes to lock`);
-          
           for (const note of notes) {
             const { data: existingStatus } = await supabase
               .from('note_compliance_status')
@@ -185,14 +172,10 @@ serve(async (req) => {
               note_type: noteType.type,
               locked: true
             });
-
-            console.log(`Locked ${noteType.type} ${note.id}`);
           }
         }
       }
     }
-
-    console.log(`Sunday lockout completed. Locked ${results.length} notes.`);
 
     return new Response(
       JSON.stringify({
@@ -205,9 +188,8 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error('Error in sunday-lockout function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Lockout failed' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

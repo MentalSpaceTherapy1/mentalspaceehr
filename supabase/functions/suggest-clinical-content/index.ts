@@ -29,8 +29,6 @@ serve(async (req) => {
     const startTime = Date.now();
     const { content, suggestionType, clientId, noteType }: SuggestionRequest = await req.json();
 
-    console.log(`Generating ${suggestionType} suggestions`);
-
     // Get AI settings
     const { data: aiSettings } = await supabase
       .from('ai_note_settings')
@@ -176,7 +174,6 @@ serve(async (req) => {
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error(`${useOpenAI ? 'OpenAI' : 'Lovable AI'} error:`, aiResponse.status, errorText);
       
       // Log the error
       await supabase.from('ai_request_logs').insert({
@@ -224,8 +221,6 @@ serve(async (req) => {
       success: true
     });
 
-    console.log(`Suggestions generated in ${processingTime}ms`);
-
     return new Response(
       JSON.stringify({
         suggestions,
@@ -238,9 +233,8 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("Error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: 'Suggestion generation failed' }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -56,10 +56,7 @@ serve(async (req) => {
       throw new Error('Required API keys not configured');
     }
 
-    console.log('Starting transcription and note generation...');
-
-    // Step 1: Transcribe audio using Whisper via Lovable AI Gateway
-    console.log('Transcribing audio...');
+    // Step 1: Transcribe audio using Whisper
     const binaryAudio = processBase64Chunks(audioBase64);
     const audioBlob = new Blob([binaryAudio], { type: 'audio/webm' });
     
@@ -77,16 +74,13 @@ serve(async (req) => {
 
     if (!transcriptionResponse.ok) {
       const errorText = await transcriptionResponse.text();
-      console.error('Transcription error:', errorText);
-      throw new Error(`Transcription failed: ${errorText}`);
+      throw new Error('Transcription failed');
     }
 
     const transcriptionData = await transcriptionResponse.json();
     const transcript = transcriptionData.text;
-    console.log('Transcription complete, length:', transcript.length);
 
     // Step 2: Generate structured clinical note using AI
-    console.log('Generating clinical note from transcript...');
     const noteGenerationResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -155,7 +149,6 @@ Be professional, concise, and clinically appropriate. If information is missing,
 
     if (!noteGenerationResponse.ok) {
       const errorText = await noteGenerationResponse.text();
-      console.error('Note generation error:', errorText);
       
       if (noteGenerationResponse.status === 429) {
         throw new Error('Rate limit exceeded. Please try again in a moment.');
@@ -167,7 +160,6 @@ Be professional, concise, and clinically appropriate. If information is missing,
     }
 
     const noteData = await noteGenerationResponse.json();
-    console.log('Note generation response received');
 
     // Extract the structured note from tool call
     const toolCall = noteData.choices[0].message.tool_calls?.[0];
@@ -176,7 +168,6 @@ Be professional, concise, and clinically appropriate. If information is missing,
     }
 
     const noteContent = JSON.parse(toolCall.function.arguments);
-    console.log('Structured note extracted successfully');
 
     // Step 3: Save to database
     const supabase = createClient(
@@ -203,11 +194,8 @@ Be professional, concise, and clinically appropriate. If information is missing,
       .single();
 
     if (noteError) {
-      console.error('Database error:', noteError);
       throw noteError;
     }
-
-    console.log('Clinical note saved successfully');
 
     return new Response(
       JSON.stringify({
@@ -222,10 +210,9 @@ Be professional, concise, and clinically appropriate. If information is missing,
     );
 
   } catch (error) {
-    console.error('Error in transcribe-and-generate-note:', error);
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: 'Processing failed',
         details: error 
       }),
       {

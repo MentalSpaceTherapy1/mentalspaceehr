@@ -48,8 +48,6 @@ serve(async (req) => {
 
     if (queryError) throw queryError;
 
-    console.log(`Found ${expiringConsents?.length || 0} consents expiring in 30 days`);
-
     if (!expiringConsents || expiringConsents.length === 0) {
       return new Response(
         JSON.stringify({ message: 'No consents require renewal notification' }),
@@ -68,7 +66,6 @@ serve(async (req) => {
         const clinicianName = `${consent.profiles?.first_name || ''} ${consent.profiles?.last_name || ''}`.trim();
         
         if (!clientEmail) {
-          console.log(`No email for client ${clientName}, skipping notification`);
           continue;
         }
 
@@ -129,10 +126,7 @@ serve(async (req) => {
           clientName,
           status: 'notified',
         });
-
-        console.log(`Notification sent to ${clientName} (${clientEmail})`);
       } catch (error: any) {
-        console.error(`Error notifying consent ${consent.id}:`, error);
         results.push({
           consentId: consent.id,
           status: 'error',
@@ -149,9 +143,8 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    console.error('Error in telehealth-consent-renewal:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Renewal check failed' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -140,10 +140,8 @@ async function sendEmailReminder(
       recipient: appointment.client.email
     });
     
-    console.log(`Email reminder sent to ${appointment.client.email}`);
-  } catch (error) {
-    console.error('Error sending email:', error);
     
+  } catch (error) {
     await supabase.from('reminder_logs').insert({
       appointment_id: appointment.id,
       reminder_type: 'email',
@@ -169,8 +167,6 @@ async function generateConfirmationToken(appointmentId: string): Promise<string>
 }
 
 async function processReminders(): Promise<any> {
-  console.log('Processing appointment reminders...');
-  
   // Get reminder settings
   const { data: settings } = await supabase
     .from('reminder_settings')
@@ -178,7 +174,6 @@ async function processReminders(): Promise<any> {
     .single();
   
   if (!settings || !settings.enabled) {
-    console.log('Reminders disabled');
     return { processed: 0, message: 'Reminders disabled' };
   }
   
@@ -209,7 +204,6 @@ async function processReminders(): Promise<any> {
         .lte('appointment_date', targetTime.toISOString().split('T')[0]);
       
       if (error) {
-        console.error('Error fetching appointments:', error);
         results.errors.push(error.message);
         continue;
       }
@@ -226,7 +220,6 @@ async function processReminders(): Promise<any> {
           .maybeSingle();
         
         if (existingLog) {
-          console.log(`Reminder already sent for appointment ${appointment.id}`);
           continue;
         }
         
@@ -234,7 +227,6 @@ async function processReminders(): Promise<any> {
           await sendEmailReminder(appointment as AppointmentDetails, settings, hours);
           results.sent++;
         } catch (error) {
-          console.error(`Failed to send reminder for appointment ${appointment.id}:`, error);
           results.failed++;
           results.errors.push(`Appointment ${appointment.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
@@ -244,7 +236,6 @@ async function processReminders(): Promise<any> {
     }
   }
   
-  console.log('Reminder processing complete:', results);
   return results;
 }
 

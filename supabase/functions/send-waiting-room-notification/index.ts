@@ -29,7 +29,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log(`[Waiting Room Notification] Processing notification for room: ${waitingRoomId}`);
+    
 
     // Check if notifications are enabled in practice settings
     const { data: settings } = await supabaseClient
@@ -41,7 +41,6 @@ serve(async (req) => {
     const notificationsEnabled = telehealthSettings.notify_clinician_on_arrival !== false; // Default to true
 
     if (!notificationsEnabled) {
-      console.log('[Waiting Room Notification] Notifications disabled in settings');
       return new Response(
         JSON.stringify({ message: 'Notifications disabled', skipped: true }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
@@ -73,7 +72,6 @@ serve(async (req) => {
       .single();
 
     if (fetchError || !waitingRoom) {
-      console.error('[Waiting Room Notification] Error fetching waiting room:', fetchError);
       throw new Error('Waiting room not found');
     }
 
@@ -89,7 +87,6 @@ serve(async (req) => {
       .single();
 
     if (!clinician?.email) {
-      console.error('[Waiting Room Notification] Clinician email not found');
       throw new Error('Clinician email not found');
     }
 
@@ -141,8 +138,6 @@ serve(async (req) => {
       `,
     });
 
-    console.log('[Waiting Room Notification] Email sent:', emailResponse);
-
     // Update waiting room with notification status
     await supabaseClient
       .from('telehealth_waiting_rooms')
@@ -164,9 +159,8 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('[Waiting Room Notification] Error:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: 'Notification failed' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
