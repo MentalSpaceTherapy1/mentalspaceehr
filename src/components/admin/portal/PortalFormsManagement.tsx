@@ -56,7 +56,8 @@ export const PortalFormsManagement = () => {
             <TableRow>
               <TableHead>Title</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead>Sections</TableHead>
+              <TableHead>Staff Access</TableHead>
+              <TableHead>Portal Sharing</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Signature</TableHead>
               <TableHead>Est. Time</TableHead>
@@ -66,12 +67,12 @@ export const PortalFormsManagement = () => {
           <TableBody>
             {templates?.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
                   No form templates created yet
                 </TableCell>
               </TableRow>
             ) : (
-              templates?.map((template) => (
+              templates?.map((template: any) => (
                 <TableRow key={template.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -90,7 +91,20 @@ export const PortalFormsManagement = () => {
                     <Badge variant="outline">{template.form_type}</Badge>
                   </TableCell>
                   <TableCell>
-                    {Array.isArray(template.sections) ? template.sections.length : 0} sections
+                    <Badge variant="secondary">
+                      {template.staff_access_level || 'Administrative'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      {template.shareable_on_portal ? (
+                        <Badge variant="default" className="w-fit">
+                          {template.shareable_on_demand ? 'Shareable on Demand' : 'Auto-Shared'}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="w-fit">Not Shareable</Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant={template.is_active ? 'default' : 'secondary'}>

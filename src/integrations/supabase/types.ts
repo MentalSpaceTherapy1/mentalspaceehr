@@ -5109,6 +5109,9 @@ export type Database = {
           is_active: boolean
           requires_signature: boolean
           sections: Json
+          shareable_on_demand: boolean | null
+          shareable_on_portal: boolean | null
+          staff_access_level: string | null
           title: string
           updated_at: string
           version: number
@@ -5124,6 +5127,9 @@ export type Database = {
           is_active?: boolean
           requires_signature?: boolean
           sections?: Json
+          shareable_on_demand?: boolean | null
+          shareable_on_portal?: boolean | null
+          staff_access_level?: string | null
           title: string
           updated_at?: string
           version?: number
@@ -5139,6 +5145,9 @@ export type Database = {
           is_active?: boolean
           requires_signature?: boolean
           sections?: Json
+          shareable_on_demand?: boolean | null
+          shareable_on_portal?: boolean | null
+          staff_access_level?: string | null
           title?: string
           updated_at?: string
           version?: number
