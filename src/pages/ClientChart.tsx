@@ -40,6 +40,7 @@ import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { DocumentManagementPanel } from '@/components/documents/DocumentManagementPanel';
 import { ClinicalNotesSection } from '@/components/clients/ClinicalNotesSection';
 import { ClientPortalFormsSection } from '@/components/clients/ClientPortalFormsSection';
+import { ClientMessagesSection } from '@/components/clients/ClientMessagesSection';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 
@@ -260,6 +261,8 @@ export default function ClientChart() {
       case 'clinical-notes':
       case 'termination-notes':
         return <ClinicalNotesSection clientId={id!} noteType={activeSection as any} />;
+      case 'messages':
+        return <ClientMessagesSection clientId={id!} />;
       case 'telehealth-consent':
         return (
           <>
