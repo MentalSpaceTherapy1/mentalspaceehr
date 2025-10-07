@@ -19,8 +19,6 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { email, firstName }: PasswordResetEmailRequest = await req.json();
 
-    console.log('Generating password reset link for:', email);
-
     if (!email) {
       throw new Error('Email is required');
     }
@@ -28,8 +26,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Get authorization token from request
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      console.error('No authorization header provided');
-      return new Response(JSON.stringify({ error: 'Unauthorized: No authorization header' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
     // Extract JWT token from Authorization header
@@ -50,28 +47,21 @@ const handler = async (req: Request): Promise<Response> => {
       const payload = JSON.parse(json);
       userId = payload?.sub ?? null;
     } catch (e) {
-      console.error('Failed to decode JWT:', e);
+      // Invalid token
     }
 
     if (!userId) {
-      console.error('No user id found in token');
-      return new Response(JSON.stringify({ error: 'Unauthorized: Invalid token' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
-
-    console.log('User authenticated:', userId);
 
     const { data: isAdmin, error: roleErr } = await supabaseUser.rpc('has_role', { _user_id: userId, _role: 'administrator' });
     if (roleErr) {
-      console.error('Role check error:', roleErr);
-      return new Response(JSON.stringify({ error: 'Error checking permissions: ' + roleErr.message }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
+      return new Response(JSON.stringify({ error: 'Permission check failed' }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
     
     if (!isAdmin) {
-      console.error('User is not an administrator');
-      return new Response(JSON.stringify({ error: 'Forbidden: Administrator role required' }), { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } });
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
-
-    console.log('Administrator access verified');
 
     // Create Supabase admin client with service role key
     const supabaseAdmin = createClient(
@@ -96,16 +86,11 @@ const handler = async (req: Request): Promise<Response> => {
       options: finalRedirect ? { redirectTo: finalRedirect } : undefined,
     });
 
-    if (error) {
-      console.error('Error generating reset link:', error);
-      throw error;
-    }
+    if (error) throw error;
 
     if (!data.properties?.action_link) {
       throw new Error('Failed to generate reset link');
     }
-
-    console.log('Reset link generated successfully');
 
     // Call the existing send-password-reset function to send the email
     const { error: emailError } = await supabaseAdmin.functions.invoke('send-password-reset', {
@@ -116,12 +101,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
 
-    if (emailError) {
-      console.error('Error sending reset email:', emailError);
-      throw emailError;
-    }
-
-    console.log('Password reset email sent successfully to:', email);
+    if (emailError) throw emailError;
 
     return new Response(
       JSON.stringify({ success: true, message: 'Password reset email sent successfully' }),
@@ -131,9 +111,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in send-admin-password-reset function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Admin password reset failed' }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

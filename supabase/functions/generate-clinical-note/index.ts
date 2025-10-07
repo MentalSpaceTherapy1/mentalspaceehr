@@ -39,8 +39,6 @@ serve(async (req) => {
       sessionId,
     }: GenerateNoteRequest = await req.json();
 
-    console.log(`Generating ${noteType} note in ${noteFormat} format`);
-
     // Get AI settings
     const { data: aiSettings } = await supabase
       .from("ai_note_settings")
@@ -252,9 +250,7 @@ GENERATION GUIDELINES:
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`${useOpenAI ? 'OpenAI' : 'Lovable AI'} error:`, response.status, errorText);
-      throw new Error(`AI generation failed: ${response.statusText}`);
+      throw new Error('AI generation failed');
     }
 
     const aiResponse = await response.json();
@@ -307,17 +303,13 @@ GENERATION GUIDELINES:
       },
     };
 
-    console.log(`Note generated successfully in ${processingTime}ms with confidence ${confidenceScore}`);
-
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    console.error("Error generating note:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Note generation failed' }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
@@ -419,7 +411,7 @@ async function assessRisksEnhanced(content: any, inputText: string, model: strin
       }
     }
   } catch (error) {
-    console.error("AI risk assessment error:", error);
+    // Fallback to basic assessment
   }
 
   // Fallback to basic assessment

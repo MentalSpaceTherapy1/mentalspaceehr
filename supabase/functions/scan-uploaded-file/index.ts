@@ -15,8 +15,6 @@ serve(async (req) => {
   try {
     const { filePath, bucket } = await req.json();
 
-    console.log(`Scanning file: ${filePath} in bucket: ${bucket}`);
-
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -27,10 +25,7 @@ serve(async (req) => {
       .from(bucket)
       .download(filePath);
 
-    if (error) {
-      console.error('Error downloading file:', error);
-      throw error;
-    }
+    if (error) throw error;
 
     // TODO: Integrate with virus scanning service
     // Options for production:
@@ -55,8 +50,6 @@ serve(async (req) => {
       if (bytes.length >= pattern.length) {
         const matches = pattern.every((byte, i) => bytes[i] === byte);
         if (matches) {
-          console.warn(`Suspicious file detected: ${name}`);
-          
           // Delete the file
           await supabase.storage.from(bucket).remove([filePath]);
           
@@ -82,8 +75,6 @@ serve(async (req) => {
       }
     }
 
-    console.log('File passed basic security checks');
-
     return new Response(
       JSON.stringify({
         success: true,
@@ -94,9 +85,8 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in scan-uploaded-file function:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: 'File scan failed' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,

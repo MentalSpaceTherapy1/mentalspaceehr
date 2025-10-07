@@ -31,8 +31,6 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     const resend = new Resend(resendApiKey);
 
-    console.log('Starting waitlist slot notification check...');
-
     // Get active waitlist entries
     const { data: waitlistEntries, error: waitlistError } = await supabase
       .from('appointment_waitlist')
@@ -42,18 +40,11 @@ serve(async (req) => {
       .order('priority', { ascending: false })
       .order('added_date', { ascending: true });
 
-    if (waitlistError) {
-      console.error('Error fetching waitlist:', waitlistError);
-      throw waitlistError;
-    }
-
-    console.log(`Found ${waitlistEntries?.length || 0} active waitlist entries`);
+    if (waitlistError) throw waitlistError;
 
     let notificationsCount = 0;
 
     for (const entry of waitlistEntries || []) {
-      console.log(`Checking entry ${entry.id} for client ${entry.client_id}`);
-
       // Build clinician list (primary + alternates)
       const clinicianIds = [entry.clinician_id];
       if (entry.alternate_clinician_ids) {
@@ -70,10 +61,7 @@ serve(async (req) => {
         .gte('appointment_date', new Date().toISOString().split('T')[0])
         .limit(10);
 
-      if (slotsError) {
-        console.error('Error finding slots:', slotsError);
-        continue;
-      }
+      if (slotsError) continue;
 
       // Filter by preferred days if specified
       let matchingSlots = availableSlots || [];
@@ -96,8 +84,6 @@ serve(async (req) => {
       }
 
       if (matchingSlots.length > 0) {
-        console.log(`Found ${matchingSlots.length} matching slots for entry ${entry.id}`);
-
         // Get client and clinician info for notification
         const { data: client } = await supabase
           .from('clients')
@@ -120,10 +106,7 @@ serve(async (req) => {
           })
           .eq('id', entry.id);
 
-        if (updateError) {
-          console.error('Error updating waitlist entry:', updateError);
-          continue;
-        }
+        if (updateError) continue;
 
         // Send email notification
         if (client?.email) {
@@ -150,22 +133,16 @@ serve(async (req) => {
                 </div>
                 <p>Please contact us to confirm this appointment.</p>
                 <p>Best regards,<br>MentalSpace Team</p>
-              `
-            });
-
-            console.log(`Email sent to ${client.email}:`, emailResponse);
-          } catch (emailError) {
-            console.error('Error sending email:', emailError);
+                `
+              });
+            } catch (emailError) {
+              // Email failures are non-critical
+            }
           }
-        } else {
-          console.log(`No email address for client ${client?.first_name} ${client?.last_name}`);
-        }
         
         notificationsCount++;
       }
     }
-
-    console.log(`Sent ${notificationsCount} notifications`);
 
     return new Response(
       JSON.stringify({
@@ -180,9 +157,8 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in notify-waitlist-slots:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: 'Waitlist notification failed' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500

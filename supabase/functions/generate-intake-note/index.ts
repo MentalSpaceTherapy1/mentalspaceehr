@@ -429,8 +429,7 @@ Use clinical terminology, evidence-based observations, and realistic details app
         });
       }
       const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw new Error('AI gateway error');
     }
 
     const data = await response.json();
@@ -453,8 +452,7 @@ Use clinical terminology, evidence-based observations, and realistic details app
         }
       }
     } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      throw new Error('AI returned invalid format. Please try again.');
+      throw new Error('AI returned invalid format');
     }
 
     return new Response(
@@ -462,9 +460,8 @@ Use clinical terminology, evidence-based observations, and realistic details app
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error in generate-intake-note:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal server error' }),
+      JSON.stringify({ error: 'Failed to generate intake note' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

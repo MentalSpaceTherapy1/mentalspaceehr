@@ -19,8 +19,6 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { userId, newPassword }: ResetPasswordRequest = await req.json();
 
-    console.log('Resetting password for user:', userId);
-
     // Validate input
     if (!userId || !newPassword) {
       throw new Error('Missing userId or newPassword');
@@ -46,8 +44,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Get authorization token from request
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      console.error('No authorization header provided');
-      return new Response(JSON.stringify({ error: 'Unauthorized: No authorization header' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
     // Extract JWT token from Authorization header
@@ -68,28 +65,21 @@ const handler = async (req: Request): Promise<Response> => {
       const payload = JSON.parse(json);
       callerId = payload?.sub ?? null;
     } catch (e) {
-      console.error('Failed to decode JWT:', e);
+      // Invalid token format
     }
 
     if (!callerId) {
-      console.error('No user id found in token');
-      return new Response(JSON.stringify({ error: 'Unauthorized: Invalid token' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
-
-    console.log('User authenticated:', callerId);
 
     const { data: isAdmin, error: roleErr } = await supabaseUser.rpc('has_role', { _user_id: callerId, _role: 'administrator' });
     if (roleErr) {
-      console.error('Role check error:', roleErr);
-      return new Response(JSON.stringify({ error: 'Error checking permissions: ' + roleErr.message }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
+      return new Response(JSON.stringify({ error: 'Permission check failed' }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
     
     if (!isAdmin) {
-      console.error('User is not an administrator');
-      return new Response(JSON.stringify({ error: 'Forbidden: Administrator role required' }), { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } });
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
-
-    console.log('Administrator access verified');
 
     // Create Supabase admin client with service role key
     const supabaseAdmin = createClient(
@@ -108,12 +98,7 @@ const handler = async (req: Request): Promise<Response> => {
       password: newPassword,
     });
 
-    if (error) {
-      console.error('Error updating password:', error);
-      throw error;
-    }
-
-    console.log("Password reset successfully for user:", userId);
+    if (error) throw error;
 
     return new Response(
       JSON.stringify({ success: true, message: 'Password reset successfully' }),
@@ -123,9 +108,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in reset-user-password function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Password reset failed' }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

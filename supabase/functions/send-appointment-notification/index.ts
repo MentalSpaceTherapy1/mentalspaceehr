@@ -27,17 +27,11 @@ serve(async (req) => {
   try {
     const { appointmentId, notificationType }: NotificationRequest = await req.json();
 
-    console.log(`Processing ${notificationType} notification for appointment ${appointmentId}`);
-
     // Check notification settings
     const { data: notificationSettings, error: settingsError } = await supabase
       .from("appointment_notification_settings")
       .select("*")
       .maybeSingle();
-
-    if (settingsError) {
-      console.error("Error fetching notification settings:", settingsError);
-    }
 
     // Check if this notification type is enabled
     const isEnabled = notificationSettings 
@@ -47,7 +41,6 @@ serve(async (req) => {
       : true; // Default to enabled if no settings found
 
     if (!isEnabled) {
-      console.log(`Notifications for ${notificationType} are disabled`);
       return new Response(
         JSON.stringify({ message: `Notifications for ${notificationType} are disabled` }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
@@ -90,7 +83,6 @@ serve(async (req) => {
     if (respectPreferences) {
       const clientConsents = appointment.client?.consents as any;
       if (!clientConsents?.appointmentReminders) {
-        console.log("Client has not opted in for appointment notifications");
         return new Response(
           JSON.stringify({ message: "Client has not opted in for notifications" }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
@@ -270,18 +262,14 @@ serve(async (req) => {
         .eq("id", logEntry.id);
     }
 
-    console.log(`Email sent successfully via Resend:`, emailData);
-
     return new Response(
       JSON.stringify({ success: true, emailId: emailData?.id }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
 
   } catch (error) {
-    console.error("Error sending appointment notification:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Notification failed' }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }

@@ -22,8 +22,6 @@ serve(async (req) => {
     const startTime = Date.now();
     const { sectionType, context, clientId, existingData } = await req.json();
 
-    console.log(`Generating content for section: ${sectionType}`);
-
     // Get AI settings
     const { data: aiSettings } = await supabase
       .from('ai_note_settings')
@@ -85,9 +83,6 @@ serve(async (req) => {
     });
 
     if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error(`AI error:`, aiResponse.status, errorText);
-      
       return new Response(
         JSON.stringify({ error: "AI service error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -105,17 +100,14 @@ serve(async (req) => {
 
     const generatedContent = JSON.parse(toolCall.function.arguments);
 
-    console.log(`Section content generated in ${processingTime}ms`);
-
     return new Response(
       JSON.stringify({ content: generatedContent }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {
-    console.error("Error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: 'Section generation failed' }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

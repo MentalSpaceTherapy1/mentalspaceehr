@@ -22,8 +22,6 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { email, resetUrl, firstName }: PasswordResetRequest = await req.json();
 
-    console.log('Sending password reset email to:', email);
-
     const emailHtml = `
       <!DOCTYPE html>
       <html>
@@ -88,7 +86,6 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (emailResponse?.error) {
-      console.error("Resend error sending password reset:", emailResponse.error);
       return new Response(
         JSON.stringify({ success: false, error: emailResponse.error.message || "Email send failed" }),
         {
@@ -98,16 +95,13 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("Password reset email sent successfully:", emailResponse);
-
     return new Response(JSON.stringify({ success: true, emailResponse }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
-    console.error("Error sending password reset:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Password reset failed' }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

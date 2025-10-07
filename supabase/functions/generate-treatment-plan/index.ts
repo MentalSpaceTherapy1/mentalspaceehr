@@ -18,8 +18,6 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    console.log('Generating treatment plan for client:', clientId);
-
     const diagnosesText = currentDiagnoses && currentDiagnoses.length > 0
       ? currentDiagnoses.map((d: any) => `${d.icdCode}: ${d.diagnosis} (${d.severity})`).join(', ')
       : 'No diagnoses provided';
@@ -257,13 +255,10 @@ Return your response in valid JSON format with this exact structure:
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw new Error('AI gateway error');
     }
 
     const data = await response.json();
-    console.log('AI response received');
 
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) {
@@ -316,9 +311,8 @@ Return your response in valid JSON format with this exact structure:
     );
 
   } catch (error: any) {
-    console.error('Error in generate-treatment-plan function:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Failed to generate treatment plan' }),
+      JSON.stringify({ error: 'Treatment plan generation failed' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

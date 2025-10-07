@@ -28,8 +28,6 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { clientId, email, firstName, lastName, tempPassword }: InvitationRequest = await req.json();
 
-    console.log('Sending portal invitation to:', email);
-
     const portalUrl = `${siteUrl}/portal/login`;
 
     const emailHtml = `
@@ -99,8 +97,6 @@ const handler = async (req: Request): Promise<Response> => {
       html: emailHtml,
     });
 
-    console.log("Invitation email sent successfully:", emailResponse);
-
     // Log the invitation
     const supabase = createClient(supabaseUrl, supabaseKey);
     await supabase.from('portal_access_log').insert({
@@ -116,9 +112,8 @@ const handler = async (req: Request): Promise<Response> => {
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
-    console.error("Error sending invitation:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Invitation failed' }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

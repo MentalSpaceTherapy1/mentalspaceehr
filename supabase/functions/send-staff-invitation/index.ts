@@ -40,7 +40,6 @@ serve(async (req) => {
     }
 
     const { userId, tempPassword } = validation.data;
-    console.log('Sending staff invitation for user:', userId);
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -60,10 +59,7 @@ serve(async (req) => {
       .eq('id', userId)
       .single();
 
-    if (profileError) {
-      console.error('Profile error:', profileError);
-      throw profileError;
-    }
+    if (profileError) throw profileError;
 
     // Get practice settings for email templates
     const { data: settings } = await supabaseAdmin
@@ -105,16 +101,12 @@ Mental Space AI Team`;
       .replace(/{tempPassword}/g, tempPassword)
       .replace(/{portalUrl}/g, portalUrl);
 
-    console.log('Sending email to:', profile.email);
-
     const emailResponse = await resend.emails.send({
       from: "Mental Space AI <onboarding@resend.dev>",
       to: [profile.email],
       subject: subject,
       text: body,
     });
-
-    console.log('Email sent successfully:', emailResponse);
 
     return new Response(
       JSON.stringify({ 
@@ -127,10 +119,8 @@ Mental Space AI Team`;
       }
     );
   } catch (error) {
-    console.error('Error in send-staff-invitation function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Invitation failed' }),
       {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
