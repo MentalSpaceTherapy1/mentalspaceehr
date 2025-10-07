@@ -11,8 +11,6 @@ import {
   User, 
   CreditCard, 
   FileText, 
-  Pill, 
-  Stethoscope, 
   Calendar, 
   FolderOpen, 
   MessageSquare, 
@@ -52,12 +50,7 @@ const chartSections = [
   { 
     id: 'client-portal', 
     label: 'Client Portal', 
-    icon: UserCog,
-    subsections: [
-      { id: 'portal-forms-assigned', label: 'Assigned Forms' },
-      { id: 'portal-forms-completed', label: 'Completed Forms' },
-      { id: 'portal-messages', label: 'Portal Messages' },
-    ]
+    icon: UserCog
   },
   { 
     id: 'clinical-documents', 
@@ -77,8 +70,6 @@ const chartSections = [
       { id: 'termination-notes', label: 'Termination Notes' },
     ]
   },
-  { id: 'medications', label: 'Medications', icon: Pill },
-  { id: 'diagnoses', label: 'Diagnoses', icon: Stethoscope },
   { id: 'appointments', label: 'Appointments', icon: Calendar },
   { id: 'documents-forms', label: 'Documents & Forms', icon: FolderOpen },
   { id: 'messages', label: 'Messages', icon: MessageSquare },
@@ -269,19 +260,6 @@ export default function ClientChart() {
       case 'clinical-notes':
       case 'termination-notes':
         return <ClinicalNotesSection clientId={id!} noteType={activeSection as any} />;
-      case 'portal-forms-assigned':
-      case 'portal-forms-completed':
-      case 'portal-messages':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Client Portal - {activeSection === 'portal-forms-assigned' ? 'Assigned Forms' : activeSection === 'portal-forms-completed' ? 'Completed Forms' : 'Portal Messages'}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Client portal integration will be fully implemented in the next phase.</p>
-            </CardContent>
-          </Card>
-        );
       case 'telehealth-consent':
         return (
           <>
