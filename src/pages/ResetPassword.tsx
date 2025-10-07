@@ -41,6 +41,14 @@ export default function ResetPassword() {
     if (meta) meta.setAttribute('content', 'Reset your MentalSpace account password securely.');
 
     // Parse tokens from both hash and search params
+    const hash = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : window.location.hash;
+    const hashParams = new URLSearchParams(hash);
+    const searchParams = new URLSearchParams(window.location.search);
+
+    // Try to get tokens from either source
+    const type = hashParams.get('type') || searchParams.get('type');
+    const access_token = hashParams.get('access_token') || searchParams.get('access_token');
+    const refresh_token = hashParams.get('refresh_token') || searchParams.get('refresh_token');
 
     const finalize = (ok: boolean) => {
       setValidSession(ok);
