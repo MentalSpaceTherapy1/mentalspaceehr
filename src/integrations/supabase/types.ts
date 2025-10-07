@@ -2457,6 +2457,57 @@ export type Database = {
           },
         ]
       }
+      clinician_schedules: {
+        Row: {
+          accept_new_clients: boolean | null
+          available_locations: string[] | null
+          buffer_time_between_appointments: number | null
+          clinician_id: string
+          created_at: string | null
+          created_by: string | null
+          effective_end_date: string | null
+          effective_start_date: string
+          id: string
+          max_appointments_per_day: number | null
+          max_appointments_per_week: number | null
+          updated_at: string | null
+          updated_by: string | null
+          weekly_schedule: Json
+        }
+        Insert: {
+          accept_new_clients?: boolean | null
+          available_locations?: string[] | null
+          buffer_time_between_appointments?: number | null
+          clinician_id: string
+          created_at?: string | null
+          created_by?: string | null
+          effective_end_date?: string | null
+          effective_start_date?: string
+          id?: string
+          max_appointments_per_day?: number | null
+          max_appointments_per_week?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+          weekly_schedule?: Json
+        }
+        Update: {
+          accept_new_clients?: boolean | null
+          available_locations?: string[] | null
+          buffer_time_between_appointments?: number | null
+          clinician_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          effective_end_date?: string | null
+          effective_start_date?: string
+          id?: string
+          max_appointments_per_day?: number | null
+          max_appointments_per_week?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+          weekly_schedule?: Json
+        }
+        Relationships: []
+      }
       compliance_rules: {
         Row: {
           allow_exceptions: boolean | null
@@ -6262,6 +6313,66 @@ export type Database = {
           },
         ]
       }
+      schedule_exceptions: {
+        Row: {
+          all_day: boolean | null
+          approval_date: string | null
+          approved_by: string | null
+          clinician_id: string
+          created_at: string | null
+          created_by: string | null
+          denial_reason: string | null
+          end_date: string
+          end_time: string | null
+          exception_type: string
+          id: string
+          notes: string | null
+          reason: string
+          start_date: string
+          start_time: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          all_day?: boolean | null
+          approval_date?: string | null
+          approved_by?: string | null
+          clinician_id: string
+          created_at?: string | null
+          created_by?: string | null
+          denial_reason?: string | null
+          end_date: string
+          end_time?: string | null
+          exception_type: string
+          id?: string
+          notes?: string | null
+          reason: string
+          start_date: string
+          start_time?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          all_day?: boolean | null
+          approval_date?: string | null
+          approved_by?: string | null
+          clinician_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          denial_reason?: string | null
+          end_date?: string
+          end_time?: string | null
+          exception_type?: string
+          id?: string
+          notes?: string | null
+          reason?: string
+          start_date?: string
+          start_time?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       security_incidents: {
         Row: {
           created_at: string | null
@@ -8188,6 +8299,18 @@ export type Database = {
       track_document_view: {
         Args: { document_id: string; viewer_id: string }
         Returns: undefined
+      }
+      validate_appointment_schedule: {
+        Args: {
+          p_appointment_date: string
+          p_clinician_id: string
+          p_end_time: string
+          p_start_time: string
+        }
+        Returns: {
+          is_valid: boolean
+          reason: string
+        }[]
       }
       validate_telehealth_licensure: {
         Args: { _client_id: string; _clinician_id: string }
