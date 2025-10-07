@@ -42,6 +42,7 @@ import { ClinicalNotesSection } from '@/components/clients/ClinicalNotesSection'
 import { ClientPortalFormsSection } from '@/components/clients/ClientPortalFormsSection';
 import { ClientMessagesSection } from '@/components/clients/ClientMessagesSection';
 import { ClientPaymentHistory } from '@/components/clients/ClientPaymentHistory';
+import { ClientAuditLog } from '@/components/clients/ClientAuditLog';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 
@@ -268,6 +269,8 @@ export default function ClientChart() {
         return <ClinicalNotesSection clientId={id!} noteType={activeSection as any} />;
       case 'messages':
         return <ClientMessagesSection clientId={id!} />;
+      case 'audit-log':
+        return <ClientAuditLog clientId={id!} />;
       case 'telehealth-consent':
         return (
           <>
