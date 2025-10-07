@@ -71,14 +71,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logLoginAttempt = async (email: string, success: boolean, failureReason?: string) => {
     try {
-      // SECURITY: Use 'client-side' instead of external IP API for HIPAA compliance
-      // IP logging should be done server-side via edge functions using request headers
-      await supabase.from('login_attempts').insert({
-        email,
-        success,
-        failure_reason: failureReason,
-        ip_address: 'client-side',
-        user_agent: navigator.userAgent,
+      // SECURITY: Log via edge function to capture real server-side IP from request headers
+      await supabase.functions.invoke('log-auth-attempt', {
+        body: { 
+          email: email.toLowerCase(), 
+          success, 
+          error_message: failureReason || null 
+        }
       });
     } catch (error) {
       // Never block authentication due to logging failures

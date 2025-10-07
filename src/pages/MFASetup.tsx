@@ -33,7 +33,11 @@ export default function MFASetup() {
       const totpFactor = data?.totp?.find((f) => f.status === 'verified');
       setMfaEnabled(!!totpFactor);
     } catch (error) {
-      console.error('Error checking MFA status:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to check MFA status',
+        variant: 'destructive',
+      });
     }
   };
 
