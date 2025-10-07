@@ -76,7 +76,7 @@ export default function MiscellaneousNote() {
       if (error) throw error;
       setAvailableClients(data || []);
     } catch (error) {
-      console.error('Error loading clients:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -93,7 +93,7 @@ export default function MiscellaneousNote() {
         setClinicianName(`${data.first_name} ${data.last_name}`);
       }
     } catch (error) {
-      console.error('Error fetching clinician name:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -188,7 +188,6 @@ export default function MiscellaneousNote() {
 
       navigate('/notes');
     } catch (error) {
-      console.error('Error saving note:', error);
       toast({
         title: 'Error',
         description: 'Failed to save miscellaneous note',
@@ -246,7 +245,6 @@ export default function MiscellaneousNote() {
         setAiInput('');
       }
     } catch (error: any) {
-      console.error('Error generating note:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to generate note with AI',

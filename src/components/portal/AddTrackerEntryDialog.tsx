@@ -82,7 +82,6 @@ export function AddTrackerEntryDialog({ open, onOpenChange, tracker, onSubmit }:
       
       onOpenChange(false);
     } catch (error) {
-      console.error('Error adding entry:', error);
       toast({
         title: 'Error',
         description: 'Failed to add entry',

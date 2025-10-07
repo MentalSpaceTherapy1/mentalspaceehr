@@ -87,7 +87,7 @@ export default function ClinicalNote() {
       if (error) throw error;
       setClient(data);
     } catch (error) {
-      console.error('Error loading client:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -104,7 +104,7 @@ export default function ClinicalNote() {
         setClinicianName(`${data.first_name} ${data.last_name}`);
       }
     } catch (error) {
-      console.error('Error fetching clinician name:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -138,7 +138,6 @@ export default function ClinicalNote() {
         });
       }
     } catch (error) {
-      console.error('Error loading note:', error);
       toast({
         title: 'Error',
         description: 'Failed to load clinical note',
@@ -222,7 +221,6 @@ export default function ClinicalNote() {
         navigate('/notes');
       }
     } catch (error) {
-      console.error('Error saving note:', error);
       toast({
         title: 'Error',
         description: 'Failed to save clinical note',
@@ -256,7 +254,6 @@ export default function ClinicalNote() {
       setSignatureDialogOpen(false);
       navigate('/notes');
     } catch (error) {
-      console.error('Error signing note:', error);
       toast({
         title: 'Error',
         description: 'Failed to sign clinical note',

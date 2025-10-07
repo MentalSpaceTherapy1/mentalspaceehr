@@ -83,7 +83,7 @@ export default function ConsultationNote() {
       if (error) throw error;
       setAppointments(data || []);
     } catch (error) {
-      console.error('Error loading appointments:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -98,7 +98,7 @@ export default function ConsultationNote() {
       if (error) throw error;
       setAvailableClients(data || []);
     } catch (error) {
-      console.error('Error loading clients:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -115,7 +115,7 @@ export default function ConsultationNote() {
         setClinicianName(`${data.first_name} ${data.last_name}`);
       }
     } catch (error) {
-      console.error('Error fetching clinician name:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -182,7 +182,6 @@ export default function ConsultationNote() {
 
       navigate('/notes');
     } catch (error) {
-      console.error('Error saving note:', error);
       toast({
         title: 'Error',
         description: 'Failed to save consultation note',
@@ -240,7 +239,6 @@ export default function ConsultationNote() {
         setAiInput('');
       }
     } catch (error: any) {
-      console.error('Error generating consultation note:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to generate consultation note with AI',

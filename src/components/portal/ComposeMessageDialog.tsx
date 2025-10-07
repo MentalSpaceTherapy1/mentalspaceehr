@@ -89,7 +89,6 @@ export const ComposeMessageDialog = ({ open, onOpenChange, replyTo }: ComposeMes
       if (error) throw error;
       setClinicians(data || []);
     } catch (error) {
-      console.error('Error loading clinicians:', error);
       toast.error('Failed to load clinicians');
     } finally {
       setLoadingClinicians(false);
@@ -151,7 +150,6 @@ export const ComposeMessageDialog = ({ open, onOpenChange, replyTo }: ComposeMes
       setAttachments([]);
 
     } catch (error) {
-      console.error('Error sending message:', error);
       toast.error('Failed to send message');
     } finally {
       setSending(false);

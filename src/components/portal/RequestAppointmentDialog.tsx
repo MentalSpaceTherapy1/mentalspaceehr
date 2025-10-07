@@ -68,7 +68,6 @@ export const RequestAppointmentDialog = ({ open, onOpenChange }: RequestAppointm
       if (error) throw error;
       setClinicians(data || []);
     } catch (error) {
-      console.error('Error loading clinicians:', error);
       toast.error('Failed to load clinicians');
     } finally {
       setLoadingClinicians(false);
@@ -143,7 +142,6 @@ export const RequestAppointmentDialog = ({ open, onOpenChange }: RequestAppointm
       });
 
     } catch (error) {
-      console.error('Error submitting appointment request:', error);
       toast.error('Failed to submit appointment request');
     } finally {
       setSubmitting(false);

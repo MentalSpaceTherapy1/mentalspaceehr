@@ -98,7 +98,7 @@ export default function TerminationNote() {
       if (error) throw error;
       setClient(data);
     } catch (error) {
-      console.error('Error loading client:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -153,7 +153,7 @@ export default function TerminationNote() {
         }));
       }
     } catch (error) {
-      console.error('Error loading client history:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -170,7 +170,7 @@ export default function TerminationNote() {
         setClinicianName(`${data.first_name} ${data.last_name}`);
       }
     } catch (error) {
-      console.error('Error fetching clinician name:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -219,7 +219,6 @@ export default function TerminationNote() {
         });
       }
     } catch (error) {
-      console.error('Error loading note:', error);
       toast({
         title: 'Error',
         description: 'Failed to load termination note',
@@ -314,7 +313,6 @@ export default function TerminationNote() {
         navigate('/notes');
       }
     } catch (error) {
-      console.error('Error saving note:', error);
       toast({
         title: 'Error',
         description: 'Failed to save termination note',
@@ -351,7 +349,6 @@ export default function TerminationNote() {
       setSignatureDialogOpen(false);
       navigate('/notes');
     } catch (error) {
-      console.error('Error signing note:', error);
       toast({
         title: 'Error',
         description: 'Failed to sign termination note',

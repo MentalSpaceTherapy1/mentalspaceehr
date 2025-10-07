@@ -308,7 +308,6 @@ export default function ProgressNote() {
       if (error) throw error;
       setAvailableClients(data || []);
     } catch (error) {
-      console.error('Error loading clients:', error);
       toast({
         title: 'Error',
         description: 'Failed to load clients',
@@ -331,7 +330,7 @@ export default function ProgressNote() {
       if (error) throw error;
       setAppointments(data || []);
     } catch (error) {
-      console.error('Error loading appointments:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -343,7 +342,7 @@ export default function ProgressNote() {
       // For now, we'll initialize empty
       setClientGoals([]);
     } catch (error) {
-      console.error('Error loading client goals:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -360,7 +359,7 @@ export default function ProgressNote() {
         setClinicianName(`${data.first_name} ${data.last_name}`);
       }
     } catch (error) {
-      console.error('Error fetching clinician name:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -393,7 +392,7 @@ export default function ProgressNote() {
         }));
       }
     } catch (error) {
-      console.error('Error fetching intake note:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -450,7 +449,6 @@ export default function ProgressNote() {
           }));
       }
     } catch (error) {
-      console.error('Error loading appointment:', error);
       toast({
         title: 'Error',
         description: 'Failed to load appointment data',
@@ -483,7 +481,6 @@ export default function ProgressNote() {
         });
       }
     } catch (error) {
-      console.error('Error loading note:', error);
       toast({
         title: 'Error',
         description: 'Failed to load progress note',
@@ -632,7 +629,6 @@ export default function ProgressNote() {
 
       return savedNoteId || null;
     } catch (error) {
-      console.error('Error saving note:', error);
       toast({
         title: 'Error',
         description: 'Failed to save progress note',
@@ -690,7 +686,6 @@ export default function ProgressNote() {
         setAiInput('');
       }
     } catch (error: any) {
-      console.error('Error generating note:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to generate note with AI',
@@ -777,7 +772,6 @@ export default function ProgressNote() {
       setFormData(prev => ({ ...prev, status: 'Locked' }));
       navigate('/notes');
     } catch (error) {
-      console.error('Error signing note:', error);
       toast({
         title: 'Error',
         description: 'Failed to sign note',
@@ -800,7 +794,6 @@ export default function ProgressNote() {
         .maybeSingle();
 
       if (supervisionError) {
-        console.error('Error checking supervision:', supervisionError);
         return;
       }
 
@@ -836,7 +829,6 @@ export default function ProgressNote() {
         .single();
 
       if (cosignError) {
-        console.error('Error creating cosignature record:', cosignError);
         return;
       }
 
@@ -866,7 +858,6 @@ export default function ProgressNote() {
         });
       }
     } catch (error) {
-      console.error('Error submitting for cosign:', error);
       // Don't block the signing process if cosign submission fails
     }
   };

@@ -66,7 +66,6 @@ export const CancelAppointmentDialog = ({ open, onOpenChange, appointment }: Can
       });
 
     } catch (error) {
-      console.error('Error cancelling appointment:', error);
       toast.error('Failed to cancel appointment');
     } finally {
       setCancelling(false);

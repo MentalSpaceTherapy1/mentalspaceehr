@@ -241,21 +241,14 @@ export default function TreatmentPlan() {
         .maybeSingle();
 
       if (intakeError) {
-        console.error('Error loading intake:', intakeError);
         throw intakeError;
       }
 
-      console.log('Intake data loaded for client:', selectedClientId, intakeData);
-
       // Pre-populate diagnoses from intake assessment
       if (intakeData?.diagnoses && intakeData.diagnoses.length > 0) {
-        console.log('Found diagnoses in intake:', intakeData.diagnoses);
-        
         const diagnoses = intakeData.diagnoses.map((icdCode: string, index: number) => {
           // Look up the diagnosis description from ICD-10 codes
           const icd10Code = icd10MentalHealthCodes.find(code => code.code === icdCode);
-          
-          console.log(`Mapping ${icdCode} to`, icd10Code);
           
           return {
             icdCode,
@@ -264,8 +257,6 @@ export default function TreatmentPlan() {
             type: (index === 0 ? 'Principal' : 'Secondary') as 'Principal' | 'Secondary',
           };
         });
-
-        console.log('Setting diagnoses:', diagnoses);
 
         setFormData(prev => ({ ...prev, diagnoses, clientId: selectedClientId }));
         
@@ -282,7 +273,7 @@ export default function TreatmentPlan() {
         });
       }
     } catch (error) {
-      console.error('Error loading intake data:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -297,7 +288,6 @@ export default function TreatmentPlan() {
       if (error) throw error;
       setAvailableClients(data || []);
     } catch (error) {
-      console.error('Error loading clients:', error);
       toast({
         title: 'Error',
         description: 'Failed to load clients',
@@ -319,7 +309,7 @@ export default function TreatmentPlan() {
         setClinicianName(`${data.first_name} ${data.last_name}`);
       }
     } catch (error) {
-      console.error('Error fetching clinician name:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -339,11 +329,8 @@ export default function TreatmentPlan() {
         .maybeSingle();
 
       if (intakeError) {
-        console.error('Error loading intake:', intakeError);
         throw intakeError;
       }
-
-      console.log('Intake data loaded:', intakeData);
 
       // Load client demographics
       const { data: clientData, error: clientError } = await supabase
@@ -356,13 +343,9 @@ export default function TreatmentPlan() {
 
       // Pre-populate diagnoses from intake assessment
       if (intakeData?.diagnoses && intakeData.diagnoses.length > 0) {
-        console.log('Found diagnoses in intake:', intakeData.diagnoses);
-        
         const diagnoses = intakeData.diagnoses.map((icdCode: string, index: number) => {
           // Look up the diagnosis description from ICD-10 codes
           const icd10Code = icd10MentalHealthCodes.find(code => code.code === icdCode);
-          
-          console.log(`Mapping ${icdCode} to`, icd10Code);
           
           return {
             icdCode,
@@ -371,8 +354,6 @@ export default function TreatmentPlan() {
             type: (index === 0 ? 'Principal' : 'Secondary') as 'Principal' | 'Secondary',
           };
         });
-
-        console.log('Setting diagnoses:', diagnoses);
 
         setFormData(prev => ({ ...prev, diagnoses }));
         
@@ -410,7 +391,7 @@ export default function TreatmentPlan() {
         }));
       }
     } catch (error) {
-      console.error('Error loading intake data:', error);
+      // Silently handle - non-critical
     }
   };
 
@@ -481,7 +462,6 @@ export default function TreatmentPlan() {
         });
       }
     } catch (error) {
-      console.error('Error loading treatment plan:', error);
       toast({
         title: 'Error',
         description: 'Failed to load treatment plan',
@@ -599,7 +579,6 @@ export default function TreatmentPlan() {
 
       navigate(`/clients/${formData.clientId}/chart`);
     } catch (error) {
-      console.error('Error saving treatment plan:', error);
       toast({
         title: 'Error',
         description: 'Failed to save treatment plan',
@@ -660,7 +639,6 @@ export default function TreatmentPlan() {
         navigate(`/clients/${formData.clientId}/chart`);
       }
     } catch (error) {
-      console.error('Error signing treatment plan:', error);
       toast({
         title: 'Error',
         description: 'Failed to sign treatment plan',
@@ -683,7 +661,6 @@ export default function TreatmentPlan() {
         .maybeSingle();
 
       if (supervisionError) {
-        console.error('Error checking supervision:', supervisionError);
         return;
       }
 
@@ -719,7 +696,6 @@ export default function TreatmentPlan() {
         .single();
 
       if (cosignError) {
-        console.error('Error creating cosignature record:', cosignError);
         return;
       }
 
@@ -749,7 +725,6 @@ export default function TreatmentPlan() {
         });
       }
     } catch (error) {
-      console.error('Error submitting for cosign:', error);
       // Don't block the signing process if cosign submission fails
     }
   };
@@ -807,7 +782,6 @@ export default function TreatmentPlan() {
       
       navigate(`/clients/${formData.clientId}/chart`);
     } catch (error) {
-      console.error('Error co-signing treatment plan:', error);
       toast({
         title: 'Error',
         description: 'Failed to co-sign treatment plan',
@@ -862,7 +836,6 @@ export default function TreatmentPlan() {
         setAiInput('');
       }
     } catch (error: any) {
-      console.error('Error generating treatment plan:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to generate treatment plan with AI',

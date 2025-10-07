@@ -79,7 +79,6 @@ Please contact me to reschedule this appointment.`;
       });
 
     } catch (error) {
-      console.error('Error sending request:', error);
       toast.error('Failed to send change request');
     } finally {
       setSending(false);

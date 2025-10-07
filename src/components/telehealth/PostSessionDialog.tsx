@@ -110,7 +110,6 @@ export const PostSessionDialog = ({
       onOpenChange(false);
 
     } catch (error) {
-      console.error('Error processing recording:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to process recording',
@@ -147,7 +146,7 @@ export const PostSessionDialog = ({
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error updating billing info:', error);
+      // Silently handle - non-critical
     }
   };
 
