@@ -6,10 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { useClinicalAssessments } from '@/hooks/useClinicalAssessments';
 import { ClipboardList, Clock, FileText, Users, TrendingUp } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AdministerAssessmentDialog } from '@/components/admin/assessments/AdministerAssessmentDialog';
 
 export default function Assessments() {
   const { assessments, isLoading } = useClinicalAssessments();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [administerDialogOpen, setAdministerDialogOpen] = useState(false);
+  const [selectedAssessment, setSelectedAssessment] = useState<{ id: string; name: string } | null>(null);
+
+  const handleAdminister = (assessmentId: string, assessmentName: string) => {
+    setSelectedAssessment({ id: assessmentId, name: assessmentName });
+    setAdministerDialogOpen(true);
+  };
 
   const categories = Array.from(new Set(assessments.map((a) => a.category)));
 
@@ -152,7 +160,11 @@ export default function Assessments() {
                         </div>
 
                         <div className="flex space-x-2 pt-2">
-                          <Button size="sm" className="flex-1">
+                          <Button 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => handleAdminister(assessment.id, assessment.assessment_name)}
+                          >
                             <Users className="h-4 w-4 mr-1" />
                             Administer
                           </Button>
@@ -169,6 +181,15 @@ export default function Assessments() {
           </Tabs>
         </div>
       </div>
+
+      {selectedAssessment && (
+        <AdministerAssessmentDialog
+          open={administerDialogOpen}
+          onOpenChange={setAdministerDialogOpen}
+          assessmentId={selectedAssessment.id}
+          assessmentName={selectedAssessment.name}
+        />
+      )}
     </DashboardLayout>
   );
 }
