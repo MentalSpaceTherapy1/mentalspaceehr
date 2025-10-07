@@ -696,6 +696,7 @@ export type Database = {
           administered_via: string | null
           administration_date: string | null
           assessment_id: string
+          assigned_via_portal: boolean | null
           chart_note_id: string | null
           client_id: string
           clinical_recommendations: string | null
@@ -704,6 +705,8 @@ export type Database = {
           id: string
           interpretation_notes: string | null
           interpreted_severity: string | null
+          portal_assigned_date: string | null
+          portal_due_date: string | null
           raw_score: number | null
           responses: Json
           time_taken_seconds: number | null
@@ -715,6 +718,7 @@ export type Database = {
           administered_via?: string | null
           administration_date?: string | null
           assessment_id: string
+          assigned_via_portal?: boolean | null
           chart_note_id?: string | null
           client_id: string
           clinical_recommendations?: string | null
@@ -723,6 +727,8 @@ export type Database = {
           id?: string
           interpretation_notes?: string | null
           interpreted_severity?: string | null
+          portal_assigned_date?: string | null
+          portal_due_date?: string | null
           raw_score?: number | null
           responses: Json
           time_taken_seconds?: number | null
@@ -734,6 +740,7 @@ export type Database = {
           administered_via?: string | null
           administration_date?: string | null
           assessment_id?: string
+          assigned_via_portal?: boolean | null
           chart_note_id?: string | null
           client_id?: string
           clinical_recommendations?: string | null
@@ -742,6 +749,8 @@ export type Database = {
           id?: string
           interpretation_notes?: string | null
           interpreted_severity?: string | null
+          portal_assigned_date?: string | null
+          portal_due_date?: string | null
           raw_score?: number | null
           responses?: Json
           time_taken_seconds?: number | null
@@ -757,6 +766,100 @@ export type Database = {
           },
           {
             foreignKeyName: "assessment_administrations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessment_critical_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          action_required: string | null
+          actions_taken: string | null
+          administration_id: string
+          alert_status: string
+          assessment_id: string
+          client_id: string
+          created_at: string | null
+          critical_item_id: string
+          follow_up_notes: string | null
+          id: string
+          item_text: string
+          notification_sent_at: string | null
+          notified_users: Json | null
+          resolved_at: string | null
+          resolved_by: string | null
+          response_value: Json
+          severity: string
+          triggered_at: string
+          updated_at: string | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          action_required?: string | null
+          actions_taken?: string | null
+          administration_id: string
+          alert_status?: string
+          assessment_id: string
+          client_id: string
+          created_at?: string | null
+          critical_item_id: string
+          follow_up_notes?: string | null
+          id?: string
+          item_text: string
+          notification_sent_at?: string | null
+          notified_users?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          response_value: Json
+          severity: string
+          triggered_at?: string
+          updated_at?: string | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          action_required?: string | null
+          actions_taken?: string | null
+          administration_id?: string
+          alert_status?: string
+          assessment_id?: string
+          client_id?: string
+          created_at?: string | null
+          critical_item_id?: string
+          follow_up_notes?: string | null
+          id?: string
+          item_text?: string
+          notification_sent_at?: string | null
+          notified_users?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          response_value?: Json
+          severity?: string
+          triggered_at?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_critical_alerts_administration_id_fkey"
+            columns: ["administration_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_administrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_critical_alerts_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_critical_alerts_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
@@ -2072,6 +2175,7 @@ export type Database = {
           category: string
           created_at: string | null
           created_by: string | null
+          critical_items: Json | null
           description: string | null
           estimated_minutes: number | null
           id: string
@@ -2088,6 +2192,7 @@ export type Database = {
           category: string
           created_at?: string | null
           created_by?: string | null
+          critical_items?: Json | null
           description?: string | null
           estimated_minutes?: number | null
           id?: string
@@ -2104,6 +2209,7 @@ export type Database = {
           category?: string
           created_at?: string | null
           created_by?: string | null
+          critical_items?: Json | null
           description?: string | null
           estimated_minutes?: number | null
           id?: string
