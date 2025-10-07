@@ -41,6 +41,7 @@ import { PortalAccessDialog } from '@/components/admin/PortalAccessDialog';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { DocumentManagementPanel } from '@/components/documents/DocumentManagementPanel';
 import { ClinicalNotesSection } from '@/components/clients/ClinicalNotesSection';
+import { ClientPortalDocumentsSection } from '@/components/clients/ClientPortalDocumentsSection';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 
@@ -198,6 +199,9 @@ export default function ClientChart() {
 
   const renderContent = () => {
     switch (activeSection) {
+      case 'client-portal':
+        return <ClientPortalDocumentsSection clientId={id!} />;
+      
       case 'demographics':
         return (
           <Card>
