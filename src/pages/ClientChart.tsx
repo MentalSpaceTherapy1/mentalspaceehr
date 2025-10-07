@@ -200,7 +200,7 @@ export default function ClientChart() {
   const renderContent = () => {
     switch (activeSection) {
       case 'client-portal':
-        return <ClientPortalFormsSection />;
+        return <ClientPortalFormsSection clientId={id!} />;
       
       case 'demographics':
         return (

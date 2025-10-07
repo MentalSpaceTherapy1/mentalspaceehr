@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,8 +15,11 @@ import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { FormTemplate, FormWithResponse } from '@/types/forms';
 
-export const ClientPortalFormsSection = () => {
-  const { clientId } = useParams<{ clientId: string }>();
+interface ClientPortalFormsSectionProps {
+  clientId: string;
+}
+
+export const ClientPortalFormsSection = ({ clientId }: ClientPortalFormsSectionProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedTemplate, setSelectedTemplate] = useState<FormTemplate | null>(null);
