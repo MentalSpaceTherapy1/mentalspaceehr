@@ -39,6 +39,7 @@ import { PortalAccessDialog } from '@/components/admin/PortalAccessDialog';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { DocumentManagementPanel } from '@/components/documents/DocumentManagementPanel';
 import { ClinicalNotesSection } from '@/components/clients/ClinicalNotesSection';
+import { ClinicalDocumentsDashboard } from '@/components/clients/ClinicalDocumentsDashboard';
 import { ClientPortalFormsSection } from '@/components/clients/ClientPortalFormsSection';
 import { ClientMessagesSection } from '@/components/clients/ClientMessagesSection';
 import { ClientPaymentHistory } from '@/components/clients/ClientPaymentHistory';
@@ -73,7 +74,6 @@ const chartSections = [
           { id: 'contact-notes', label: 'Contact Notes' },
           { id: 'miscellaneous-notes', label: 'Miscellaneous Notes' },
           { id: 'cancellation-notes', label: 'Cancellation Notes' },
-          { id: 'clinical-notes', label: 'Clinical Notes' },
           { id: 'termination-notes', label: 'Termination Notes' },
         ]
       },
@@ -281,6 +281,8 @@ export default function ClientChart() {
         );
       case 'appointments':
         return <ClientAppointments clientId={id!} />;
+      case 'clinical-documents':
+        return <ClinicalDocumentsDashboard clientId={id!} />;
       case 'progress-notes':
       case 'intake-assessment':
       case 'treatment-plans':
@@ -290,7 +292,6 @@ export default function ClientChart() {
       case 'contact-notes':
       case 'miscellaneous-notes':
       case 'cancellation-notes':
-      case 'clinical-notes':
       case 'termination-notes':
         return <ClinicalNotesSection clientId={id!} noteType={activeSection as any} />;
       case 'messages':
