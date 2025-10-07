@@ -5405,6 +5405,119 @@ export type Database = {
           },
         ]
       }
+      portal_progress_entries: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          entry_date: string
+          entry_time: string | null
+          entry_type: string
+          id: string
+          notes: string | null
+          scale_max: number | null
+          scale_min: number | null
+          tags: string[] | null
+          updated_at: string | null
+          value: number | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          entry_date: string
+          entry_time?: string | null
+          entry_type: string
+          id?: string
+          notes?: string | null
+          scale_max?: number | null
+          scale_min?: number | null
+          tags?: string[] | null
+          updated_at?: string | null
+          value?: number | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          entry_date?: string
+          entry_time?: string | null
+          entry_type?: string
+          id?: string
+          notes?: string | null
+          scale_max?: number | null
+          scale_min?: number | null
+          tags?: string[] | null
+          updated_at?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_progress_entries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_resources: {
+        Row: {
+          category: string
+          content_summary: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          estimated_read_time: number | null
+          external_url: string | null
+          file_path: string | null
+          id: string
+          is_featured: boolean
+          is_public: boolean
+          resource_type: string
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          category: string
+          content_summary?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          estimated_read_time?: number | null
+          external_url?: string | null
+          file_path?: string | null
+          id?: string
+          is_featured?: boolean
+          is_public?: boolean
+          resource_type: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          category?: string
+          content_summary?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          estimated_read_time?: number | null
+          external_url?: string | null
+          file_path?: string | null
+          id?: string
+          is_featured?: boolean
+          is_public?: boolean
+          resource_type?: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
       practice_locations: {
         Row: {
           city: string

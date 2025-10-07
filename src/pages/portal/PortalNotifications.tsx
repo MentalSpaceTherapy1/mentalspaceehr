@@ -24,6 +24,14 @@ export default function PortalNotifications() {
         return <FileText className="h-5 w-5 text-orange-500" />;
       case 'billing':
         return <CreditCard className="h-5 w-5 text-red-500" />;
+      case 'form':
+        return <FileText className="h-5 w-5 text-purple-500" />;
+      case 'resource':
+        return <FileText className="h-5 w-5 text-teal-500" />;
+      case 'reminder':
+        return <Bell className="h-5 w-5 text-yellow-500" />;
+      case 'alert':
+        return <Bell className="h-5 w-5 text-red-500" />;
       default:
         return <Bell className="h-5 w-5 text-muted-foreground" />;
     }

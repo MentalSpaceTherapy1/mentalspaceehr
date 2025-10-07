@@ -6,14 +6,16 @@ import { toast } from 'sonner';
 export interface PortalNotification {
   id: string;
   clientId: string;
-  notificationType: 'appointment' | 'message' | 'document' | 'billing' | 'system';
+  notificationType: 'appointment' | 'message' | 'document' | 'billing' | 'system' | 'form' | 'resource' | 'reminder' | 'alert';
   title: string;
   message: string;
   actionUrl?: string;
+  actionLabel?: string;
   priority: 'low' | 'normal' | 'high' | 'urgent';
   isRead: boolean;
   readAt?: Date;
   createdAt: Date;
+  metadata?: Record<string, any>;
 }
 
 export const usePortalNotifications = () => {
@@ -157,9 +159,11 @@ function mapNotification(data: any): PortalNotification {
     title: data.title,
     message: data.message,
     actionUrl: data.action_url,
+    actionLabel: data.action_label,
     priority: data.priority,
     isRead: data.is_read,
     readAt: data.read_at ? new Date(data.read_at) : undefined,
-    createdAt: new Date(data.created_at)
+    createdAt: new Date(data.created_at),
+    metadata: data.metadata || {},
   };
 }

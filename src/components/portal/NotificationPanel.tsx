@@ -3,9 +3,19 @@ import { usePortalNotifications } from '@/hooks/usePortalNotifications';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, MessageSquare, FileText, CreditCard, Bell as BellIcon } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Calendar, 
+  MessageSquare, 
+  FileText, 
+  Bell as BellIcon,
+  BookOpen,
+  File,
+  AlertCircle,
+  CheckCheck,
+  ExternalLink
+} from 'lucide-react';
+import { format } from 'date-fns';
 
 interface NotificationPanelProps {
   onClose: () => void;
@@ -13,23 +23,34 @@ interface NotificationPanelProps {
 
 export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
   const navigate = useNavigate();
-  const { notifications, unreadCount, markAsRead, markAllAsRead, loading } = usePortalNotifications();
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = usePortalNotifications();
 
-  const recentNotifications = notifications.slice(0, 10);
+  const recentNotifications = notifications?.slice(0, 10) || [];
 
   const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'appointment':
-        return <Calendar className="h-4 w-4 text-blue-500" />;
-      case 'message':
-        return <MessageSquare className="h-4 w-4 text-green-500" />;
-      case 'document':
-        return <FileText className="h-4 w-4 text-orange-500" />;
-      case 'billing':
-        return <CreditCard className="h-4 w-4 text-red-500" />;
-      default:
-        return <BellIcon className="h-4 w-4 text-muted-foreground" />;
-    }
+    const icons: Record<string, any> = {
+      appointment: Calendar,
+      message: MessageSquare,
+      form: FileText,
+      resource: BookOpen,
+      document: File,
+      reminder: BellIcon,
+      alert: AlertCircle,
+      billing: FileText,
+      system: BellIcon,
+    };
+    const Icon = icons[type] || BellIcon;
+    return <Icon className="h-4 w-4" />;
+  };
+
+  const getPriorityColor = (priority: string): 'default' | 'secondary' | 'destructive' => {
+    const colors: Record<string, 'default' | 'secondary' | 'destructive'> = {
+      low: 'secondary',
+      normal: 'default',
+      high: 'default',
+      urgent: 'destructive',
+    };
+    return colors[priority] || 'default';
   };
 
   const handleNotificationClick = async (notification: any) => {
@@ -62,7 +83,8 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
         <h3 className="font-semibold">Notifications</h3>
         {unreadCount > 0 && (
           <Button variant="ghost" size="sm" onClick={markAllAsRead}>
-            Mark all as read
+            <CheckCheck className="h-4 w-4 mr-2" />
+            Mark all read
           </Button>
         )}
       </div>
@@ -70,43 +92,57 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
       {/* Notifications List */}
       <ScrollArea className="h-[400px]">
         {recentNotifications.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
-            <BellIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            <BellIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>No notifications</p>
           </div>
         ) : (
           <div className="divide-y">
             {recentNotifications.map((notification) => (
-              <button
+              <div
                 key={notification.id}
+                className={`p-4 hover:bg-muted/50 cursor-pointer transition-colors ${
+                  !notification.isRead ? 'bg-primary/5' : ''
+                }`}
                 onClick={() => handleNotificationClick(notification)}
-                className={cn(
-                  "w-full p-4 text-left hover:bg-accent transition-colors",
-                  !notification.isRead && "bg-accent/50"
-                )}
               >
                 <div className="flex gap-3">
-                  <div className="flex-shrink-0 mt-1">
+                  <div className={`rounded-full p-2 shrink-0 ${
+                    !notification.isRead ? 'bg-primary/10' : 'bg-muted'
+                  }`}>
                     {getNotificationIcon(notification.notificationType)}
                   </div>
-                  <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex-1 space-y-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-medium line-clamp-1">
+                      <p className="text-sm font-medium leading-none">
                         {notification.title}
                       </p>
-                      {!notification.isRead && (
-                        <div className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" />
+                      {notification.priority !== 'normal' && (
+                        <Badge 
+                          variant={getPriorityColor(notification.priority)}
+                          className="shrink-0"
+                        >
+                          {notification.priority}
+                        </Badge>
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-2">
                       {notification.message}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(notification.createdAt, { addSuffix: true })}
-                    </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(notification.createdAt), 'MMM dd, h:mm a')}
+                        </p>
+                        {notification.actionUrl && (
+                          <span className="text-xs text-primary flex items-center gap-1">
+                            {notification.actionLabel || 'View'} 
+                            <ExternalLink className="h-3 w-3" />
+                          </span>
+                        )}
+                      </div>
                   </div>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         )}
