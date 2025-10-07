@@ -75,6 +75,7 @@ import CreateTestPortalUser from "./pages/admin/CreateTestPortalUser";
 import PortalManagement from "./pages/admin/PortalManagement";
 import DocumentLibrary from "./pages/admin/DocumentLibrary";
 import Assessments from "./pages/admin/Assessments";
+import AssessmentAdministration from "./pages/admin/AssessmentAdministration";
 import DocumentManagement from "./pages/admin/DocumentManagement";
 import InsuranceClaims from "./pages/admin/InsuranceClaims";
 import BillingManagement from "./pages/admin/BillingManagement";
@@ -367,7 +368,15 @@ const App = () => (
               } 
             />
             <Route 
-              path="/admin/document-management" 
+              path="/admin/assessments/:assessmentId/administer/:administrationId" 
+              element={
+                <AdminRoute>
+                  <AssessmentAdministration />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/admin/document-management"
               element={
                 <AdminRoute>
                   <DocumentManagement />

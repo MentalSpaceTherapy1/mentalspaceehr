@@ -149,6 +149,108 @@ export const useClinicalAssessments = () => {
     }
   };
 
+  const fetchAssessmentById = async (assessmentId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('clinical_assessments')
+        .select('*')
+        .eq('id', assessmentId)
+        .single();
+
+      if (error) throw error;
+      return data as unknown as ClinicalAssessment;
+    } catch (error: any) {
+      toast({
+        title: 'Error loading assessment',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
+  const fetchAdministrationById = async (administrationId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('assessment_administrations')
+        .select(`
+          *,
+          assessment:clinical_assessments(*)
+        `)
+        .eq('id', administrationId)
+        .single();
+
+      if (error) throw error;
+      return {
+        ...data,
+        responses: data.responses as { item_id: number; response: number }[],
+        assessment: {
+          ...(data.assessment as any),
+          scoring_algorithm: (data.assessment as any).scoring_algorithm as ScoringAlgorithm
+        }
+      } as AssessmentAdministration;
+    } catch (error: any) {
+      toast({
+        title: 'Error loading administration',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
+
+  const updateAdministration = async (
+    administrationId: string,
+    responses: { item_id: number; response: number }[],
+    assessmentId: string
+  ) => {
+    try {
+      const assessment = assessments.find((a) => a.id === assessmentId);
+      if (!assessment) throw new Error('Assessment not found');
+
+      const rawScore = calculateScore(assessment, responses);
+      const interpretation = interpretScore(assessment, rawScore);
+
+      const { data, error } = await supabase
+        .from('assessment_administrations')
+        .update({
+          responses,
+          raw_score: rawScore,
+          interpreted_severity: interpretation.severity,
+          clinical_recommendations: interpretation.recommendation,
+          completion_status: 'completed',
+        })
+        .eq('id', administrationId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update score history
+      await supabase
+        .from('assessment_score_history')
+        .update({
+          score: rawScore,
+          severity_level: interpretation.severity,
+        })
+        .eq('administration_id', administrationId);
+
+      toast({
+        title: 'Assessment saved',
+        description: `Score: ${rawScore} - ${interpretation.severity}`,
+      });
+
+      return data;
+    } catch (error: any) {
+      toast({
+        title: 'Error saving assessment',
+        description: error.message,
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   const calculateScore = (
     assessment: ClinicalAssessment,
     responses: { item_id: number; response: number }[]
@@ -252,6 +354,9 @@ export const useClinicalAssessments = () => {
     isLoading,
     fetchAdministrations,
     fetchScoreHistory,
+    fetchAssessmentById,
+    fetchAdministrationById,
+    updateAdministration,
     calculateScore,
     interpretScore,
     administerAssessment,
