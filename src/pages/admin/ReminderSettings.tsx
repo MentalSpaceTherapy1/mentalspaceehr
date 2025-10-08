@@ -35,8 +35,13 @@ export default function ReminderSettings() {
   const [newEmailTiming, setNewEmailTiming] = useState('');
   const [newSmsTiming, setNewSmsTiming] = useState('');
 
+  const [capabilities, setCapabilities] = useState<{ twilioConfigured: boolean; resendConfigured: boolean }>({ twilioConfigured: false, resendConfigured: false });
+
   useEffect(() => {
     loadSettings();
+    supabase.functions.invoke('reminder-capabilities').then(({ data }) => {
+      if (data) setCapabilities(data as any);
+    }).catch(() => {});
   }, []);
 
   const loadSettings = async () => {
@@ -332,7 +337,7 @@ export default function ReminderSettings() {
                   <div>
                     <CardTitle>SMS Reminders</CardTitle>
                     <CardDescription>
-                      Configure SMS reminder timing and templates (requires Twilio)
+                      Configure SMS reminder timing and templates {capabilities.twilioConfigured ? '(Twilio connected)' : '(requires Twilio)'}
                     </CardDescription>
                   </div>
                   <Switch
@@ -343,11 +348,13 @@ export default function ReminderSettings() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                  <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                    SMS reminders require Twilio credentials to be configured. Contact your administrator to set up SMS functionality.
-                  </p>
-                </div>
+                {!capabilities.twilioConfigured && (
+                  <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                    <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                      SMS reminders require Twilio credentials to be configured. Contact your administrator to set up SMS functionality.
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <Label>Reminder Timing (hours before appointment)</Label>

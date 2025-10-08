@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "https://esm.sh/resend@2.0.0";
-import Twilio from "https://esm.sh/twilio@4.23.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -9,11 +8,10 @@ const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Initialize Twilio client
-const twilioClient = Twilio(
-  Deno.env.get("TWILIO_ACCOUNT_SID"),
-  Deno.env.get("TWILIO_AUTH_TOKEN")
-);
+// Twilio credentials (use REST API via fetch for Deno compatibility)
+const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -191,11 +189,11 @@ async function sendSmsReminder(
 ): Promise<void> {
   const confirmationToken = await generateConfirmationToken(appointment.id);
   const baseUrl = supabaseUrl.replace('supabase.co', 'lovableproject.com');
-  
+
   const confirmationUrl = `${baseUrl}/confirm-appointment/${confirmationToken}`;
   const rescheduleUrl = `${baseUrl}/schedule?appointmentId=${appointment.id}`;
   const cancelUrl = `${baseUrl}/cancel-appointment/${confirmationToken}`;
-  
+
   const smsContent = replaceTemplateVariables(
     settings.sms_template,
     appointment,
@@ -203,17 +201,45 @@ async function sendSmsReminder(
     rescheduleUrl,
     cancelUrl
   );
-  
+
   const MAX_RETRIES = 3;
-  const RETRY_DELAY_MS = 2000; // 2 seconds between retries
-  
+  const RETRY_DELAY_MS = 2000;
+
+  // Normalize to E.164
+  const normalizePhone = (phone: string): string | null => {
+    if (!phone) return null;
+    const raw = phone.trim();
+    if (raw.startsWith('+')) return raw;
+    const digits = raw.replace(/\D/g, '');
+    if (digits.length === 10) return `+1${digits}`;
+    if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+    return null;
+  };
+
+  const toPhone = normalizePhone(appointment.client.primary_phone);
+  if (!toPhone || !TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
+    throw new Error('Twilio not fully configured or invalid phone.');
+  }
+
   try {
-    const message = await twilioClient.messages.create({
-      to: appointment.client.primary_phone,
-      from: Deno.env.get("TWILIO_PHONE_NUMBER"),
-      body: smsContent
+    const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
+    const params = new URLSearchParams({ To: toPhone, From: TWILIO_PHONE_NUMBER, Body: smsContent });
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`),
+      },
+      body: params.toString(),
     });
-    
+
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Twilio SMS failed: ${resp.status} ${text}`);
+    }
+
+    const json = await resp.json();
+
     // Log successful send with Twilio message SID
     await supabase.from('reminder_logs').insert({
       appointment_id: appointment.id,
@@ -221,77 +247,71 @@ async function sendSmsReminder(
       hours_before: hoursBefor,
       status: 'sent',
       sent_at: new Date().toISOString(),
-      recipient: appointment.client.primary_phone,
-      external_id: message.sid,
-      delivery_status: message.status
+      recipient: toPhone,
+      external_id: json?.sid,
+      delivery_status: json?.status
     });
-    
+
     // Update appointments.reminders_sent JSONB
     const { data: currentAppt } = await supabase
       .from('appointments')
       .select('reminders_sent')
       .eq('id', appointment.id)
       .single();
-    
+
     const updatedReminders = {
       ...(currentAppt?.reminders_sent || {}),
       smsSent: true,
       smsSentDate: new Date().toISOString(),
       smsDelivered: true,
-      smsMessageId: message.sid,
+      smsMessageId: json?.sid,
       smsTimingUsed: hoursBefor
     };
-    
+
     await supabase
       .from('appointments')
       .update({ reminders_sent: updatedReminders })
       .eq('id', appointment.id);
-    
-    console.log(`SMS sent successfully: ${message.sid}, Status: ${message.status}`);
-    
+
+    console.log(`SMS sent successfully: ${json?.sid}, Status: ${json?.status}`);
+
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const isRetryable = errorMessage.includes('timeout') || 
-                        errorMessage.includes('network') || 
-                        errorMessage.includes('rate limit');
-    
-    // Retry logic for transient errors
+    const isRetryable = errorMessage.includes('timeout') || errorMessage.includes('network') || errorMessage.includes('rate limit');
+
     if (isRetryable && retryCount < MAX_RETRIES) {
       console.log(`SMS send failed, retrying (${retryCount + 1}/${MAX_RETRIES}): ${errorMessage}`);
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * (retryCount + 1)));
       return sendSmsReminder(appointment, settings, hoursBefor, retryCount + 1);
     }
-    
-    // Log failed send after exhausting retries
+
     await supabase.from('reminder_logs').insert({
       appointment_id: appointment.id,
       reminder_type: 'sms',
       hours_before: hoursBefor,
       status: 'failed',
       error_message: errorMessage,
-      recipient: appointment.client.primary_phone
+      recipient: toPhone || appointment.client.primary_phone || null
     });
-    
-    // Update appointments.reminders_sent JSONB with error
+
     const { data: currentAppt } = await supabase
       .from('appointments')
       .select('reminders_sent')
       .eq('id', appointment.id)
       .single();
-    
+
     const updatedReminders = {
       ...(currentAppt?.reminders_sent || {}),
       smsSent: false,
       smsError: errorMessage,
       smsFailedAt: new Date().toISOString()
     };
-    
+
     await supabase
       .from('appointments')
       .update({ reminders_sent: updatedReminders })
       .eq('id', appointment.id);
-    
-    // Log to audit logs for tracking
+
     await supabase.from('audit_logs').insert({
       user_id: appointment.client_id,
       action_type: 'sms_send_failed',
@@ -300,7 +320,7 @@ async function sendSmsReminder(
       action_description: `Failed to send SMS reminder after ${retryCount} retries: ${errorMessage}`,
       severity: 'error'
     });
-    
+
     throw error;
   }
 }

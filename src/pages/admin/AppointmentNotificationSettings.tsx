@@ -61,7 +61,7 @@ export default function AppointmentNotificationSettings() {
             send_on_update: true,
             send_on_cancel: true,
             respect_client_preferences: true,
-            notify_recipients: ['client']
+            notify_recipients: ['client', 'clinician']
           })
           .select()
           .single();
