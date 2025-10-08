@@ -23,14 +23,34 @@ export const usePortalForms = (clientId?: string) => {
 
       if (error) throw error;
       
-      // Transform database response to match our types
-      return (data || []).map(item => ({
-        ...item,
-        template: item.template ? {
+      // Transform and sanitize database response to match our types
+      return (data || []).map(item => {
+        // Sanitize template data to prevent rendering issues
+        const template = item.template ? {
           ...item.template,
-          sections: (item.template.sections as any) || [],
-        } : undefined,
-      })) as FormWithResponse[];
+          sections: Array.isArray(item.template.sections) 
+            ? (item.template.sections as any[])
+                .filter(s => s && typeof s === 'object') // Filter out falsy sections
+                .map(section => ({
+                  ...section,
+                  order: section.order ?? 0, // Ensure order exists
+                  fields: Array.isArray(section.fields)
+                    ? section.fields
+                        .filter(f => f && typeof f === 'object') // Filter out falsy fields
+                        .map(field => ({
+                          ...field,
+                          order: field.order ?? 0, // Ensure order exists
+                        }))
+                    : [], // Default to empty array if fields is missing
+                }))
+            : [], // Default to empty array if sections is missing
+        } : undefined;
+
+        return {
+          ...item,
+          template,
+        };
+      }) as FormWithResponse[];
     },
     enabled: !!clientId,
   });
@@ -61,6 +81,8 @@ export const usePortalForms = (clientId?: string) => {
   // Start form mutation
   const startFormMutation = useMutation({
     mutationFn: async (assignmentId: string) => {
+      console.log('Creating form response for assignment:', assignmentId);
+      
       const { data, error } = await supabase
         .from('portal_form_responses')
         .insert({
@@ -68,20 +90,30 @@ export const usePortalForms = (clientId?: string) => {
           client_id: clientId!,
           started_at: new Date().toISOString(),
           responses: {},
+          progress_percentage: 0,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating form response:', error);
+        throw error;
+      }
+
+      console.log('Form response created:', data.id);
 
       // Update assignment status
-      await supabase
+      const { error: updateError } = await supabase
         .from('portal_form_assignments')
         .update({ 
           status: 'started',
           status_updated_at: new Date().toISOString(),
         })
         .eq('id', assignmentId);
+
+      if (updateError) {
+        console.error('Error updating assignment status:', updateError);
+      }
 
       return data;
     },

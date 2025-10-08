@@ -5,6 +5,7 @@ import { usePortalForms } from '@/hooks/usePortalForms';
 import { useClientDocuments } from '@/hooks/useClientDocuments';
 import { FormRenderer } from '@/components/portal/forms/FormRenderer';
 import { DocumentViewer } from '@/components/documents/DocumentViewer';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -42,37 +43,49 @@ export default function PortalDocuments() {
 
   const handleStartForm = async (form: FormWithResponse) => {
     try {
-      console.log('Starting form:', form.id);
+      console.log('Starting form:', form.id, 'Template:', form.template?.id, 'Sections:', form.template?.sections?.length);
       
       if (!form.response) {
-        // Start the form and wait for completion
-        await startForm(form.id);
+        // Start the form and get the new response directly
+        const newResponse = await startForm(form.id);
         
-        // Wait for query to refetch with updated data
-        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('Form started, response created:', newResponse.id);
         
-        // Get the updated form with the response
-        const updatedForm = forms?.find(f => f.id === form.id);
-        
-        if (updatedForm?.response && updatedForm?.template) {
-          console.log('Form response created, rendering form');
-          setSelectedForm(updatedForm);
-        } else {
-          throw new Error('Form response not created properly');
+        // Verify template has sections
+        if (!form.template?.sections || form.template.sections.length === 0) {
+          throw new Error('Form template has no sections configured');
         }
+        
+        // Set selected form with the new response immediately
+        setSelectedForm({
+          ...form,
+          response: newResponse as any,
+          status: 'started',
+          status_updated_at: new Date().toISOString(),
+        });
+        
+        toast({
+          title: 'Form started',
+          description: 'You can now begin filling out the form.',
+        });
       } else {
-        // Form already has a response, just render it
-        if (form.template) {
-          setSelectedForm(form);
-        } else {
+        // Form already has a response, verify template before rendering
+        if (!form.template) {
           throw new Error('Form template not found');
         }
+        
+        if (!form.template.sections || form.template.sections.length === 0) {
+          throw new Error('Form template has no sections configured');
+        }
+        
+        console.log('Continuing existing form with', form.template.sections.length, 'sections');
+        setSelectedForm(form);
       }
     } catch (error) {
       console.error('Error starting form:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to start form. Please try again.',
+        title: 'Error starting form',
+        description: error instanceof Error ? error.message : 'Failed to start form. Please try again.',
         variant: 'destructive',
       });
     }
@@ -125,19 +138,32 @@ export default function PortalDocuments() {
     );
   }
 
+  if (isStarting) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Starting form...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (selectedForm && selectedForm.template) {
-    console.log('Rendering form:', selectedForm.template.title, 'Sections:', selectedForm.template.sections);
+    console.log('Rendering form:', selectedForm.template.title, 'Sections:', selectedForm.template.sections?.length);
     return (
       <div className="space-y-6">
-        <FormRenderer
-          template={selectedForm.template}
-          response={selectedForm.response}
-          onSaveProgress={handleSaveProgress}
-          onSubmit={handleSubmit}
-          onCancel={() => setSelectedForm(null)}
-          isSaving={isSaving}
-          isSubmitting={isSubmitting}
-        />
+        <ErrorBoundary onReset={() => setSelectedForm(null)}>
+          <FormRenderer
+            template={selectedForm.template}
+            response={selectedForm.response}
+            onSaveProgress={handleSaveProgress}
+            onSubmit={handleSubmit}
+            onCancel={() => setSelectedForm(null)}
+            isSaving={isSaving}
+            isSubmitting={isSubmitting}
+          />
+        </ErrorBoundary>
       </div>
     );
   }

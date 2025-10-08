@@ -88,7 +88,8 @@ export const FormRenderer = ({
     defaultValues: response?.responses || {},
   });
 
-  const sortedSections = [...template.sections].sort((a, b) => a.order - b.order);
+  // Null-safe sorting with default order values
+  const sortedSections = [...template.sections].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const currentSection = sortedSections[currentSectionIndex];
   const totalSections = sortedSections.length;
 
@@ -106,13 +107,24 @@ export const FormRenderer = ({
   }, [template, form, onSaveProgress]);
 
   const calculateProgress = (values: Record<string, any>) => {
-    const allFields = sortedSections.flatMap(s => s.fields);
-    const requiredFields = allFields.filter(f => f.required);
+    const allFields = sortedSections.flatMap(s => s.fields || []);
+    const requiredFields = allFields.filter(f => f && f.required);
+    
+    // Guard against division by zero
+    if (requiredFields.length === 0) {
+      return 0;
+    }
+    
     const filledRequired = requiredFields.filter(f => values[f.id]).length;
     return Math.round((filledRequired / requiredFields.length) * 100);
   };
 
   const validateSection = async () => {
+    // Handle sections with no fields
+    if (!currentSection.fields || currentSection.fields.length === 0) {
+      return true;
+    }
+    
     const fieldIds = currentSection.fields.map(f => f.id);
     return await form.trigger(fieldIds as any);
   };
@@ -199,7 +211,8 @@ export const FormRenderer = ({
 
                   <div className="space-y-4">
                     {currentSection.fields
-                      .sort((a, b) => a.order - b.order)
+                      .filter(field => field && field.id) // Filter out invalid fields
+                      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) // Null-safe sort
                       .map(field => (
                         <FormFieldRenderer
                           key={field.id}
