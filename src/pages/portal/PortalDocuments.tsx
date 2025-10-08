@@ -48,11 +48,26 @@ export default function PortalDocuments() {
         // Start the form and wait for completion
         await startForm(form.id);
         
-        // Small delay to ensure cache is updated
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // Wait for query to refetch with updated data
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Get the updated form with the response
+        const updatedForm = forms?.find(f => f.id === form.id);
+        
+        if (updatedForm?.response && updatedForm?.template) {
+          console.log('Form response created, rendering form');
+          setSelectedForm(updatedForm);
+        } else {
+          throw new Error('Form response not created properly');
+        }
+      } else {
+        // Form already has a response, just render it
+        if (form.template) {
+          setSelectedForm(form);
+        } else {
+          throw new Error('Form template not found');
+        }
       }
-      
-      setSelectedForm(form);
     } catch (error) {
       console.error('Error starting form:', error);
       toast({
@@ -111,16 +126,19 @@ export default function PortalDocuments() {
   }
 
   if (selectedForm && selectedForm.template) {
+    console.log('Rendering form:', selectedForm.template.title, 'Sections:', selectedForm.template.sections);
     return (
-      <FormRenderer
-        template={selectedForm.template}
-        response={selectedForm.response}
-        onSaveProgress={handleSaveProgress}
-        onSubmit={handleSubmit}
-        onCancel={() => setSelectedForm(null)}
-        isSaving={isSaving}
-        isSubmitting={isSubmitting}
-      />
+      <div className="space-y-6">
+        <FormRenderer
+          template={selectedForm.template}
+          response={selectedForm.response}
+          onSaveProgress={handleSaveProgress}
+          onSubmit={handleSubmit}
+          onCancel={() => setSelectedForm(null)}
+          isSaving={isSaving}
+          isSubmitting={isSubmitting}
+        />
+      </div>
     );
   }
 
