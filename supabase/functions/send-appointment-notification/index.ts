@@ -61,7 +61,9 @@ serve(async (req) => {
         clinician:profiles!clinician_id(
           first_name,
           last_name,
-          title
+          title,
+          email,
+          phone
         ),
         location:practice_locations!office_location_id(
           location_name,
@@ -80,20 +82,16 @@ serve(async (req) => {
 
     // Check if client has opted in for appointment reminders (if respect_client_preferences is enabled)
     const respectPreferences = notificationSettings?.respect_client_preferences !== false;
+    let clientAllows = true;
     if (respectPreferences) {
       const clientConsents = appointment.client?.consents as any;
-      if (!clientConsents?.appointmentReminders) {
-        return new Response(
-          JSON.stringify({ message: "Client has not opted in for notifications" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-        );
+      // Only block if the client explicitly opted OUT; if missing, allow
+      if (clientConsents && clientConsents.appointmentReminders === false) {
+        clientAllows = false;
       }
     }
 
-    const clientEmail = appointment.client?.email;
-    if (!clientEmail) {
-      throw new Error("Client email not found");
-    }
+    const clientEmail = appointment.client?.email || null;
 
     // Format date and time
     const appointmentDate = new Date(appointment.appointment_date);
@@ -216,50 +214,176 @@ serve(async (req) => {
       }
     }
 
-    // Log notification attempt
-    const { data: logEntry } = await supabase
-      .from("appointment_notifications")
-      .insert({
-        appointment_id: appointmentId,
-        notification_type: notificationType,
-        recipient_email: clientEmail,
-        status: "pending",
-      })
-      .select()
-      .single();
+    // Determine recipients from settings
+    const notifyRecipients: string[] = Array.isArray(notificationSettings?.notify_recipients)
+      ? (notificationSettings!.notify_recipients as string[])
+      : ["client"]; // default
 
-    // Send email via Resend
-    const { data: emailData, error: emailError } = await resend.emails.send({
-      from: "MentalSpace <onboarding@resend.dev>",
-      to: [clientEmail],
-      subject: subject,
-      html: htmlContent,
-    });
+    const notifyClient = notifyRecipients.includes("client") && clientAllows;
+    const notifyClinician = notifyRecipients.includes("clinician");
 
-    if (emailError) {
-      // Update log with failure
-      if (logEntry) {
-        await supabase
-          .from("appointment_notifications")
-          .update({
-            status: "failed",
-            error_message: emailError.message,
-          })
-          .eq("id", logEntry.id);
+    // Attempt to get phone numbers for SMS (optional)
+    let clientPhone: string | null = null;
+    let clinicianPhone: string | null = null;
+    try {
+      const { data: clientRow } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("id", appointment.client_id)
+        .single();
+      if (clientRow) {
+        clientPhone = (clientRow.phone || clientRow.mobile_phone || clientRow.primary_phone || clientRow.contact_phone || null) as string | null;
       }
-      throw emailError;
+      const { data: clinicianRow } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", appointment.clinician_id)
+        .single();
+      if (clinicianRow) {
+        clinicianPhone = (clinicianRow.phone || clinicianRow.mobile_phone || clinicianRow.primary_phone || clinicianRow.contact_phone || null) as string | null;
+      }
+    } catch (_) {
+      // Ignore phone lookup errors
     }
 
-    // Update log with success
-    if (logEntry) {
-      await supabase
+    // Helper: normalize US/E.164 phone
+    const normalizePhone = (phone: string): string | null => {
+      if (!phone) return null;
+      const raw = phone.trim();
+      if (raw.startsWith('+') && raw.length > 8) return raw;
+      const digits = raw.replace(/\D/g, '');
+      if (digits.length === 10) return `+1${digits}`;
+      if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+      return null;
+    };
+
+    // Helper: send email via Resend
+    const sendEmail = async (to: string) => {
+      const { data, error } = await resend.emails.send({
+        from: "MentalSpace <onboarding@resend.dev>",
+        to: [to],
+        subject,
+        html: htmlContent,
+      });
+      if (error) throw error;
+      return data?.id as string | undefined;
+    };
+
+    // Helper: send SMS via Twilio (if configured)
+    const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+    const twilioAuth = Deno.env.get("TWILIO_AUTH_TOKEN");
+    const twilioFrom = Deno.env.get("TWILIO_PHONE_NUMBER");
+    const canSendSms = !!(twilioSid && twilioAuth && twilioFrom);
+
+    const sendSms = async (to: string, body: string) => {
+      if (!canSendSms) return null;
+      const url = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
+      const params = new URLSearchParams({ To: to, From: twilioFrom!, Body: body });
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ' + btoa(`${twilioSid}:${twilioAuth}`),
+        },
+        body: params.toString(),
+      });
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(`Twilio SMS failed: ${resp.status} ${text}`);
+      }
+      const json = await resp.json();
+      return json?.sid as string | undefined;
+    };
+
+    // Build recipients
+    const emailTargets: Array<{ type: 'client' | 'clinician'; email: string }> = [];
+    if (notifyClient && clientEmail) emailTargets.push({ type: 'client', email: clientEmail });
+    if (notifyClinician && appointment.clinician?.email) emailTargets.push({ type: 'clinician', email: appointment.clinician.email });
+
+    // Send emails and log each
+    for (const target of emailTargets) {
+      const { data: log } = await supabase
         .from("appointment_notifications")
-        .update({
-          status: "sent",
-          sent_at: new Date().toISOString(),
-          resend_id: emailData?.id,
+        .insert({
+          appointment_id: appointmentId,
+          notification_type: notificationType,
+          recipient_email: target.email,
+          status: "pending",
         })
-        .eq("id", logEntry.id);
+        .select()
+        .single();
+
+      try {
+        const emailId = await sendEmail(target.email);
+        if (log) {
+          await supabase
+            .from("appointment_notifications")
+            .update({
+              status: "sent",
+              sent_at: new Date().toISOString(),
+              resend_id: emailId,
+            })
+            .eq("id", log.id);
+        }
+      } catch (e: any) {
+        if (log) {
+          await supabase
+            .from("appointment_notifications")
+            .update({ status: "failed", error_message: e?.message || String(e) })
+            .eq("id", log.id);
+        }
+      }
+    }
+
+    // Build SMS content (concise)
+    const smsTextBase = (() => {
+      switch (notificationType) {
+        case 'created':
+          return `Appt scheduled ${formattedDate} ${formattedTime} with ${clinicianName}. ${appointment.service_location === 'Telehealth' ? 'Telehealth' : appointment.location?.location_name || ''}`.trim();
+        case 'updated':
+          return `Appt updated ${formattedDate} ${formattedTime} with ${clinicianName}.`;
+        case 'cancelled':
+          return `Appt cancelled ${formattedDate} ${formattedTime} with ${clinicianName}.`;
+      }
+    })();
+
+    const smsTargets: Array<{ type: 'client' | 'clinician'; phone: string }> = [];
+    const nClient = clientPhone ? normalizePhone(clientPhone) : null;
+    const nClin = clinicianPhone ? normalizePhone(clinicianPhone) : null;
+    if (notifyClient && nClient) smsTargets.push({ type: 'client', phone: nClient });
+    if (notifyClinician && nClin) smsTargets.push({ type: 'clinician', phone: nClin });
+
+    // Send SMS (if configured) and log
+    if (canSendSms) {
+      for (const target of smsTargets) {
+        const { data: log } = await supabase
+          .from("appointment_notifications")
+          .insert({
+            appointment_id: appointmentId,
+            notification_type: `${notificationType}_sms`,
+            recipient_email: target.phone, // storing phone for traceability
+            status: "pending",
+          })
+          .select()
+          .single();
+
+        try {
+          await sendSms(target.phone, smsTextBase);
+          if (log) {
+            await supabase
+              .from("appointment_notifications")
+              .update({ status: "sent", sent_at: new Date().toISOString() })
+              .eq("id", log.id);
+          }
+        } catch (e: any) {
+          if (log) {
+            await supabase
+              .from("appointment_notifications")
+              .update({ status: "failed", error_message: e?.message || String(e) })
+              .eq("id", log.id);
+          }
+        }
+      }
     }
 
     // Send in-app message to client portal
@@ -299,7 +423,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, emailId: emailData?.id }),
+      JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
 
