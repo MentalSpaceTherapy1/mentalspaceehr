@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { generateRecurringSeries, RecurrencePattern, AppointmentBase } from '@/lib/recurringAppointments';
 
 interface BlockedTime {
   id: string;
@@ -77,6 +78,11 @@ export function useBlockedTimes(clinicianId?: string) {
 
   const createBlockedTime = async (blockedTime: Omit<BlockedTime, 'id' | 'created_date'>) => {
     try {
+      // Check if this is a recurring blocked time
+      if (blockedTime.is_recurring && blockedTime.recurrence_pattern) {
+        return await createRecurringBlockedTimes(blockedTime);
+      }
+
       const { data, error } = await supabase
         .from('blocked_times')
         .insert([blockedTime])
@@ -95,6 +101,66 @@ export function useBlockedTimes(clinicianId?: string) {
       toast({
         title: 'Error',
         description: 'Failed to create blocked time.',
+        variant: 'destructive'
+      });
+      throw err;
+    }
+  };
+
+  const createRecurringBlockedTimes = async (blockedTime: Omit<BlockedTime, 'id' | 'created_date'>) => {
+    try {
+      if (!blockedTime.recurrence_pattern) {
+        throw new Error('Recurrence pattern is required for recurring blocked times');
+      }
+
+      // Create base object for series generation
+      const baseBlock = {
+        client_id: '', // Not needed for blocked times
+        clinician_id: blockedTime.clinician_id,
+        appointment_date: blockedTime.start_date,
+        start_time: blockedTime.start_time,
+        end_time: blockedTime.end_time,
+        duration: 0, // Not needed
+        appointment_type: '', // Not needed
+        service_location: '', // Not needed
+        timezone: 'America/New_York'
+      };
+
+      // Generate series using the same logic as recurring appointments
+      const series = generateRecurringSeries(baseBlock, blockedTime.recurrence_pattern);
+
+      // Convert series to blocked time entries
+      const blockedTimesArray = series.map((item, index) => ({
+        clinician_id: blockedTime.clinician_id,
+        title: blockedTime.title,
+        block_type: blockedTime.block_type,
+        start_date: item.appointment_date,
+        end_date: item.appointment_date, // Same day for each occurrence
+        start_time: blockedTime.start_time,
+        end_time: blockedTime.end_time,
+        notes: blockedTime.notes,
+        is_recurring: true,
+        recurrence_pattern: blockedTime.recurrence_pattern,
+        created_by: blockedTime.created_by
+      }));
+
+      const { data, error } = await supabase
+        .from('blocked_times')
+        .insert(blockedTimesArray)
+        .select();
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: `Created ${data.length} recurring blocked time${data.length > 1 ? 's' : ''}.`
+      });
+
+      return data;
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to create recurring blocked times.',
         variant: 'destructive'
       });
       throw err;
@@ -156,6 +222,7 @@ export function useBlockedTimes(clinicianId?: string) {
     loading,
     error,
     createBlockedTime,
+    createRecurringBlockedTimes,
     updateBlockedTime,
     deleteBlockedTime,
     refreshBlockedTimes: fetchBlockedTimes
