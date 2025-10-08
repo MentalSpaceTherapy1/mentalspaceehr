@@ -117,7 +117,7 @@ export default function ClientRegistration() {
       hipaaAcknowledgment: false,
       releaseOfInformation: false,
       electronicCommunication: false,
-      appointmentReminders: false,
+      appointmentReminders: true,
       photographyConsent: false,
       researchParticipation: false,
     },

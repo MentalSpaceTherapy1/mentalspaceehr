@@ -121,8 +121,11 @@ export function ClientContactInfo({ formData, setFormData }: ClientContactInfoPr
           <div className="flex items-start space-x-2">
             <Checkbox
               id="smsConsent"
-              checked={formData.smsConsent || false}
-              onCheckedChange={(checked) => setFormData({ ...formData, smsConsent: checked })}
+              checked={formData.consents?.appointmentReminders ?? true}
+              onCheckedChange={(checked) => setFormData({ 
+                ...formData, 
+                consents: { ...formData.consents, appointmentReminders: checked }
+              })}
             />
             <div className="flex-1">
               <Label htmlFor="smsConsent" className="cursor-pointer font-normal">
