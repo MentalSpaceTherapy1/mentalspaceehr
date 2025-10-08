@@ -262,6 +262,42 @@ serve(async (req) => {
         .eq("id", logEntry.id);
     }
 
+    // Send in-app message to client portal
+    try {
+      let messageSubject = "";
+      let messageBody = "";
+
+      switch (notificationType) {
+        case "created":
+          messageSubject = "Appointment Scheduled";
+          messageBody = `Your appointment has been scheduled for ${formattedDate} at ${formattedTime} with ${clinicianName}.\n\nType: ${appointment.appointment_type}\nLocation: ${locationInfo}`;
+          break;
+        case "updated":
+          messageSubject = "Appointment Updated";
+          messageBody = `Your appointment has been updated.\n\nNew Details:\nDate: ${formattedDate}\nTime: ${formattedTime}\nProvider: ${clinicianName}\nType: ${appointment.appointment_type}\nLocation: ${locationInfo}`;
+          break;
+        case "cancelled":
+          messageSubject = "Appointment Cancelled";
+          messageBody = `Your appointment scheduled for ${formattedDate} at ${formattedTime} with ${clinicianName} has been cancelled.${appointment.cancellation_reason ? `\n\nReason: ${appointment.cancellation_reason}` : ""}`;
+          break;
+      }
+
+      // Insert portal message
+      await supabase.from("client_portal_messages").insert({
+        client_id: appointment.client_id,
+        clinician_id: appointment.clinician_id,
+        sender_id: appointment.clinician_id,
+        subject: messageSubject,
+        message: messageBody,
+        priority: notificationType === "cancelled" ? "high" : "normal",
+        status: "Sent",
+        sent_date: new Date().toISOString(),
+      });
+    } catch (messageError) {
+      console.error("Failed to send in-app message:", messageError);
+      // Don't fail the entire notification if in-app message fails
+    }
+
     return new Response(
       JSON.stringify({ success: true, emailId: emailData?.id }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }

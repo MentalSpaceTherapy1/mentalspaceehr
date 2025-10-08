@@ -471,6 +471,14 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
 
   const updateRecurringSeries = async (parentId: string, updates: any) => {
     try {
+      // Get all appointments in the series
+      const { data: seriesAppointments, error: fetchError } = await supabase
+        .from('appointments')
+        .select('id')
+        .or(`id.eq.${parentId},parent_recurrence_id.eq.${parentId}`);
+
+      if (fetchError) throw fetchError;
+
       // Update all appointments in the series
       const { error } = await supabase
         .from('appointments')
@@ -487,6 +495,22 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
         title: "Success",
         description: "Recurring series updated successfully"
       });
+
+      // Send notifications for each appointment in the series
+      if (seriesAppointments && seriesAppointments.length > 0) {
+        for (const appointment of seriesAppointments) {
+          try {
+            await supabase.functions.invoke('send-appointment-notification', {
+              body: {
+                appointmentId: appointment.id,
+                notificationType: 'updated'
+              }
+            });
+          } catch (notifError) {
+            console.error('Failed to send notification for appointment:', appointment.id, notifError);
+          }
+        }
+      }
     } catch (err) {
       toast({
         title: "Error",
@@ -527,6 +551,17 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
   const cancelRecurringSeries = async (parentId: string, reason: string, notes?: string, applyFee?: boolean) => {
     try {
       const now = new Date().toISOString();
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Get all future appointments in the series before canceling
+      const { data: futureAppointments, error: fetchError } = await supabase
+        .from('appointments')
+        .select('id')
+        .or(`id.eq.${parentId},parent_recurrence_id.eq.${parentId}`)
+        .gte('appointment_date', today)
+        .neq('status', 'Cancelled');
+
+      if (fetchError) throw fetchError;
       
       // Cancel all future appointments in the series
       const { error } = await supabase
@@ -544,14 +579,31 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
           last_modified_by: user?.id
         })
         .or(`id.eq.${parentId},parent_recurrence_id.eq.${parentId}`)
-        .gte('appointment_date', new Date().toISOString().split('T')[0]);
+        .gte('appointment_date', today)
+        .neq('status', 'Cancelled');
 
       if (error) throw error;
       
       toast({
         title: "Success",
-        description: "Recurring series cancelled successfully"
+        description: `Cancelled ${futureAppointments?.length || 0} future appointments`
       });
+
+      // Send notifications for each cancelled appointment
+      if (futureAppointments && futureAppointments.length > 0) {
+        for (const appointment of futureAppointments) {
+          try {
+            await supabase.functions.invoke('send-appointment-notification', {
+              body: {
+                appointmentId: appointment.id,
+                notificationType: 'cancelled'
+              }
+            });
+          } catch (notifError) {
+            console.error('Failed to send notification for appointment:', appointment.id, notifError);
+          }
+        }
+      }
     } catch (err) {
       toast({
         title: "Error",
