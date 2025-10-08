@@ -35,6 +35,11 @@ export const FormAssignmentDialog = ({
 
   const { assignForm, bulkAssignForms } = usePortalFormTemplates();
   
+  // Guard against undefined or empty templates
+  if (!templates || templates.length === 0) {
+    return null;
+  }
+  
   const isBulk = templates.length > 1;
 
   const handleSubmit = async () => {
