@@ -513,7 +513,8 @@ export default function ClientChart() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const portalLink = `${window.location.origin}/portal/login`;
+                    const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+                    const portalLink = `${siteUrl}/portal/login`;
                     navigator.clipboard.writeText(portalLink);
                     toast({
                       title: 'Portal Link Copied',
