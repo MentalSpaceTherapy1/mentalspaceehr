@@ -207,6 +207,26 @@ async function sendSmsReminder(
       delivery_status: message.status
     });
     
+    // Update appointments.reminders_sent JSONB
+    const { data: currentAppt } = await supabase
+      .from('appointments')
+      .select('reminders_sent')
+      .eq('id', appointment.id)
+      .single();
+    
+    const updatedReminders = {
+      ...(currentAppt?.reminders_sent || {}),
+      smsSent: true,
+      smsSentDate: new Date().toISOString(),
+      smsDelivered: true,
+      smsMessageId: message.sid
+    };
+    
+    await supabase
+      .from('appointments')
+      .update({ reminders_sent: updatedReminders })
+      .eq('id', appointment.id);
+    
     console.log(`SMS sent successfully: ${message.sid}, Status: ${message.status}`);
     
   } catch (error) {
@@ -231,6 +251,25 @@ async function sendSmsReminder(
       error_message: errorMessage,
       recipient: appointment.client.primary_phone
     });
+    
+    // Update appointments.reminders_sent JSONB with error
+    const { data: currentAppt } = await supabase
+      .from('appointments')
+      .select('reminders_sent')
+      .eq('id', appointment.id)
+      .single();
+    
+    const updatedReminders = {
+      ...(currentAppt?.reminders_sent || {}),
+      smsSent: false,
+      smsError: errorMessage,
+      smsFailedAt: new Date().toISOString()
+    };
+    
+    await supabase
+      .from('appointments')
+      .update({ reminders_sent: updatedReminders })
+      .eq('id', appointment.id);
     
     // Log to audit logs for tracking
     await supabase.from('audit_logs').insert({
