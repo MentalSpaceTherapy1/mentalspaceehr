@@ -179,6 +179,8 @@ export function AppointmentDialog({
         client_notes: appointment.client_notes ?? '',
         telehealth_platform: appointment.telehealth_platform || 'Internal',
         telehealth_link: appointment.telehealth_link || '',
+        cpt_code: appointment.cpt_code || '',
+        icd_codes: appointment.icd_codes || [],
       });
       setIsRecurring(editSeries ? true : (appointment.is_recurring || false));
       if (appointment.recurrence_pattern) {

@@ -23,6 +23,8 @@ export interface Appointment {
   client_notes?: string;
   telehealth_link?: string;
   telehealth_platform?: string;
+  cpt_code?: string;
+  icd_codes?: string[];
   is_recurring: boolean;
   recurrence_pattern?: any;
   parent_recurrence_id?: string;
