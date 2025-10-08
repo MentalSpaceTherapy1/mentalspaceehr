@@ -120,20 +120,25 @@ serve(async (req) => {
       time: appointment.start_time
     });
 
-    // Check if client has opted in for appointment reminders (if respect_client_preferences is enabled)
+    // Check client consent for appointment notifications
+    // NOTE: Transactional appointment notifications (create/update/cancel) should generally be sent
+    // regardless of "reminder" preferences, as they're critical communications about scheduled care
     const respectPreferences = notificationSettings?.respect_client_preferences !== false;
     let clientAllows = true;
+    
     if (respectPreferences) {
       const clientConsents = appointment.client?.consents as any;
-      // Only block if the client explicitly opted OUT; if missing, allow
+      // For now, we respect appointmentReminders setting, but this should ideally be separated
+      // into "appointment notifications" (transactional) vs "reminders" (marketing)
       if (clientConsents && clientConsents.appointmentReminders === false) {
         clientAllows = false;
-        console.log(`[${executionId}] Client has OPTED OUT of appointment reminders`);
+        console.log(`[${executionId}] Client has OPTED OUT - blocking notification per preference`);
       } else {
-        console.log(`[${executionId}] Client consent check: ALLOWED (explicit opt-in or no preference set)`);
+        console.log(`[${executionId}] Client consent check: ALLOWED`);
       }
     } else {
-      console.log(`[${executionId}] Client consent check: SKIPPED (respect_client_preferences is false)`);
+      // If respect_client_preferences is false, always send (treat as transactional)
+      console.log(`[${executionId}] Client consent check: SKIPPED (sending transactional notification)`);
     }
 
     const clientEmail = appointment.client?.email || null;
@@ -280,22 +285,24 @@ serve(async (req) => {
     try {
       const { data: clientRow } = await supabase
         .from("clients")
-        .select("*")
+        .select("primary_phone")
         .eq("id", appointment.client_id)
         .single();
       if (clientRow) {
-        clientPhone = (clientRow.phone || clientRow.mobile_phone || clientRow.primary_phone || clientRow.contact_phone || null) as string | null;
+        clientPhone = clientRow.primary_phone as string | null;
+        console.log(`[${executionId}] Client phone lookup: ${clientPhone || 'not found'}`);
       }
       const { data: clinicianRow } = await supabase
         .from("profiles")
-        .select("*")
+        .select("phone_number")
         .eq("id", appointment.clinician_id)
         .single();
       if (clinicianRow) {
-        clinicianPhone = (clinicianRow.phone_number || null) as string | null;
+        clinicianPhone = clinicianRow.phone_number as string | null;
+        console.log(`[${executionId}] Clinician phone lookup: ${clinicianPhone || 'not found'}`);
       }
-    } catch (_) {
-      // Ignore phone lookup errors
+    } catch (e) {
+      console.error(`[${executionId}] Phone lookup error:`, e);
     }
 
     // Helper: normalize US/E.164 phone
@@ -309,13 +316,89 @@ serve(async (req) => {
       return null;
     };
 
-    // Helper: send email via Resend
-    const sendEmail = async (to: string) => {
+    // Helper: send email via Resend with role-specific content
+    const sendEmail = async (to: string, recipientType: 'client' | 'clinician') => {
+      let roleSubject = subject;
+      let roleHtmlContent = htmlContent;
+      
+      // Create clinician-specific content if needed
+      if (recipientType === 'clinician') {
+        const dashboardLink = `${Deno.env.get('SITE_URL') || 'https://app.chctherapy.com'}/clients/${appointment.client_id}`;
+        
+        switch (notificationType) {
+          case "created":
+            roleSubject = `New Appointment: ${clientName} - ${formattedDate}`;
+            roleHtmlContent = `
+              <h2>New Appointment Scheduled</h2>
+              <p>A new appointment has been scheduled with your client.</p>
+              
+              <div style="background-color: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px;">
+                <h3>Appointment Details:</h3>
+                <p><strong>Client:</strong> ${clientName}</p>
+                <p><strong>Date:</strong> ${formattedDate}</p>
+                <p><strong>Time:</strong> ${formattedTime}</p>
+                <p><strong>Type:</strong> ${appointment.appointment_type}</p>
+                <p><strong>Location:</strong><br/>${locationInfo.replace(/\n/g, "<br/>")}</p>
+                ${appointment.notes ? `<p><strong>Notes:</strong> ${appointment.notes}</p>` : ''}
+              </div>
+              
+              <p><a href="${dashboardLink}" style="display: inline-block; background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">View Client Chart</a></p>
+            `;
+            break;
+          case "updated":
+            roleSubject = `Appointment Updated: ${clientName} - ${formattedDate}`;
+            roleHtmlContent = `
+              <h2>Appointment Updated</h2>
+              <p>An appointment with your client has been updated.</p>
+              
+              <div style="background-color: #fff3cd; padding: 20px; margin: 20px 0; border-radius: 8px;">
+                <h3>Updated Details:</h3>
+                <p><strong>Client:</strong> ${clientName}</p>
+                <p><strong>Date:</strong> ${formattedDate}</p>
+                <p><strong>Time:</strong> ${formattedTime}</p>
+                <p><strong>Type:</strong> ${appointment.appointment_type}</p>
+                <p><strong>Location:</strong><br/>${locationInfo.replace(/\n/g, "<br/>")}</p>
+              </div>
+              
+              <p><a href="${dashboardLink}" style="display: inline-block; background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">View Client Chart</a></p>
+            `;
+            break;
+          case "cancelled":
+            roleSubject = `Appointment Cancelled: ${clientName} - ${formattedDate}`;
+            roleHtmlContent = `
+              <h2>Appointment Cancelled</h2>
+              <p>An appointment with your client has been cancelled.</p>
+              
+              <div style="background-color: #fee; padding: 20px; margin: 20px 0; border-radius: 8px;">
+                <p><strong>Client:</strong> ${clientName}</p>
+                <p><strong>Date:</strong> ${formattedDate}</p>
+                <p><strong>Time:</strong> ${formattedTime}</p>
+                ${appointment.cancellation_reason ? `<p><strong>Reason:</strong> ${appointment.cancellation_reason}</p>` : ""}
+              </div>
+              
+              <p><a href="${dashboardLink}" style="display: inline-block; background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">View Client Chart</a></p>
+            `;
+            break;
+        }
+      } else {
+        // Client-specific content - add telehealth join link if applicable
+        if (appointment.service_location === "Telehealth" && appointment.telehealth_link) {
+          const joinLink = appointment.telehealth_link.startsWith('http') 
+            ? appointment.telehealth_link 
+            : `${Deno.env.get('SITE_URL') || 'https://app.chctherapy.com'}${appointment.telehealth_link}`;
+          
+          roleHtmlContent = roleHtmlContent.replace(
+            '</div>',
+            `<p style="margin-top: 15px;"><a href="${joinLink}" style="display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Join Telehealth Session</a></p></div>`
+          );
+        }
+      }
+      
       const { data, error } = await resend.emails.send({
         from: "CHC Therapy <support@chctherapy.com>",
         to: [to],
-        subject,
-        html: htmlContent,
+        subject: roleSubject,
+        html: roleHtmlContent,
       });
       if (error) throw error;
       return data?.id as string | undefined;
@@ -362,7 +445,7 @@ serve(async (req) => {
         .single();
 
       try {
-        const emailId = await sendEmail(target.email);
+        const emailId = await sendEmail(target.email, target.type);
         console.log(`[${executionId}] ✓ Email sent to ${target.type}: ${target.email} (Resend ID: ${emailId})`);
         if (log) {
           await supabase
