@@ -6,6 +6,7 @@ import { useClientDocuments } from '@/hooks/useClientDocuments';
 import { FormRenderer } from '@/components/portal/forms/FormRenderer';
 import { DocumentViewer } from '@/components/documents/DocumentViewer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,6 +16,7 @@ import { format } from 'date-fns';
 
 export default function PortalDocuments() {
   const { portalContext } = usePortalAccount();
+  const { toast } = useToast();
   const [selectedForm, setSelectedForm] = useState<FormWithResponse | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);

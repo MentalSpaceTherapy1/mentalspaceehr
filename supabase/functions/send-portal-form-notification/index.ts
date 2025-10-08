@@ -11,11 +11,10 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  let body: any;
-  let assignmentId: string;
+  let assignmentId: string | undefined;
   
   try {
-    body = await req.json();
+    const body = await req.json();
     assignmentId = body.assignmentId;
     
     if (!assignmentId) {
