@@ -115,16 +115,31 @@ export const usePortalFormTemplates = () => {
 
   // Assign form to client
   const assignForm = useMutation({
-    mutationFn: async (assignment: Omit<FormAssignment, 'id' | 'created_at' | 'updated_at' | 'status_updated_at' | 'assigned_date' | 'assigned_by'>) => {
+    mutationFn: async (assignment: Omit<FormAssignment, 'id' | 'created_at' | 'updated_at' | 'status_updated_at' | 'assigned_date' | 'assigned_by'> & { sendNotification?: boolean }) => {
       const { data: userData } = await supabase.auth.getUser();
+      
+      const { sendNotification, ...assignmentData } = assignment;
       
       const { data, error } = await supabase
         .from('portal_form_assignments')
-        .insert([{ ...assignment, assigned_by: userData.user?.id }])
+        .insert([{ ...assignmentData, assigned_by: userData.user?.id }])
         .select()
         .single();
 
       if (error) throw error;
+      
+      // Send notification if requested
+      if (sendNotification && data) {
+        try {
+          await supabase.functions.invoke('send-portal-form-notification', {
+            body: { assignmentId: data.id },
+          });
+        } catch (notificationError: any) {
+          console.error('Failed to send notification:', notificationError);
+          toast.error('Form assigned but notification failed to send');
+        }
+      }
+      
       return data;
     },
     onSuccess: () => {

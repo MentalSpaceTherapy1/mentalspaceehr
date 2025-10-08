@@ -44,6 +44,7 @@ export const FormAssignmentDialog = ({
       instructions: instructions || undefined,
       saved_to_chart: false,
       status: 'assigned',
+      sendNotification,
     });
     
     onSuccess();

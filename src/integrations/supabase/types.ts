@@ -5273,6 +5273,47 @@ export type Database = {
           },
         ]
       }
+      portal_form_notifications: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          recipient_email: string
+          resend_id: string | null
+          sent_at: string
+          status: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          recipient_email: string
+          resend_id?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          recipient_email?: string
+          resend_id?: string | null
+          sent_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_form_notifications_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "portal_form_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portal_form_responses: {
         Row: {
           approval_status: string | null

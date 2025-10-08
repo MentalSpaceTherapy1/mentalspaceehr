@@ -102,4 +102,7 @@ verify_jwt = true
 [functions.log-auth-attempt]
 verify_jwt = false
 
+[functions.send-portal-form-notification]
+verify_jwt = true
+
 
