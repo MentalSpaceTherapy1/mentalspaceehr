@@ -165,11 +165,16 @@ export function AppointmentDialog({
 
   useEffect(() => {
     if (appointment) {
+      // Normalize time format from HH:mm:ss to HH:mm
+      const normalizedStartTime = appointment.start_time 
+        ? appointment.start_time.substring(0, 5)
+        : '09:00';
+      
       form.reset({
         client_id: appointment.client_id,
         clinician_id: appointment.clinician_id,
         appointment_date: new Date(appointment.appointment_date),
-        start_time: appointment.start_time || '09:00',
+        start_time: normalizedStartTime,
         duration: appointment.duration,
         appointment_type: appointment.appointment_type,
         service_location: appointment.service_location,
