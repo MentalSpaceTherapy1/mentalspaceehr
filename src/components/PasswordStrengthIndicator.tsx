@@ -52,11 +52,12 @@ export function PasswordStrengthIndicator({
             {strengthLabels[strength]}
           </span>
         </div>
-        <Progress 
-          value={(strengthScore / 8) * 100} 
-          className="h-2"
-          indicatorClassName={strengthColors[strength]}
-        />
+        <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+          <div 
+            className={`h-full transition-all duration-300 ${strengthColors[strength]}`}
+            style={{ width: `${(strengthScore / 8) * 100}%` }}
+          />
+        </div>
       </div>
 
       {/* Breach Warning */}
