@@ -167,7 +167,8 @@ async function sendEmailReminder(
 async function sendSmsReminder(
   appointment: AppointmentDetails,
   settings: any,
-  hoursBefor: number
+  hoursBefor: number,
+  retryCount: number = 0
 ): Promise<void> {
   const confirmationToken = await generateConfirmationToken(appointment.id);
   const baseUrl = supabaseUrl.replace('supabase.co', 'lovableproject.com');
@@ -184,6 +185,9 @@ async function sendSmsReminder(
     cancelUrl
   );
   
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY_MS = 2000; // 2 seconds between retries
+  
   try {
     const message = await twilioClient.messages.create({
       to: appointment.client.primary_phone,
@@ -199,14 +203,26 @@ async function sendSmsReminder(
       status: 'sent',
       sent_at: new Date().toISOString(),
       recipient: appointment.client.primary_phone,
-      external_id: message.sid
+      external_id: message.sid,
+      delivery_status: message.status
     });
     
-    console.log(`SMS sent successfully: ${message.sid}`);
+    console.log(`SMS sent successfully: ${message.sid}, Status: ${message.status}`);
     
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const isRetryable = errorMessage.includes('timeout') || 
+                        errorMessage.includes('network') || 
+                        errorMessage.includes('rate limit');
     
+    // Retry logic for transient errors
+    if (isRetryable && retryCount < MAX_RETRIES) {
+      console.log(`SMS send failed, retrying (${retryCount + 1}/${MAX_RETRIES}): ${errorMessage}`);
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * (retryCount + 1)));
+      return sendSmsReminder(appointment, settings, hoursBefor, retryCount + 1);
+    }
+    
+    // Log failed send after exhausting retries
     await supabase.from('reminder_logs').insert({
       appointment_id: appointment.id,
       reminder_type: 'sms',
@@ -222,7 +238,7 @@ async function sendSmsReminder(
       action_type: 'sms_send_failed',
       resource_type: 'appointment',
       resource_id: appointment.id,
-      action_description: `Failed to send SMS reminder: ${errorMessage}`,
+      action_description: `Failed to send SMS reminder after ${retryCount} retries: ${errorMessage}`,
       severity: 'error'
     });
     
