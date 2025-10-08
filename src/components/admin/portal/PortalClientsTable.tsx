@@ -95,6 +95,34 @@ export function PortalClientsTable() {
     setDialogOpen(true);
   };
 
+  const handleSendInvitation = async (client: Client) => {
+    if (!client.email) {
+      toast.error('Client must have an email address');
+      return;
+    }
+
+    if (!client.portal_enabled) {
+      toast.error('Portal access must be enabled first');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.functions.invoke('send-portal-invitation', {
+        body: { 
+          clientId: client.id,
+          email: client.email 
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success('Portal invitation sent successfully');
+    } catch (error) {
+      console.error('Error sending invitation:', error);
+      toast.error('Failed to send invitation');
+    }
+  };
+
   const exportClientList = () => {
     const csv = [
       ['MRN', 'Name', 'Email', 'Portal Enabled', 'Portal User ID', 'Last Login', 'Status'].join(','),
@@ -249,14 +277,26 @@ export function PortalClientsTable() {
                           : 'Never'}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleManageClient(client)}
-                        >
-                          <UserCog className="h-4 w-4 mr-2" />
-                          Manage
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          {client.portal_enabled && !client.portal_user_id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSendInvitation(client)}
+                            >
+                              <Mail className="h-4 w-4 mr-2" />
+                              Send Invitation
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleManageClient(client)}
+                          >
+                            <UserCog className="h-4 w-4 mr-2" />
+                            Manage
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

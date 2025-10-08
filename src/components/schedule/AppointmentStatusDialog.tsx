@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { GroupSessionParticipantEditor } from './GroupSessionParticipantEditor';
 
 type StatusAction = 'check-in' | 'check-out' | 'no-show' | 'complete';
 
@@ -130,6 +131,13 @@ export function AppointmentStatusDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {appointment?.is_group_session && (
+            <GroupSessionParticipantEditor 
+              appointmentId={appointment.id}
+              onUpdate={() => {}}
+            />
+          )}
+
           {action === 'no-show' && (
             <>
               <div className="space-y-2">

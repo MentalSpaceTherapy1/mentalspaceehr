@@ -83,7 +83,7 @@ export const useScheduleExceptions = (clinicianId?: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
-      const { error: insertError } = await supabase
+      const { data, error: insertError } = await supabase
         .from('schedule_exceptions')
         .insert({
           clinician_id: exceptionData.clinicianId,
@@ -97,13 +97,32 @@ export const useScheduleExceptions = (clinicianId?: string) => {
           notes: exceptionData.notes,
           status: exceptionData.status,
           created_by: user?.id,
-        });
+        })
+        .select()
+        .single();
 
       if (insertError) throw insertError;
 
+      // Send notification for approval
+      try {
+        await supabase.functions.invoke('send-schedule-exception-notification', {
+          body: {
+            exceptionId: data.id,
+            clinicianId: exceptionData.clinicianId,
+            exceptionType: exceptionData.exceptionType,
+            startDate: exceptionData.startDate,
+            endDate: exceptionData.endDate,
+            reason: exceptionData.reason
+          }
+        });
+      } catch (notificationError) {
+        console.error('Failed to send notification:', notificationError);
+        // Don't fail the exception creation if notification fails
+      }
+
       toast({
         title: 'Success',
-        description: 'Exception created successfully',
+        description: 'Exception created and submitted for approval',
       });
 
       await fetchExceptions();

@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Download, FileText, FileSpreadsheet } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { toast } from 'sonner';
 
 interface ReportResultsDialogProps {
   open: boolean;
@@ -18,7 +21,33 @@ const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accen
 
 export function ReportResultsDialog({ open, onOpenChange, reportName, reportData, isLoading }: ReportResultsDialogProps) {
   const exportToPDF = () => {
-    // TODO: Implement PDF export
+    if (!reportData?.tableData) {
+      toast.error('No data available to export');
+      return;
+    }
+
+    const doc = new jsPDF();
+    const headers = Object.keys(reportData.tableData[0] || {});
+    const rows = reportData.tableData.map((row: any) => 
+      headers.map(h => row[h])
+    );
+
+    doc.setFontSize(16);
+    doc.text(reportName, 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 22);
+
+    autoTable(doc, {
+      head: [headers],
+      body: rows,
+      startY: 28,
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [99, 102, 241] }
+    });
+
+    doc.save(`${reportName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+    toast.success('PDF exported successfully');
   };
 
   const exportToCSV = () => {
@@ -41,7 +70,33 @@ export function ReportResultsDialog({ open, onOpenChange, reportName, reportData
   };
 
   const exportToExcel = () => {
-    // TODO: Implement Excel export
+    if (!reportData?.tableData) {
+      toast.error('No data available to export');
+      return;
+    }
+
+    // Create Excel-compatible CSV with proper formatting
+    const headers = Object.keys(reportData.tableData[0] || {});
+    const csvContent = [
+      headers.join('\t'), // Use tabs for Excel
+      ...reportData.tableData.map((row: any) => 
+        headers.map(h => {
+          const value = row[h];
+          // Escape special characters and wrap in quotes if needed
+          return typeof value === 'string' && (value.includes(',') || value.includes('\n'))
+            ? `"${value.replace(/"/g, '""')}"`
+            : value;
+        }).join('\t')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${reportName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xls`;
+    a.click();
+    toast.success('Excel file exported successfully');
   };
 
   if (isLoading) {

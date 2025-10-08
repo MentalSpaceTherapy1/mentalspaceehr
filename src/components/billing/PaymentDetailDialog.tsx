@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { FileText, Printer } from "lucide-react";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { toast } from 'sonner';
 
 interface PaymentDetailDialogProps {
   open: boolean;
@@ -14,7 +17,65 @@ export const PaymentDetailDialog = ({ open, onOpenChange, payment }: PaymentDeta
   if (!payment) return null;
 
   const handlePrintReceipt = () => {
-    // TODO: Implement receipt printing
+    if (!payment) return;
+
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(20);
+    doc.text('Payment Receipt', 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Receipt #: ${payment.receipt_number}`, 14, 28);
+    doc.text(`Date: ${format(new Date(payment.payment_date), 'PPP')}`, 14, 34);
+
+    // Payment Details
+    doc.setFontSize(12);
+    doc.text('Payment Information', 14, 45);
+    doc.setFontSize(10);
+    doc.text(`Method: ${payment.payment_method}`, 14, 52);
+    doc.text(`Check/Ref: ${payment.check_number || 'N/A'}`, 14, 58);
+    doc.text(`Source: ${payment.payment_source}`, 14, 64);
+    doc.text(`Payer: ${payment.payer?.company_name || 'Self-Pay'}`, 14, 70);
+
+    // Line items table
+    const tableData = payment.payment_line_items?.map((item: any) => [
+      format(new Date(item.charge_entry.service_date), 'MM/dd/yyyy'),
+      item.charge_entry.client 
+        ? `${item.charge_entry.client.last_name}, ${item.charge_entry.client.first_name}`
+        : 'Unknown',
+      item.charge_entry.cpt_code,
+      `$${item.charge_entry.charge_amount.toFixed(2)}`,
+      `$${item.payment_amount.toFixed(2)}`,
+      `$${(item.adjustment_amount || 0).toFixed(2)}`
+    ]) || [];
+
+    autoTable(doc, {
+      startY: 80,
+      head: [['Date', 'Client', 'CPT', 'Charge', 'Payment', 'Adjustment']],
+      body: tableData,
+      theme: 'grid',
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [99, 102, 241] }
+    });
+
+    // Totals
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    const totalPayment = payment.payment_line_items?.reduce(
+      (sum: number, item: any) => sum + (item.payment_amount || 0), 0
+    ) || 0;
+    const totalAdjustment = payment.payment_line_items?.reduce(
+      (sum: number, item: any) => sum + (item.adjustment_amount || 0), 0
+    ) || 0;
+
+    doc.setFontSize(11);
+    doc.text(`Total Payment: $${totalPayment.toFixed(2)}`, 14, finalY);
+    doc.text(`Total Adjustments: $${totalAdjustment.toFixed(2)}`, 14, finalY + 7);
+    doc.setFontSize(12);
+    doc.text(`Total Applied: $${(totalPayment + totalAdjustment).toFixed(2)}`, 14, finalY + 14);
+
+    // Save or print
+    doc.save(`receipt_${payment.receipt_number}.pdf`);
+    toast.success('Receipt generated successfully');
   };
 
   const totalPayment = payment.payment_line_items?.reduce(
