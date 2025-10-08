@@ -66,6 +66,7 @@ export function AppSidebar() {
 
   const mainItems = [
     { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard, roles: ['all'], color: 'from-primary to-accent' },
+    { title: 'My Schedule', url: '/my-schedule', icon: Clock, roles: ['therapist', 'associate_trainee', 'supervisor'], color: 'from-green-400 to-emerald-400' },
     { title: 'Schedule', url: '/schedule', icon: Calendar, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-secondary to-primary' },
     { title: 'Clients', url: '/clients', icon: Users, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-accent to-primary' },
     { title: 'Billing', url: '/billing', icon: DollarSign, roles: ['therapist', 'associate_trainee', 'supervisor', 'front_desk'], color: 'from-success to-primary' },
@@ -107,6 +108,7 @@ export function AppSidebar() {
       title: 'Clinical Operations',
       icon: GraduationCap,
       items: [
+        { title: 'Clinician Schedules', url: '/admin/clinician-schedules', icon: Clock, color: 'from-green-400 to-emerald-400' },
         { title: 'Supervision Management', url: '/admin/supervision-management', icon: GraduationCap, color: 'from-indigo-400 to-purple-400' },
         { title: 'AI Clinical Notes', url: '/admin/ai-notes', icon: Sparkles, color: 'from-cyan-400 to-blue-400' },
         { title: 'AI Quality Metrics', url: '/admin/ai-quality-metrics', icon: Brain, color: 'from-blue-400 to-cyan-400' },

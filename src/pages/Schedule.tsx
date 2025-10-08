@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Clock, Users, Calendar as CalendarIcon, Repeat } from 'lucide-react';
+import { Plus, Clock, Users, Calendar as CalendarIcon, Repeat, Settings } from 'lucide-react';
 import { useAppointments, Appointment } from '@/hooks/useAppointments';
 import { useBlockedTimes } from '@/hooks/useBlockedTimes';
 import { AppointmentDialog } from '@/components/schedule/AppointmentDialog';
@@ -18,6 +18,7 @@ import { AppointmentStatusDialog } from '@/components/schedule/AppointmentStatus
 import { CancellationDialog } from '@/components/schedule/CancellationDialog';
 import { BlockedTimesDialog } from '@/components/schedule/BlockedTimesDialog';
 import { RecurringEditDialog } from '@/components/schedule/RecurringEditDialog';
+import { ClinicianSelectorDialog } from '@/components/schedule/ClinicianSelectorDialog';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -51,8 +52,9 @@ export default function Schedule() {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [defaultDate, setDefaultDate] = useState<Date>();
   const [colorBy, setColorBy] = useState<ColorBy>('status');
-  const [selectedClinician, setSelectedClinician] = useState<string>('all');
-  const [clinicians, setClinicians] = useState<any[]>([]);
+  const [selectedClinicians, setSelectedClinicians] = useState<Set<string>>(new Set());
+  const [clinicians, setClinicians] = useState<Array<{ id: string; first_name: string; last_name: string; color: string }>>([]);
+  const [clinicianSelectorOpen, setClinicianSelectorOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [statusAction, setStatusAction] = useState<StatusAction>('check-in');
   const [cancellationDialogOpen, setCancellationDialogOpen] = useState(false);
@@ -79,11 +81,9 @@ export default function Schedule() {
     cancelRecurringSeries,
     updateRecurringSeries,
     refreshAppointments,
-  } = useAppointments(dateRange.start, dateRange.end, selectedClinician === 'all' ? undefined : selectedClinician);
+  } = useAppointments(dateRange.start, dateRange.end, undefined);
 
-  const { blockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime } = useBlockedTimes(
-    selectedClinician === 'all' ? undefined : selectedClinician
-  );
+  const { blockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime } = useBlockedTimes(undefined);
 
   // Auto-scroll to business hours (8 AM) on mount
   useEffect(() => {
@@ -100,31 +100,74 @@ export default function Schedule() {
     setTimeout(scrollToBusinessHours, 100);
   }, [view]); // Re-scroll when view changes
 
-  // Fetch clinicians
-  useMemo(() => {
+  // Fetch clinicians with assigned colors
+  useEffect(() => {
     const fetchClinicians = async () => {
       const { data } = await supabase
         .from('profiles')
         .select('id, first_name, last_name')
         .eq('is_active', true)
         .eq('available_for_scheduling', true);
-      if (data) setClinicians(data);
+      
+      if (data) {
+        // Assign consistent colors based on ID hash
+        const cliniciansWithColors = data.map((c, index) => {
+          const hash = c.id.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0);
+          const hue = hash % 360;
+          return {
+            ...c,
+            color: `hsl(${hue}, 70%, 50%)`,
+          };
+        });
+        setClinicians(cliniciansWithColors);
+        // Select all by default
+        setSelectedClinicians(new Set(cliniciansWithColors.map(c => c.id)));
+      }
     };
     fetchClinicians();
   }, []);
 
   const events = useMemo(() => {
-    return appointments.map((apt) => {
+    // Filter appointments by selected clinicians
+    const filteredAppointments = appointments.filter(apt => 
+      selectedClinicians.size === 0 || selectedClinicians.has(apt.clinician_id)
+    );
+
+    // Add appointments as events
+    const appointmentEvents = filteredAppointments.map((apt) => {
       const incidentToBadge = apt.is_incident_to ? ' 💼' : '';
       return {
         id: apt.id,
         title: `${apt.appointment_type}${isRecurringAppointment(apt) ? ' 🔁' : ''}${incidentToBadge}`,
         start: new Date(`${apt.appointment_date}T${apt.start_time}`),
         end: new Date(`${apt.appointment_date}T${apt.end_time}`),
-        resource: apt,
+        resource: { type: 'appointment', data: apt },
       };
     });
-  }, [appointments]);
+
+    // Add blocked times as gray events
+    const blockedEvents = blockedTimes
+      .filter(bt => selectedClinicians.size === 0 || selectedClinicians.has(bt.clinician_id))
+      .flatMap((bt) => {
+        const events = [];
+        const start = new Date(bt.start_date);
+        const end = new Date(bt.end_date);
+        
+        // Generate events for each day in the range
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          events.push({
+            id: `blocked-${bt.id}-${d.toISOString()}`,
+            title: bt.title || 'Blocked',
+            start: new Date(`${format(d, 'yyyy-MM-dd')}T${bt.start_time}`),
+            end: new Date(`${format(d, 'yyyy-MM-dd')}T${bt.end_time}`),
+            resource: { type: 'blocked', data: bt },
+          });
+        }
+        return events;
+      });
+
+    return [...appointmentEvents, ...blockedEvents];
+  }, [appointments, blockedTimes, selectedClinicians]);
 
   const handleSelectSlot = useCallback(({ start }: { start: Date }) => {
     setDefaultDate(start);
@@ -133,7 +176,17 @@ export default function Schedule() {
   }, []);
 
   const handleSelectEvent = useCallback((event: any) => {
-    const appointment = event.resource as Appointment;
+    const resource = event.resource;
+    
+    // Check if it's a blocked time
+    if (resource.type === 'blocked') {
+      setSelectedBlockedTime(resource.data);
+      setBlockedTimeDialogOpen(true);
+      return;
+    }
+    
+    // Handle appointment
+    const appointment = resource.data as Appointment;
     
     // Check if this is a recurring appointment and we're trying to edit
     if (isRecurringAppointment(appointment)) {
@@ -235,7 +288,24 @@ export default function Schedule() {
   };
 
   const eventStyleGetter = (event: any) => {
-    const appointment = event.resource as Appointment;
+    const resource = event.resource;
+    
+    // Blocked time - always gray
+    if (resource.type === 'blocked') {
+      return {
+        style: {
+          backgroundColor: 'hsl(0, 0%, 75%)',
+          borderRadius: '4px',
+          opacity: 0.6,
+          color: 'white',
+          border: '1px dashed hsl(0, 0%, 60%)',
+          display: 'block',
+        },
+      };
+    }
+    
+    // Appointment styling
+    const appointment = resource.data as Appointment;
     let backgroundColor = 'hsl(var(--primary))';
     
     if (colorBy === 'status') {
@@ -274,9 +344,9 @@ export default function Schedule() {
       };
       backgroundColor = typeColors[appointment.appointment_type] || 'hsl(var(--primary))';
     } else if (colorBy === 'clinician') {
-      const hash = appointment.clinician_id.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0);
-      const hue = hash % 360;
-      backgroundColor = `hsl(${hue}, 70%, 50%)`;
+      // Use the pre-assigned color from clinicians array
+      const clinician = clinicians.find(c => c.id === appointment.clinician_id);
+      backgroundColor = clinician?.color || 'hsl(var(--primary))';
     }
 
     return {
@@ -340,20 +410,19 @@ export default function Schedule() {
             <div className="flex gap-4 items-center flex-wrap">
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold">Clinician:</span>
-                <Select value={selectedClinician} onValueChange={setSelectedClinician}>
-                  <SelectTrigger className="w-[200px] border-2 border-primary/20 hover:border-primary/40 transition-colors">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Clinicians</SelectItem>
-                    {clinicians.map(c => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.first_name} {c.last_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <span className="text-sm font-semibold">Clinicians:</span>
+                <Button
+                  variant="outline"
+                  className="border-2 border-primary/20 hover:border-primary/40 transition-colors"
+                  onClick={() => setClinicianSelectorOpen(true)}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  {selectedClinicians.size === 0 
+                    ? 'None Selected' 
+                    : selectedClinicians.size === clinicians.length 
+                    ? 'All Clinicians'
+                    : `${selectedClinicians.size} Selected`}
+                </Button>
               </div>
 
               <div className="flex items-center gap-2">
@@ -383,6 +452,10 @@ export default function Schedule() {
                 </Badge>
                 <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md">
                   No Show
+                </Badge>
+                <Badge variant="outline" className="shadow-md flex items-center gap-1 border-gray-400">
+                  <div className="w-3 h-3 bg-gray-400 rounded" />
+                  Blocked Time
                 </Badge>
                 <Badge variant="secondary" className="shadow-md flex items-center gap-1">
                   <span>💼</span>
@@ -499,6 +572,14 @@ export default function Schedule() {
             />
           </>
         )}
+
+        <ClinicianSelectorDialog
+          open={clinicianSelectorOpen}
+          onOpenChange={setClinicianSelectorOpen}
+          clinicians={clinicians}
+          selectedClinicians={selectedClinicians}
+          onApply={setSelectedClinicians}
+        />
       </div>
     </DashboardLayout>
   );

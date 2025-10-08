@@ -83,6 +83,7 @@ import InsuranceClaims from "./pages/admin/InsuranceClaims";
 import BillingManagement from "./pages/admin/BillingManagement";
 import AuditLogs from "./pages/admin/AuditLogs";
 import ClinicianScheduleManagement from "./pages/admin/ClinicianScheduleManagement";
+import MySchedule from "./pages/MySchedule";
 
 const queryClient = new QueryClient();
 
@@ -293,6 +294,14 @@ const App = () => (
                 <AdminRoute>
                   <ClinicianScheduleManagement />
                 </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/my-schedule" 
+              element={
+                <ProtectedRoute>
+                  <MySchedule />
+                </ProtectedRoute>
               } 
             />
             <Route 
