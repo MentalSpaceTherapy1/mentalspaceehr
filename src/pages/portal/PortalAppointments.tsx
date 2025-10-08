@@ -66,7 +66,7 @@ export default function PortalAppointments() {
   const handleJoinSession = (appointment: any) => {
     if (appointment.telehealth_link) {
       const sessionId = appointment.telehealth_link.split('/').pop();
-      navigate(`/telehealth/session/${sessionId}`);
+      navigate(`/portal/telehealth/session/${sessionId}`);
     }
   };
 

@@ -125,6 +125,15 @@ export default function TelehealthSession() {
       // unique candidates in priority order
       const candidates = Array.from(new Set([noColon, withPrefix, withoutPrefix]));
 
+      // Detect if user is a portal client by checking if they have a client record with their user ID as portal_user_id
+      const { data: clientData } = await supabase
+        .from('clients')
+        .select('id, first_name, last_name')
+        .eq('portal_user_id', user?.id)
+        .maybeSingle();
+      
+      const isPortalClient = !!clientData;
+
       // 1) Try to fetch existing session by any candidate
       const { data: foundSessions, error: findErr } = await supabase
         .from('telehealth_sessions')
@@ -157,7 +166,8 @@ export default function TelehealthSession() {
 
         if (apptErr) throw apptErr;
 
-        const hostAppointment = (appts || []).find((a: any) => a.clinician_id === user?.id);
+        // Only staff (non-portal clients) can create sessions
+        const hostAppointment = !isPortalClient ? (appts || []).find((a: any) => a.clinician_id === user?.id) : null;
         if (hostAppointment && user?.id) {
           const canonicalId = withPrefix; // enforce canonical prefix
 
@@ -205,21 +215,29 @@ export default function TelehealthSession() {
       } else {
         // If we found a session and its session_id differs from the URL, normalize the route
         if (sessionData.session_id !== noColon) {
-          const canonicalLink = `/telehealth/session/${sessionData.session_id}`;
+          const canonicalLink = isPortalClient 
+            ? `/portal/telehealth/session/${sessionData.session_id}`
+            : `/telehealth/session/${sessionData.session_id}`;
           navigate(canonicalLink, { replace: true });
         }
       }
 
       setSession(sessionData);
-      const isUserHost = sessionData.host_id === user?.id;
+      const isUserHost = !isPortalClient && sessionData.host_id === user?.id;
       setIsHost(isUserHost);
 
-      // Fetch user profile (best-effort)
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('first_name, last_name')
-        .eq('id', user?.id)
-        .maybeSingle();
+      // Fetch user profile based on whether they're a portal client or staff
+      let profileData;
+      if (isPortalClient && clientData) {
+        profileData = { first_name: clientData.first_name, last_name: clientData.last_name };
+      } else {
+        const { data } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', user?.id)
+          .maybeSingle();
+        profileData = data;
+      }
 
       setProfile(profileData);
 

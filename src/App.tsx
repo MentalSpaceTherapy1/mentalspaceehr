@@ -656,6 +656,14 @@ const App = () => (
                 </ClientPortalRoute>
               }
             />
+            <Route 
+              path="/portal/telehealth/session/:sessionId" 
+              element={
+                <ClientPortalRoute>
+                  <TelehealthSession />
+                </ClientPortalRoute>
+              } 
+            />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

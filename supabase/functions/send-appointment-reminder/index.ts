@@ -68,8 +68,9 @@ function replaceTemplateVariables(
       ? `${location.location_name}, ${location.street1}, ${location.city}, ${location.state}`
       : appointment.service_location;
   
-  const telehealthLink = appointment.telehealth_link 
-    ? `\n\nJoin your session: ${supabaseUrl.replace('supabase.co', 'lovableproject.com')}${appointment.telehealth_link}`
+  const sessionId = appointment.telehealth_link?.split('/').pop();
+  const telehealthLink = appointment.telehealth_link && sessionId
+    ? `\n\nJoin your session: ${supabaseUrl.replace('supabase.co', 'lovableproject.com')}/portal/telehealth/session/${sessionId}`
     : '';
   
   return template

@@ -383,9 +383,8 @@ serve(async (req) => {
       } else {
         // Client-specific content - add telehealth join link if applicable
         if (appointment.service_location === "Telehealth" && appointment.telehealth_link) {
-          const joinLink = appointment.telehealth_link.startsWith('http') 
-            ? appointment.telehealth_link 
-            : `${Deno.env.get('SITE_URL') || 'https://app.chctherapy.com'}${appointment.telehealth_link}`;
+          const sessionId = appointment.telehealth_link.split('/').pop();
+          const joinLink = `${Deno.env.get('SITE_URL') || 'https://app.chctherapy.com'}/portal/telehealth/session/${sessionId}`;
           
           roleHtmlContent = roleHtmlContent.replace(
             '</div>',
