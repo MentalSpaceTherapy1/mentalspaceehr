@@ -4544,6 +4544,155 @@ export type Database = {
           },
         ]
       }
+      notification_logs: {
+        Row: {
+          clicked: boolean | null
+          clicked_date: string | null
+          error_message: string | null
+          id: string
+          message_content: string
+          message_subject: string | null
+          metadata: Json | null
+          notification_type: string
+          opened: boolean | null
+          opened_date: string | null
+          recipient_email: string | null
+          recipient_id: string
+          recipient_phone: string | null
+          recipient_type: string
+          related_entity_id: string | null
+          related_entity_type: string | null
+          rule_id: string | null
+          sent_date: string
+          sent_successfully: boolean
+        }
+        Insert: {
+          clicked?: boolean | null
+          clicked_date?: string | null
+          error_message?: string | null
+          id?: string
+          message_content: string
+          message_subject?: string | null
+          metadata?: Json | null
+          notification_type: string
+          opened?: boolean | null
+          opened_date?: string | null
+          recipient_email?: string | null
+          recipient_id: string
+          recipient_phone?: string | null
+          recipient_type: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          rule_id?: string | null
+          sent_date?: string
+          sent_successfully?: boolean
+        }
+        Update: {
+          clicked?: boolean | null
+          clicked_date?: string | null
+          error_message?: string | null
+          id?: string
+          message_content?: string
+          message_subject?: string | null
+          metadata?: Json | null
+          notification_type?: string
+          opened?: boolean | null
+          opened_date?: string | null
+          recipient_email?: string | null
+          recipient_id?: string
+          recipient_phone?: string | null
+          recipient_type?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          rule_id?: string | null
+          sent_date?: string
+          sent_successfully?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_logs_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "notification_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_rules: {
+        Row: {
+          conditions: Json | null
+          created_by: string | null
+          created_date: string
+          execution_count: number | null
+          id: string
+          is_active: boolean
+          last_executed_at: string | null
+          max_repeats: number | null
+          message_subject: string | null
+          message_template: string
+          recipient_type: string
+          recipients: string[]
+          repeat_interval: number | null
+          rule_name: string
+          rule_type: string
+          send_once: boolean
+          send_repeatedly: boolean
+          timing_offset: number | null
+          timing_type: string
+          trigger_event: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          conditions?: Json | null
+          created_by?: string | null
+          created_date?: string
+          execution_count?: number | null
+          id?: string
+          is_active?: boolean
+          last_executed_at?: string | null
+          max_repeats?: number | null
+          message_subject?: string | null
+          message_template: string
+          recipient_type: string
+          recipients: string[]
+          repeat_interval?: number | null
+          rule_name: string
+          rule_type: string
+          send_once?: boolean
+          send_repeatedly?: boolean
+          timing_offset?: number | null
+          timing_type: string
+          trigger_event: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          conditions?: Json | null
+          created_by?: string | null
+          created_date?: string
+          execution_count?: number | null
+          id?: string
+          is_active?: boolean
+          last_executed_at?: string | null
+          max_repeats?: number | null
+          message_subject?: string | null
+          message_template?: string
+          recipient_type?: string
+          recipients?: string[]
+          repeat_interval?: number | null
+          rule_name?: string
+          rule_type?: string
+          send_once?: boolean
+          send_repeatedly?: boolean
+          timing_offset?: number | null
+          timing_type?: string
+          trigger_event?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       payment_line_items: {
         Row: {
           adjustment_amount: number | null
