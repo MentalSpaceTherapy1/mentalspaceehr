@@ -14,6 +14,8 @@ import { MFAVerification } from '@/components/MFAVerification';
 import { EmailVerificationNotice } from '@/components/EmailVerificationNotice';
 import { supabase } from '@/integrations/supabase/client';
 import { checkTrustedDevice, addTrustedDevice } from '@/lib/api/trustedDevices';
+import { usePasswordValidation } from '@/hooks/usePasswordValidation';
+import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -45,6 +47,9 @@ export default function Auth() {
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
   const [rememberDevice, setRememberDevice] = useState(false);
+  const [signupPassword, setSignupPassword] = useState('');
+  
+  const passwordValidation = usePasswordValidation(signupPassword);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -156,6 +161,14 @@ export default function Auth() {
 
     try {
       signUpSchema.parse(data);
+      
+      // Check for breached password
+      if (passwordValidation.isBreached) {
+        setErrors({ password: 'This password has been exposed in data breaches. Please choose a different password.' });
+        setLoading(false);
+        return;
+      }
+      
       const { error } = await signUp(data.email, data.password, {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -394,19 +407,20 @@ export default function Auth() {
                       type="password"
                       placeholder="••••••••••••"
                       autoComplete="new-password"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
                       required 
                     />
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <p>Password must contain:</p>
-                      <ul className="list-disc list-inside space-y-0.5">
-                        <li>At least 12 characters</li>
-                        <li>One uppercase letter</li>
-                        <li>One lowercase letter</li>
-                        <li>One number</li>
-                        <li>One special character</li>
-                      </ul>
-                    </div>
-                    {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                    <PasswordStrengthIndicator
+                      password={signupPassword}
+                      isBreached={passwordValidation.isBreached}
+                      breachCount={passwordValidation.breachCount}
+                      isChecking={passwordValidation.isChecking}
+                      strength={passwordValidation.strength}
+                      strengthScore={passwordValidation.strengthScore}
+                      suggestions={passwordValidation.suggestions}
+                    />
+                    {errors.password && <p className="text-sm text-destructive mt-2">{errors.password}</p>}
                   </div>
                   
                   <div className="space-y-2">
