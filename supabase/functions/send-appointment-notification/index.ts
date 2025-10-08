@@ -300,7 +300,7 @@ serve(async (req) => {
     if (notifyClient && clientEmail) emailTargets.push({ type: 'client', email: clientEmail });
     if (notifyClinician && appointment.clinician?.email) emailTargets.push({ type: 'clinician', email: appointment.clinician.email });
 
-    // Send emails and log each
+    // Send emails and log each (non-blocking - don't stop portal messages if email fails)
     for (const target of emailTargets) {
       const { data: log } = await supabase
         .from("appointment_notifications")
@@ -315,6 +315,7 @@ serve(async (req) => {
 
       try {
         const emailId = await sendEmail(target.email);
+        console.log(`Email sent to ${target.type}: ${target.email}`);
         if (log) {
           await supabase
             .from("appointment_notifications")
@@ -326,12 +327,14 @@ serve(async (req) => {
             .eq("id", log.id);
         }
       } catch (e: any) {
+        console.error(`Failed to send email to ${target.type}: ${target.email}`, e);
         if (log) {
           await supabase
             .from("appointment_notifications")
             .update({ status: "failed", error_message: e?.message || String(e) })
             .eq("id", log.id);
         }
+        // Continue processing - don't throw
       }
     }
 
@@ -368,7 +371,8 @@ serve(async (req) => {
           .single();
 
         try {
-          await sendSms(target.phone, smsTextBase);
+          const smsSid = await sendSms(target.phone, smsTextBase);
+          console.log(`SMS sent to ${target.type}: ${target.phone}`);
           if (log) {
             await supabase
               .from("appointment_notifications")
@@ -376,50 +380,60 @@ serve(async (req) => {
               .eq("id", log.id);
           }
         } catch (e: any) {
+          console.error(`Failed to send SMS to ${target.type}: ${target.phone}`, e);
           if (log) {
             await supabase
               .from("appointment_notifications")
               .update({ status: "failed", error_message: e?.message || String(e) })
               .eq("id", log.id);
           }
+          // Continue processing - don't throw
         }
       }
     }
 
-    // Send in-app message to client portal
-    try {
-      let messageSubject = "";
-      let messageBody = "";
+    // Send in-app message to client portal (always send this, even if email/SMS fail)
+    if (notifyClient) {
+      try {
+        let messageSubject = "";
+        let messageBody = "";
 
-      switch (notificationType) {
-        case "created":
-          messageSubject = "Appointment Scheduled";
-          messageBody = `Your appointment has been scheduled for ${formattedDate} at ${formattedTime} with ${clinicianName}.\n\nType: ${appointment.appointment_type}\nLocation: ${locationInfo}`;
-          break;
-        case "updated":
-          messageSubject = "Appointment Updated";
-          messageBody = `Your appointment has been updated.\n\nNew Details:\nDate: ${formattedDate}\nTime: ${formattedTime}\nProvider: ${clinicianName}\nType: ${appointment.appointment_type}\nLocation: ${locationInfo}`;
-          break;
-        case "cancelled":
-          messageSubject = "Appointment Cancelled";
-          messageBody = `Your appointment scheduled for ${formattedDate} at ${formattedTime} with ${clinicianName} has been cancelled.${appointment.cancellation_reason ? `\n\nReason: ${appointment.cancellation_reason}` : ""}`;
-          break;
+        switch (notificationType) {
+          case "created":
+            messageSubject = "Appointment Scheduled";
+            messageBody = `Your appointment has been scheduled for ${formattedDate} at ${formattedTime} with ${clinicianName}.\n\nType: ${appointment.appointment_type}\nLocation: ${locationInfo}`;
+            break;
+          case "updated":
+            messageSubject = "Appointment Updated";
+            messageBody = `Your appointment has been updated.\n\nNew Details:\nDate: ${formattedDate}\nTime: ${formattedTime}\nProvider: ${clinicianName}\nType: ${appointment.appointment_type}\nLocation: ${locationInfo}`;
+            break;
+          case "cancelled":
+            messageSubject = "Appointment Cancelled";
+            messageBody = `Your appointment scheduled for ${formattedDate} at ${formattedTime} with ${clinicianName} has been cancelled.${appointment.cancellation_reason ? `\n\nReason: ${appointment.cancellation_reason}` : ""}`;
+            break;
+        }
+
+        // Insert portal message
+        const { error: msgError } = await supabase.from("client_portal_messages").insert({
+          client_id: appointment.client_id,
+          clinician_id: appointment.clinician_id,
+          sender_id: appointment.clinician_id,
+          subject: messageSubject,
+          message: messageBody,
+          priority: notificationType === "cancelled" ? "high" : "normal",
+          status: "Sent",
+          sent_date: new Date().toISOString(),
+        });
+        
+        if (msgError) {
+          console.error("Failed to insert portal message:", msgError);
+        } else {
+          console.log(`Portal message created for client: ${appointment.client_id}`);
+        }
+      } catch (messageError) {
+        console.error("Exception sending in-app message:", messageError);
+        // Don't fail the entire notification if in-app message fails
       }
-
-      // Insert portal message
-      await supabase.from("client_portal_messages").insert({
-        client_id: appointment.client_id,
-        clinician_id: appointment.clinician_id,
-        sender_id: appointment.clinician_id,
-        subject: messageSubject,
-        message: messageBody,
-        priority: notificationType === "cancelled" ? "high" : "normal",
-        status: "Sent",
-        sent_date: new Date().toISOString(),
-      });
-    } catch (messageError) {
-      console.error("Failed to send in-app message:", messageError);
-      // Don't fail the entire notification if in-app message fails
     }
 
     return new Response(
