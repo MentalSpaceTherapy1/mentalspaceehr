@@ -16,6 +16,8 @@ export default function Dashboard() {
   const { roles, loading } = useCurrentUserRoles();
   const navigate = useNavigate();
 
+  console.log('[Dashboard] Rendering with roles:', roles, 'loading:', loading);
+
   // Redirect client users to portal
   useEffect(() => {
     if (!loading && roles.length > 0) {

@@ -12,6 +12,8 @@ import {
 export const SessionTimeoutWarning = () => {
   const { showWarning, extendSession } = useSessionTimeout();
 
+  console.log('[SessionTimeoutWarning] showWarning:', showWarning);
+
   return (
     <AlertDialog open={showWarning} onOpenChange={() => {}}>
       <AlertDialogContent>

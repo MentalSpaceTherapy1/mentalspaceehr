@@ -15,11 +15,14 @@ export function PasswordExpirationWarning() {
   const { daysUntilExpiration, isExpired, showWarning, loading } = usePasswordExpiration();
   const navigate = useNavigate();
 
+  console.log('[PasswordExpirationWarning] State:', { isExpired, showWarning, loading, daysUntilExpiration });
+
   if (loading) return null;
 
   if (isExpired) {
+    console.log('[PasswordExpirationWarning] Rendering EXPIRED dialog');
     return (
-      <AlertDialog open={true}>
+      <AlertDialog open={true} onOpenChange={() => console.log('Expired dialog change attempted')}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 text-destructive">
@@ -42,8 +45,9 @@ export function PasswordExpirationWarning() {
   }
 
   if (showWarning) {
+    console.log('[PasswordExpirationWarning] Rendering WARNING dialog, days:', daysUntilExpiration);
     return (
-      <AlertDialog open={true}>
+      <AlertDialog open={true} onOpenChange={() => console.log('Warning dialog change attempted')}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
             <div className="flex items-center gap-3 text-amber-600">
