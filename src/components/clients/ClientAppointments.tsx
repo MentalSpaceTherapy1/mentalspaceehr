@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, MapPin, Video, Users, Plus, Filter } from 'lucide-react';
+import { Calendar, Clock, MapPin, Video, Users, Plus, Filter, Edit } from 'lucide-react';
 import { format, isToday, differenceInMinutes, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -317,13 +317,23 @@ export function ClientAppointments({ clientId }: ClientAppointmentsProps) {
                       )}
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate('/schedule')}
-                    >
-                      View in Calendar
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/schedule?appointmentId=${appointment.id}`)}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate('/schedule')}
+                      >
+                        View in Calendar
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

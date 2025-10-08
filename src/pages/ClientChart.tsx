@@ -23,7 +23,8 @@ import {
   FileCheck,
   CheckCircle,
   XCircle,
-  UserCog
+  UserCog,
+  Edit
 } from 'lucide-react';
 import { toast, useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -499,10 +500,21 @@ export default function ClientChart() {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Clients
             </Button>
-            <h3 className="font-semibold text-lg">
-              {client.first_name} {client.last_name}
-            </h3>
-            <p className="text-sm text-muted-foreground">MRN: {client.medical_record_number}</p>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="font-semibold text-lg">
+                  {client.first_name} {client.last_name}
+                </h3>
+                <p className="text-sm text-muted-foreground">MRN: {client.medical_record_number}</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/clients/${id}/edit`)}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           
           <ScrollArea className="h-[calc(100vh-200px)]">

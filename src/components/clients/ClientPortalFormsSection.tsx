@@ -26,6 +26,7 @@ export const ClientPortalFormsSection = ({ clientId }: ClientPortalFormsSectionP
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedResponse, setSelectedResponse] = useState<FormWithResponse | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [selectedForms, setSelectedForms] = useState<string[]>([]);
 
   const { activeTemplates, templatesLoading } = usePortalFormTemplates();
   const { forms, isLoading, cancelAssignment, resendNotification } = usePortalForms(clientId);
@@ -63,6 +64,29 @@ export const ClientPortalFormsSection = ({ clientId }: ClientPortalFormsSectionP
   const handleAssignForm = (template: FormTemplate) => {
     setSelectedTemplate(template);
     setAssignDialogOpen(true);
+  };
+
+  const handleToggleFormSelection = (formId: string) => {
+    setSelectedForms(prev =>
+      prev.includes(formId) ? prev.filter(id => id !== formId) : [...prev, formId]
+    );
+  };
+
+  const handleBulkAssign = () => {
+    if (selectedForms.length === 0) {
+      toast({
+        title: 'No forms selected',
+        description: 'Please select at least one form to assign',
+        variant: 'destructive',
+      });
+      return;
+    }
+    // Open dialog for bulk assignment - we'll use the first selected form's template
+    const firstForm = filteredTemplates?.find(t => selectedForms.includes(t.id));
+    if (firstForm) {
+      setSelectedTemplate(firstForm);
+      setAssignDialogOpen(true);
+    }
   };
 
   const handleReviewResponse = (form: FormWithResponse) => {
@@ -129,13 +153,18 @@ export const ClientPortalFormsSection = ({ clientId }: ClientPortalFormsSectionP
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mb-4">
+              <div className="mb-4 flex items-center gap-4">
                 <Input
                   placeholder="Search forms by title or type..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="max-w-sm"
                 />
+                {selectedForms.length > 0 && (
+                  <Button onClick={handleBulkAssign}>
+                    Assign {selectedForms.length} Form{selectedForms.length > 1 ? 's' : ''}
+                  </Button>
+                )}
               </div>
 
               {templatesLoading ? (
@@ -148,6 +177,20 @@ export const ClientPortalFormsSection = ({ clientId }: ClientPortalFormsSectionP
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-[50px]">
+                        <input
+                          type="checkbox"
+                          checked={selectedForms.length === filteredTemplates.length}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedForms(filteredTemplates.map(t => t.id));
+                            } else {
+                              setSelectedForms([]);
+                            }
+                          }}
+                          className="h-4 w-4"
+                        />
+                      </TableHead>
                       <TableHead>Form Title</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Signature Required</TableHead>
@@ -158,6 +201,14 @@ export const ClientPortalFormsSection = ({ clientId }: ClientPortalFormsSectionP
                   <TableBody>
                     {filteredTemplates.map((template) => (
                       <TableRow key={template.id}>
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={selectedForms.includes(template.id)}
+                            onChange={() => handleToggleFormSelection(template.id)}
+                            className="h-4 w-4"
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">{template.title}</TableCell>
                         <TableCell>
                           <Badge variant="outline">{template.form_type}</Badge>
