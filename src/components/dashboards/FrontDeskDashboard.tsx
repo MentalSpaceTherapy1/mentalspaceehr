@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { GradientCard, GradientCardContent, GradientCardDescription, GradientCardHeader, GradientCardTitle } from '@/components/ui/gradient-card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -13,6 +14,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 export const FrontDeskDashboard = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6">
       {/* Quick Stats */}
@@ -166,19 +169,35 @@ export const FrontDeskDashboard = () => {
         </GradientCardHeader>
         <GradientCardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4 hover:bg-primary/5 hover:border-primary transition-all">
+            <Button 
+              variant="outline" 
+              className="h-auto flex flex-col gap-2 p-4 hover:bg-primary/5 hover:border-primary transition-all"
+              onClick={() => navigate('/schedule')}
+            >
               <UserPlus className="h-5 w-5" />
               <span className="text-sm">Check-in Patient</span>
             </Button>
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4 hover:bg-accent/5 hover:border-accent transition-all">
+            <Button 
+              variant="outline" 
+              className="h-auto flex flex-col gap-2 p-4 hover:bg-accent/5 hover:border-accent transition-all"
+              onClick={() => navigate('/schedule')}
+            >
               <Calendar className="h-5 w-5" />
               <span className="text-sm">Schedule</span>
             </Button>
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4 hover:bg-secondary/5 hover:border-secondary transition-all">
+            <Button 
+              variant="outline" 
+              className="h-auto flex flex-col gap-2 p-4 hover:bg-secondary/5 hover:border-secondary transition-all"
+              onClick={() => navigate('/messages')}
+            >
               <Phone className="h-5 w-5" />
               <span className="text-sm">Log Call</span>
             </Button>
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4 hover:bg-primary/5 hover:border-primary transition-all">
+            <Button 
+              variant="outline" 
+              className="h-auto flex flex-col gap-2 p-4 hover:bg-primary/5 hover:border-primary transition-all"
+              onClick={() => navigate('/clients')}
+            >
               <Users className="h-5 w-5" />
               <span className="text-sm">Patient Lookup</span>
             </Button>

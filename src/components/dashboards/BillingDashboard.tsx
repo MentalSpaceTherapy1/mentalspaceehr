@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GradientCard, GradientCardContent, GradientCardDescription, GradientCardHeader, GradientCardTitle } from '@/components/ui/gradient-card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { IncidentToBillingReport } from '@/components/billing/IncidentToBillingReport';
 
 export const BillingDashboard = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
 
   return (
@@ -258,19 +260,35 @@ export const BillingDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+            <Button 
+              variant="outline" 
+              className="h-auto flex flex-col gap-2 p-4"
+              onClick={() => navigate('/admin/insurance-claims')}
+            >
               <FileText className="h-5 w-5" />
               <span className="text-sm">Submit Claim</span>
             </Button>
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+            <Button 
+              variant="outline" 
+              className="h-auto flex flex-col gap-2 p-4"
+              onClick={() => navigate('/admin/billing-management')}
+            >
               <CreditCard className="h-5 w-5" />
               <span className="text-sm">Process Payment</span>
             </Button>
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+            <Button 
+              variant="outline" 
+              className="h-auto flex flex-col gap-2 p-4"
+              onClick={() => navigate('/admin/eligibility-verification')}
+            >
               <AlertCircle className="h-5 w-5" />
               <span className="text-sm">Verify Insurance</span>
             </Button>
-            <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+            <Button 
+              variant="outline" 
+              className="h-auto flex flex-col gap-2 p-4"
+              onClick={() => navigate('/admin/reports')}
+            >
               <TrendingUp className="h-5 w-5" />
               <span className="text-sm">View Reports</span>
             </Button>

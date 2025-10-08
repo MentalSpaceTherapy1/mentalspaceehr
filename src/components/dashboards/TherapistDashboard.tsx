@@ -1,6 +1,9 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GradientCard, GradientCardContent, GradientCardDescription, GradientCardHeader, GradientCardTitle } from '@/components/ui/gradient-card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Calendar, 
   Clock, 
@@ -14,8 +17,77 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ComplianceAlerts } from './ComplianceAlerts';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export const TherapistDashboard = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    todaysSessions: 0,
+    pendingNotes: 0,
+    activeClients: 0,
+    complianceRate: 100
+  });
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!user?.id) return;
+
+      try {
+        setLoading(true);
+        const today = new Date().toISOString().split('T')[0];
+
+        // Fetch today's appointments
+        const { data: appointments, error: apptError } = await supabase
+          .from('appointments')
+          .select('id')
+          .eq('clinician_id', user.id)
+          .eq('appointment_date', today)
+          .eq('status', 'Scheduled');
+
+        if (apptError) throw apptError;
+
+        // Fetch active clients
+        const { data: clients, error: clientError } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('primary_therapist_id', user.id)
+          .eq('status', 'Active');
+
+        if (clientError) throw clientError;
+
+        // Fetch pending notes from compliance status
+        const { data: complianceData, error: complianceError } = await supabase
+          .from('note_compliance_status')
+          .select('id, status')
+          .eq('clinician_id', user.id)
+          .in('status', ['Due Soon', 'Overdue', 'Late', 'Locked']);
+
+        if (complianceError) throw complianceError;
+
+        // Calculate compliance rate
+        const totalNotes = complianceData?.length || 0;
+        const overdueNotes = complianceData?.filter(n => ['Overdue', 'Late', 'Locked'].includes(n.status as string))?.length || 0;
+        const complianceRate = totalNotes === 0 ? 100 : Math.round(((totalNotes - overdueNotes) / totalNotes) * 100);
+
+        setStats({
+          todaysSessions: appointments?.length || 0,
+          pendingNotes: totalNotes,
+          activeClients: clients?.length || 0,
+          complianceRate
+        });
+      } catch (error) {
+        console.error('[TherapistDashboard] Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user?.id]);
+
   return (
     <div className="space-y-6">
       {/* Today's Overview */}
@@ -26,7 +98,11 @@ export const TherapistDashboard = () => {
             <Calendar className="h-5 w-5 text-primary" />
           </GradientCardHeader>
           <GradientCardContent>
-            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">0</div>
+            {loading ? (
+              <Skeleton className="h-10 w-20" />
+            ) : (
+              <div className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{stats.todaysSessions}</div>
+            )}
             <p className="text-xs text-muted-foreground">Scheduled appointments</p>
           </GradientCardContent>
         </GradientCard>
@@ -37,7 +113,11 @@ export const TherapistDashboard = () => {
             <FileText className="h-5 w-5 text-warning" />
           </GradientCardHeader>
           <GradientCardContent>
-            <div className="text-3xl font-bold text-warning">0</div>
+            {loading ? (
+              <Skeleton className="h-10 w-20" />
+            ) : (
+              <div className="text-3xl font-bold text-warning">{stats.pendingNotes}</div>
+            )}
             <p className="text-xs text-muted-foreground">Unsigned notes</p>
           </GradientCardContent>
         </GradientCard>
@@ -48,7 +128,11 @@ export const TherapistDashboard = () => {
             <Users className="h-5 w-5 text-accent" />
           </GradientCardHeader>
           <GradientCardContent>
-            <div className="text-3xl font-bold text-accent">0</div>
+            {loading ? (
+              <Skeleton className="h-10 w-20" />
+            ) : (
+              <div className="text-3xl font-bold text-accent">{stats.activeClients}</div>
+            )}
             <p className="text-xs text-muted-foreground">On your caseload</p>
           </GradientCardContent>
         </GradientCard>
@@ -59,7 +143,11 @@ export const TherapistDashboard = () => {
             <CheckCircle2 className="h-5 w-5 text-success" />
           </GradientCardHeader>
           <GradientCardContent>
-            <div className="text-3xl font-bold text-success">100%</div>
+            {loading ? (
+              <Skeleton className="h-10 w-20" />
+            ) : (
+              <div className="text-3xl font-bold text-success">{stats.complianceRate}%</div>
+            )}
             <p className="text-xs text-muted-foreground">Documentation on time</p>
           </GradientCardContent>
         </GradientCard>
@@ -91,7 +179,13 @@ export const TherapistDashboard = () => {
                 <div>
                   <Calendar className="h-12 w-12 text-primary/50 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">No appointments scheduled</p>
-                  <Button variant="default" className="mt-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">Schedule an appointment</Button>
+                  <Button 
+                    variant="default" 
+                    className="mt-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                    onClick={() => navigate('/schedule')}
+                  >
+                    Schedule an appointment
+                  </Button>
                 </div>
               </div>
             </div>
@@ -144,19 +238,35 @@ export const TherapistDashboard = () => {
           </GradientCardHeader>
           <GradientCardContent>
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+              <Button 
+                variant="outline" 
+                className="h-auto flex flex-col gap-2 p-4"
+                onClick={() => navigate('/notes')}
+              >
                 <FileText className="h-5 w-5" />
                 <span className="text-sm">New Note</span>
               </Button>
-              <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+              <Button 
+                variant="outline" 
+                className="h-auto flex flex-col gap-2 p-4"
+                onClick={() => navigate('/schedule')}
+              >
                 <Calendar className="h-5 w-5" />
                 <span className="text-sm">Schedule</span>
               </Button>
-              <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+              <Button 
+                variant="outline" 
+                className="h-auto flex flex-col gap-2 p-4"
+                onClick={() => navigate('/clients')}
+              >
                 <Users className="h-5 w-5" />
                 <span className="text-sm">Clients</span>
               </Button>
-              <Button variant="outline" className="h-auto flex flex-col gap-2 p-4">
+              <Button 
+                variant="outline" 
+                className="h-auto flex flex-col gap-2 p-4"
+                onClick={() => navigate('/tasks')}
+              >
                 <ClipboardList className="h-5 w-5" />
                 <span className="text-sm">To-Do</span>
               </Button>
