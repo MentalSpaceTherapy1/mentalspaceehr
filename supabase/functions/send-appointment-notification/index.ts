@@ -6,6 +6,12 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const resendApiKey = Deno.env.get("RESEND_API_KEY")!;
 
+// Helper: send SMS via Twilio (if configured)
+const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+const twilioAuth = Deno.env.get("TWILIO_AUTH_TOKEN");
+const twilioFrom = Deno.env.get("TWILIO_PHONE_NUMBER");
+const canSendSms = !!(twilioSid && twilioAuth && twilioFrom);
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const resend = new Resend(resendApiKey);
 
@@ -24,14 +30,34 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const executionId = `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  console.log(`[${executionId}] === NOTIFICATION FUNCTION STARTED ===`);
+  
   try {
     const { appointmentId, notificationType }: NotificationRequest = await req.json();
+    console.log(`[${executionId}] Request: appointmentId=${appointmentId}, type=${notificationType}`);
+
+    // Validate environment variables
+    if (!resendApiKey) {
+      console.error(`[${executionId}] CRITICAL: RESEND_API_KEY not configured`);
+      throw new Error("Email service not configured");
+    }
+    console.log(`[${executionId}] RESEND_API_KEY: configured`);
+    console.log(`[${executionId}] Twilio SMS: ${canSendSms ? 'configured' : 'NOT configured'}`);
 
     // Check notification settings
     const { data: notificationSettings, error: settingsError } = await supabase
       .from("appointment_notification_settings")
       .select("*")
       .maybeSingle();
+    
+    console.log(`[${executionId}] Notification settings loaded:`, {
+      found: !!notificationSettings,
+      send_on_create: notificationSettings?.send_on_create,
+      send_on_update: notificationSettings?.send_on_update,
+      send_on_cancel: notificationSettings?.send_on_cancel,
+      respect_client_preferences: notificationSettings?.respect_client_preferences
+    });
 
     // Check if this notification type is enabled
     const isEnabled = notificationSettings 
@@ -41,11 +67,14 @@ serve(async (req) => {
       : true; // Default to enabled if no settings found
 
     if (!isEnabled) {
+      console.log(`[${executionId}] Notifications for ${notificationType} are DISABLED in settings`);
       return new Response(
-        JSON.stringify({ message: `Notifications for ${notificationType} are disabled` }),
+        JSON.stringify({ message: `Notifications for ${notificationType} are disabled`, executionId }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
+    
+    console.log(`[${executionId}] Notification type ${notificationType} is ENABLED`);
 
     // Fetch appointment details with related data
     const { data: appointment, error: appointmentError } = await supabase
@@ -77,8 +106,19 @@ serve(async (req) => {
       .single();
 
     if (appointmentError || !appointment) {
+      console.error(`[${executionId}] Failed to fetch appointment:`, appointmentError);
       throw new Error(`Failed to fetch appointment: ${appointmentError?.message}`);
     }
+    
+    console.log(`[${executionId}] Appointment loaded:`, {
+      id: appointment.id,
+      client: `${appointment.client?.first_name} ${appointment.client?.last_name}`,
+      clientEmail: appointment.client?.email,
+      clinician: `${appointment.clinician?.first_name} ${appointment.clinician?.last_name}`,
+      clinicianEmail: appointment.clinician?.email,
+      date: appointment.appointment_date,
+      time: appointment.start_time
+    });
 
     // Check if client has opted in for appointment reminders (if respect_client_preferences is enabled)
     const respectPreferences = notificationSettings?.respect_client_preferences !== false;
@@ -88,7 +128,12 @@ serve(async (req) => {
       // Only block if the client explicitly opted OUT; if missing, allow
       if (clientConsents && clientConsents.appointmentReminders === false) {
         clientAllows = false;
+        console.log(`[${executionId}] Client has OPTED OUT of appointment reminders`);
+      } else {
+        console.log(`[${executionId}] Client consent check: ALLOWED (explicit opt-in or no preference set)`);
       }
+    } else {
+      console.log(`[${executionId}] Client consent check: SKIPPED (respect_client_preferences is false)`);
     }
 
     const clientEmail = appointment.client?.email || null;
@@ -219,8 +264,15 @@ serve(async (req) => {
       ? (notificationSettings!.notify_recipients as string[])
       : ["client"]; // default
 
-    const notifyClient = notifyRecipients.includes("client");
+    const notifyClient = notifyRecipients.includes("client") && clientAllows;
     const notifyClinician = notifyRecipients.includes("clinician");
+    
+    console.log(`[${executionId}] Notification recipients:`, {
+      notifyClient,
+      notifyClinician,
+      clientAllows,
+      configuredRecipients: notifyRecipients
+    });
 
     // Attempt to get phone numbers for SMS (optional)
     let clientPhone: string | null = null;
@@ -269,12 +321,6 @@ serve(async (req) => {
       return data?.id as string | undefined;
     };
 
-    // Helper: send SMS via Twilio (if configured)
-    const twilioSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-    const twilioAuth = Deno.env.get("TWILIO_AUTH_TOKEN");
-    const twilioFrom = Deno.env.get("TWILIO_PHONE_NUMBER");
-    const canSendSms = !!(twilioSid && twilioAuth && twilioFrom);
-
     const sendSms = async (to: string, body: string) => {
       if (!canSendSms) return null;
       const url = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
@@ -299,6 +345,8 @@ serve(async (req) => {
     const emailTargets: Array<{ type: 'client' | 'clinician'; email: string }> = [];
     if (notifyClient && clientEmail) emailTargets.push({ type: 'client', email: clientEmail });
     if (notifyClinician && appointment.clinician?.email) emailTargets.push({ type: 'clinician', email: appointment.clinician.email });
+    
+    console.log(`[${executionId}] Email targets:`, emailTargets.map(t => `${t.type}: ${t.email}`));
 
     // Send emails and log each (non-blocking - don't stop portal messages if email fails)
     for (const target of emailTargets) {
@@ -315,7 +363,7 @@ serve(async (req) => {
 
       try {
         const emailId = await sendEmail(target.email);
-        console.log(`Email sent to ${target.type}: ${target.email}`);
+        console.log(`[${executionId}] ✓ Email sent to ${target.type}: ${target.email} (Resend ID: ${emailId})`);
         if (log) {
           await supabase
             .from("appointment_notifications")
@@ -327,7 +375,12 @@ serve(async (req) => {
             .eq("id", log.id);
         }
       } catch (e: any) {
-        console.error(`Failed to send email to ${target.type}: ${target.email}`, e);
+        console.error(`[${executionId}] ✗ Failed to send email to ${target.type}: ${target.email}`, e);
+        console.error(`[${executionId}] Email error details:`, {
+          message: e?.message,
+          name: e?.name,
+          stack: e?.stack?.split('\n').slice(0, 3)
+        });
         if (log) {
           await supabase
             .from("appointment_notifications")
@@ -355,9 +408,12 @@ serve(async (req) => {
     const nClin = clinicianPhone ? normalizePhone(clinicianPhone) : null;
     if (notifyClient && nClient) smsTargets.push({ type: 'client', phone: nClient });
     if (notifyClinician && nClin) smsTargets.push({ type: 'clinician', phone: nClin });
+    
+    console.log(`[${executionId}] SMS targets:`, smsTargets.map(t => `${t.type}: ${t.phone}`));
 
     // Send SMS (if configured) and log
     if (canSendSms) {
+      console.log(`[${executionId}] Twilio SMS enabled, sending ${smsTargets.length} messages`);
       for (const target of smsTargets) {
         const { data: log } = await supabase
           .from("appointment_notifications")
@@ -372,7 +428,7 @@ serve(async (req) => {
 
         try {
           const smsSid = await sendSms(target.phone, smsTextBase);
-          console.log(`SMS sent to ${target.type}: ${target.phone}`);
+          console.log(`[${executionId}] ✓ SMS sent to ${target.type}: ${target.phone} (Twilio SID: ${smsSid})`);
           if (log) {
             await supabase
               .from("appointment_notifications")
@@ -380,7 +436,11 @@ serve(async (req) => {
               .eq("id", log.id);
           }
         } catch (e: any) {
-          console.error(`Failed to send SMS to ${target.type}: ${target.phone}`, e);
+          console.error(`[${executionId}] ✗ Failed to send SMS to ${target.type}: ${target.phone}`, e);
+          console.error(`[${executionId}] SMS error details:`, {
+            message: e?.message,
+            name: e?.name
+          });
           if (log) {
             await supabase
               .from("appointment_notifications")
@@ -390,6 +450,8 @@ serve(async (req) => {
           // Continue processing - don't throw
         }
       }
+    } else {
+      console.log(`[${executionId}] Twilio SMS NOT configured - skipping ${smsTargets.length} SMS messages`);
     }
 
     // Send in-app message to client portal (always send this, even if email/SMS fail)
