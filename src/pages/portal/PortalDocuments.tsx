@@ -7,6 +7,7 @@ import { FormRenderer } from '@/components/portal/forms/FormRenderer';
 import { DocumentViewer } from '@/components/documents/DocumentViewer';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -149,8 +150,47 @@ export default function PortalDocuments() {
     );
   }
 
-  if (selectedForm && selectedForm.template) {
-    console.log('Rendering form:', selectedForm.template.title, 'Sections:', selectedForm.template.sections?.length);
+  // If a form is selected, render the form with defensive checks
+  if (selectedForm) {
+    // Defensive validation before rendering
+    const hasValidTemplate = selectedForm.template && 
+      selectedForm.template.sections && 
+      Array.isArray(selectedForm.template.sections) &&
+      selectedForm.template.sections.length > 0;
+
+    if (!hasValidTemplate) {
+      console.error('PortalDocuments: Invalid template structure', {
+        formId: selectedForm.id,
+        hasTemplate: !!selectedForm.template,
+        hasSections: !!selectedForm.template?.sections,
+        isArray: Array.isArray(selectedForm.template?.sections),
+        sectionsCount: selectedForm.template?.sections?.length,
+      });
+      
+      return (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Form Error</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  This form template is invalid or incomplete. Please contact support.
+                </AlertDescription>
+              </Alert>
+              <Button variant="outline" onClick={() => setSelectedForm(null)}>
+                Go Back
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    console.log('Rendering form:', selectedForm.template.title, 'Sections:', selectedForm.template.sections.length);
+    
     return (
       <div className="space-y-6">
         <ErrorBoundary onReset={() => setSelectedForm(null)}>

@@ -29,8 +29,36 @@ export const FormRenderer = ({
   isSaving,
   isSubmitting,
 }: FormRendererProps) => {
-  // Validate template has sections
-  if (!template.sections || template.sections.length === 0) {
+  // ⚠️ CRITICAL: Initialize ALL hooks FIRST (Rules of Hooks)
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+  const [showSignature, setShowSignature] = useState(false);
+  const [startTime] = useState(Date.now());
+  const signaturePadRef = useRef<SignaturePadRef>(null);
+
+  const form = useForm({
+    defaultValues: response?.responses || {},
+  });
+
+  // Log template structure for debugging
+  useEffect(() => {
+    console.log('FormRenderer mounted:', {
+      templateId: template.id,
+      templateTitle: template.title,
+      sectionsCount: template.sections?.length || 0,
+      hasSections: !!template.sections,
+    });
+  }, [template]);
+
+  // NOW validate template after hooks are initialized
+  const hasValidSections = template.sections && Array.isArray(template.sections) && template.sections.length > 0;
+  const invalidSections = hasValidSections 
+    ? template.sections.filter(s => !s.fields || !Array.isArray(s.fields) || s.fields.length === 0)
+    : [];
+  const hasInvalidSections = invalidSections.length > 0;
+
+  // Validation error UI (conditional rendering, not early return)
+  if (!hasValidSections) {
+    console.error('FormRenderer: Template has no valid sections', template);
     return (
       <Card>
         <CardHeader>
@@ -53,10 +81,8 @@ export const FormRenderer = ({
     );
   }
 
-  // Validate all sections have fields
-  const invalidSections = template.sections.filter(s => !s.fields || s.fields.length === 0);
-  if (invalidSections.length > 0) {
-    console.error('Invalid sections found:', invalidSections);
+  if (hasInvalidSections) {
+    console.error('FormRenderer: Invalid sections found:', invalidSections);
     return (
       <Card>
         <CardHeader>
@@ -78,15 +104,6 @@ export const FormRenderer = ({
       </Card>
     );
   }
-
-  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
-  const [showSignature, setShowSignature] = useState(false);
-  const [startTime] = useState(Date.now());
-  const signaturePadRef = useRef<SignaturePadRef>(null);
-
-  const form = useForm({
-    defaultValues: response?.responses || {},
-  });
 
   // Null-safe sorting with default order values
   const sortedSections = [...template.sections].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));

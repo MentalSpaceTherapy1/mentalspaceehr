@@ -26,25 +26,49 @@ export const usePortalForms = (clientId?: string) => {
       // Transform and sanitize database response to match our types
       return (data || []).map(item => {
         // Sanitize template data to prevent rendering issues
-        const template = item.template ? {
-          ...item.template,
-          sections: Array.isArray(item.template.sections) 
-            ? (item.template.sections as any[])
-                .filter(s => s && typeof s === 'object') // Filter out falsy sections
+        const rawTemplate = item.template;
+        
+        if (!rawTemplate) {
+          console.warn('usePortalForms: Assignment has no template', item.id);
+        }
+        
+        const template = rawTemplate ? {
+          ...rawTemplate,
+          sections: Array.isArray(rawTemplate.sections) 
+            ? (rawTemplate.sections as any[])
+                .filter(section => {
+                  if (!section || typeof section !== 'object') {
+                    console.warn('usePortalForms: Invalid section detected in template', rawTemplate.id);
+                    return false;
+                  }
+                  return true;
+                })
                 .map(section => ({
                   ...section,
-                  order: section.order ?? 0, // Ensure order exists
+                  order: section.order ?? 0,
                   fields: Array.isArray(section.fields)
                     ? section.fields
-                        .filter(f => f && typeof f === 'object') // Filter out falsy fields
+                        .filter(field => {
+                          if (!field || typeof field !== 'object' || !field.id) {
+                            console.warn('usePortalForms: Invalid field detected in section', section.id);
+                            return false;
+                          }
+                          return true;
+                        })
                         .map(field => ({
                           ...field,
-                          order: field.order ?? 0, // Ensure order exists
+                          order: field.order ?? 0,
                         }))
-                    : [], // Default to empty array if fields is missing
+                    : []
                 }))
-            : [], // Default to empty array if sections is missing
+            : []
         } : undefined;
+        
+        console.log('usePortalForms: Sanitized template', {
+          assignmentId: item.id,
+          templateId: rawTemplate?.id,
+          sectionsCount: template?.sections?.length || 0,
+        });
 
         return {
           ...item,
