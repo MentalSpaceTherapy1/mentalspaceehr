@@ -110,13 +110,33 @@ export default function Schedule() {
         .eq('available_for_scheduling', true);
       
       if (data) {
-        // Assign consistent colors based on ID hash
-        const cliniciansWithColors = data.map((c, index) => {
+        // Use a predefined color palette for better distinction
+        const colorPalette = [
+          'hsl(0, 70%, 50%)',    // Red
+          'hsl(30, 70%, 50%)',   // Orange
+          'hsl(60, 70%, 50%)',   // Yellow
+          'hsl(120, 70%, 50%)',  // Green
+          'hsl(180, 70%, 50%)',  // Cyan
+          'hsl(210, 70%, 50%)',  // Blue
+          'hsl(270, 70%, 50%)',  // Purple
+          'hsl(300, 70%, 50%)',  // Magenta
+          'hsl(15, 70%, 50%)',   // Red-Orange
+          'hsl(45, 70%, 50%)',   // Gold
+          'hsl(90, 70%, 50%)',   // Lime
+          'hsl(150, 70%, 50%)',  // Teal
+          'hsl(195, 70%, 50%)',  // Sky Blue
+          'hsl(240, 70%, 50%)',  // Indigo
+          'hsl(285, 70%, 50%)',  // Violet
+          'hsl(330, 70%, 50%)',  // Pink
+        ];
+        
+        // Assign colors using hash for consistency, but from palette
+        const cliniciansWithColors = data.map((c) => {
           const hash = c.id.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0);
-          const hue = hash % 360;
+          const colorIndex = hash % colorPalette.length;
           return {
             ...c,
-            color: `hsl(${hue}, 70%, 50%)`,
+            color: colorPalette[colorIndex],
           };
         });
         setClinicians(cliniciansWithColors);
