@@ -1,12 +1,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import Twilio from "https://esm.sh/twilio@4.23.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// Initialize Twilio client
+const twilioClient = Twilio(
+  Deno.env.get("TWILIO_ACCOUNT_SID"),
+  Deno.env.get("TWILIO_AUTH_TOKEN")
+);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,11 +27,13 @@ interface AppointmentDetails {
   end_time: string;
   service_location: string;
   telehealth_link: string | null;
+  client_id: string;
   client: {
     first_name: string;
     last_name: string;
     email: string;
     primary_phone: string;
+    sms_consent: boolean;
   };
   clinician: {
     first_name: string;
@@ -155,6 +164,72 @@ async function sendEmailReminder(
   }
 }
 
+async function sendSmsReminder(
+  appointment: AppointmentDetails,
+  settings: any,
+  hoursBefor: number
+): Promise<void> {
+  const confirmationToken = await generateConfirmationToken(appointment.id);
+  const baseUrl = supabaseUrl.replace('supabase.co', 'lovableproject.com');
+  
+  const confirmationUrl = `${baseUrl}/confirm-appointment/${confirmationToken}`;
+  const rescheduleUrl = `${baseUrl}/schedule?appointmentId=${appointment.id}`;
+  const cancelUrl = `${baseUrl}/cancel-appointment/${confirmationToken}`;
+  
+  const smsContent = replaceTemplateVariables(
+    settings.sms_template,
+    appointment,
+    confirmationUrl,
+    rescheduleUrl,
+    cancelUrl
+  );
+  
+  try {
+    const message = await twilioClient.messages.create({
+      to: appointment.client.primary_phone,
+      from: Deno.env.get("TWILIO_PHONE_NUMBER"),
+      body: smsContent
+    });
+    
+    // Log successful send with Twilio message SID
+    await supabase.from('reminder_logs').insert({
+      appointment_id: appointment.id,
+      reminder_type: 'sms',
+      hours_before: hoursBefor,
+      status: 'sent',
+      sent_at: new Date().toISOString(),
+      recipient: appointment.client.primary_phone,
+      external_id: message.sid
+    });
+    
+    console.log(`SMS sent successfully: ${message.sid}`);
+    
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    await supabase.from('reminder_logs').insert({
+      appointment_id: appointment.id,
+      reminder_type: 'sms',
+      hours_before: hoursBefor,
+      status: 'failed',
+      error_message: errorMessage,
+      recipient: appointment.client.primary_phone
+    });
+    
+    // Log to audit logs for tracking
+    await supabase.from('audit_logs').insert({
+      user_id: appointment.client_id,
+      action_type: 'sms_send_failed',
+      resource_type: 'appointment',
+      resource_id: appointment.id,
+      action_description: `Failed to send SMS reminder: ${errorMessage}`,
+      severity: 'error'
+    });
+    
+    throw error;
+  }
+}
+
 async function generateConfirmationToken(appointmentId: string): Promise<string> {
   const token = crypto.randomUUID();
   
@@ -195,7 +270,7 @@ async function processReminders(): Promise<any> {
         .from('appointments')
         .select(`
           *,
-          client:clients!inner(first_name, last_name, email, primary_phone),
+          client:clients!inner(first_name, last_name, email, primary_phone, sms_consent),
           clinician:profiles!appointments_clinician_id_fkey(first_name, last_name, title),
           location:practice_locations(location_name, street1, city, state)
         `)
@@ -229,6 +304,64 @@ async function processReminders(): Promise<any> {
         } catch (error) {
           results.failed++;
           results.errors.push(`Appointment ${appointment.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+        
+        results.processed++;
+      }
+    }
+  }
+  
+  // Process SMS reminders
+  if (settings.sms_enabled && settings.sms_timing) {
+    for (const hours of settings.sms_timing) {
+      const targetTime = new Date();
+      targetTime.setHours(targetTime.getHours() + hours);
+      
+      // Get appointments that need SMS reminders
+      const { data: appointments, error } = await supabase
+        .from('appointments')
+        .select(`
+          *,
+          client:clients!inner(first_name, last_name, email, primary_phone, sms_consent),
+          clinician:profiles!appointments_clinician_id_fkey(first_name, last_name, title),
+          location:practice_locations(location_name, street1, city, state)
+        `)
+        .eq('status', 'Scheduled')
+        .eq('client.sms_consent', true)
+        .gte('appointment_date', targetTime.toISOString().split('T')[0])
+        .lte('appointment_date', targetTime.toISOString().split('T')[0]);
+      
+      if (error) {
+        results.errors.push(error.message);
+        continue;
+      }
+      
+      for (const appointment of appointments || []) {
+        // Check if SMS reminder already sent
+        const { data: existingLog } = await supabase
+          .from('reminder_logs')
+          .select('id')
+          .eq('appointment_id', appointment.id)
+          .eq('reminder_type', 'sms')
+          .eq('hours_before', hours)
+          .eq('status', 'sent')
+          .maybeSingle();
+        
+        if (existingLog) {
+          continue;
+        }
+        
+        // Skip if client doesn't have SMS consent
+        if (!appointment.client.sms_consent || !appointment.client.primary_phone) {
+          continue;
+        }
+        
+        try {
+          await sendSmsReminder(appointment as AppointmentDetails, settings, hours);
+          results.sent++;
+        } catch (error) {
+          results.failed++;
+          results.errors.push(`SMS for appointment ${appointment.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
         
         results.processed++;

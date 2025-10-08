@@ -2017,6 +2017,8 @@ export type Database = {
           secondary_phone_type: string | null
           sex_assigned_at_birth: string | null
           sexual_orientation: string | null
+          sms_consent: boolean | null
+          sms_opt_out_date: string | null
           special_needs: string | null
           state: string
           status: string
@@ -2097,6 +2099,8 @@ export type Database = {
           secondary_phone_type?: string | null
           sex_assigned_at_birth?: string | null
           sexual_orientation?: string | null
+          sms_consent?: boolean | null
+          sms_opt_out_date?: string | null
           special_needs?: string | null
           state: string
           status?: string
@@ -2177,6 +2181,8 @@ export type Database = {
           secondary_phone_type?: string | null
           sex_assigned_at_birth?: string | null
           sexual_orientation?: string | null
+          sms_consent?: boolean | null
+          sms_opt_out_date?: string | null
           special_needs?: string | null
           state?: string
           status?: string
@@ -6152,7 +6158,9 @@ export type Database = {
           appointment_id: string | null
           confirmed_at: string | null
           created_at: string | null
+          delivery_status: string | null
           error_message: string | null
+          external_id: string | null
           hours_before: number
           id: string
           recipient: string
@@ -6164,7 +6172,9 @@ export type Database = {
           appointment_id?: string | null
           confirmed_at?: string | null
           created_at?: string | null
+          delivery_status?: string | null
           error_message?: string | null
+          external_id?: string | null
           hours_before: number
           id?: string
           recipient: string
@@ -6176,7 +6186,9 @@ export type Database = {
           appointment_id?: string | null
           confirmed_at?: string | null
           created_at?: string | null
+          delivery_status?: string | null
           error_message?: string | null
+          external_id?: string | null
           hours_before?: number
           id?: string
           recipient?: string

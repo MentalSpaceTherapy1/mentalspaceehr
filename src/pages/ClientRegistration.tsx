@@ -41,6 +41,7 @@ export default function ClientRegistration() {
     email: '',
     preferredContactMethod: 'Phone',
     okayToLeaveMessage: false,
+    smsConsent: false,
     
     // Address
     street1: '',
@@ -175,6 +176,7 @@ export default function ClientRegistration() {
           email: formData.email || null,
           preferred_contact_method: formData.preferredContactMethod,
           okay_to_leave_message: formData.okayToLeaveMessage,
+          sms_consent: formData.smsConsent || false,
           street1: formData.street1,
           street2: formData.street2 || null,
           city: formData.city,

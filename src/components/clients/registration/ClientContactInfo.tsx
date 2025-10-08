@@ -115,6 +115,27 @@ export function ClientContactInfo({ formData, setFormData }: ClientContactInfoPr
         </div>
       </div>
 
+      <div className="p-4 border rounded-lg bg-muted/50">
+        <h4 className="font-medium mb-3">Communication Preferences</h4>
+        <div className="space-y-3">
+          <div className="flex items-start space-x-2">
+            <Checkbox
+              id="smsConsent"
+              checked={formData.smsConsent || false}
+              onCheckedChange={(checked) => setFormData({ ...formData, smsConsent: checked })}
+            />
+            <div className="flex-1">
+              <Label htmlFor="smsConsent" className="cursor-pointer font-normal">
+                I consent to receive appointment reminders via SMS text message
+              </Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Standard message and data rates may apply. You can opt out at any time.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <h3 className="text-lg font-semibold pt-4">Address</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2 md:col-span-2">
