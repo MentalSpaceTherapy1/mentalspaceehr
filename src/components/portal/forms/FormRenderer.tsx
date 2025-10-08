@@ -29,6 +29,56 @@ export const FormRenderer = ({
   isSaving,
   isSubmitting,
 }: FormRendererProps) => {
+  // Validate template has sections
+  if (!template.sections || template.sections.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Form Configuration Error</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              This form is not properly configured. Please contact support.
+            </AlertDescription>
+          </Alert>
+          <div className="mt-4">
+            <Button variant="outline" onClick={onCancel}>
+              Go Back
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Validate all sections have fields
+  const invalidSections = template.sections.filter(s => !s.fields || s.fields.length === 0);
+  if (invalidSections.length > 0) {
+    console.error('Invalid sections found:', invalidSections);
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Form Configuration Error</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Some sections of this form are missing required fields. Please contact support.
+            </AlertDescription>
+          </Alert>
+          <div className="mt-4">
+            <Button variant="outline" onClick={onCancel}>
+              Go Back
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [showSignature, setShowSignature] = useState(false);
   const [startTime] = useState(Date.now());

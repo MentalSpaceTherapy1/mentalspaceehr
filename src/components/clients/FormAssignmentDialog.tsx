@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 interface FormAssignmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  template: FormTemplate;
+  templates: FormTemplate[];
   clientId: string;
   onSuccess: () => void;
 }
@@ -24,7 +24,7 @@ interface FormAssignmentDialogProps {
 export const FormAssignmentDialog = ({
   open,
   onOpenChange,
-  template,
+  templates,
   clientId,
   onSuccess,
 }: FormAssignmentDialogProps) => {
@@ -33,19 +33,32 @@ export const FormAssignmentDialog = ({
   const [instructions, setInstructions] = useState('');
   const [sendNotification, setSendNotification] = useState(true);
 
-  const { assignForm } = usePortalFormTemplates();
+  const { assignForm, bulkAssignForms } = usePortalFormTemplates();
+  
+  const isBulk = templates.length > 1;
 
   const handleSubmit = async () => {
-    assignForm.mutate({
-      template_id: template.id,
-      client_id: clientId,
-      due_date: dueDate?.toISOString(),
-      priority,
-      instructions: instructions || undefined,
-      saved_to_chart: false,
-      status: 'assigned',
-      sendNotification,
-    });
+    if (isBulk) {
+      bulkAssignForms.mutate({
+        templateIds: templates.map(t => t.id),
+        clientId,
+        dueDate: dueDate?.toISOString(),
+        priority,
+        instructions: instructions || undefined,
+        sendNotification,
+      });
+    } else {
+      assignForm.mutate({
+        template_id: templates[0].id,
+        client_id: clientId,
+        due_date: dueDate?.toISOString(),
+        priority,
+        instructions: instructions || undefined,
+        saved_to_chart: false,
+        status: 'assigned',
+        sendNotification,
+      });
+    }
     
     onSuccess();
   };
@@ -54,25 +67,44 @@ export const FormAssignmentDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Assign Form to Client</DialogTitle>
+          <DialogTitle>
+            {isBulk ? `Assign ${templates.length} Forms to Client` : 'Assign Form to Client'}
+          </DialogTitle>
           <DialogDescription>
-            Assign "{template.title}" for the client to complete via their portal
+            {isBulk 
+              ? `Assign ${templates.length} forms for the client to complete via their portal`
+              : `Assign "${templates[0].title}" for the client to complete via their portal`
+            }
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Form Template</Label>
-            <div className="p-3 bg-muted rounded-md">
-              <p className="font-medium">{template.title}</p>
-              <p className="text-sm text-muted-foreground">{template.form_type}</p>
-              {template.estimated_minutes && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  Estimated time: ~{template.estimated_minutes} minutes
-                </p>
-              )}
+          {isBulk ? (
+            <div className="space-y-2">
+              <Label>Forms to Assign ({templates.length})</Label>
+              <div className="p-3 bg-muted rounded-md max-h-40 overflow-y-auto space-y-2">
+                {templates.map(t => (
+                  <div key={t.id} className="text-sm">
+                    <p className="font-medium">{t.title}</p>
+                    <p className="text-xs text-muted-foreground">{t.form_type}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>Form Template</Label>
+              <div className="p-3 bg-muted rounded-md">
+                <p className="font-medium">{templates[0].title}</p>
+                <p className="text-sm text-muted-foreground">{templates[0].form_type}</p>
+                {templates[0].estimated_minutes && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Estimated time: ~{templates[0].estimated_minutes} minutes
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="due-date">Due Date (Optional)</Label>
@@ -144,11 +176,11 @@ export const FormAssignmentDialog = ({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={assignForm.isPending}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={assignForm.isPending || bulkAssignForms.isPending}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={assignForm.isPending}>
-            {assignForm.isPending ? 'Assigning...' : 'Assign Form'}
+          <Button onClick={handleSubmit} disabled={assignForm.isPending || bulkAssignForms.isPending}>
+            {(assignForm.isPending || bulkAssignForms.isPending) ? 'Assigning...' : `Assign ${isBulk ? 'Forms' : 'Form'}`}
           </Button>
         </DialogFooter>
       </DialogContent>

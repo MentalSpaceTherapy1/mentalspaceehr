@@ -39,10 +39,26 @@ export default function PortalDocuments() {
   } = useClientDocuments(portalContext?.account.clientId);
 
   const handleStartForm = async (form: FormWithResponse) => {
-    if (!form.response) {
-      await startForm(form.id);
+    try {
+      console.log('Starting form:', form.id);
+      
+      if (!form.response) {
+        // Start the form and wait for completion
+        await startForm(form.id);
+        
+        // Small delay to ensure cache is updated
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+      
+      setSelectedForm(form);
+    } catch (error) {
+      console.error('Error starting form:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to start form. Please try again.',
+        variant: 'destructive',
+      });
     }
-    setSelectedForm(form);
   };
 
   const handleSaveProgress = (responses: Record<string, any>, progressPercentage: number) => {

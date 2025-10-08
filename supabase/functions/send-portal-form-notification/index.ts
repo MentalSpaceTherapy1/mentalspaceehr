@@ -1,27 +1,33 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const siteUrl = Deno.env.get("SITE_URL") || supabaseUrl;
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface NotificationRequest {
-  assignmentId: string;
-}
-
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let body: any;
+  let assignmentId: string;
+  
   try {
-    const { assignmentId }: NotificationRequest = await req.json();
-    console.log("Processing notification for assignment:", assignmentId);
+    body = await req.json();
+    assignmentId = body.assignmentId;
+    
+    if (!assignmentId) {
+      return new Response(
+        JSON.stringify({ error: 'Missing assignmentId' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const siteUrl = Deno.env.get("SITE_URL") || supabaseUrl;
 
     // Create Supabase client with service role
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -32,13 +38,7 @@ serve(async (req) => {
       .select(`
         *,
         template:portal_form_templates(*),
-        client:clients(
-          id,
-          first_name,
-          last_name,
-          email,
-          portal_user_id
-        )
+        client:clients(id, first_name, last_name, email, portal_user_id)
       `)
       .eq("id", assignmentId)
       .single();
@@ -62,9 +62,7 @@ serve(async (req) => {
     const estimatedMinutes = assignment.template?.estimated_minutes;
     const dueDate = assignment.due_date 
       ? new Date(assignment.due_date).toLocaleDateString('en-US', { 
-          month: 'long', 
-          day: 'numeric', 
-          year: 'numeric' 
+          month: 'long', day: 'numeric', year: 'numeric' 
         })
       : null;
 
@@ -144,13 +142,28 @@ serve(async (req) => {
       </html>
     `;
 
-    // Send email using SendGrid
+    // Send via SendGrid
     const sendGridApiKey = Deno.env.get('SENDGRID_API_KEY');
+    
     if (!sendGridApiKey) {
-      throw new Error('SENDGRID_API_KEY is not configured');
+      console.error('SENDGRID_API_KEY is not configured');
+      
+      // Log to notifications table
+      await supabase.from('portal_form_notifications').insert({
+        assignment_id: assignmentId,
+        recipient_email: assignment.client.email,
+        status: 'failed',
+        error_message: 'SENDGRID_API_KEY not configured',
+        sent_at: new Date().toISOString(),
+      });
+      
+      return new Response(
+        JSON.stringify({ error: 'Email service not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const emailResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    const sgResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${sendGridApiKey}`,
@@ -161,77 +174,64 @@ serve(async (req) => {
           to: [{ email: assignment.client.email }],
           subject: `New Form Assignment${assignment.priority === 'urgent' ? ' [URGENT]' : ''}: ${formTitle}`,
         }],
-        from: {
-          email: 'noreply@mentalspace.com',
-          name: 'MentalSpace EHR'
-        },
-        content: [{
-          type: 'text/html',
-          value: emailHtml,
-        }],
+        from: { email: 'noreply@mentalspace.com', name: 'MentalSpace EHR' },
+        content: [{ type: 'text/html', value: emailHtml }],
       }),
     });
 
-    if (!emailResponse.ok) {
-      const errorText = await emailResponse.text();
+    if (!sgResponse.ok) {
+      const errorText = await sgResponse.text();
       throw new Error(`SendGrid error: ${errorText}`);
     }
 
     console.log("Email sent successfully via SendGrid");
 
     // Log the notification
-    const { error: logError } = await supabase
-      .from("portal_form_notifications")
-      .insert({
-        assignment_id: assignmentId,
-        recipient_email: assignment.client.email,
-        status: "sent",
-        resend_id: null,
-      });
-
-    if (logError) {
-      console.error("Error logging notification:", logError);
-    }
+    await supabase.from("portal_form_notifications").insert({
+      assignment_id: assignmentId,
+      recipient_email: assignment.client.email,
+      status: "sent",
+      sent_at: new Date().toISOString(),
+    });
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Notification sent successfully"
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ success: true, message: "Notification sent successfully" }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error: any) {
-    console.error("Error sending notification:", error);
 
-    // Try to log the failed notification
+  } catch (error: any) {
+    console.error('Error sending notification:', error);
+    
+    // Log error to database using the assignmentId we already parsed
     try {
-      const { assignmentId } = await req.json();
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
       
-      await supabase
-        .from("portal_form_notifications")
-        .insert({
-          assignment_id: assignmentId,
-          recipient_email: "unknown@error.com",
-          status: "failed",
-          error_message: error.message,
-        });
-    } catch (logError) {
-      console.error("Error logging failed notification:", logError);
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      if (assignmentId) {
+        const { data: assignment } = await supabase
+          .from('portal_form_assignments')
+          .select('*, client:clients(email)')
+          .eq('id', assignmentId)
+          .single();
+        
+        if (assignment) {
+          await supabase.from('portal_form_notifications').insert({
+            assignment_id: assignmentId,
+            recipient_email: assignment.client.email,
+            status: 'failed',
+            error_message: error?.message || 'Unknown error',
+            sent_at: new Date().toISOString(),
+          });
+        }
       }
+    } catch (logError) {
+      console.error('Failed to log error to database:', logError);
+    }
+    
+    return new Response(
+      JSON.stringify({ error: error?.message || 'Failed to send notification' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

@@ -22,7 +22,7 @@ interface ClientPortalFormsSectionProps {
 export const ClientPortalFormsSection = ({ clientId }: ClientPortalFormsSectionProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedTemplate, setSelectedTemplate] = useState<FormTemplate | null>(null);
+  const [selectedTemplates, setSelectedTemplates] = useState<FormTemplate[]>([]);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedResponse, setSelectedResponse] = useState<FormWithResponse | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
@@ -62,7 +62,7 @@ export const ClientPortalFormsSection = ({ clientId }: ClientPortalFormsSectionP
   };
 
   const handleAssignForm = (template: FormTemplate) => {
-    setSelectedTemplate(template);
+    setSelectedTemplates([template]);
     setAssignDialogOpen(true);
   };
 
@@ -81,10 +81,13 @@ export const ClientPortalFormsSection = ({ clientId }: ClientPortalFormsSectionP
       });
       return;
     }
-    // Open dialog for bulk assignment - we'll use the first selected form's template
-    const firstForm = filteredTemplates?.find(t => selectedForms.includes(t.id));
-    if (firstForm) {
-      setSelectedTemplate(firstForm);
+    // Get all selected templates
+    const templatesToAssign = filteredTemplates?.filter(t => 
+      selectedForms.includes(t.id)
+    ) || [];
+    
+    if (templatesToAssign.length > 0) {
+      setSelectedTemplates(templatesToAssign);
       setAssignDialogOpen(true);
     }
   };
@@ -440,18 +443,17 @@ export const ClientPortalFormsSection = ({ clientId }: ClientPortalFormsSectionP
       </Tabs>
 
       {/* Dialogs */}
-      {selectedTemplate && (
-        <FormAssignmentDialog
-          open={assignDialogOpen}
-          onOpenChange={setAssignDialogOpen}
-          template={selectedTemplate}
-          clientId={clientId!}
-          onSuccess={() => {
-            setAssignDialogOpen(false);
-            setSelectedTemplate(null);
-          }}
-        />
-      )}
+      <FormAssignmentDialog
+        open={assignDialogOpen}
+        onOpenChange={setAssignDialogOpen}
+        templates={selectedTemplates}
+        clientId={clientId!}
+        onSuccess={() => {
+          setAssignDialogOpen(false);
+          setSelectedTemplates([]);
+          setSelectedForms([]);
+        }}
+      />
 
       {selectedResponse && selectedResponse.response && (
         <FormResponseReviewDialog

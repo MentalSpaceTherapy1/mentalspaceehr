@@ -144,10 +144,67 @@ export const usePortalFormTemplates = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portal-form-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['portal-forms'] });
       toast.success('Form assigned to client');
     },
     onError: (error) => {
       toast.error('Failed to assign form: ' + error.message);
+    },
+  });
+
+  // Bulk assign forms to client
+  const bulkAssignForms = useMutation({
+    mutationFn: async (params: {
+      templateIds: string[];
+      clientId: string;
+      dueDate?: string;
+      priority: 'low' | 'normal' | 'high' | 'urgent';
+      instructions?: string;
+      sendNotification: boolean;
+    }) => {
+      const { data: userData } = await supabase.auth.getUser();
+      
+      // Create all assignments in parallel
+      const assignments = params.templateIds.map(templateId => ({
+        template_id: templateId,
+        client_id: params.clientId,
+        due_date: params.dueDate,
+        priority: params.priority,
+        instructions: params.instructions,
+        saved_to_chart: false,
+        status: 'assigned' as const,
+        assigned_by: userData.user?.id,
+      }));
+
+      const { data, error } = await supabase
+        .from('portal_form_assignments')
+        .insert(assignments)
+        .select();
+
+      if (error) throw error;
+
+      // Send bulk notification if requested
+      if (params.sendNotification && data) {
+        const assignmentIds = data.map(a => a.id);
+        try {
+          await supabase.functions.invoke('send-portal-form-bulk-notification', {
+            body: { assignmentIds, clientId: params.clientId },
+          });
+        } catch (notificationError: any) {
+          console.error('Bulk notification failed:', notificationError);
+          toast.error('Forms assigned but notification failed to send');
+        }
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['portal-form-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['portal-forms'] });
+      toast.success('Forms assigned successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to assign forms: ' + error.message);
     },
   });
 
@@ -159,5 +216,6 @@ export const usePortalFormTemplates = () => {
     updateTemplate,
     deleteTemplate,
     assignForm,
+    bulkAssignForms,
   };
 };
