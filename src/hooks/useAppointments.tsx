@@ -48,6 +48,9 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
 
     fetchAppointments();
 
+    // Debounce timer for real-time updates
+    let debounceTimer: NodeJS.Timeout;
+
     // Subscribe to real-time updates
     const channel = supabase
       .channel('appointments_changes')
@@ -58,13 +61,20 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
           schema: 'public',
           table: 'appointments'
         },
-        () => {
-          fetchAppointments();
+        (payload) => {
+          console.log('Real-time appointment change detected:', payload.eventType);
+          // Debounce to prevent rapid re-fetches
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            console.log('Refreshing appointments after real-time event');
+            fetchAppointments();
+          }, 300);
         }
       )
       .subscribe();
 
     return () => {
+      clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
   }, [user, startDate, endDate, clinicianId]);

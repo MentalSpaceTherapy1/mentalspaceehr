@@ -253,15 +253,21 @@ export default function Schedule() {
   }, []);
 
   const handleSaveAppointment = async (data: Partial<Appointment>, editSeries?: boolean) => {
-    if (selectedAppointment) {
-      if (editSeries && isRecurringAppointment(selectedAppointment)) {
-        const parentId = selectedAppointment.parent_recurrence_id || selectedAppointment.id;
-        await updateRecurringSeries(parentId, data);
+    try {
+      if (selectedAppointment) {
+        if (editSeries && isRecurringAppointment(selectedAppointment)) {
+          const parentId = selectedAppointment.parent_recurrence_id || selectedAppointment.id;
+          await updateRecurringSeries(parentId, data);
+        } else {
+          await updateAppointment(selectedAppointment.id, data);
+        }
       } else {
-        await updateAppointment(selectedAppointment.id, data);
+        await createAppointment(data);
       }
-    } else {
-      await createAppointment(data);
+      // Manually refresh to ensure immediate update
+      await refreshAppointments();
+    } catch (error) {
+      console.error('Error saving appointment:', error);
     }
   };
 
@@ -275,7 +281,7 @@ export default function Schedule() {
 
   const handleEventDrop = async ({ event, start, end }: any) => {
     try {
-      const appointment = event.resource as Appointment;
+      const appointment = event.resource.data as Appointment;
       const newDate = format(start, 'yyyy-MM-dd');
       const newStartTime = format(start, 'HH:mm');
       const newEndTime = format(end, 'HH:mm');
@@ -285,6 +291,9 @@ export default function Schedule() {
         start_time: newStartTime,
         end_time: newEndTime,
       });
+
+      // Manually refresh to ensure immediate update
+      await refreshAppointments();
 
       toast({
         title: 'Success',
@@ -311,10 +320,16 @@ export default function Schedule() {
   };
 
   const handleSaveBlockedTime = async (data: any) => {
-    if (data.id) {
-      await updateBlockedTime(data.id, data);
-    } else {
-      await createBlockedTime(data);
+    try {
+      if (data.id) {
+        await updateBlockedTime(data.id, data);
+      } else {
+        await createBlockedTime(data);
+      }
+      // Manually refresh to ensure immediate update
+      await refreshAppointments();
+    } catch (error) {
+      console.error('Error saving blocked time:', error);
     }
   };
 
