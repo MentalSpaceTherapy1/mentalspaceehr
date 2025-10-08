@@ -149,6 +149,25 @@ async function sendEmailReminder(
       recipient: appointment.client.email
     });
     
+    // Update appointments.reminders_sent JSONB
+    const { data: currentAppt } = await supabase
+      .from('appointments')
+      .select('reminders_sent')
+      .eq('id', appointment.id)
+      .single();
+    
+    const updatedReminders = {
+      ...(currentAppt?.reminders_sent || {}),
+      emailSent: true,
+      emailSentDate: new Date().toISOString(),
+      emailTimingUsed: hoursBefor
+    };
+    
+    await supabase
+      .from('appointments')
+      .update({ reminders_sent: updatedReminders })
+      .eq('id', appointment.id);
+    
     
   } catch (error) {
     await supabase.from('reminder_logs').insert({
@@ -219,7 +238,8 @@ async function sendSmsReminder(
       smsSent: true,
       smsSentDate: new Date().toISOString(),
       smsDelivered: true,
-      smsMessageId: message.sid
+      smsMessageId: message.sid,
+      smsTimingUsed: hoursBefor
     };
     
     await supabase

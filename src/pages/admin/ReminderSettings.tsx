@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Bell, Mail, MessageSquare, Clock, Save } from 'lucide-react';
+import { Bell, Mail, MessageSquare, Clock, Save, Plus, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface ReminderSettings {
@@ -32,6 +32,8 @@ export default function ReminderSettings() {
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<ReminderSettings | null>(null);
   const [testEmail, setTestEmail] = useState('');
+  const [newEmailTiming, setNewEmailTiming] = useState('');
+  const [newSmsTiming, setNewSmsTiming] = useState('');
 
   useEffect(() => {
     loadSettings();
@@ -107,6 +109,80 @@ export default function ReminderSettings() {
         variant: 'destructive'
       });
     }
+  };
+
+  const addEmailTiming = () => {
+    if (!settings || !newEmailTiming) return;
+    const hours = parseInt(newEmailTiming);
+    if (isNaN(hours) || hours <= 0) {
+      toast({
+        title: 'Invalid timing',
+        description: 'Please enter a positive number of hours',
+        variant: 'destructive'
+      });
+      return;
+    }
+    if (settings.email_timing.includes(hours)) {
+      toast({
+        title: 'Duplicate timing',
+        description: 'This timing already exists',
+        variant: 'destructive'
+      });
+      return;
+    }
+    setSettings({
+      ...settings,
+      email_timing: [...settings.email_timing, hours].sort((a, b) => b - a)
+    });
+    setNewEmailTiming('');
+  };
+
+  const removeEmailTiming = (hours: number) => {
+    if (!settings) return;
+    setSettings({
+      ...settings,
+      email_timing: settings.email_timing.filter(h => h !== hours)
+    });
+  };
+
+  const addSmsTiming = () => {
+    if (!settings || !newSmsTiming) return;
+    const hours = parseInt(newSmsTiming);
+    if (isNaN(hours) || hours <= 0) {
+      toast({
+        title: 'Invalid timing',
+        description: 'Please enter a positive number of hours',
+        variant: 'destructive'
+      });
+      return;
+    }
+    if (settings.sms_timing.includes(hours)) {
+      toast({
+        title: 'Duplicate timing',
+        description: 'This timing already exists',
+        variant: 'destructive'
+      });
+      return;
+    }
+    setSettings({
+      ...settings,
+      sms_timing: [...settings.sms_timing, hours].sort((a, b) => b - a)
+    });
+    setNewSmsTiming('');
+  };
+
+  const removeSmsTiming = (hours: number) => {
+    if (!settings) return;
+    setSettings({
+      ...settings,
+      sms_timing: settings.sms_timing.filter(h => h !== hours)
+    });
+  };
+
+  const formatHours = (hours: number): string => {
+    if (hours >= 168) return `${hours / 168} week${hours / 168 > 1 ? 's' : ''}`;
+    if (hours >= 24) return `${hours / 24} day${hours / 24 > 1 ? 's' : ''}`;
+    return `${hours} hour${hours > 1 ? 's' : ''}`;
   };
 
   if (loading || !settings) {
@@ -190,15 +266,43 @@ export default function ReminderSettings() {
               <CardContent className="space-y-4">
                 <div>
                   <Label>Reminder Timing (hours before appointment)</Label>
-                  <div className="flex gap-2 mt-2">
-                    {settings.email_timing.map((hours, idx) => (
-                      <Badge key={idx} variant="secondary">
-                        {hours} hours
+                  <div className="flex flex-wrap gap-2 mt-2 mb-3">
+                    {settings.email_timing.map((hours) => (
+                      <Badge key={hours} variant="secondary" className="gap-2">
+                        {formatHours(hours)}
+                        <button
+                          onClick={() => removeEmailTiming(hours)}
+                          className="ml-1 hover:text-destructive"
+                          disabled={!settings.email_enabled}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
                       </Badge>
                     ))}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Current: Reminders sent at 24 hours and 1 hour before
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Hours before (e.g., 168 for 1 week)"
+                      value={newEmailTiming}
+                      onChange={(e) => setNewEmailTiming(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && addEmailTiming()}
+                      disabled={!settings.email_enabled}
+                      className="max-w-xs"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addEmailTiming}
+                      disabled={!settings.email_enabled || !newEmailTiming}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Suggested: 168 (1 week), 72 (3 days), 24 (1 day), 1 (1 hour)
                   </p>
                 </div>
 
@@ -247,13 +351,44 @@ export default function ReminderSettings() {
 
                 <div>
                   <Label>Reminder Timing (hours before appointment)</Label>
-                  <div className="flex gap-2 mt-2">
-                    {settings.sms_timing.map((hours, idx) => (
-                      <Badge key={idx} variant="secondary">
-                        {hours} hours
+                  <div className="flex flex-wrap gap-2 mt-2 mb-3">
+                    {settings.sms_timing.map((hours) => (
+                      <Badge key={hours} variant="secondary" className="gap-2">
+                        {formatHours(hours)}
+                        <button
+                          onClick={() => removeSmsTiming(hours)}
+                          className="ml-1 hover:text-destructive"
+                          disabled={!settings.sms_enabled}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
                       </Badge>
                     ))}
                   </div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Hours before (e.g., 24 for 1 day)"
+                      value={newSmsTiming}
+                      onChange={(e) => setNewSmsTiming(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && addSmsTiming()}
+                      disabled={!settings.sms_enabled}
+                      className="max-w-xs"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addSmsTiming}
+                      disabled={!settings.sms_enabled || !newSmsTiming}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Suggested: 24 (1 day), 1 (1 hour) - Keep SMS minimal for cost control
+                  </p>
                 </div>
 
                 <div>
