@@ -219,7 +219,7 @@ serve(async (req) => {
       ? (notificationSettings!.notify_recipients as string[])
       : ["client"]; // default
 
-    const notifyClient = notifyRecipients.includes("client") && clientAllows;
+    const notifyClient = notifyRecipients.includes("client");
     const notifyClinician = notifyRecipients.includes("clinician");
 
     // Attempt to get phone numbers for SMS (optional)
