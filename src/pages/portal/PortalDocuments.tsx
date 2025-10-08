@@ -38,9 +38,9 @@ export default function PortalDocuments() {
     getDocumentUrl,
   } = useClientDocuments(portalContext?.account.clientId);
 
-  const handleStartForm = (form: FormWithResponse) => {
+  const handleStartForm = async (form: FormWithResponse) => {
     if (!form.response) {
-      startForm(form.id);
+      await startForm(form.id);
     }
     setSelectedForm(form);
   };
@@ -86,27 +86,23 @@ export default function PortalDocuments() {
 
   if (isLoading) {
     return (
-      <PortalLayout>
-        <div className="flex items-center justify-center h-96">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </PortalLayout>
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   if (selectedForm && selectedForm.template) {
     return (
-      <PortalLayout>
-        <FormRenderer
-          template={selectedForm.template}
-          response={selectedForm.response}
-          onSaveProgress={handleSaveProgress}
-          onSubmit={handleSubmit}
-          onCancel={() => setSelectedForm(null)}
-          isSaving={isSaving}
-          isSubmitting={isSubmitting}
-        />
-      </PortalLayout>
+      <FormRenderer
+        template={selectedForm.template}
+        response={selectedForm.response}
+        onSaveProgress={handleSaveProgress}
+        onSubmit={handleSubmit}
+        onCancel={() => setSelectedForm(null)}
+        isSaving={isSaving}
+        isSubmitting={isSubmitting}
+      />
     );
   }
 
@@ -139,8 +135,7 @@ export default function PortalDocuments() {
   };
 
   return (
-    <PortalLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Forms & Documents</h1>
           <p className="text-muted-foreground">Complete required forms and view your documents</p>
@@ -368,6 +363,5 @@ export default function PortalDocuments() {
           onDownload={() => selectedDocument && handleDownloadDocument(selectedDocument)}
         />
       </div>
-    </PortalLayout>
-  );
-}
+    );
+  }

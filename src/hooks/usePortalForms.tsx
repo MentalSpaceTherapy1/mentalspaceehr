@@ -256,7 +256,7 @@ export const usePortalForms = (clientId?: string) => {
   return {
     forms: formsWithResponses,
     isLoading,
-    startForm: startFormMutation.mutate,
+    startForm: (assignmentId: string) => startFormMutation.mutateAsync(assignmentId),
     saveProgress: saveProgressMutation.mutate,
     submitForm: submitFormMutation.mutate,
     cancelAssignment: cancelAssignmentMutation.mutate,
