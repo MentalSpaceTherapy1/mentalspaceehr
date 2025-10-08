@@ -24,7 +24,8 @@ import {
   CheckCircle,
   XCircle,
   UserCog,
-  Edit
+  Edit,
+  Link
 } from 'lucide-react';
 import { toast, useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -507,13 +508,31 @@ export default function ClientChart() {
                 </h3>
                 <p className="text-sm text-muted-foreground">MRN: {client.medical_record_number}</p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate(`/clients/${id}/edit`)}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
+              <div className="flex gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const portalLink = `${window.location.origin}/portal/login`;
+                    navigator.clipboard.writeText(portalLink);
+                    toast({
+                      title: 'Portal Link Copied',
+                      description: 'Client portal login link has been copied to clipboard',
+                    });
+                  }}
+                  title="Copy portal login link"
+                >
+                  <Link className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/clients/${id}/edit`)}
+                  title="Edit client"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
           
