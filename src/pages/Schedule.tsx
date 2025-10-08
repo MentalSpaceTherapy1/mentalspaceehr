@@ -24,6 +24,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { isRecurringAppointment } from '@/lib/recurringAppointments';
+import { isClinicianAvailable, getDayName, parseTime } from '@/lib/scheduleUtils';
+import { WeeklySchedule } from '@/hooks/useClinicianSchedule';
 
 const locales = {
   'en-US': enUS,
@@ -54,6 +56,7 @@ export default function Schedule() {
   const [colorBy, setColorBy] = useState<ColorBy>('status');
   const [selectedClinicians, setSelectedClinicians] = useState<Set<string>>(new Set());
   const [clinicians, setClinicians] = useState<Array<{ id: string; first_name: string; last_name: string; color: string }>>([]);
+  const [clinicianSchedules, setClinicianSchedules] = useState<Record<string, WeeklySchedule>>({});
   const [clinicianSelectorOpen, setClinicianSelectorOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [statusAction, setStatusAction] = useState<StatusAction>('check-in');
@@ -100,7 +103,7 @@ export default function Schedule() {
     setTimeout(scrollToBusinessHours, 100);
   }, [view]); // Re-scroll when view changes
 
-  // Fetch clinicians with assigned colors
+  // Fetch clinicians with assigned colors and their schedules
   useEffect(() => {
     const fetchClinicians = async () => {
       const { data } = await supabase
@@ -142,6 +145,23 @@ export default function Schedule() {
         setClinicians(cliniciansWithColors);
         // Select all by default
         setSelectedClinicians(new Set(cliniciansWithColors.map(c => c.id)));
+
+        // Fetch schedules for all clinicians
+        const { data: schedules } = await supabase
+          .from('clinician_schedules')
+          .select('*')
+          .in('clinician_id', cliniciansWithColors.map(c => c.id))
+          .order('effective_start_date', { ascending: false });
+
+        if (schedules) {
+          const schedulesMap: Record<string, WeeklySchedule> = {};
+          schedules.forEach((schedule) => {
+            if (!schedulesMap[schedule.clinician_id]) {
+              schedulesMap[schedule.clinician_id] = schedule.weekly_schedule as unknown as WeeklySchedule;
+            }
+          });
+          setClinicianSchedules(schedulesMap);
+        }
       }
     };
     fetchClinicians();
@@ -306,6 +326,75 @@ export default function Schedule() {
       setDialogOpen(true);
     }
   };
+
+  const slotPropGetter = useCallback((date: Date) => {
+    // If no clinicians selected, show all slots as available
+    if (selectedClinicians.size === 0) {
+      return {};
+    }
+
+    const dayName = getDayName(date);
+    const timeString = format(date, 'HH:mm');
+    const timeMinutes = parseTime(timeString);
+
+    // Check if ANY selected clinician is available at this time
+    let anyAvailable = false;
+    let isBreakTime = false;
+
+    for (const clinicianId of selectedClinicians) {
+      const schedule = clinicianSchedules[clinicianId];
+      if (!schedule) continue;
+
+      const daySchedule = schedule[dayName];
+      if (!daySchedule || !daySchedule.isWorkingDay) continue;
+
+      // Check if time is within any shift
+      const inShift = daySchedule.shifts.some(shift => {
+        const shiftStart = parseTime(shift.startTime);
+        const shiftEnd = parseTime(shift.endTime);
+        return timeMinutes >= shiftStart && timeMinutes < shiftEnd;
+      });
+
+      if (inShift) {
+        // Check if it's break time
+        const inBreak = daySchedule.breakTimes.some(breakTime => {
+          const breakStart = parseTime(breakTime.startTime);
+          const breakEnd = parseTime(breakTime.endTime);
+          return timeMinutes >= breakStart && timeMinutes < breakEnd;
+        });
+
+        if (inBreak) {
+          isBreakTime = true;
+        } else {
+          anyAvailable = true;
+          break; // At least one clinician is available
+        }
+      }
+    }
+
+    // If it's break time for all selected clinicians who work this time
+    if (isBreakTime && !anyAvailable) {
+      return {
+        style: {
+          backgroundColor: 'hsl(25, 95%, 85%)', // Light orange for break
+          border: '1px solid hsl(25, 95%, 70%)',
+        },
+      };
+    }
+
+    // If no clinician is available (non-working hours)
+    if (!anyAvailable) {
+      return {
+        style: {
+          backgroundColor: 'hsl(0, 0%, 95%)', // Light gray for non-working
+          pointerEvents: 'none' as const,
+        },
+      };
+    }
+
+    // Working hours - default styling
+    return {};
+  }, [selectedClinicians, clinicianSchedules]);
 
   const eventStyleGetter = (event: any) => {
     const resource = event.resource;
@@ -511,6 +600,7 @@ export default function Schedule() {
                 resizable
                 selectable={canCreateAppointments}
                 eventPropGetter={eventStyleGetter}
+                slotPropGetter={slotPropGetter}
                 step={15}
                 timeslots={4}
                 defaultView="week"
