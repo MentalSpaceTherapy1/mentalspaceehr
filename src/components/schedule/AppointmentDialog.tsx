@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { format, isToday, isPast } from 'date-fns';
+import { format, isToday, isPast, parseISO } from 'date-fns';
 import { Calendar as CalendarIcon, Sparkles, Repeat, Video, DollarSign, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { TimeSlotPicker } from './TimeSlotPicker';
@@ -173,7 +173,7 @@ export function AppointmentDialog({
       form.reset({
         client_id: appointment.client_id,
         clinician_id: appointment.clinician_id,
-        appointment_date: new Date(appointment.appointment_date),
+        appointment_date: parseISO(appointment.appointment_date),
         start_time: normalizedStartTime,
         duration: appointment.duration,
         appointment_type: appointment.appointment_type,
