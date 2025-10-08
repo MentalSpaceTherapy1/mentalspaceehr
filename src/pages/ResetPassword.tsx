@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { z } from 'zod';
 import logo from '@/assets/mentalspace-logo.png';
 import { supabase } from '@/integrations/supabase/client';
+import { usePasswordValidation } from '@/hooks/usePasswordValidation';
+import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 
 const passwordSchema = z.object({
   password: z.string()
@@ -32,6 +34,16 @@ export default function ResetPassword() {
   const [storedTokens, setStoredTokens] = useState<{ access_token: string; refresh_token: string } | null>(null);
   const { updatePassword } = useAuth();
   const navigate = useNavigate();
+  
+  // Password breach checking
+  const { 
+    isBreached, 
+    breachCount, 
+    isChecking: isCheckingBreach,
+    strength,
+    strengthScore,
+    suggestions 
+  } = usePasswordValidation(password);
 
   // Establish session from recovery link tokens
   useEffect(() => {
@@ -88,6 +100,15 @@ export default function ResetPassword() {
     setLoading(true);
 
     try {
+      // Check for breached password
+      if (isBreached) {
+        setErrors({ 
+          password: 'This password has been exposed in data breaches. Please choose a different password.' 
+        });
+        setLoading(false);
+        return;
+      }
+
       const validatedData = passwordSchema.parse({ password, confirmPassword });
       
       // Check for active session
@@ -195,6 +216,17 @@ export default function ResetPassword() {
                 autoComplete="new-password"
                 required
               />
+              
+              <PasswordStrengthIndicator
+                password={password}
+                isBreached={isBreached}
+                breachCount={breachCount}
+                isChecking={isCheckingBreach}
+                strength={strength}
+                strengthScore={strengthScore}
+                suggestions={suggestions}
+              />
+              
               <div className="text-xs text-muted-foreground space-y-1">
                 <p>Password must contain:</p>
                 <ul className="list-disc list-inside space-y-0.5">
@@ -228,7 +260,7 @@ export default function ResetPassword() {
             <Button
               type="submit"
               className="w-full"
-              disabled={loading || !validSession}
+              disabled={loading || !validSession || isBreached || isCheckingBreach}
             >
               {loading ? 'Updating...' : 'Update Password'}
             </Button>
