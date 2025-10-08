@@ -9,6 +9,7 @@ import { ClinicianSchedule, WeeklySchedule, DaySchedule, TimeBlock } from '@/hoo
 import { getDefaultWeeklySchedule, validateDaySchedule } from '@/lib/scheduleUtils';
 import { Plus, Trash2, Clock, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { TimeSlotPicker } from '@/components/schedule/TimeSlotPicker';
 
 interface ClinicianScheduleEditorProps {
   clinicianId: string;
@@ -169,20 +170,20 @@ export function ClinicianScheduleEditor({
               <div className="space-y-2">
                 {daySchedule.shifts.map((shift, index) => (
                   <div key={index} className="flex items-center gap-2">
-                    <Input
-                      type="time"
+                    <TimeSlotPicker
                       value={shift.startTime}
-                      onChange={(e) =>
-                        updateShift(day, index, { ...shift, startTime: e.target.value })
+                      onChange={(value) =>
+                        updateShift(day, index, { ...shift, startTime: value })
                       }
+                      className="flex-1"
                     />
-                    <span>to</span>
-                    <Input
-                      type="time"
+                    <span className="text-muted-foreground">to</span>
+                    <TimeSlotPicker
                       value={shift.endTime}
-                      onChange={(e) =>
-                        updateShift(day, index, { ...shift, endTime: e.target.value })
+                      onChange={(value) =>
+                        updateShift(day, index, { ...shift, endTime: value })
                       }
+                      className="flex-1"
                     />
                     <Button
                       size="sm"
@@ -207,20 +208,20 @@ export function ClinicianScheduleEditor({
               <div className="space-y-2">
                 {daySchedule.breakTimes.map((breakTime, index) => (
                   <div key={index} className="flex items-center gap-2">
-                    <Input
-                      type="time"
+                    <TimeSlotPicker
                       value={breakTime.startTime}
-                      onChange={(e) =>
-                        updateBreak(day, index, { ...breakTime, startTime: e.target.value })
+                      onChange={(value) =>
+                        updateBreak(day, index, { ...breakTime, startTime: value })
                       }
+                      className="flex-1"
                     />
-                    <span>to</span>
-                    <Input
-                      type="time"
+                    <span className="text-muted-foreground">to</span>
+                    <TimeSlotPicker
                       value={breakTime.endTime}
-                      onChange={(e) =>
-                        updateBreak(day, index, { ...breakTime, endTime: e.target.value })
+                      onChange={(value) =>
+                        updateBreak(day, index, { ...breakTime, endTime: value })
                       }
+                      className="flex-1"
                     />
                     <Button
                       size="sm"
