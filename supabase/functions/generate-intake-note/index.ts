@@ -26,6 +26,23 @@ serve(async (req) => {
       }
     );
 
+    // Fetch AI settings to determine provider
+    const { data: aiSettings } = await supabaseClient
+      .from('ai_note_settings')
+      .select('*')
+      .maybeSingle();
+
+    const useOpenAI = aiSettings?.provider === 'openai';
+    const apiKey = useOpenAI ? Deno.env.get('OPENAI_API_KEY') : Deno.env.get('LOVABLE_API_KEY');
+    const apiUrl = useOpenAI 
+      ? 'https://api.openai.com/v1/chat/completions'
+      : 'https://ai.gateway.lovable.dev/v1/chat/completions';
+    const model = aiSettings?.model || (useOpenAI ? 'gpt-5-2025-08-07' : 'google/gemini-2.5-flash');
+
+    if (!apiKey) {
+      throw new Error(`${useOpenAI ? 'OPENAI' : 'LOVABLE'}_API_KEY not configured`);
+    }
+
     // Fetch client data
     const { data: client, error: clientError } = await supabaseClient
       .from('clients')
@@ -49,11 +66,6 @@ Client Information:
 Use clinical terminology, evidence-based observations, and realistic details appropriate for a thorough intake evaluation.`;
 
     const userPrompt = `Based on the following information, generate a complete intake assessment:\n\n${clientContext}\n\nClinician's Notes:\n${freeTextInput}\n\nGenerate comprehensive clinical content for all sections of the intake assessment. Return ONLY valid JSON, no other text.`;
-
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
 
     // Define comprehensive tool schema for structured output
     const tools = [{
@@ -398,21 +410,29 @@ Use clinical terminology, evidence-based observations, and realistic details app
       }
     }];
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Call AI API with structured output
+    const requestBody: any = {
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      tools: tools,
+      tool_choice: { type: "function", function: { name: "generate_intake_assessment" } }
+    };
+
+    // For OpenAI GPT-5+ models, use max_completion_tokens
+    if (useOpenAI && (model.includes('gpt-5') || model.includes('o3') || model.includes('o4'))) {
+      requestBody.max_completion_tokens = 4000;
+    }
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        tools: tools,
-        tool_choice: { type: "function", function: { name: "generate_intake_assessment" } }
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {

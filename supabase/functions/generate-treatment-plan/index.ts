@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,10 +13,26 @@ serve(async (req) => {
 
   try {
     const { freeTextInput, clientId, currentDiagnoses } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    // Fetch AI settings to determine provider
+    const { data: aiSettings } = await supabase
+      .from('ai_note_settings')
+      .select('*')
+      .maybeSingle();
+
+    const useOpenAI = aiSettings?.provider === 'openai';
+    const apiKey = useOpenAI ? Deno.env.get('OPENAI_API_KEY') : Deno.env.get('LOVABLE_API_KEY');
+    const apiUrl = useOpenAI 
+      ? 'https://api.openai.com/v1/chat/completions'
+      : 'https://ai.gateway.lovable.dev/v1/chat/completions';
+    const model = aiSettings?.model || (useOpenAI ? 'gpt-5-2025-08-07' : 'google/gemini-2.5-flash');
+
+    if (!apiKey) {
+      throw new Error(`${useOpenAI ? 'OPENAI' : 'LOVABLE'}_API_KEY is not configured`);
     }
 
     const diagnosesText = currentDiagnoses && currentDiagnoses.length > 0
@@ -98,148 +115,155 @@ Return your response in valid JSON format with this exact structure:
   "psychoeducationTopics": ["topic 1", "topic 2", ...]
 }`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: freeTextInput }
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "create_treatment_plan",
-              description: "Create a structured treatment plan with problems, goals, objectives, and interventions",
-              parameters: {
-                type: "object",
-                properties: {
-                  problems: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        problemStatement: { type: "string" },
-                        problemType: { type: "string", enum: ["Clinical", "Psychosocial", "Environmental"] },
-                        severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] }
-                      },
-                      required: ["problemStatement", "problemType", "severity"]
-                    }
-                  },
-                  goals: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        relatedProblemId: { type: "string" },
-                        goalStatement: { type: "string" },
-                        goalType: { type: "string", enum: ["Short-term", "Long-term"] },
-                        objectives: {
-                          type: "array",
-                          items: {
-                            type: "object",
-                            properties: {
-                              objectiveStatement: { type: "string" },
-                              measurementMethod: { type: "string" },
-                              frequency: { type: "string" },
-                              interventions: {
-                                type: "array",
-                                items: {
-                                  type: "object",
-                                  properties: {
-                                    interventionDescription: { type: "string" },
-                                    interventionType: { type: "string" },
-                                    frequency: { type: "string" },
-                                    responsibleParty: { type: "string" }
-                                  },
-                                  required: ["interventionDescription", "interventionType", "frequency", "responsibleParty"]
-                                }
-                              }
-                            },
-                            required: ["objectiveStatement", "measurementMethod", "frequency", "interventions"]
-                          }
-                        }
-                      },
-                      required: ["relatedProblemId", "goalStatement", "goalType", "objectives"]
-                    }
-                  },
-                  treatmentModalities: {
+    const requestBody: any = {
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: freeTextInput }
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "create_treatment_plan",
+            description: "Create a structured treatment plan with problems, goals, objectives, and interventions",
+            parameters: {
+              type: "object",
+              properties: {
+                problems: {
+                  type: "array",
+                  items: {
                     type: "object",
                     properties: {
-                      therapeuticApproaches: {
-                        type: "array",
-                        items: { type: "string" }
-                      },
-                      adjunctServices: {
-                        type: "array",
-                        items: {
-                          type: "object",
-                          properties: {
-                            service: { type: "string" },
-                            frequency: { type: "string" }
-                          }
-                        }
-                      }
-                    }
-                  },
-                  dischargeCriteria: {
-                    type: "array",
-                    items: { type: "string" }
-                  },
-                  clientStrengths: {
-                    type: "array",
-                    items: { type: "string" }
-                  },
-                  psychoeducationTopics: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "List of psychoeducation topics to cover (e.g., stress management, coping skills, medication education)"
-                  },
-                  medicationPlan: {
-                    type: "object",
-                    properties: {
-                      medicationsRequired: {
-                        type: "boolean",
-                        description: "Whether medications are recommended as part of treatment"
-                      },
-                      prescribingProvider: {
-                        type: "string",
-                        description: "Name or type of prescribing provider if medications recommended"
-                      },
-                      medications: {
-                        type: "array",
-                        items: {
-                          type: "object",
-                          properties: {
-                            medicationName: { type: "string" },
-                            dosage: { type: "string" },
-                            frequency: { type: "string" },
-                            indication: { type: "string" }
-                          },
-                          required: ["medicationName", "indication"]
-                        },
-                        description: "Recommended medications if applicable"
-                      },
-                      monitoringPlan: {
-                        type: "string",
-                        description: "Plan for monitoring medication effectiveness and side effects"
-                      }
+                      problemStatement: { type: "string" },
+                      problemType: { type: "string", enum: ["Clinical", "Psychosocial", "Environmental"] },
+                      severity: { type: "string", enum: ["Mild", "Moderate", "Severe"] }
                     },
-                    required: ["medicationsRequired", "medications", "monitoringPlan"]
+                    required: ["problemStatement", "problemType", "severity"]
                   }
                 },
-                required: ["problems", "goals", "treatmentModalities", "dischargeCriteria", "clientStrengths"]
-              }
+                goals: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      relatedProblemId: { type: "string" },
+                      goalStatement: { type: "string" },
+                      goalType: { type: "string", enum: ["Short-term", "Long-term"] },
+                      objectives: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            objectiveStatement: { type: "string" },
+                            measurementMethod: { type: "string" },
+                            frequency: { type: "string" },
+                            interventions: {
+                              type: "array",
+                              items: {
+                                type: "object",
+                                properties: {
+                                  interventionDescription: { type: "string" },
+                                  interventionType: { type: "string" },
+                                  frequency: { type: "string" },
+                                  responsibleParty: { type: "string" }
+                                },
+                                required: ["interventionDescription", "interventionType", "frequency", "responsibleParty"]
+                              }
+                            }
+                          },
+                          required: ["objectiveStatement", "measurementMethod", "frequency", "interventions"]
+                        }
+                      }
+                    },
+                    required: ["relatedProblemId", "goalStatement", "goalType", "objectives"]
+                  }
+                },
+                treatmentModalities: {
+                  type: "object",
+                  properties: {
+                    therapeuticApproaches: {
+                      type: "array",
+                      items: { type: "string" }
+                    },
+                    adjunctServices: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          service: { type: "string" },
+                          frequency: { type: "string" }
+                        }
+                      }
+                    }
+                  }
+                },
+                dischargeCriteria: {
+                  type: "array",
+                  items: { type: "string" }
+                },
+                clientStrengths: {
+                  type: "array",
+                  items: { type: "string" }
+                },
+                psychoeducationTopics: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "List of psychoeducation topics to cover (e.g., stress management, coping skills, medication education)"
+                },
+                medicationPlan: {
+                  type: "object",
+                  properties: {
+                    medicationsRequired: {
+                      type: "boolean",
+                      description: "Whether medications are recommended as part of treatment"
+                    },
+                    prescribingProvider: {
+                      type: "string",
+                      description: "Name or type of prescribing provider if medications recommended"
+                    },
+                    medications: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          medicationName: { type: "string" },
+                          dosage: { type: "string" },
+                          frequency: { type: "string" },
+                          indication: { type: "string" }
+                        },
+                        required: ["medicationName", "indication"]
+                      },
+                      description: "Recommended medications if applicable"
+                    },
+                    monitoringPlan: {
+                      type: "string",
+                      description: "Plan for monitoring medication effectiveness and side effects"
+                    }
+                  },
+                  required: ["medicationsRequired", "medications", "monitoringPlan"]
+                }
+              },
+              required: ["problems", "goals", "treatmentModalities", "dischargeCriteria", "clientStrengths"]
             }
           }
-        ],
-        tool_choice: { type: "function", function: { name: "create_treatment_plan" } }
-      }),
+        }
+      ],
+      tool_choice: { type: "function", function: { name: "create_treatment_plan" } }
+    };
+
+    // For OpenAI GPT-5+ models, use max_completion_tokens
+    if (useOpenAI && (model.includes('gpt-5') || model.includes('o3') || model.includes('o4'))) {
+      requestBody.max_completion_tokens = 4000;
+    }
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {

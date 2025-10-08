@@ -49,11 +49,33 @@ serve(async (req) => {
       throw new Error('Missing required parameters');
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Fetch AI settings to determine provider
+    const { data: aiSettings } = await supabase
+      .from('ai_note_settings')
+      .select('*')
+      .maybeSingle();
+
+    const useOpenAI = aiSettings?.provider === 'openai';
+    const apiKey = useOpenAI ? Deno.env.get('OPENAI_API_KEY') : Deno.env.get('LOVABLE_API_KEY');
+    const apiUrl = useOpenAI 
+      ? 'https://api.openai.com/v1/chat/completions'
+      : 'https://ai.gateway.lovable.dev/v1/chat/completions';
+    const model = aiSettings?.model || (useOpenAI ? 'gpt-5-2025-08-07' : 'google/gemini-2.5-flash');
+    
+    // OpenAI API key is always required for Whisper transcription
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
-    if (!LOVABLE_API_KEY || !OPENAI_API_KEY) {
-      throw new Error('Required API keys not configured');
+    if (!OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY required for transcription');
+    }
+
+    if (!apiKey) {
+      throw new Error(`${useOpenAI ? 'OPENAI' : 'LOVABLE'}_API_KEY not configured`);
     }
 
     // Step 1: Transcribe audio using Whisper
@@ -80,19 +102,13 @@ serve(async (req) => {
     const transcriptionData = await transcriptionResponse.json();
     const transcript = transcriptionData.text;
 
-    // Step 2: Generate structured clinical note using AI
-    const noteGenerationResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a clinical documentation assistant. Generate a structured SOAP note from telehealth session transcripts. 
+    // Step 2: Generate structured clinical note using configured AI provider
+    const requestBody: any = {
+      model,
+      messages: [
+        {
+          role: 'system',
+          content: `You are a clinical documentation assistant. Generate a structured SOAP note from telehealth session transcripts. 
 Extract and organize information into these sections:
 - Subjective: Client's reported concerns, symptoms, feelings
 - Objective: Observable behaviors, mood, affect, appearance
@@ -100,51 +116,64 @@ Extract and organize information into these sections:
 - Plan: Treatment recommendations, follow-up, homework
 
 Be professional, concise, and clinically appropriate. If information is missing, note it rather than inventing details.`
-          },
-          {
-            role: 'user',
-            content: `Generate a SOAP note from this telehealth session transcript:\n\n${transcript}`
-          }
-        ],
-        tools: [
-          {
-            type: 'function',
-            function: {
-              name: 'create_soap_note',
-              description: 'Create a structured SOAP note from session transcript',
-              parameters: {
-                type: 'object',
-                properties: {
-                  subjective: {
-                    type: 'string',
-                    description: 'Client reported symptoms, concerns, and feelings'
-                  },
-                  objective: {
-                    type: 'string',
-                    description: 'Observable behaviors, mood, affect, appearance'
-                  },
-                  assessment: {
-                    type: 'string',
-                    description: 'Clinical impressions and diagnostic considerations'
-                  },
-                  plan: {
-                    type: 'string',
-                    description: 'Treatment recommendations and next steps'
-                  },
-                  interventions: {
-                    type: 'array',
-                    items: { type: 'string' },
-                    description: 'List of interventions used during session'
-                  }
+        },
+        {
+          role: 'user',
+          content: `Generate a SOAP note from this telehealth session transcript:\n\n${transcript}`
+        }
+      ],
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'create_soap_note',
+            description: 'Create a structured SOAP note from session transcript',
+            parameters: {
+              type: 'object',
+              properties: {
+                subjective: {
+                  type: 'string',
+                  description: 'Client reported symptoms, concerns, and feelings'
                 },
-                required: ['subjective', 'objective', 'assessment', 'plan'],
-                additionalProperties: false
-              }
+                objective: {
+                  type: 'string',
+                  description: 'Observable behaviors, mood, affect, appearance'
+                },
+                assessment: {
+                  type: 'string',
+                  description: 'Clinical impressions and diagnostic considerations'
+                },
+                plan: {
+                  type: 'string',
+                  description: 'Treatment recommendations and next steps'
+                },
+                interventions: {
+                  type: 'array',
+                  items: { type: 'string' },
+                  description: 'List of interventions used during session'
+                }
+              },
+              required: ['subjective', 'objective', 'assessment', 'plan'],
+              additionalProperties: false
             }
           }
-        ],
-        tool_choice: { type: 'function', function: { name: 'create_soap_note' } }
-      }),
+        }
+      ],
+      tool_choice: { type: 'function', function: { name: 'create_soap_note' } }
+    };
+
+    // For OpenAI GPT-5+ models, use max_completion_tokens
+    if (useOpenAI && (model.includes('gpt-5') || model.includes('o3') || model.includes('o4'))) {
+      requestBody.max_completion_tokens = 2000;
+    }
+
+    const noteGenerationResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
     });
 
     if (!noteGenerationResponse.ok) {
@@ -170,11 +199,6 @@ Be professional, concise, and clinically appropriate. If information is missing,
     const noteContent = JSON.parse(toolCall.function.arguments);
 
     // Step 3: Save to database
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
     const { data: clinicalNote, error: noteError } = await supabase
       .from('clinical_notes')
       .insert({
@@ -186,7 +210,7 @@ Be professional, concise, and clinically appropriate. If information is missing,
         note_format: 'SOAP',
         content: noteContent,
         ai_generated: true,
-        ai_model_used: 'google/gemini-2.5-flash',
+        ai_model_used: model,
         date_of_service: new Date().toISOString().split('T')[0],
         created_by: clinicianId
       })
