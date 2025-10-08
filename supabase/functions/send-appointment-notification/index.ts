@@ -92,7 +92,7 @@ serve(async (req) => {
           last_name,
           title,
           email,
-          phone
+          phone_number
         ),
         location:practice_locations!office_location_id(
           location_name,
@@ -292,7 +292,7 @@ serve(async (req) => {
         .eq("id", appointment.clinician_id)
         .single();
       if (clinicianRow) {
-        clinicianPhone = (clinicianRow.phone || clinicianRow.mobile_phone || clinicianRow.primary_phone || clinicianRow.contact_phone || null) as string | null;
+        clinicianPhone = (clinicianRow.phone_number || null) as string | null;
       }
     } catch (_) {
       // Ignore phone lookup errors
@@ -312,7 +312,7 @@ serve(async (req) => {
     // Helper: send email via Resend
     const sendEmail = async (to: string) => {
       const { data, error } = await resend.emails.send({
-        from: "MentalSpace <onboarding@resend.dev>",
+        from: "CHC Therapy <support@chctherapy.com>",
         to: [to],
         subject,
         html: htmlContent,
@@ -375,16 +375,18 @@ serve(async (req) => {
             .eq("id", log.id);
         }
       } catch (e: any) {
-        console.error(`[${executionId}] ✗ Failed to send email to ${target.type}: ${target.email}`, e);
-        console.error(`[${executionId}] Email error details:`, {
+        const errorDetails = e?.message || JSON.stringify(e) || String(e);
+        console.error(`[${executionId}] ✗ Failed to send email to ${target.type}: ${target.email}`);
+        console.error(`[${executionId}] Email error details:`, JSON.stringify({
           message: e?.message,
           name: e?.name,
-          stack: e?.stack?.split('\n').slice(0, 3)
-        });
+          statusCode: e?.statusCode,
+          error: e
+        }));
         if (log) {
           await supabase
             .from("appointment_notifications")
-            .update({ status: "failed", error_message: e?.message || String(e) })
+            .update({ status: "failed", error_message: errorDetails })
             .eq("id", log.id);
         }
         // Continue processing - don't throw

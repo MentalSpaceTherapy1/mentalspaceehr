@@ -127,9 +127,17 @@ async function sendEmailReminder(
     </div>
   `;
   
+  // Skip if client email is missing
+  if (!appointment.client.email) {
+    console.log(`Skipping email reminder for appointment ${appointment.id}: no client email`);
+    return;
+  }
+
+  console.log(`Sending email reminder to ${appointment.client.email} for appointment ${appointment.id}`);
+
   try {
     const { error } = await resend.emails.send({
-      from: "Appointments <onboarding@resend.dev>",
+      from: "CHC Therapy <support@chctherapy.com>",
       to: [appointment.client.email],
       subject: `Appointment Reminder - ${new Date(appointment.appointment_date).toLocaleDateString()}`,
       html
@@ -167,13 +175,16 @@ async function sendEmailReminder(
       .eq('id', appointment.id);
     
     
-  } catch (error) {
+  } catch (error: any) {
+    const errorDetails = error?.message || JSON.stringify(error) || 'Unknown error';
+    console.error(`Failed to send email reminder for appointment ${appointment.id}:`, errorDetails);
+    
     await supabase.from('reminder_logs').insert({
       appointment_id: appointment.id,
       reminder_type: 'email',
       hours_before: hoursBefor,
       status: 'failed',
-      error_message: error instanceof Error ? error.message : 'Unknown error',
+      error_message: errorDetails,
       recipient: appointment.client.email
     });
     
