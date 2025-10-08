@@ -5,11 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClinicianScheduleEditor } from '@/components/schedule/ClinicianScheduleEditor';
+import { ClinicianScheduleCalendarPreview } from '@/components/schedule/ClinicianScheduleCalendarPreview';
 import { ScheduleExceptionDialog } from '@/components/schedule/ScheduleExceptionDialog';
 import { useClinicianSchedule } from '@/hooks/useClinicianSchedule';
 import { useScheduleExceptions } from '@/hooks/useScheduleExceptions';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Clock, Plus, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Plus, CheckCircle, XCircle, AlertCircle, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 
@@ -114,6 +115,10 @@ export default function ClinicianScheduleManagement() {
                 <Calendar className="h-4 w-4 mr-2" />
                 Weekly Schedule
               </TabsTrigger>
+              <TabsTrigger value="preview">
+                <Eye className="h-4 w-4 mr-2" />
+                Calendar Preview
+              </TabsTrigger>
               <TabsTrigger value="exceptions">
                 <Clock className="h-4 w-4 mr-2" />
                 Time Off & Exceptions
@@ -128,6 +133,18 @@ export default function ClinicianScheduleManagement() {
                 onSave={saveSchedule}
                 onRefresh={refreshSchedule}
               />
+            </TabsContent>
+
+            <TabsContent value="preview">
+              {schedule ? (
+                <ClinicianScheduleCalendarPreview schedule={schedule.weeklySchedule} />
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center text-muted-foreground">
+                    No schedule configured yet
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="exceptions">

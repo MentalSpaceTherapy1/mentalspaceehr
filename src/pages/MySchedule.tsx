@@ -1,10 +1,11 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clock, CalendarDays } from 'lucide-react';
+import { Clock, CalendarDays, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useClinicianSchedule } from '@/hooks/useClinicianSchedule';
 import { ClinicianScheduleEditor } from '@/components/schedule/ClinicianScheduleEditor';
+import { ClinicianScheduleCalendarPreview } from '@/components/schedule/ClinicianScheduleCalendarPreview';
 import { useScheduleExceptions } from '@/hooks/useScheduleExceptions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,14 +42,18 @@ export default function MySchedule() {
         </div>
 
         <Tabs defaultValue="schedule" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-2xl grid-cols-3">
             <TabsTrigger value="schedule" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
               Weekly Schedule
             </TabsTrigger>
+            <TabsTrigger value="preview" className="flex items-center gap-2">
+              <Eye className="h-4 w-4" />
+              Calendar Preview
+            </TabsTrigger>
             <TabsTrigger value="exceptions" className="flex items-center gap-2">
               <CalendarDays className="h-4 w-4" />
-              Time Off & Exceptions
+              Time Off
             </TabsTrigger>
           </TabsList>
 
@@ -70,6 +75,18 @@ export default function MySchedule() {
                 />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="preview">
+            {schedule ? (
+              <ClinicianScheduleCalendarPreview schedule={schedule.weeklySchedule} />
+            ) : (
+              <Card className="border-2 shadow-lg">
+                <CardContent className="py-12 text-center text-muted-foreground">
+                  No schedule configured yet. Go to the Weekly Schedule tab to set up your availability.
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="exceptions">
