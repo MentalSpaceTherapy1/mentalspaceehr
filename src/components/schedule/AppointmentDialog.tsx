@@ -74,6 +74,7 @@ interface AppointmentDialogProps {
   appointment?: Appointment | null;
   defaultDate?: Date;
   defaultClinicianId?: string;
+  defaultClientId?: string;
   onSave: (data: Partial<Appointment>, editSeries?: boolean) => Promise<void>;
   editSeries?: boolean;
   onRequestCancel?: () => void;
@@ -85,6 +86,7 @@ export function AppointmentDialog({
   appointment,
   defaultDate,
   defaultClinicianId,
+  defaultClientId,
   onSave,
   editSeries = false,
   onRequestCancel,
@@ -136,6 +138,7 @@ export function AppointmentDialog({
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
+      client_id: defaultClientId || '',
       appointment_date: defaultDate || new Date(),
       clinician_id: defaultClinicianId || '',
       duration: 50,
@@ -182,6 +185,19 @@ export function AppointmentDialog({
         setRecurrencePattern(appointment.recurrence_pattern);
       }
     } else {
+      // Reset form for new appointment with default values
+      form.reset({
+        client_id: defaultClientId || '',
+        appointment_date: defaultDate || new Date(),
+        clinician_id: defaultClinicianId || '',
+        duration: 50,
+        service_location: 'Office',
+        appointment_type: 'Therapy Session',
+        is_recurring: false,
+        telehealth_platform: 'Internal',
+        icd_codes: [],
+        start_time: '09:00',
+      });
       setIsRecurring(false);
       setRecurrencePattern({
         frequency: 'Weekly',
@@ -190,7 +206,7 @@ export function AppointmentDialog({
         numberOfOccurrences: 10,
       });
     }
-  }, [appointment, form, editSeries]);
+  }, [appointment, form, editSeries, defaultClientId, defaultDate, defaultClinicianId]);
 
   useEffect(() => {
     fetchData();

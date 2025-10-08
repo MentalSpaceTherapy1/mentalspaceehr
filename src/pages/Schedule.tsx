@@ -26,6 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { isRecurringAppointment } from '@/lib/recurringAppointments';
 import { isClinicianAvailable, getDayName, parseTime } from '@/lib/scheduleUtils';
 import { WeeklySchedule } from '@/hooks/useClinicianSchedule';
+import { useSearchParams } from 'react-router-dom';
 
 const locales = {
   'en-US': enUS,
@@ -48,11 +49,13 @@ export default function Schedule() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { roles } = useCurrentUserRoles();
+  const [searchParams] = useSearchParams();
   const [view, setView] = useState<View>('week');
   const [date, setDate] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [defaultDate, setDefaultDate] = useState<Date>();
+  const [defaultClientId, setDefaultClientId] = useState<string>();
   const [colorBy, setColorBy] = useState<ColorBy>('status');
   const [selectedClinicians, setSelectedClinicians] = useState<Set<string>>(new Set());
   const [clinicians, setClinicians] = useState<Array<{ id: string; first_name: string; last_name: string; color: string }>>([]);
@@ -67,6 +70,15 @@ export default function Schedule() {
   const [recurringEditAction, setRecurringEditAction] = useState<'edit' | 'cancel'>('edit');
   const [pendingRecurringAction, setPendingRecurringAction] = useState<(() => void) | null>(null);
   const [isEditingSeries, setIsEditingSeries] = useState(false);
+
+  // Read clientId from URL query parameters on mount
+  useEffect(() => {
+    const clientId = searchParams.get('clientId');
+    if (clientId) {
+      setDefaultClientId(clientId);
+      setDialogOpen(true);
+    }
+  }, []);
   
   // Calculate date range for fetching appointments
   const dateRange = useMemo(() => {
@@ -211,6 +223,7 @@ export default function Schedule() {
 
   const handleSelectSlot = useCallback(({ start }: { start: Date }) => {
     setDefaultDate(start);
+    setDefaultClientId(undefined);
     setSelectedAppointment(null);
     setDialogOpen(true);
   }, []);
@@ -624,6 +637,7 @@ export default function Schedule() {
               appointment={selectedAppointment}
               defaultDate={defaultDate}
               defaultClinicianId={user?.id}
+              defaultClientId={defaultClientId}
               onSave={handleSaveAppointment}
               editSeries={isEditingSeries}
               onRequestCancel={() => {
