@@ -34,7 +34,12 @@ export interface Appointment {
   billed_under_provider_id?: string;
 }
 
-export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: string) => {
+export const useAppointments = (
+  startDate?: Date,
+  endDate?: Date,
+  clinicianId?: string,
+  clientId?: string // Add clientId for portal context
+) => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -77,7 +82,7 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
       clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
-  }, [user, startDate, endDate, clinicianId]);
+  }, [user, startDate, endDate, clinicianId, clientId]);
 
   const fetchAppointments = async () => {
     try {
@@ -87,6 +92,11 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
         .select('*')
         .order('appointment_date', { ascending: true })
         .order('start_time', { ascending: true });
+
+      // Apply filters - explicit clientId takes precedence for portal users
+      if (clientId) {
+        query = query.eq('client_id', clientId);
+      }
 
       if (startDate) {
         query = query.gte('appointment_date', startDate.toISOString().split('T')[0]);
@@ -100,7 +110,12 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching appointments:', error);
+        throw error;
+      }
+      
+      console.log('Appointments fetched:', data?.length || 0);
       setAppointments(data || []);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch appointments'));
@@ -635,6 +650,7 @@ export const useAppointments = (startDate?: Date, endDate?: Date, clinicianId?: 
     updateRecurringSeries,
     cancelAppointment,
     cancelRecurringSeries,
-    refreshAppointments: fetchAppointments
+    refreshAppointments: fetchAppointments,
+    refetch: fetchAppointments // Alias for consistency
   };
 };

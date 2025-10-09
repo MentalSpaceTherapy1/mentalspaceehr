@@ -38,27 +38,40 @@ export default function PortalDashboard() {
   const [nextAppointment, setNextAppointment] = useState<UpcomingAppointment | null>(null);
 
   useEffect(() => {
-    if (user) {
+    if (user && !contextLoading && portalContext?.client?.id) {
       fetchDashboardData();
     }
-  }, [user]);
+  }, [user, contextLoading, portalContext?.client?.id]);
 
   const fetchDashboardData = async () => {
+    if (!user) return;
+
     try {
+      setLoading(true);
+      
       // Get client record
-      const { data: client } = await supabase
+      const { data: client, error: clientError } = await supabase
         .from('clients')
         .select('id')
-        .eq('portal_user_id', user?.id)
+        .eq('portal_user_id', user.id)
         .maybeSingle();
 
+      if (clientError) {
+        console.error('Error fetching client:', clientError);
+        toast.error('Failed to load client information');
+        return;
+      }
+
       if (!client) {
+        console.error('No client found for portal user:', user.id);
         toast.error('Client record not found');
         return;
       }
 
-      // Fetch upcoming appointments
-      const { data: appointments } = await supabase
+      console.log('Fetching appointments for client:', client.id);
+
+      // Fetch upcoming appointments with explicit client_id filter
+      const { data: appointments, error: appointmentsError } = await supabase
         .from('appointments')
         .select(`
           id,
@@ -73,6 +86,13 @@ export default function PortalDashboard() {
         .order('appointment_date', { ascending: true })
         .order('start_time', { ascending: true })
         .limit(1);
+
+      if (appointmentsError) {
+        console.error('Error fetching appointments:', appointmentsError);
+        toast.error('Failed to load appointments');
+      }
+
+      console.log('Appointments fetched:', appointments);
 
       if (appointments && appointments.length > 0) {
         const appt = appointments[0];

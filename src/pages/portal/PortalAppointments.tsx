@@ -15,17 +15,34 @@ import { useNavigate } from 'react-router-dom';
 
 export default function PortalAppointments() {
   const navigate = useNavigate();
-  const { portalContext } = usePortalAccount();
-  const { appointments, loading } = useAppointments();
+  const { portalContext, loading: contextLoading } = usePortalAccount();
+  
+  // Pass clientId to useAppointments for explicit filtering
+  const clientId = portalContext?.client?.id;
+  const { appointments, loading: appointmentsLoading, refetch } = useAppointments(
+    undefined,
+    undefined,
+    undefined,
+    clientId
+  );
+  
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [requestChangeOpen, setRequestChangeOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [requestNewOpen, setRequestNewOpen] = useState(false);
 
-  const clientAppointments = appointments.filter(
-    apt => apt.client_id === portalContext?.client.id
-  );
+  // Refetch when client ID becomes available
+  useEffect(() => {
+    if (clientId && !appointmentsLoading) {
+      console.log('Portal client ID loaded, fetching appointments:', clientId);
+      refetch();
+    }
+  }, [clientId]);
+
+  const clientAppointments = clientId 
+    ? appointments.filter(apt => apt.client_id === clientId)
+    : [];
 
   const now = new Date();
   const upcomingAppointments = clientAppointments
@@ -85,7 +102,7 @@ export default function PortalAppointments() {
     setCancelOpen(true);
   };
 
-  if (loading) {
+  if (contextLoading || appointmentsLoading) {
     return (
       <PortalLayout>
         <div className="space-y-6">
