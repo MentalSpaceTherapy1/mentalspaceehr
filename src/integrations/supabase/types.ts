@@ -3008,22 +3008,49 @@ export type Database = {
       }
       data_quality_results: {
         Row: {
-          check_date: string
+          check_name: string
+          check_query: string
+          check_type: string
+          checked_at: string
           created_at: string
+          error_message: string | null
+          execution_time_ms: number | null
           id: string
-          results: Json
+          passed: boolean
+          severity: string
+          table_name: string
+          threshold: number | null
+          violation_count: number
         }
         Insert: {
-          check_date: string
+          check_name: string
+          check_query: string
+          check_type: string
+          checked_at?: string
           created_at?: string
+          error_message?: string | null
+          execution_time_ms?: number | null
           id?: string
-          results: Json
+          passed: boolean
+          severity: string
+          table_name: string
+          threshold?: number | null
+          violation_count?: number
         }
         Update: {
-          check_date?: string
+          check_name?: string
+          check_query?: string
+          check_type?: string
+          checked_at?: string
           created_at?: string
+          error_message?: string | null
+          execution_time_ms?: number | null
           id?: string
-          results?: Json
+          passed?: boolean
+          severity?: string
+          table_name?: string
+          threshold?: number | null
+          violation_count?: number
         }
         Relationships: []
       }
