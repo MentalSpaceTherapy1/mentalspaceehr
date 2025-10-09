@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useWebRTC } from '@/hooks/useWebRTC';
+import { useTwilioVideo } from '@/hooks/useTwilioVideo';
 import { useAudioRecording } from '@/hooks/useAudioRecording';
-import { useConnectionMetrics } from '@/hooks/useConnectionMetrics';
+import { RemoteParticipant, RemoteVideoTrack, RemoteAudioTrack } from 'twilio-video';
 import { supabase } from '@/integrations/supabase/client';
 import { VideoGrid } from '@/components/telehealth/VideoGrid';
 import { SessionControls } from '@/components/telehealth/SessionControls';
@@ -61,22 +61,24 @@ export default function TelehealthSession() {
   const [waitingRoomAdmitted, setWaitingRoomAdmitted] = useState(false);
   
   const timeoutCheckRef = useRef<NodeJS.Timeout | null>(null);
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(new Map());
+  const userName = profile ? `${profile.first_name} ${profile.last_name}` : 'User';
 
   const {
-    localStream,
-    remoteStreams,
+    room,
+    localParticipant: twilioLocalParticipant,
+    remoteParticipants,
     connectionState,
     connectionQuality,
     isMuted,
     isVideoEnabled,
-    isScreenSharing,
-    initializeMedia,
+    localVideoTrack,
+    localAudioTrack,
+    connect,
+    disconnect,
     toggleMute,
-    toggleVideo,
-    startScreenShare,
-    stopScreenShare
-  } = useWebRTC(normalizedSessionId, user?.id || '', isHost ? 'host' : 'client');
+    toggleVideo
+  } = useTwilioVideo(normalizedSessionId, user?.id || '', userName);
 
   const {
     isRecording,
@@ -86,8 +88,134 @@ export default function TelehealthSession() {
     error: recordingError,
   } = useAudioRecording();
 
-  // Track connection metrics
-  useConnectionMetrics(session?.id, user?.id || '', peerConnectionRef.current);
+  // Build local MediaStream from Twilio tracks
+  const localStream = useMemo(() => {
+    if (!localVideoTrack && !localAudioTrack) return null;
+    const tracks: MediaStreamTrack[] = [];
+    if (localVideoTrack) tracks.push(localVideoTrack.mediaStreamTrack);
+    if (localAudioTrack) tracks.push(localAudioTrack.mediaStreamTrack);
+    return new MediaStream(tracks);
+  }, [localVideoTrack, localAudioTrack]);
+
+  // Handle Twilio remote participant tracks
+  useEffect(() => {
+    if (!room) return;
+
+    const handleTrackSubscribed = (track: RemoteVideoTrack | RemoteAudioTrack, participant: RemoteParticipant) => {
+      console.log('Track subscribed:', track.kind, 'from', participant.identity);
+      
+      setRemoteStreams((prev) => {
+        const existingStream = prev.get(participant.sid);
+        const tracks = existingStream ? Array.from(existingStream.getTracks()) : [];
+        tracks.push(track.mediaStreamTrack);
+        return new Map(prev).set(participant.sid, new MediaStream(tracks));
+      });
+    };
+
+    const handleTrackUnsubscribed = (track: RemoteVideoTrack | RemoteAudioTrack, participant: RemoteParticipant) => {
+      console.log('Track unsubscribed:', track.kind, 'from', participant.identity);
+      
+      setRemoteStreams((prev) => {
+        const existingStream = prev.get(participant.sid);
+        if (!existingStream) return prev;
+        
+        const remainingTracks = Array.from(existingStream.getTracks()).filter(
+          t => t.id !== track.mediaStreamTrack.id
+        );
+        
+        if (remainingTracks.length === 0) {
+          const newMap = new Map(prev);
+          newMap.delete(participant.sid);
+          return newMap;
+        }
+        
+        return new Map(prev).set(participant.sid, new MediaStream(remainingTracks));
+      });
+    };
+
+    // Subscribe to existing participants' tracks
+    room.participants.forEach((participant) => {
+      participant.tracks.forEach((publication) => {
+        if (publication.track && publication.track.kind !== 'data') {
+          handleTrackSubscribed(publication.track as RemoteVideoTrack | RemoteAudioTrack, participant);
+        }
+      });
+
+      participant.on('trackSubscribed', (track) => {
+        if (track.kind !== 'data') {
+          handleTrackSubscribed(track as RemoteVideoTrack | RemoteAudioTrack, participant);
+        }
+      });
+      participant.on('trackUnsubscribed', (track) => {
+        if (track.kind !== 'data') {
+          handleTrackUnsubscribed(track as RemoteVideoTrack | RemoteAudioTrack, participant);
+        }
+      });
+    });
+
+    return () => {
+      room.participants.forEach((participant) => {
+        participant.removeAllListeners('trackSubscribed');
+        participant.removeAllListeners('trackUnsubscribed');
+      });
+    };
+  }, [room]);
+
+  // Update participant connection state in DB when Twilio connects
+  useEffect(() => {
+    if (!session || !user || connectionState !== 'connected') return;
+
+    const updateParticipantState = async () => {
+      try {
+        const { data: existingParticipant } = await supabase
+          .from('session_participants')
+          .select('id')
+          .eq('session_id', session.id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (existingParticipant) {
+          await supabase
+            .from('session_participants')
+            .update({
+              connection_state: 'connected',
+              joined_at: new Date().toISOString()
+            })
+            .eq('id', existingParticipant.id);
+        }
+      } catch (error) {
+        console.error('Error updating participant state:', error);
+      }
+    };
+
+    updateParticipantState();
+
+    return () => {
+      const cleanup = async () => {
+        try {
+          const { data: existingParticipant } = await supabase
+            .from('session_participants')
+            .select('id')
+            .eq('session_id', session.id)
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (existingParticipant) {
+            await supabase
+              .from('session_participants')
+              .update({
+                connection_state: 'disconnected',
+                left_at: new Date().toISOString()
+              })
+              .eq('id', existingParticipant.id);
+          }
+        } catch (error) {
+          console.error('Error in cleanup:', error);
+        }
+      };
+      cleanup();
+    };
+  }, [session, user, connectionState]);
 
   useEffect(() => {
     if (!user || !sessionId) return;
@@ -327,16 +455,23 @@ export default function TelehealthSession() {
         }
       }
 
-      // Show bandwidth test before initializing media
+      // Show bandwidth test before connecting to Twilio
       if (!bandwidthTestComplete) {
         setShowBandwidthTest(true);
         setLoading(false);
         return;
       }
 
-      // Initialize media
-      await initializeMedia();
-      setMediaReady(true);
+      // Connect to Twilio Video
+      try {
+        console.log('Connecting to Twilio room:', sessionData.session_id);
+        await connect();
+        setMediaReady(true);
+        console.log('Successfully connected to Twilio');
+      } catch (err) {
+        console.error('Failed to connect to Twilio:', err);
+        throw new Error('Failed to connect to video service. Please check that Twilio is configured.');
+      }
 
       // Create participant record (ignore error if already exists)
       try {
@@ -402,6 +537,9 @@ export default function TelehealthSession() {
 
   const handleEndSession = async () => {
     try {
+      // Disconnect from Twilio
+      disconnect();
+
       // Stop recording if active
       let blob = audioBlob;
       if (isRecording) {
@@ -456,11 +594,11 @@ export default function TelehealthSession() {
   };
 
   const handleToggleScreenShare = () => {
-    if (isScreenSharing) {
-      stopScreenShare();
-    } else {
-      startScreenShare();
-    }
+    toast({
+      title: 'Screen Sharing',
+      description: 'Screen sharing with Twilio Video will be implemented in a future update',
+      variant: 'default'
+    });
   };
 
   // Session timeout monitoring (2-hour limit)
@@ -571,17 +709,17 @@ export default function TelehealthSession() {
             
             console.log('Consent verified for session, continuing to media initialization');
             
-            // Continue with bandwidth test or media initialization
+            // Continue with bandwidth test or Twilio connection
             if (!bandwidthTestComplete) {
               setShowBandwidthTest(true);
             } else {
-              // Initialize media directly
+              // Connect to Twilio directly
               try {
-                await initializeMedia();
+                await connect();
                 setMediaReady(true);
               } catch (err) {
-                console.error('Error initializing media after consent:', err);
-                setError('Failed to access camera/microphone');
+                console.error('Error connecting to Twilio after consent:', err);
+                setError('Failed to connect to video service. Please check that Twilio is configured.');
               }
             }
           }}
@@ -656,15 +794,15 @@ export default function TelehealthSession() {
           <Button 
             onClick={async () => {
               try {
-                console.log('Grant Access clicked, initializing media...');
-                await initializeMedia();
+                console.log('Grant Access clicked, connecting to Twilio...');
+                await connect();
                 setMediaReady(true);
                 console.log('Media ready set to true');
               } catch (err) {
-                console.error('Failed to initialize media:', err);
+                console.error('Failed to connect to Twilio:', err);
                 toast({
-                  title: 'Access Denied',
-                  description: 'Please allow camera and microphone access in your browser settings',
+                  title: 'Connection Failed',
+                  description: 'Failed to connect to video service. Please check that Twilio is configured.',
                   variant: 'destructive'
                 });
               }
@@ -683,19 +821,22 @@ export default function TelehealthSession() {
     stream: localStream,
     isMuted,
     isVideoEnabled,
-    isScreenSharing,
+    isScreenSharing: false,
     role: isHost ? 'host' as const : 'client' as const
   };
 
-  const remoteParticipants = Array.from(remoteStreams.entries()).map(([id, stream]) => ({
-    id,
-    name: 'Participant', // Would fetch from database
-    stream,
-    isMuted: false, // Would track via realtime
-    isVideoEnabled: true,
-    isScreenSharing: false,
-    role: 'client' as const
-  }));
+  const remoteParticipantsList = Array.from(remoteParticipants.values()).map((participant) => {
+    const stream = remoteStreams.get(participant.sid);
+    return {
+      id: participant.sid,
+      name: participant.identity,
+      stream: stream || null,
+      isMuted: false,
+      isVideoEnabled: stream !== null,
+      isScreenSharing: false,
+      role: 'client' as const
+    };
+  });
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -744,8 +885,8 @@ export default function TelehealthSession() {
             <div className="flex-1">
               <VideoGrid
                 localParticipant={localParticipant}
-                remoteParticipants={remoteParticipants}
-                layout={remoteParticipants.length > 2 ? 'grid' : 'spotlight'}
+                remoteParticipants={remoteParticipantsList}
+                layout={remoteParticipantsList.length > 2 ? 'grid' : 'spotlight'}
               />
             </div>
           </div>
@@ -767,7 +908,7 @@ export default function TelehealthSession() {
       <SessionControls
         isMuted={isMuted}
         isVideoEnabled={isVideoEnabled}
-        isScreenSharing={isScreenSharing}
+        isScreenSharing={false}
         isChatOpen={isChatOpen}
         isRecording={teleFlags.recording_feature_enabled ? isRecording : false}
         recordingDuration={teleFlags.recording_feature_enabled ? recordingDuration : 0}
@@ -820,12 +961,12 @@ export default function TelehealthSession() {
             });
           }
           
-          // Initialize media after bandwidth test
+          // Connect to Twilio after bandwidth test
           try {
-            console.log('Initializing media after bandwidth test...');
-            await initializeMedia();
+            console.log('Connecting to Twilio after bandwidth test...');
+            await connect();
             setMediaReady(true);
-            console.log('Media initialized successfully');
+            console.log('Twilio connection successful');
             
             // Create participant record
             if (session && user && profile) {
@@ -844,8 +985,8 @@ export default function TelehealthSession() {
               }
             }
           } catch (err) {
-            console.error('Error initializing media:', err);
-            setError('Failed to access camera/microphone');
+            console.error('Error connecting to Twilio:', err);
+            setError('Failed to connect to video service. Please check that Twilio is configured.');
           }
         }}
         onCancel={() => {

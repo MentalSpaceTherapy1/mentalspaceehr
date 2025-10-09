@@ -68,14 +68,17 @@ export const useTwilioVideo = (sessionId: string, userId: string, userName: stri
       setConnectionState('connected');
 
       connectedRoom.on('participantConnected', (p: RemoteParticipant) => {
+        console.log('Participant connected:', p.identity);
         setRemoteParticipants((prev) => new Map(prev).set(p.sid, p));
       });
 
       connectedRoom.on('participantDisconnected', (p: RemoteParticipant) => {
+        console.log('Participant disconnected:', p.identity);
         setRemoteParticipants((prev) => { const u = new Map(prev); u.delete(p.sid); return u; });
       });
 
       connectedRoom.participants.forEach((p) => {
+        console.log('Existing participant:', p.identity);
         setRemoteParticipants((prev) => new Map(prev).set(p.sid, p));
       });
 

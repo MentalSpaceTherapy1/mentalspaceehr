@@ -7,7 +7,7 @@ interface ConnectionQualityProps {
   packetLoss: number;
   latency: number;
   jitter: number;
-  connectionState: RTCPeerConnectionState;
+  connectionState: 'new' | 'connected' | 'reconnecting' | 'disconnected';
 }
 
 export const ConnectionQualityIndicator = ({
