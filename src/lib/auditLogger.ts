@@ -166,3 +166,82 @@ export async function logSecurityEvent(
     severity: 'critical'
   });
 }
+
+/**
+ * Log bulk data export - triggers enhanced monitoring
+ */
+export async function logBulkExport(
+  userId: string,
+  resourceType: AuditResourceType,
+  description: string,
+  recordCount: number,
+  details?: Record<string, any>
+): Promise<void> {
+  await logAuditEvent({
+    userId,
+    actionType: 'phi_access',
+    resourceType,
+    actionDescription: `${description} (${recordCount} records)`,
+    actionDetails: {
+      ...details,
+      recordCount,
+      exportType: 'bulk',
+      timestamp: new Date().toISOString()
+    },
+    severity: 'warning'
+  });
+}
+
+/**
+ * Log critical PHI access (multiple records at once)
+ */
+export async function logCriticalAccess(
+  userId: string,
+  resourceType: AuditResourceType,
+  description: string,
+  accessCount: number,
+  details?: Record<string, any>
+): Promise<void> {
+  await logAuditEvent({
+    userId,
+    actionType: 'phi_access',
+    resourceType,
+    actionDescription: description,
+    actionDetails: {
+      ...details,
+      accessCount,
+      timestamp: new Date().toISOString()
+    },
+    severity: accessCount > 50 ? 'critical' : 'warning'
+  });
+}
+
+/**
+ * Log after-hours access for review
+ */
+export async function logAfterHoursAccess(
+  userId: string,
+  resourceType: AuditResourceType,
+  resourceId: string,
+  description: string,
+  details?: Record<string, any>
+): Promise<void> {
+  const hour = new Date().getHours();
+  const isAfterHours = hour < 6 || hour >= 20; // Before 6 AM or after 8 PM
+  
+  if (isAfterHours) {
+    await logAuditEvent({
+      userId,
+      actionType: 'phi_access',
+      resourceType,
+      resourceId,
+      actionDescription: `[AFTER HOURS] ${description}`,
+      actionDetails: {
+        ...details,
+        accessTime: new Date().toISOString(),
+        hour
+      },
+      severity: 'info'
+    });
+  }
+}

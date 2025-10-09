@@ -922,6 +922,51 @@ export type Database = {
           },
         ]
       }
+      audit_alert_rules: {
+        Row: {
+          action_type: string
+          alert_recipients: string[]
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          resource_type: string
+          rule_name: string
+          severity: string
+          threshold: number
+          time_window_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          action_type: string
+          alert_recipients: string[]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          resource_type: string
+          rule_name: string
+          severity: string
+          threshold: number
+          time_window_minutes: number
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          alert_recipients?: string[]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          resource_type?: string
+          rule_name?: string
+          severity?: string
+          threshold?: number
+          time_window_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action_description: string
@@ -2960,6 +3005,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      data_quality_results: {
+        Row: {
+          check_date: string
+          created_at: string
+          id: string
+          results: Json
+        }
+        Insert: {
+          check_date: string
+          created_at?: string
+          id?: string
+          results: Json
+        }
+        Update: {
+          check_date?: string
+          created_at?: string
+          id?: string
+          results?: Json
+        }
+        Relationships: []
       }
       document_library: {
         Row: {
@@ -8405,6 +8471,14 @@ export type Database = {
           days_until_due: number
           due_date: string
           status: string
+        }[]
+      }
+      check_excessive_phi_access: {
+        Args: { hours?: number; threshold?: number }
+        Returns: {
+          access_count: number
+          user_email: string
+          user_id: string
         }[]
       }
       check_rate_limit: {
