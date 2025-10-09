@@ -2264,6 +2264,36 @@ export type Database = {
           },
         ]
       }
+      clinical_analytics_cache: {
+        Row: {
+          aggregation_period: string
+          calculated_at: string
+          id: string
+          metric_data: Json
+          metric_type: string
+          period_end: string
+          period_start: string
+        }
+        Insert: {
+          aggregation_period: string
+          calculated_at?: string
+          id?: string
+          metric_data: Json
+          metric_type: string
+          period_end: string
+          period_start: string
+        }
+        Update: {
+          aggregation_period?: string
+          calculated_at?: string
+          id?: string
+          metric_data?: Json
+          metric_type?: string
+          period_end?: string
+          period_start?: string
+        }
+        Relationships: []
+      }
       clinical_assessments: {
         Row: {
           acronym: string
@@ -4316,6 +4346,81 @@ export type Database = {
           },
         ]
       }
+      kpi_snapshots: {
+        Row: {
+          active_providers: number | null
+          avg_caseload: number | null
+          avg_gad7_score: number | null
+          avg_phq9_score: number | null
+          cancellation_count: number | null
+          collection_rate: number | null
+          completed_appointments: number | null
+          created_at: string
+          crisis_events: number | null
+          discharged_patients_count: number | null
+          documentation_compliance_rate: number | null
+          id: string
+          new_patients_count: number | null
+          no_show_count: number | null
+          outstanding_balance: number | null
+          snapshot_date: string
+          snapshot_type: string
+          total_active_patients: number | null
+          total_appointments: number | null
+          total_revenue: number | null
+          total_sessions: number | null
+          utilization_rate: number | null
+        }
+        Insert: {
+          active_providers?: number | null
+          avg_caseload?: number | null
+          avg_gad7_score?: number | null
+          avg_phq9_score?: number | null
+          cancellation_count?: number | null
+          collection_rate?: number | null
+          completed_appointments?: number | null
+          created_at?: string
+          crisis_events?: number | null
+          discharged_patients_count?: number | null
+          documentation_compliance_rate?: number | null
+          id?: string
+          new_patients_count?: number | null
+          no_show_count?: number | null
+          outstanding_balance?: number | null
+          snapshot_date: string
+          snapshot_type: string
+          total_active_patients?: number | null
+          total_appointments?: number | null
+          total_revenue?: number | null
+          total_sessions?: number | null
+          utilization_rate?: number | null
+        }
+        Update: {
+          active_providers?: number | null
+          avg_caseload?: number | null
+          avg_gad7_score?: number | null
+          avg_phq9_score?: number | null
+          cancellation_count?: number | null
+          collection_rate?: number | null
+          completed_appointments?: number | null
+          created_at?: string
+          crisis_events?: number | null
+          discharged_patients_count?: number | null
+          documentation_compliance_rate?: number | null
+          id?: string
+          new_patients_count?: number | null
+          no_show_count?: number | null
+          outstanding_balance?: number | null
+          snapshot_date?: string
+          snapshot_type?: string
+          total_active_patients?: number | null
+          total_appointments?: number | null
+          total_revenue?: number | null
+          total_sessions?: number | null
+          utilization_rate?: number | null
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           attempt_time: string | null
@@ -5358,6 +5463,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      performance_metrics: {
+        Row: {
+          execution_time_ms: number
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_type: string
+          resource_usage: Json | null
+          timestamp: string
+        }
+        Insert: {
+          execution_time_ms: number
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_type: string
+          resource_usage?: Json | null
+          timestamp?: string
+        }
+        Update: {
+          execution_time_ms?: number
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_type?: string
+          resource_usage?: Json | null
+          timestamp?: string
+        }
+        Relationships: []
       }
       portal_access_log: {
         Row: {
@@ -7331,6 +7466,57 @@ export type Database = {
           },
         ]
       }
+      slow_query_log: {
+        Row: {
+          endpoint: string | null
+          executed_at: string
+          execution_time_ms: number
+          id: string
+          optimization_notes: string | null
+          optimization_suggested: boolean | null
+          parameters: Json | null
+          query_hash: string
+          query_plan: Json | null
+          query_text: string
+          request_id: string | null
+          row_count: number | null
+          table_names: string[] | null
+          user_id: string | null
+        }
+        Insert: {
+          endpoint?: string | null
+          executed_at?: string
+          execution_time_ms: number
+          id?: string
+          optimization_notes?: string | null
+          optimization_suggested?: boolean | null
+          parameters?: Json | null
+          query_hash: string
+          query_plan?: Json | null
+          query_text: string
+          request_id?: string | null
+          row_count?: number | null
+          table_names?: string[] | null
+          user_id?: string | null
+        }
+        Update: {
+          endpoint?: string | null
+          executed_at?: string
+          execution_time_ms?: number
+          id?: string
+          optimization_notes?: string | null
+          optimization_suggested?: boolean | null
+          parameters?: Json | null
+          query_hash?: string
+          query_plan?: Json | null
+          query_text?: string
+          request_id?: string | null
+          row_count?: number | null
+          table_names?: string[] | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       supervision_relationships: {
         Row: {
           can_bill_incident_to: boolean
@@ -7649,6 +7835,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_health_metrics: {
+        Row: {
+          active_users: number | null
+          api_requests_per_minute: number | null
+          avg_query_time_ms: number | null
+          cpu_usage_percent: number | null
+          database_connections: number | null
+          database_size_mb: number | null
+          error_rate: number | null
+          health_status: string
+          id: string
+          memory_usage_percent: number | null
+          metadata: Json | null
+          metric_timestamp: string
+          overall_health_score: number | null
+          slow_query_count: number | null
+          storage_usage_percent: number | null
+          table_sizes: Json | null
+          total_sessions: number | null
+        }
+        Insert: {
+          active_users?: number | null
+          api_requests_per_minute?: number | null
+          avg_query_time_ms?: number | null
+          cpu_usage_percent?: number | null
+          database_connections?: number | null
+          database_size_mb?: number | null
+          error_rate?: number | null
+          health_status?: string
+          id?: string
+          memory_usage_percent?: number | null
+          metadata?: Json | null
+          metric_timestamp?: string
+          overall_health_score?: number | null
+          slow_query_count?: number | null
+          storage_usage_percent?: number | null
+          table_sizes?: Json | null
+          total_sessions?: number | null
+        }
+        Update: {
+          active_users?: number | null
+          api_requests_per_minute?: number | null
+          avg_query_time_ms?: number | null
+          cpu_usage_percent?: number | null
+          database_connections?: number | null
+          database_size_mb?: number | null
+          error_rate?: number | null
+          health_status?: string
+          id?: string
+          memory_usage_percent?: number | null
+          metadata?: Json | null
+          metric_timestamp?: string
+          overall_health_score?: number | null
+          slow_query_count?: number | null
+          storage_usage_percent?: number | null
+          table_sizes?: Json | null
+          total_sessions?: number | null
+        }
+        Relationships: []
       }
       task_comments: {
         Row: {
