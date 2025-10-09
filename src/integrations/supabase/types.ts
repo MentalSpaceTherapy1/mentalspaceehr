@@ -6469,6 +6469,45 @@ export type Database = {
           },
         ]
       }
+      release_metrics: {
+        Row: {
+          collected_at: string
+          created_at: string
+          data_quality: Json
+          deployment_metrics: Json
+          id: string
+          release_date: string
+          release_id: string
+          security: Json
+          stability_metrics: Json
+          user_impact: Json
+        }
+        Insert: {
+          collected_at?: string
+          created_at?: string
+          data_quality?: Json
+          deployment_metrics?: Json
+          id?: string
+          release_date: string
+          release_id: string
+          security?: Json
+          stability_metrics?: Json
+          user_impact?: Json
+        }
+        Update: {
+          collected_at?: string
+          created_at?: string
+          data_quality?: Json
+          deployment_metrics?: Json
+          id?: string
+          release_date?: string
+          release_id?: string
+          security?: Json
+          stability_metrics?: Json
+          user_impact?: Json
+        }
+        Relationships: []
+      }
       reminder_logs: {
         Row: {
           appointment_id: string | null
