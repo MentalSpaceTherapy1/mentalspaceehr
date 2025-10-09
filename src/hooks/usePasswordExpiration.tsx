@@ -68,11 +68,12 @@ export const usePasswordExpiration = () => {
       }
 
       // Warn if expiring soon (< 7 days)
-      if (daysRemaining <= 7 && daysRemaining > 0) {
+      const shouldShowWarning = daysRemaining <= 7 && daysRemaining > 0;
+      if (shouldShowWarning) {
         toast({
           title: 'Password Expiring Soon',
           description: `Your password will expire in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}. Please change it soon.`,
-          variant: 'warning',
+          variant: 'default',
         });
       }
 
@@ -87,6 +88,7 @@ export const usePasswordExpiration = () => {
     loading,
     isExpired,
     daysUntilExpiration,
+    showWarning: daysUntilExpiration !== null && daysUntilExpiration <= 7 && daysUntilExpiration > 0,
     checkPasswordExpiration
   };
 };

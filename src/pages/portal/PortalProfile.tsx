@@ -61,7 +61,7 @@ export default function PortalProfile() {
     );
   }
 
-  if (error) {
+  if (!portalContext) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">Unable to load profile data</p>

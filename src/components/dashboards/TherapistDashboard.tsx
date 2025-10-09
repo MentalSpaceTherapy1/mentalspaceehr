@@ -129,15 +129,20 @@ export const TherapistDashboard = () => {
         if (completedError) console.error('[TherapistDashboard] Error fetching completed sessions:', completedError);
 
         // Fetch treatment plans due for review (if table exists)
-        const { data: treatmentPlans, error: treatmentError } = await supabase
-          .from('treatment_plans')
-          .select('id')
-          .eq('therapist_id', user.id)
-          .lt('next_review_date', today)
-          .eq('status', 'Active');
-
-        // Don't throw error if treatment_plans table doesn't exist
-        const treatmentPlansDue = treatmentPlans?.length || 0;
+        let treatmentPlansDue = 0;
+        try {
+          const { data: treatmentPlans } = await (supabase as any)
+            .from('treatment_plans')
+            .select('id')
+            .eq('therapist_id', user.id)
+            .lt('next_review_date', today)
+            .eq('status', 'Active');
+          
+          treatmentPlansDue = treatmentPlans?.length || 0;
+        } catch (err) {
+          // Treatment plans table may not exist
+          console.log('[TherapistDashboard] Treatment plans table not available');
+        }
 
         // ✅ FIX #2: Use unsigned/draft notes count for "Pending Notes"
         setStats({
