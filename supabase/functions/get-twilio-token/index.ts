@@ -82,7 +82,7 @@ async function generateToken(identity: string, roomName: string): Promise<string
   const secret = new TextEncoder().encode(twilioApiSecret)
   
   const jwt = await new jose.SignJWT(payload)
-    .setProtectedHeader({ alg: 'HS256', cty: 'twilio-fpa;v=1' })
+    .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
     .sign(secret)
 
   return jwt
