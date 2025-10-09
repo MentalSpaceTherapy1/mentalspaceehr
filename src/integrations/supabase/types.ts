@@ -4052,6 +4052,39 @@ export type Database = {
         }
         Relationships: []
       }
+      integration_health_logs: {
+        Row: {
+          checked_at: string
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          response_time_ms: number
+          service_name: string
+          status: string
+        }
+        Insert: {
+          checked_at?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          response_time_ms: number
+          service_name: string
+          status: string
+        }
+        Update: {
+          checked_at?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          response_time_ms?: number
+          service_name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       journal_entries: {
         Row: {
           client_id: string
