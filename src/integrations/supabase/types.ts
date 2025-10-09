@@ -2859,6 +2859,163 @@ export type Database = {
           },
         ]
       }
+      content_pack_changelog: {
+        Row: {
+          breaking_change: boolean
+          change_details: Json | null
+          change_summary: string
+          change_type: string
+          created_at: string
+          entity_id: string
+          entity_name: string
+          entity_type: string
+          id: string
+          migration_required: boolean
+          migration_script: string | null
+          version_id: string
+        }
+        Insert: {
+          breaking_change?: boolean
+          change_details?: Json | null
+          change_summary: string
+          change_type: string
+          created_at?: string
+          entity_id: string
+          entity_name: string
+          entity_type: string
+          id?: string
+          migration_required?: boolean
+          migration_script?: string | null
+          version_id: string
+        }
+        Update: {
+          breaking_change?: boolean
+          change_details?: Json | null
+          change_summary?: string
+          change_type?: string
+          created_at?: string
+          entity_id?: string
+          entity_name?: string
+          entity_type?: string
+          id?: string
+          migration_required?: boolean
+          migration_script?: string | null
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_pack_changelog_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "content_pack_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_pack_installations: {
+        Row: {
+          created_at: string
+          error_log: Json | null
+          id: string
+          installation_status: string
+          installed_at: string
+          installed_by: string | null
+          migration_log: Json | null
+          rollback_available: boolean
+          updated_at: string
+          version_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_log?: Json | null
+          id?: string
+          installation_status?: string
+          installed_at?: string
+          installed_by?: string | null
+          migration_log?: Json | null
+          rollback_available?: boolean
+          updated_at?: string
+          version_id: string
+        }
+        Update: {
+          created_at?: string
+          error_log?: Json | null
+          id?: string
+          installation_status?: string
+          installed_at?: string
+          installed_by?: string | null
+          migration_log?: Json | null
+          rollback_available?: boolean
+          updated_at?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_pack_installations_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "content_pack_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_pack_versions: {
+        Row: {
+          content_data: Json
+          content_type: string
+          created_at: string
+          deprecates_versions: string[] | null
+          description: string | null
+          id: string
+          is_active: boolean
+          is_draft: boolean
+          release_date: string
+          released_by: string | null
+          requires_version: string | null
+          updated_at: string
+          validation_errors: Json | null
+          validation_status: string
+          version_name: string
+          version_number: string
+        }
+        Insert: {
+          content_data?: Json
+          content_type: string
+          created_at?: string
+          deprecates_versions?: string[] | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_draft?: boolean
+          release_date?: string
+          released_by?: string | null
+          requires_version?: string | null
+          updated_at?: string
+          validation_errors?: Json | null
+          validation_status?: string
+          version_name: string
+          version_number: string
+        }
+        Update: {
+          content_data?: Json
+          content_type?: string
+          created_at?: string
+          deprecates_versions?: string[] | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_draft?: boolean
+          release_date?: string
+          released_by?: string | null
+          requires_version?: string | null
+          updated_at?: string
+          validation_errors?: Json | null
+          validation_status?: string
+          version_name?: string
+          version_number?: string
+        }
+        Relationships: []
+      }
       custom_assessments: {
         Row: {
           assessment_name: string
