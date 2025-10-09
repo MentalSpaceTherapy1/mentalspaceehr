@@ -13,11 +13,13 @@ import {
   TrendingUp,
   Settings,
   Users,
-  CheckCircle2
+  CheckCircle2,
+  Play
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { UnlockRequestManagement } from '@/components/compliance/UnlockRequestManagement';
+import { toast } from 'sonner';
 
 interface ComplianceAlert {
   id: string;
@@ -67,6 +69,7 @@ export default function ComplianceDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [runningCheck, setRunningCheck] = useState(false);
 
   useEffect(() => {
     loadComplianceData();
@@ -175,7 +178,38 @@ export default function ComplianceDashboard() {
     return labels[noteType] || noteType;
   };
 
-  const filteredAlerts = filterStatus === 'all' 
+  const runComplianceCheck = async () => {
+    try {
+      setRunningCheck(true);
+      toast.info('Starting compliance check...');
+
+      const { data, error } = await supabase.functions.invoke('daily-compliance-check');
+
+      if (error) throw error;
+
+      const summary = data?.summary || {};
+      const violations = data?.violations || [];
+
+      if (violations.length === 0) {
+        toast.success('Compliance check complete - no issues found!');
+      } else {
+        toast.warning(
+          `Compliance check complete: ${summary.total || 0} issues found (${summary.critical || 0} critical, ${summary.high || 0} high)`,
+          { duration: 5000 }
+        );
+      }
+
+      // Reload the compliance data
+      await loadComplianceData();
+    } catch (error) {
+      console.error('Error running compliance check:', error);
+      toast.error('Failed to run compliance check');
+    } finally {
+      setRunningCheck(false);
+    }
+  };
+
+  const filteredAlerts = filterStatus === 'all'
     ? alerts 
     : filterStatus === 'locked'
     ? alerts.filter(a => a.is_locked)
@@ -190,10 +224,16 @@ export default function ComplianceDashboard() {
             <h1 className="text-3xl font-bold">Compliance Dashboard</h1>
             <p className="text-muted-foreground">System-wide documentation compliance monitoring</p>
           </div>
-          <Button onClick={() => navigate('/admin/compliance-rules')}>
-            <Settings className="h-4 w-4 mr-2" />
-            Manage Rules
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={runComplianceCheck} disabled={runningCheck} variant="outline">
+              <Play className="h-4 w-4 mr-2" />
+              {runningCheck ? 'Running Check...' : 'Run Compliance Check Now'}
+            </Button>
+            <Button onClick={() => navigate('/admin/compliance-rules')}>
+              <Settings className="h-4 w-4 mr-2" />
+              Manage Rules
+            </Button>
+          </div>
         </div>
 
         {/* Statistics Overview */}
