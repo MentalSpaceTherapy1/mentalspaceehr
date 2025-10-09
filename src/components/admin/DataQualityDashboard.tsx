@@ -54,7 +54,7 @@ export const DataQualityDashboard = () => {
         .limit(100);
 
       if (error) throw error;
-      setResults(data || []);
+      setResults((data || []) as QualityResult[]);
     } catch (error: any) {
       console.error('Error fetching data quality results:', error);
       toast({
