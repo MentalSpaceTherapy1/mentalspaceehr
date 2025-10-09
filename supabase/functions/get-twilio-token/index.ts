@@ -5,14 +5,32 @@ const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
 const twilioApiKey = Deno.env.get('TWILIO_API_KEY')
 const twilioApiSecret = Deno.env.get('TWILIO_API_SECRET')
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
 serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   try {
+    if (req.method !== 'POST') {
+      return new Response(
+        JSON.stringify({ error: 'Method not allowed' }),
+        { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     const { identity, room_name } = await req.json()
 
     if (!identity || !room_name) {
       return new Response(
         JSON.stringify({ error: 'Missing identity or room_name' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -20,7 +38,7 @@ serve(async (req) => {
       console.error('Missing Twilio credentials')
       return new Response(
         JSON.stringify({ error: 'Server configuration error' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -29,13 +47,13 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ token }),
-      { headers: { 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
     console.error('Error generating token:', error)
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })
