@@ -6466,6 +6466,7 @@ export type Database = {
           notification_preferences: Json | null
           npi_number: string | null
           office_extension: string | null
+          password_requires_change: boolean | null
           personal_email: string | null
           phone_number: string | null
           preferred_name: string | null
@@ -6517,6 +6518,7 @@ export type Database = {
           notification_preferences?: Json | null
           npi_number?: string | null
           office_extension?: string | null
+          password_requires_change?: boolean | null
           personal_email?: string | null
           phone_number?: string | null
           preferred_name?: string | null
@@ -6568,6 +6570,7 @@ export type Database = {
           notification_preferences?: Json | null
           npi_number?: string | null
           office_extension?: string | null
+          password_requires_change?: boolean | null
           personal_email?: string | null
           phone_number?: string | null
           preferred_name?: string | null
