@@ -238,7 +238,7 @@ export default function PortalDocuments() {
 
   return (
     <div className="space-y-6">
-        <div>
+      <div>
           <h1 className="text-3xl font-bold">Forms & Documents</h1>
           <p className="text-muted-foreground">Complete required forms and view your documents</p>
         </div>
@@ -462,8 +462,8 @@ export default function PortalDocuments() {
           onOpenChange={setViewerOpen}
           document={selectedDocument}
           documentUrl={documentUrl}
-          onDownload={() => selectedDocument && handleDownloadDocument(selectedDocument)}
+        onDownload={() => selectedDocument && handleDownloadDocument(selectedDocument)}
         />
       </div>
-    );
-  }
+  );
+}

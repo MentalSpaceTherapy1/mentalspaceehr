@@ -39,8 +39,8 @@ export default function PortalBilling() {
 
   const totalBalance = invoices.reduce((sum, inv) => sum + inv.balanceDue, 0);
 
-    <>
-      <div className="space-y-6">
+  return (
+    <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Billing & Payments</h1>
           <p className="text-muted-foreground">View your invoices and payment history</p>
@@ -207,5 +207,5 @@ export default function PortalBilling() {
           </TabsContent>
         </Tabs>
       </div>
-    </>
+  );
 }

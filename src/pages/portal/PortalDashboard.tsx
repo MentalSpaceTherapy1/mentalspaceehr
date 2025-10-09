@@ -97,7 +97,7 @@ export default function PortalDashboard() {
         upcomingCountPromise,
       ]);
 
-      const [nextApptRes, msgRes, docsRes, notiRes, apptCountRes] = results as const;
+      const [nextApptRes, msgRes, docsRes, notiRes, apptCountRes] = results;
 
       if (nextApptRes.status === 'fulfilled') {
         const { data: appointments } = nextApptRes.value as any;
