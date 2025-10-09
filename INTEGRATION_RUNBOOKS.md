@@ -1,5 +1,36 @@
 # Integration Runbooks
 
+## Overview
+This directory contains operational runbooks for all critical system integrations. Each runbook provides troubleshooting procedures, escalation paths, and monitoring guidelines.
+
+## Available Runbooks
+
+### Communication Services
+- [Resend Email Integration](docs/runbooks/RESEND_EMAIL_RUNBOOK.md) - Transactional email delivery
+- [Twilio SMS Integration](docs/runbooks/TWILIO_SMS_RUNBOOK.md) - SMS notifications and alerts
+
+### AI Services  
+- [AI Services Integration](docs/runbooks/AI_SERVICES_RUNBOOK.md) - OpenAI & Lovable AI for clinical notes
+
+### Storage & Data
+- [Supabase Storage](docs/runbooks/STORAGE_RUNBOOK.md) - File storage and document management
+- [Supabase Realtime](docs/runbooks/REALTIME_RUNBOOK.md) - WebSocket subscriptions
+
+## Integration Health Monitoring
+All integrations are monitored via the [Integration Health Dashboard](/admin/integration-health).
+
+## Runbook Usage
+Each runbook follows a standard format:
+1. Service overview and architecture
+2. Health check criteria (Green/Yellow/Red)
+3. Common issues with diagnosis and resolution
+4. Monitoring metrics and alerts
+5. Testing procedures
+6. Rollback procedures
+7. Escalation paths
+
+# Integration Runbooks
+
 ## Purpose
 
 This document provides operational runbooks for all external integrations in the MentalSpace EHR system, including troubleshooting procedures, error taxonomies, and failure simulation tests.
