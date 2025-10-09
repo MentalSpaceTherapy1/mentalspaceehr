@@ -162,17 +162,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // Log successful attempt
       await logLoginAttempt(email, true);
-      
+
       // Check user roles and redirect appropriately
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (authUser) {
+        // Check password expiration
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('last_password_change, created_at, password_requires_change')
+          .eq('id', authUser.id)
+          .single();
+
+        if (profile) {
+          // Check if password change is explicitly required
+          if (profile.password_requires_change) {
+            toast.error('Password change required before continuing');
+            navigate('/reset-password?required=true');
+            return { error: null };
+          }
+
+          // Calculate days since last password change
+          const lastChange = profile.last_password_change
+            ? new Date(profile.last_password_change)
+            : new Date(profile.created_at);
+
+          const daysSinceChange = Math.floor((Date.now() - lastChange.getTime()) / (1000 * 60 * 60 * 24));
+
+          // Password expired (>90 days)
+          if (daysSinceChange > 90) {
+            toast.error('Your password has expired. Please change it now.');
+            navigate('/reset-password?expired=true');
+            return { error: null };
+          }
+
+          // Warn if expiring soon (< 7 days)
+          const daysRemaining = 90 - daysSinceChange;
+          if (daysRemaining <= 7 && daysRemaining > 0) {
+            toast.warning(`Your password will expire in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}. Please change it soon.`);
+          }
+        }
+
         const { data: roles } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', authUser.id);
 
         const userRoles = roles?.map(r => r.role) || [];
-        
+
         // If user only has client_user role, redirect to portal
         if (userRoles.length === 1 && userRoles[0] === 'client_user') {
           toast.success('Welcome back!');
@@ -218,11 +254,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
 
-      // Update last_password_change timestamp
+      // Update last_password_change timestamp and clear password_requires_change flag
       if (user) {
         await supabase
           .from('profiles')
-          .update({ last_password_change: new Date().toISOString() })
+          .update({
+            last_password_change: new Date().toISOString(),
+            password_requires_change: false
+          })
           .eq('id', user.id);
       }
 

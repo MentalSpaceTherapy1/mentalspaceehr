@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from './use-toast';
 import { differenceInDays } from 'date-fns';
 
-const PASSWORD_EXPIRATION_DAYS = 90;
-const WARNING_DAYS_BEFORE_EXPIRATION = 7;
-
-export function usePasswordExpiration() {
+export const usePasswordExpiration = () => {
   const { user } = useAuth();
-  const [daysUntilExpiration, setDaysUntilExpiration] = useState<number | null>(null);
-  const [isExpired, setIsExpired] = useState(false);
-  const [showWarning, setShowWarning] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [isExpired, setIsExpired] = useState(false);
+  const [daysUntilExpiration, setDaysUntilExpiration] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -19,50 +19,74 @@ export function usePasswordExpiration() {
       return;
     }
 
-    const checkExpiration = async () => {
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('last_password_change')
-          .eq('id', user.id)
-          .single();
-
-        if (!profile?.last_password_change) {
-          // No password change recorded - set to account creation date
-          const accountCreated = new Date(user.created_at);
-          await supabase
-            .from('profiles')
-            .update({ last_password_change: accountCreated.toISOString() })
-            .eq('id', user.id);
-
-          const daysSinceCreation = differenceInDays(new Date(), accountCreated);
-          const daysLeft = PASSWORD_EXPIRATION_DAYS - daysSinceCreation;
-
-          setDaysUntilExpiration(daysLeft);
-          setIsExpired(daysLeft <= 0);
-          setShowWarning(daysLeft <= WARNING_DAYS_BEFORE_EXPIRATION && daysLeft > 0);
-        } else {
-          const lastChange = new Date(profile.last_password_change);
-          const daysSinceChange = differenceInDays(new Date(), lastChange);
-          const daysLeft = PASSWORD_EXPIRATION_DAYS - daysSinceChange;
-
-          setDaysUntilExpiration(daysLeft);
-          setIsExpired(daysLeft <= 0);
-          setShowWarning(daysLeft <= WARNING_DAYS_BEFORE_EXPIRATION && daysLeft > 0);
-        }
-      } catch (error) {
-        console.error('Error checking password expiration:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkExpiration();
-
-    // Check daily
-    const interval = setInterval(checkExpiration, 24 * 60 * 60 * 1000);
-    return () => clearInterval(interval);
+    checkPasswordExpiration();
   }, [user]);
 
-  return { daysUntilExpiration, isExpired, showWarning, loading };
-}
+  const checkPasswordExpiration = async () => {
+    try {
+      // Get user's profile
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('last_password_change, created_at, password_requires_change')
+        .eq('id', user!.id)
+        .single();
+
+      if (error) throw error;
+
+      // Check if password change is explicitly required
+      if (profile.password_requires_change) {
+        setIsExpired(true);
+        toast({
+          title: 'Password Change Required',
+          description: 'You must change your password before continuing.',
+          variant: 'destructive',
+        });
+        navigate('/reset-password?required=true');
+        return;
+      }
+
+      // Calculate days since last password change
+      const lastChange = profile.last_password_change 
+        ? new Date(profile.last_password_change)
+        : new Date(profile.created_at);
+      
+      const daysSinceChange = differenceInDays(new Date(), lastChange);
+      const daysRemaining = 90 - daysSinceChange;
+
+      setDaysUntilExpiration(daysRemaining);
+
+      // Password expired (>90 days)
+      if (daysSinceChange > 90) {
+        setIsExpired(true);
+        toast({
+          title: 'Password Expired',
+          description: 'Your password has expired. Please change it now.',
+          variant: 'destructive',
+        });
+        navigate('/reset-password?expired=true');
+        return;
+      }
+
+      // Warn if expiring soon (< 7 days)
+      if (daysRemaining <= 7 && daysRemaining > 0) {
+        toast({
+          title: 'Password Expiring Soon',
+          description: `Your password will expire in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}. Please change it soon.`,
+          variant: 'warning',
+        });
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error checking password expiration:', error);
+      setLoading(false);
+    }
+  };
+
+  return {
+    loading,
+    isExpired,
+    daysUntilExpiration,
+    checkPasswordExpiration
+  };
+};
