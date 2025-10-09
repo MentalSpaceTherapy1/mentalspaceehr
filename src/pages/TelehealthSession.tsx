@@ -436,8 +436,16 @@ export default function TelehealthSession() {
         description: "Thank you for using telehealth"
       });
 
-      // Show post-session dialog
-      setShowPostSessionDialog(true);
+      // Show post-session dialog only for hosts (clinicians)
+      if (isHost) {
+        setShowPostSessionDialog(true);
+      } else {
+        // For clients, just navigate back to appointments
+        const returnRoute = window.location.pathname.startsWith('/portal/')
+          ? '/portal/appointments'
+          : '/schedule';
+        navigate(returnRoute);
+      }
     } catch (err) {
       toast({
         title: "Error",

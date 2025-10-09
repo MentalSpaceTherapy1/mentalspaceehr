@@ -248,10 +248,32 @@ export const useWebRTC = (sessionId: string, userId: string, role: 'host' | 'cli
 
   // Setup signaling via Supabase Realtime
   useEffect(() => {
+    if (!localStream || !userId || !sessionId) return;
+
     const channel = supabase.channel(`webrtc-${sessionId}`)
+      .on('broadcast', { event: 'peer-joined' }, async ({ payload }) => {
+        // Another peer joined - create offer if we haven't already connected
+        if (payload.peerId === userId || peerConnections.current.has(payload.peerId)) return;
+
+        console.log('[WebRTC] Peer joined:', payload.peerId, 'Creating offer...');
+        const pc = createPeerConnection(payload.peerId, localStream);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        channel.send({
+          type: 'broadcast',
+          event: 'offer',
+          payload: {
+            offer,
+            targetPeerId: payload.peerId,
+            fromPeerId: userId
+          }
+        });
+      })
       .on('broadcast', { event: 'offer' }, async ({ payload }) => {
         if (payload.targetPeerId !== userId || !localStream) return;
-        
+
+        console.log('[WebRTC] Received offer from:', payload.fromPeerId);
         const pc = createPeerConnection(payload.fromPeerId, localStream);
         await pc.setRemoteDescription(new RTCSessionDescription(payload.offer));
         const answer = await pc.createAnswer();
@@ -269,7 +291,8 @@ export const useWebRTC = (sessionId: string, userId: string, role: 'host' | 'cli
       })
       .on('broadcast', { event: 'answer' }, async ({ payload }) => {
         if (payload.targetPeerId !== userId) return;
-        
+
+        console.log('[WebRTC] Received answer from:', payload.fromPeerId);
         const pc = peerConnections.current.get(payload.fromPeerId);
         if (pc) {
           await pc.setRemoteDescription(new RTCSessionDescription(payload.answer));
@@ -277,17 +300,33 @@ export const useWebRTC = (sessionId: string, userId: string, role: 'host' | 'cli
       })
       .on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
         if (payload.targetPeerId !== userId) return;
-        
+
         const pc = peerConnections.current.get(payload.fromPeerId);
         if (pc && payload.candidate) {
           await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          // Announce our presence once subscribed
+          console.log('[WebRTC] Announcing presence:', userId);
+          channel.send({
+            type: 'broadcast',
+            event: 'peer-joined',
+            payload: { peerId: userId }
+          });
+        }
+      });
 
     signalingChannel.current = channel;
 
     return () => {
+      // Announce leaving
+      channel.send({
+        type: 'broadcast',
+        event: 'peer-left',
+        payload: { peerId: userId }
+      });
       supabase.removeChannel(channel);
     };
   }, [sessionId, userId, localStream, createPeerConnection]);
