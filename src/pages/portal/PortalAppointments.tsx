@@ -36,9 +36,8 @@ export default function PortalAppointments() {
   useEffect(() => {
     if (clientId && !appointmentsLoading) {
       console.log('[PortalAppointments] Client ID loaded:', clientId);
-      console.log('[PortalAppointments] Current user ID:', portalContext?.user?.id);
-      console.log('[PortalAppointments] Client portal_user_id:', portalContext?.client?.portal_user_id);
-      console.log('[PortalAppointments] Portal enabled:', portalContext?.client?.portal_enabled);
+      console.log('[PortalAppointments] Current user ID (portal_user_id):', portalContext?.account.portalUserId);
+      console.log('[PortalAppointments] Portal enabled:', portalContext?.account.portalEnabled);
       refetch();
     }
   }, [clientId]);

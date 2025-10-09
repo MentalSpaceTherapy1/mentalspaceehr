@@ -8978,6 +8978,18 @@ export type Database = {
           status: string
         }[]
       }
+      check_client_portal_config: {
+        Args: { p_client_id: string }
+        Returns: {
+          appointment_count: number
+          client_id: string
+          client_name: string
+          has_appointments: boolean
+          portal_enabled: boolean
+          portal_user_email: string
+          portal_user_id: string
+        }[]
+      }
       check_excessive_phi_access: {
         Args: { hours?: number; threshold?: number }
         Returns: {
