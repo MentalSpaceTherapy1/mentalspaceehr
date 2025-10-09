@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, Clock, Video, MapPin, User, FileText } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO, parse } from 'date-fns';
 
 interface AppointmentDetailsDialogProps {
   open: boolean;
@@ -13,6 +13,16 @@ interface AppointmentDetailsDialogProps {
 
 export const AppointmentDetailsDialog = ({ open, onOpenChange, appointment }: AppointmentDetailsDialogProps) => {
   if (!appointment) return null;
+
+  const formatTime12Hour = (time?: string) => {
+    if (!time) return '';
+    try {
+      const parsed = parse(time, 'HH:mm:ss', new Date());
+      return format(parsed, 'h:mm a');
+    } catch {
+      return time;
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -60,7 +70,7 @@ export const AppointmentDetailsDialog = ({ open, onOpenChange, appointment }: Ap
                 <span>Date</span>
               </div>
               <p className="text-lg">
-                {format(new Date(appointment.appointment_date), 'EEEE, MMMM d, yyyy')}
+                {format(parseISO(appointment.appointment_date), 'EEEE, MMMM d, yyyy')}
               </p>
             </div>
 
@@ -70,7 +80,7 @@ export const AppointmentDetailsDialog = ({ open, onOpenChange, appointment }: Ap
                 <span>Time</span>
               </div>
               <p className="text-lg">
-                {appointment.start_time} - {appointment.end_time}
+                {formatTime12Hour(appointment.start_time)} - {formatTime12Hour(appointment.end_time)}
               </p>
               <p className="text-sm text-muted-foreground">
                 Duration: {appointment.duration} minutes

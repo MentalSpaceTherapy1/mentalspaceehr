@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, Video, MapPin, Phone, AlertCircle } from 'lucide-react';
-import { format, isPast, isWithinInterval, addMinutes, subMinutes } from 'date-fns';
+import { format, isPast, isWithinInterval, addMinutes, subMinutes, parseISO, parse } from 'date-fns';
 import { AppointmentDetailsDialog } from '@/components/portal/AppointmentDetailsDialog';
 import { RequestAppointmentChangeDialog } from '@/components/portal/RequestAppointmentChangeDialog';
 import { CancelAppointmentDialog } from '@/components/portal/CancelAppointmentDialog';
@@ -45,7 +45,16 @@ export default function PortalAppointments() {
   // Use appointments directly - already filtered by clientId in useAppointments hook
   const clientAppointments = appointments;
 
-  const now = new Date();
+  const formatTime12Hour = (time?: string) => {
+    if (!time) return '';
+    try {
+      const parsed = parse(time, 'HH:mm:ss', new Date());
+      return format(parsed, 'h:mm a');
+    } catch {
+      return time;
+    }
+  };
+
   const upcomingAppointments = clientAppointments
     .filter(apt => apt.status === 'Scheduled' && !isPast(new Date(`${apt.appointment_date}T${apt.end_time}`)))
     .sort((a, b) => new Date(`${a.appointment_date}T${a.start_time}`).getTime() - new Date(`${b.appointment_date}T${b.start_time}`).getTime());
@@ -74,6 +83,7 @@ export default function PortalAppointments() {
       return false;
     }
 
+    const now = new Date(); // Evaluate current time on each check
     const appointmentDateTime = new Date(`${appointment.appointment_date}T${appointment.start_time}`);
     const startTime = subMinutes(appointmentDateTime, 15);
     const endTime = addMinutes(appointmentDateTime, 30);
@@ -159,11 +169,11 @@ export default function PortalAppointments() {
                       <div className="grid gap-2 md:grid-cols-2">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Calendar className="h-4 w-4" />
-                          <span>{format(new Date(appointment.appointment_date), 'EEEE, MMMM d, yyyy')}</span>
+                          <span>{format(parseISO(appointment.appointment_date), 'EEEE, MMMM d, yyyy')}</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Clock className="h-4 w-4" />
-                          <span>{appointment.start_time} - {appointment.end_time}</span>
+                          <span>{formatTime12Hour(appointment.start_time)} - {formatTime12Hour(appointment.end_time)}</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           {appointment.service_location === 'Telehealth' ? (
@@ -224,11 +234,11 @@ export default function PortalAppointments() {
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          <span>{format(new Date(appointment.appointment_date), 'MMM d, yyyy')}</span>
+                          <span>{format(parseISO(appointment.appointment_date), 'MMM d, yyyy')}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          <span>{appointment.start_time}</span>
+                          <span>{formatTime12Hour(appointment.start_time)}</span>
                         </div>
                       </div>
                     </div>
