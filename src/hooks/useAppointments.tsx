@@ -95,6 +95,7 @@ export const useAppointments = (
 
       // Apply filters - explicit clientId takes precedence for portal users
       if (clientId) {
+        console.log('[useAppointments] Filtering by client_id:', clientId);
         query = query.eq('client_id', clientId);
       }
 
@@ -111,11 +112,19 @@ export const useAppointments = (
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching appointments:', error);
+        console.error('[useAppointments] Error fetching appointments:', error);
         throw error;
       }
-      
-      console.log('Appointments fetched:', data?.length || 0);
+
+      console.log('[useAppointments] Appointments fetched:', data?.length || 0, 'appointments');
+      if (data && data.length > 0) {
+        console.log('[useAppointments] Sample appointment:', {
+          id: data[0].id,
+          client_id: data[0].client_id,
+          appointment_date: data[0].appointment_date,
+          status: data[0].status
+        });
+      }
       setAppointments(data || []);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch appointments'));

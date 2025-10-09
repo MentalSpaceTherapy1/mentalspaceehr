@@ -25,7 +25,7 @@ export default function PortalAppointments() {
     undefined,
     clientId
   );
-  
+
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [requestChangeOpen, setRequestChangeOpen] = useState(false);
@@ -35,14 +35,16 @@ export default function PortalAppointments() {
   // Refetch when client ID becomes available
   useEffect(() => {
     if (clientId && !appointmentsLoading) {
-      console.log('Portal client ID loaded, fetching appointments:', clientId);
+      console.log('[PortalAppointments] Client ID loaded:', clientId);
+      console.log('[PortalAppointments] Current user ID:', portalContext?.user?.id);
+      console.log('[PortalAppointments] Client portal_user_id:', portalContext?.client?.portal_user_id);
+      console.log('[PortalAppointments] Portal enabled:', portalContext?.client?.portal_enabled);
       refetch();
     }
   }, [clientId]);
 
-  const clientAppointments = clientId 
-    ? appointments.filter(apt => apt.client_id === clientId)
-    : [];
+  // Use appointments directly - already filtered by clientId in useAppointments hook
+  const clientAppointments = appointments;
 
   const now = new Date();
   const upcomingAppointments = clientAppointments
