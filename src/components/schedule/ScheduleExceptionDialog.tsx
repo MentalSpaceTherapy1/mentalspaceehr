@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useScheduleExceptions, ScheduleException } from '@/hooks/useScheduleExceptions';
 import { Calendar } from 'lucide-react';
+import { TimeSlotPicker } from './TimeSlotPicker';
 
 interface ScheduleExceptionDialogProps {
   open: boolean;
@@ -142,23 +143,17 @@ export function ScheduleExceptionDialog({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start-time">Start Time</Label>
-                <Input
-                  id="start-time"
-                  type="time"
+                <TimeSlotPicker
                   value={formData.startTime || ''}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, startTime: e.target.value }))}
-                  required={!formData.allDay}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, startTime: value }))}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="end-time">End Time</Label>
-                <Input
-                  id="end-time"
-                  type="time"
+                <TimeSlotPicker
                   value={formData.endTime || ''}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, endTime: e.target.value }))}
-                  required={!formData.allDay}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, endTime: value }))}
                 />
               </div>
             </div>

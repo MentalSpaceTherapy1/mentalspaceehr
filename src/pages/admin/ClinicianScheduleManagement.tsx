@@ -9,10 +9,11 @@ import { ClinicianScheduleCalendarPreview } from '@/components/schedule/Clinicia
 import { ScheduleExceptionDialog } from '@/components/schedule/ScheduleExceptionDialog';
 import { useClinicianSchedule } from '@/hooks/useClinicianSchedule';
 import { useScheduleExceptions } from '@/hooks/useScheduleExceptions';
+import { useScheduleExceptionNotifications } from '@/hooks/useScheduleExceptionNotifications';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar, Clock, Plus, CheckCircle, XCircle, AlertCircle, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 
 interface Clinician {
   id: string;
@@ -29,6 +30,17 @@ export default function ClinicianScheduleManagement() {
 
   const { schedule, loading: scheduleLoading, saveSchedule, refreshSchedule } = useClinicianSchedule(selectedClinician);
   const { exceptions, approveException, denyException, deleteException, refreshExceptions } = useScheduleExceptions(selectedClinician);
+  const { pendingCount } = useScheduleExceptionNotifications();
+
+  const formatTime12Hour = (time?: string) => {
+    if (!time) return '';
+    try {
+      const parsed = parse(time, 'HH:mm:ss', new Date());
+      return format(parsed, 'h:mm a');
+    } catch {
+      return time;
+    }
+  };
 
   useEffect(() => {
     fetchClinicians();
@@ -119,9 +131,14 @@ export default function ClinicianScheduleManagement() {
                 <Eye className="h-4 w-4 mr-2" />
                 Calendar Preview
               </TabsTrigger>
-              <TabsTrigger value="exceptions">
+              <TabsTrigger value="exceptions" className="relative">
                 <Clock className="h-4 w-4 mr-2" />
                 Time Off & Exceptions
+                {pendingCount > 0 && (
+                  <Badge className="ml-2 bg-destructive text-destructive-foreground" variant="destructive">
+                    {pendingCount}
+                  </Badge>
+                )}
               </TabsTrigger>
             </TabsList>
 
@@ -186,7 +203,7 @@ export default function ClinicianScheduleManagement() {
                               {format(new Date(exception.endDate), 'MMM d, yyyy')}
                               {!exception.allDay && exception.startTime && exception.endTime && (
                                 <span className="ml-2">
-                                  ({exception.startTime} - {exception.endTime})
+                                  ({formatTime12Hour(exception.startTime)} - {formatTime12Hour(exception.endTime)})
                                 </span>
                               )}
                             </p>

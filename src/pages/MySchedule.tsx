@@ -11,12 +11,23 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScheduleExceptionDialog } from '@/components/schedule/ScheduleExceptionDialog';
 import { useState } from 'react';
+import { format, parse } from 'date-fns';
 
 export default function MySchedule() {
   const { user } = useAuth();
   const { schedule, loading, saveSchedule, refreshSchedule } = useClinicianSchedule(user?.id);
-  const { exceptions } = useScheduleExceptions(user?.id);
+  const { exceptions, refreshExceptions } = useScheduleExceptions(user?.id);
   const [exceptionDialogOpen, setExceptionDialogOpen] = useState(false);
+
+  const formatTime12Hour = (time?: string) => {
+    if (!time) return '';
+    try {
+      const parsed = parse(time, 'HH:mm:ss', new Date());
+      return format(parsed, 'h:mm a');
+    } catch {
+      return time;
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className?: string }> = {
@@ -123,7 +134,7 @@ export default function MySchedule() {
                           <p className="text-sm text-muted-foreground">
                             {new Date(exception.startDate).toLocaleDateString()} 
                             {exception.endDate && ` - ${new Date(exception.endDate).toLocaleDateString()}`}
-                            {!exception.allDay && ` • ${exception.startTime} - ${exception.endTime}`}
+                            {!exception.allDay && ` • ${formatTime12Hour(exception.startTime)} - ${formatTime12Hour(exception.endTime)}`}
                           </p>
                           {exception.notes && (
                             <p className="text-sm text-muted-foreground italic">{exception.notes}</p>
@@ -144,6 +155,7 @@ export default function MySchedule() {
           clinicianId={user?.id || ''}
           onSuccess={async () => {
             await refreshSchedule();
+            await refreshExceptions();
             setExceptionDialogOpen(false);
           }}
         />
