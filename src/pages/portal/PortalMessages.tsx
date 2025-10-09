@@ -38,21 +38,23 @@ export default function PortalMessages() {
     setComposeOpen(true);
   };
 
-      <>
-        <div className="space-y-6">
-          <Skeleton className="h-12 w-64" />
-          <div className="grid gap-4 md:grid-cols-3">
-            {[1, 2, 3].map(i => (
-              <Skeleton key={i} className="h-32" />
-            ))}
-          </div>
-          <Skeleton className="h-96" />
-        </div>
-      </>
-
-    <>
+  if (loading) {
+    return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <Skeleton className="h-12 w-64" />
+        <div className="grid gap-4 md:grid-cols-3">
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Messages</h1>
             <p className="text-muted-foreground">Secure messaging with your care team</p>
@@ -280,9 +282,8 @@ export default function PortalMessages() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
 
-      <ComposeMessageDialog 
+      <ComposeMessageDialog
         open={composeOpen} 
         onOpenChange={(open) => {
           setComposeOpen(open);
@@ -290,5 +291,6 @@ export default function PortalMessages() {
         }}
         replyTo={replyTo}
       />
-    </>
+    </div>
+  );
 }

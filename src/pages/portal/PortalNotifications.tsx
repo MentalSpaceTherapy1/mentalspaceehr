@@ -61,23 +61,25 @@ export default function PortalNotifications() {
   const filteredNotifications = filterNotifications();
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-      <>
-        <div className="space-y-6">
-          <h1 className="text-3xl font-bold">Notifications</h1>
-          <div className="space-y-3">
-            {[1, 2, 3, 4].map(i => (
-              <Card key={i}>
-                <CardContent className="p-6">
-                  <div className="h-16 bg-muted rounded animate-pulse" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </>
-
-    <>
+  if (loading) {
+    return (
       <div className="space-y-6">
+        <h1 className="text-3xl font-bold">Notifications</h1>
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map(i => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="h-16 bg-muted rounded animate-pulse" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Notifications</h1>
@@ -191,5 +193,5 @@ export default function PortalNotifications() {
           </TabsContent>
         </Tabs>
       </div>
-    </>
+  );
 }

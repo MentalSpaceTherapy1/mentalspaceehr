@@ -78,24 +78,26 @@ export default function PortalProgress() {
     }
   };
 
-      <>
-        <div className="space-y-6">
-          <Skeleton className="h-12 w-64" />
-          <div className="grid gap-4 md:grid-cols-3">
-            {[1, 2, 3].map(i => (
-              <Skeleton key={i} className="h-32" />
-            ))}
-          </div>
-          <Skeleton className="h-96" />
-        </div>
-      </>
-
-    <>
+  if (loading) {
+    return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Progress Tracking</h1>
-          <p className="text-muted-foreground">Track your symptoms, mood, and treatment progress</p>
+        <Skeleton className="h-12 w-64" />
+        <div className="grid gap-4 md:grid-cols-3">
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} className="h-32" />
+          ))}
         </div>
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Progress Tracking</h1>
+        <p className="text-muted-foreground">Track your symptoms, mood, and treatment progress</p>
+      </div>
 
         {/* Summary Cards */}
         <div className="grid gap-4 md:grid-cols-3">
@@ -327,24 +329,24 @@ export default function PortalProgress() {
             )}
           </TabsContent>
         </Tabs>
+        
+        {/* Dialogs */}
+        {selectedTracker && (
+          <>
+            <AddTrackerEntryDialog
+              open={addEntryDialogOpen}
+              onOpenChange={setAddEntryDialogOpen}
+              tracker={selectedTracker}
+              onSubmit={handleSubmitEntry}
+            />
+            
+            <TrackerDetailsDialog
+              open={detailsDialogOpen}
+              onOpenChange={setDetailsDialogOpen}
+              tracker={selectedTracker}
+            />
+          </>
+        )}
       </div>
-      
-      {/* Dialogs */}
-      {selectedTracker && (
-        <>
-          <AddTrackerEntryDialog
-            open={addEntryDialogOpen}
-            onOpenChange={setAddEntryDialogOpen}
-            tracker={selectedTracker}
-            onSubmit={handleSubmitEntry}
-          />
-          
-          <TrackerDetailsDialog
-            open={detailsDialogOpen}
-            onOpenChange={setDetailsDialogOpen}
-            tracker={selectedTracker}
-          />
-        </>
-      )}
-    </>
+  );
 }

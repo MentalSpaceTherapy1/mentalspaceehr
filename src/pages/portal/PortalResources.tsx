@@ -79,19 +79,21 @@ export default function PortalResources() {
   const filteredRecommended = filterResources(recommendedResources);
   const filteredAll = filterResources(resources);
 
-      <>
-        <div className="space-y-6">
-          <Skeleton className="h-10 w-64" />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} className="h-64" />
-            ))}
-          </div>
-        </div>
-      </>
-
-    <>
+  if (loading) {
+    return (
       <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-64" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold">Educational Resources</h1>
@@ -176,5 +178,5 @@ export default function PortalResources() {
           )}
         </div>
       </div>
-    </>
+  );
 }
