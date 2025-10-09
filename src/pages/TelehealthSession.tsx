@@ -36,6 +36,7 @@ export default function TelehealthSession() {
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isHost, setIsHost] = useState(false);
+  const [normalizedSessionId, setNormalizedSessionId] = useState<string>('');
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [mediaReady, setMediaReady] = useState(false);
   const [showConsentDialog, setShowConsentDialog] = useState(false);
@@ -75,7 +76,7 @@ export default function TelehealthSession() {
     toggleVideo,
     startScreenShare,
     stopScreenShare
-  } = useWebRTC(sessionId || '', user?.id || '', isHost ? 'host' : 'client');
+  } = useWebRTC(normalizedSessionId, user?.id || '', isHost ? 'host' : 'client');
 
   const {
     isRecording,
@@ -255,6 +256,10 @@ export default function TelehealthSession() {
       setSession(sessionData);
       const isUserHost = !isPortalClient && sessionData.host_id === user?.id;
       setIsHost(isUserHost);
+      
+      // Set the normalized session ID for WebRTC connection
+      setNormalizedSessionId(sessionData.session_id);
+      console.log('WebRTC will connect to room:', sessionData.session_id);
 
       // Fetch user profile based on whether they're a portal client or staff
       let profileData;
