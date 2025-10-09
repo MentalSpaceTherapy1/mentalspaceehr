@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PortalLayout } from '@/components/portal/PortalLayout';
+
 import { usePortalProgress, ProgressTracker } from '@/hooks/usePortalProgress';
 import { usePortalAccount } from '@/hooks/usePortalAccount';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -78,9 +78,7 @@ export default function PortalProgress() {
     }
   };
 
-  if (loading) {
-    return (
-      <PortalLayout>
+      <>
         <div className="space-y-6">
           <Skeleton className="h-12 w-64" />
           <div className="grid gap-4 md:grid-cols-3">
@@ -90,12 +88,9 @@ export default function PortalProgress() {
           </div>
           <Skeleton className="h-96" />
         </div>
-      </PortalLayout>
-    );
-  }
+      </>
 
-  return (
-    <PortalLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Progress Tracking</h1>
@@ -351,6 +346,5 @@ export default function PortalProgress() {
           />
         </>
       )}
-    </PortalLayout>
-  );
+    </>
 }

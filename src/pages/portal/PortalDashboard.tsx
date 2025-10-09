@@ -44,102 +44,91 @@ export default function PortalDashboard() {
   }, [user, contextLoading, portalContext?.client?.id]);
 
   const fetchDashboardData = async () => {
-    if (!user) return;
+    const clientId = portalContext?.client?.id;
+    if (!user || !clientId) return;
 
     try {
       setLoading(true);
-      
-      // Get client record
-      const { data: client, error: clientError } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('portal_user_id', user.id)
-        .maybeSingle();
+      const today = new Date().toISOString().split('T')[0];
 
-      if (clientError) {
-        console.error('Error fetching client:', clientError);
-        toast.error('Failed to load client information');
-        return;
-      }
-
-      if (!client) {
-        console.error('No client found for portal user:', user.id);
-        toast.error('Client record not found');
-        return;
-      }
-
-      console.log('Fetching appointments for client:', client.id);
-
-      // Fetch upcoming appointments with explicit client_id filter
-      const { data: appointments, error: appointmentsError } = await supabase
+      // Prepare parallel requests
+      const nextApptPromise = supabase
         .from('appointments')
         .select('id, appointment_date, start_time, appointment_type, clinician_id')
-        .eq('client_id', client.id)
+        .eq('client_id', clientId)
         .eq('status', 'Scheduled')
-        .gte('appointment_date', new Date().toISOString().split('T')[0])
+        .gte('appointment_date', today)
         .order('appointment_date', { ascending: true })
         .order('start_time', { ascending: true })
         .limit(1);
 
-      if (appointmentsError) {
-        console.error('Error fetching appointments:', appointmentsError);
-        toast.error('Failed to load appointments');
-      }
-
-      console.log('Appointments fetched:', appointments);
-
-      if (appointments && appointments.length > 0) {
-        const appt = appointments[0];
-        setNextAppointment({
-          id: appt.id,
-          appointment_date: appt.appointment_date,
-          start_time: appt.start_time,
-          appointment_type: appt.appointment_type,
-          clinician_name: 'Your clinician'
-        });
-      }
-
-      // Count unread messages
-      const { count: messagesCount } = await supabase
+      const unreadMessagesPromise = supabase
         .from('client_portal_messages')
         .select('*', { count: 'exact', head: true })
-        .eq('client_id', client.id)
+        .eq('client_id', clientId)
         .eq('is_read', false)
-        .neq('sender_id', user?.id);
+        .neq('sender_id', user.id);
 
-      // Count pending documents
-      const { count: documentsCount } = await supabase
+      const pendingDocsPromise = supabase
         .from('client_documents')
         .select('*', { count: 'exact', head: true })
-        .eq('client_id', client.id)
+        .eq('client_id', clientId)
         .eq('status', 'pending')
         .eq('requires_signature', true);
 
-      // Count unread notifications
-      const { count: notificationsCount } = await supabase
+      const unreadNotificationsPromise = supabase
         .from('portal_notifications')
         .select('*', { count: 'exact', head: true })
-        .eq('client_id', client.id)
+        .eq('client_id', clientId)
         .eq('is_read', false);
 
-      // Count all upcoming appointments
-      const { count: appointmentsCount } = await supabase
+      const upcomingCountPromise = supabase
         .from('appointments')
         .select('*', { count: 'exact', head: true })
-        .eq('client_id', client.id)
+        .eq('client_id', clientId)
         .eq('status', 'Scheduled')
-        .gte('appointment_date', new Date().toISOString().split('T')[0]);
+        .gte('appointment_date', today);
+
+      const results = await Promise.allSettled([
+        nextApptPromise,
+        unreadMessagesPromise,
+        pendingDocsPromise,
+        unreadNotificationsPromise,
+        upcomingCountPromise,
+      ]);
+
+      const [nextApptRes, msgRes, docsRes, notiRes, apptCountRes] = results as const;
+
+      if (nextApptRes.status === 'fulfilled') {
+        const { data: appointments } = nextApptRes.value as any;
+        if (appointments && appointments.length > 0) {
+          const appt = appointments[0];
+          setNextAppointment({
+            id: appt.id,
+            appointment_date: appt.appointment_date,
+            start_time: appt.start_time,
+            appointment_type: appt.appointment_type,
+            clinician_name: 'Your clinician',
+          });
+        } else {
+          setNextAppointment(null);
+        }
+      } else {
+        console.error('Failed to fetch next appointment:', nextApptRes.reason);
+        setNextAppointment(null);
+      }
+
+      const safeCount = (res: PromiseSettledResult<any>) =>
+        res.status === 'fulfilled' ? (res.value?.count || 0) : 0;
 
       setStats({
-        upcomingAppointments: appointmentsCount || 0,
-        unreadMessages: messagesCount || 0,
-        pendingDocuments: documentsCount || 0,
-        unreadNotifications: notificationsCount || 0
+        upcomingAppointments: safeCount(apptCountRes),
+        unreadMessages: safeCount(msgRes),
+        pendingDocuments: safeCount(docsRes),
+        unreadNotifications: safeCount(notiRes),
       });
-
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }

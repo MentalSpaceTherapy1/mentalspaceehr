@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PortalLayout } from '@/components/portal/PortalLayout';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PersonalInformationSection } from '@/components/portal/profile/PersonalInformationSection';
 import { InsuranceSection } from '@/components/portal/profile/InsuranceSection';
@@ -53,28 +53,15 @@ export default function PortalProfile() {
     loadInsuranceData();
   };
 
-  if (loading) {
-    return (
-      <PortalLayout>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      </PortalLayout>
-    );
-  }
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
 
-  if (!portalContext) {
-    return (
-      <PortalLayout>
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Unable to load profile data</p>
-        </div>
-      </PortalLayout>
-    );
-  }
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Unable to load profile data</p>
+      </div>
 
-  return (
-    <PortalLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Profile Settings</h1>
@@ -125,6 +112,5 @@ export default function PortalProfile() {
           </TabsContent>
         </Tabs>
       </div>
-    </PortalLayout>
-  );
+    </>
 }

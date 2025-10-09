@@ -1,4 +1,4 @@
-import { PortalLayout } from '@/components/portal/PortalLayout';
+
 import { usePortalAccount } from '@/hooks/usePortalAccount';
 import { usePortalBilling } from '@/hooks/usePortalBilling';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,8 +39,7 @@ export default function PortalBilling() {
 
   const totalBalance = invoices.reduce((sum, inv) => sum + inv.balanceDue, 0);
 
-  return (
-    <PortalLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Billing & Payments</h1>
@@ -208,6 +207,5 @@ export default function PortalBilling() {
           </TabsContent>
         </Tabs>
       </div>
-    </PortalLayout>
-  );
+    </>
 }

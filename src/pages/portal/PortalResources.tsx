@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PortalLayout } from '@/components/portal/PortalLayout';
+
 import { usePortalAccount } from '@/hooks/usePortalAccount';
 import { usePortalResources } from '@/hooks/usePortalResources';
 import { ResourceCard } from '@/components/portal/ResourceCard';
@@ -79,9 +79,7 @@ export default function PortalResources() {
   const filteredRecommended = filterResources(recommendedResources);
   const filteredAll = filterResources(resources);
 
-  if (loading) {
-    return (
-      <PortalLayout>
+      <>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -90,12 +88,9 @@ export default function PortalResources() {
             ))}
           </div>
         </div>
-      </PortalLayout>
-    );
-  }
+      </>
 
-  return (
-    <PortalLayout>
+    <>
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -181,6 +176,5 @@ export default function PortalResources() {
           )}
         </div>
       </div>
-    </PortalLayout>
-  );
+    </>
 }

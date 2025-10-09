@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PortalLayout } from '@/components/portal/PortalLayout';
+
 import { usePortalNotifications } from '@/hooks/usePortalNotifications';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -61,9 +61,7 @@ export default function PortalNotifications() {
   const filteredNotifications = filterNotifications();
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  if (loading) {
-    return (
-      <PortalLayout>
+      <>
         <div className="space-y-6">
           <h1 className="text-3xl font-bold">Notifications</h1>
           <div className="space-y-3">
@@ -76,12 +74,9 @@ export default function PortalNotifications() {
             ))}
           </div>
         </div>
-      </PortalLayout>
-    );
-  }
+      </>
 
-  return (
-    <PortalLayout>
+    <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -196,6 +191,5 @@ export default function PortalNotifications() {
           </TabsContent>
         </Tabs>
       </div>
-    </PortalLayout>
-  );
+    </>
 }

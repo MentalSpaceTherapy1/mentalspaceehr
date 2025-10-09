@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PortalLayout } from '@/components/portal/PortalLayout';
+
 import { usePortalMessages } from '@/hooks/usePortalMessages';
 import { usePortalAccount } from '@/hooks/usePortalAccount';
 import { ComposeMessageDialog } from '@/components/portal/ComposeMessageDialog';
@@ -38,9 +38,7 @@ export default function PortalMessages() {
     setComposeOpen(true);
   };
 
-  if (loading) {
-    return (
-      <PortalLayout>
+      <>
         <div className="space-y-6">
           <Skeleton className="h-12 w-64" />
           <div className="grid gap-4 md:grid-cols-3">
@@ -50,12 +48,9 @@ export default function PortalMessages() {
           </div>
           <Skeleton className="h-96" />
         </div>
-      </PortalLayout>
-    );
-  }
+      </>
 
-  return (
-    <PortalLayout>
+    <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -295,6 +290,5 @@ export default function PortalMessages() {
         }}
         replyTo={replyTo}
       />
-    </PortalLayout>
-  );
+    </>
 }
