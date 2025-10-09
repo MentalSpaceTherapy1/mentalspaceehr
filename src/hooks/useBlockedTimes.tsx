@@ -78,6 +78,8 @@ export function useBlockedTimes(clinicianId?: string) {
 
   const createBlockedTime = async (blockedTime: Omit<BlockedTime, 'id' | 'created_date'>) => {
     try {
+      console.log('[createBlockedTime] Creating blocked time:', blockedTime);
+
       // Check if this is a recurring blocked time
       if (blockedTime.is_recurring && blockedTime.recurrence_pattern) {
         return await createRecurringBlockedTimes(blockedTime);
@@ -89,7 +91,12 @@ export function useBlockedTimes(clinicianId?: string) {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[createBlockedTime] Database error:', error);
+        throw error;
+      }
+
+      console.log('[createBlockedTime] Blocked time created successfully:', data);
 
       toast({
         title: 'Success',
@@ -98,9 +105,12 @@ export function useBlockedTimes(clinicianId?: string) {
 
       return data;
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create blocked time';
+      console.error('[createBlockedTime] Error:', err);
+
       toast({
         title: 'Error',
-        description: 'Failed to create blocked time.',
+        description: errorMessage,
         variant: 'destructive'
       });
       throw err;

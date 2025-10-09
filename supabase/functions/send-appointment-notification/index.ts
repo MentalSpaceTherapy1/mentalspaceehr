@@ -382,10 +382,11 @@ serve(async (req) => {
         }
       } else {
         // Client-specific content - add telehealth join link if applicable
-        if (appointment.service_location === "Telehealth" && appointment.telehealth_link) {
+        // ✅ FIX: Only add telehealth link for created/updated, NOT for cancelled appointments
+        if (notificationType !== 'cancelled' && appointment.service_location === "Telehealth" && appointment.telehealth_link) {
           const sessionId = appointment.telehealth_link.split('/').pop();
           const joinLink = `${Deno.env.get('SITE_URL') || 'https://app.chctherapy.com'}/portal/telehealth/session/${sessionId}`;
-          
+
           roleHtmlContent = roleHtmlContent.replace(
             '</div>',
             `<p style="margin-top: 15px;"><a href="${joinLink}" style="display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Join Telehealth Session</a></p></div>`

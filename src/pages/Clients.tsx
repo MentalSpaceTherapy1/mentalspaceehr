@@ -131,18 +131,21 @@ export default function Clients() {
   };
 
   const filteredClients = clients.filter((client) => {
-    const matchesSearch = 
-      client.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.medical_record_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.primary_phone?.includes(searchQuery) ||
-      client.date_of_birth?.includes(searchQuery);
-    
+    // ✅ FIX: Handle null/undefined values properly in search
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = searchQuery === '' || (
+      (client.first_name?.toLowerCase() || '').includes(searchLower) ||
+      (client.last_name?.toLowerCase() || '').includes(searchLower) ||
+      (client.medical_record_number?.toLowerCase() || '').includes(searchLower) ||
+      (client.email?.toLowerCase() || '').includes(searchLower) ||
+      (client.primary_phone || '').includes(searchQuery) ||
+      (client.date_of_birth || '').includes(searchQuery)
+    );
+
     const matchesStatus = filters.status === 'all' || client.status === filters.status;
     const matchesTherapist = filters.therapist === 'all' || client.primary_therapist_id === filters.therapist;
-    
-    const matchesDateRange = 
+
+    const matchesDateRange =
       (!filters.dateFrom || client.registration_date >= filters.dateFrom) &&
       (!filters.dateTo || client.registration_date <= filters.dateTo);
 

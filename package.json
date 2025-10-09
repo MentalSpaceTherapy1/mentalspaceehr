@@ -7,8 +7,15 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:production": "vite build --mode production",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "lint:fix": "eslint . --fix",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "audit:security": "npm audit",
+    "audit:console": "node scripts/cleanup-console-logs.js",
+    "pre-deploy": "npm run type-check && npm run lint && npm run audit:security",
+    "prepare": "node -e \"try { require('husky').install() } catch (e) {}\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

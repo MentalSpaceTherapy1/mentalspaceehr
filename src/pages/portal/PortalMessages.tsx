@@ -38,6 +38,8 @@ export default function PortalMessages() {
     setComposeOpen(true);
   };
 
+  if (loading) {
+    return (
       <>
         <div className="space-y-6">
           <Skeleton className="h-12 w-64" />
@@ -49,7 +51,10 @@ export default function PortalMessages() {
           <Skeleton className="h-96" />
         </div>
       </>
+    );
+  }
 
+  return (
     <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -282,8 +287,8 @@ export default function PortalMessages() {
         </Tabs>
       </div>
 
-      <ComposeMessageDialog 
-        open={composeOpen} 
+      <ComposeMessageDialog
+        open={composeOpen}
         onOpenChange={(open) => {
           setComposeOpen(open);
           if (!open) setReplyTo(null);
@@ -291,4 +296,5 @@ export default function PortalMessages() {
         replyTo={replyTo}
       />
     </>
+  );
 }

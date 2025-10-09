@@ -549,30 +549,66 @@ export const useAppointments = (
   };
 
   const cancelAppointment = async (id: string, reason: string, notes?: string, applyFee?: boolean) => {
-    const result = await updateAppointment(id, {
-      status: 'Cancelled',
-      cancellation_reason: reason,
-      cancellation_notes: notes,
-      cancellation_fee_applied: applyFee || false,
-      cancellation_date: new Date().toISOString(),
-      cancelled_by: user?.id,
-      status_updated_date: new Date().toISOString(),
-      status_updated_by: user?.id
-    });
-
-    // Send notification for cancelled appointment
     try {
-      await supabase.functions.invoke('send-appointment-notification', {
+      // ✅ FIX: Set status to "No Show" if reason is "Client No Show", otherwise "Cancelled"
+      const status = reason === 'Client No Show' ? 'No Show' : 'Cancelled';
+
+      console.log('[cancelAppointment] Cancelling appointment:', { id, reason, status });
+
+      // Direct database update instead of using updateAppointment to avoid the notification call
+      const { data, error } = await supabase
+        .from('appointments')
+        .update({
+          status,
+          cancellation_reason: reason,
+          cancellation_notes: notes,
+          cancellation_fee_applied: applyFee || false,
+          cancellation_date: new Date().toISOString(),
+          cancelled_by: user?.id,
+          status_updated_date: new Date().toISOString(),
+          status_updated_by: user?.id,
+          last_modified: new Date().toISOString(),
+          last_modified_by: user?.id
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[cancelAppointment] Database error:', error);
+        throw error;
+      }
+
+      console.log('[cancelAppointment] Appointment cancelled successfully:', data);
+
+      toast({
+        title: "Success",
+        description: `Appointment ${status === 'No Show' ? 'marked as No Show' : 'cancelled'} successfully`
+      });
+
+      // Send notification for cancelled appointment (non-blocking - errors won't fail the cancellation)
+      supabase.functions.invoke('send-appointment-notification', {
         body: {
           appointmentId: id,
           notificationType: 'cancelled'
         }
+      }).then(() => {
+        console.log('[cancelAppointment] Notification sent successfully');
+      }).catch((notifError) => {
+        console.warn('[cancelAppointment] Failed to send notification (non-critical):', notifError);
       });
-    } catch (notifError) {
-      console.error('Failed to send appointment notification:', notifError);
-    }
 
-    return result;
+      return data;
+    } catch (error) {
+      console.error('[cancelAppointment] Error cancelling appointment:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to cancel appointment';
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      throw error;
+    }
   };
 
   const cancelRecurringSeries = async (parentId: string, reason: string, notes?: string, applyFee?: boolean) => {

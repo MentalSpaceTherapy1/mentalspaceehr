@@ -61,6 +61,8 @@ export default function PortalNotifications() {
   const filteredNotifications = filterNotifications();
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
+  if (loading) {
+    return (
       <>
         <div className="space-y-6">
           <h1 className="text-3xl font-bold">Notifications</h1>
@@ -75,7 +77,10 @@ export default function PortalNotifications() {
           </div>
         </div>
       </>
+    );
+  }
 
+  return (
     <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -192,4 +197,5 @@ export default function PortalNotifications() {
         </Tabs>
       </div>
     </>
+  );
 }

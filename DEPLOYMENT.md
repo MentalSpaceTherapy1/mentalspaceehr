@@ -2,252 +2,463 @@
 
 ## Pre-Deployment Checklist
 
-### Security Verification
-- [ ] All Supabase credentials have been rotated if `.env` was ever committed to git
-- [ ] `.env` file is listed in `.gitignore` and not tracked by git
-- [ ] All `console.log` statements have been replaced with `logger.ts` in production-critical code
-- [ ] TypeScript strict mode is enabled and all errors resolved
-- [ ] Dependency vulnerabilities have been addressed (`npm audit fix`)
-- [ ] Row Level Security (RLS) policies are enabled on all 66+ database tables
-- [ ] Audit logging is configured and tested
-- [ ] Rate limiting is active for authentication endpoints
-- [ ] MFA is available for users who want to enable it
+### 1. Environment Setup ✅
 
-### Environment Configuration
-- [ ] Production environment variables are configured in Lovable Cloud
-- [ ] Database connection strings are secure
-- [ ] Edge function secrets are properly configured (OPENAI_API_KEY, TWILIO_*, RESEND_API_KEY, etc.)
-- [ ] CORS settings are configured correctly for production domain
-- [ ] Email templates are configured in Resend
-- [ ] Twilio SMS settings are verified
+#### Required Actions:
+- [ ] Copy `.env.example` to `.env` and fill in production values
+- [ ] **CRITICAL**: Rotate Supabase credentials if `.env` was ever committed to git
+- [ ] Set `VITE_ENV=production`
+- [ ] Configure monitoring tools (Sentry, Analytics)
+- [ ] Set up production Supabase project (separate from dev/staging)
 
-### Database Verification
-- [ ] All 81 migrations have been applied successfully
-- [ ] Database indexes are optimized for production load
-- [ ] Backup schedule is configured (daily recommended)
-- [ ] Point-in-time recovery is enabled
-- [ ] Connection pooling is configured appropriately
-
-### Testing
-- [ ] User acceptance testing completed by clinical staff
-- [ ] Security penetration testing performed
-- [ ] Load testing completed for expected user volume
-- [ ] Browser compatibility verified (Chrome, Firefox, Safari, Edge)
-- [ ] Mobile responsiveness tested
-- [ ] Accessibility audit completed (WCAG 2.1 AA)
-
-## Deployment Steps
-
-### 1. Pre-Deployment (T-24 hours)
-
-1. **Notify Users**
-   ```
-   Send notification to all users about upcoming maintenance window
-   Recommended: 30-minute window during lowest usage period
-   ```
-
-2. **Create Database Backup**
-   ```sql
-   -- Lovable Cloud handles automatic backups
-   -- Verify latest backup exists in Supabase dashboard
-   ```
-
-3. **Verify Health Check**
-   ```bash
-   curl https://fpzuxwynuivqdyltpydj.supabase.co/functions/v1/health-check
-   # Should return status: "healthy"
-   ```
-
-### 2. Deployment (T-0)
-
-1. **Enable Maintenance Mode** (optional)
-   - Add a global banner to UI notifying users of deployment
-   - Disable non-critical background jobs
-
-2. **Deploy Application**
-   ```bash
-   # Lovable automatically builds and deploys on git push
-   git push origin main
-   
-   # Monitor build progress in Lovable dashboard
-   ```
-
-3. **Run Post-Deployment Migrations** (if any)
-   ```bash
-   # Migrations run automatically via Supabase
-   # Verify in Supabase dashboard > Database > Migrations
-   ```
-
-4. **Verify Edge Functions**
-   ```bash
-   # All 38 edge functions should be deployed
-   # Check Supabase dashboard > Edge Functions
-   ```
-
-### 3. Post-Deployment Verification (T+15 minutes)
-
-1. **Smoke Tests**
-   - [ ] Can log in with test account
-   - [ ] Can create new client record
-   - [ ] Can schedule appointment
-   - [ ] Can create clinical note
-   - [ ] Can access client documents
-   - [ ] Can send secure message
-   - [ ] Telehealth session can be initiated
-   - [ ] Billing records can be created
-
-2. **Monitor Logs**
-   ```bash
-   # Check for errors in Edge Function logs
-   # Supabase dashboard > Edge Functions > Select function > Logs
-   ```
-
-3. **Check Performance**
-   - Page load times < 3 seconds
-   - API response times < 500ms
-   - Database query performance acceptable
-
-4. **Verify Integrations**
-   - [ ] Email sending (Resend)
-   - [ ] SMS sending (Twilio)
-   - [ ] AI note generation (OpenAI/Gemini)
-   - [ ] Document storage (Supabase Storage)
-
-### 4. Rollback Procedure (If Needed)
-
-If critical issues are discovered:
-
-1. **Immediate Rollback**
-   ```bash
-   # Revert to previous version in Lovable
-   # Settings > Version History > Restore previous version
-   ```
-
-2. **Database Rollback** (if schema changes were made)
-   ```sql
-   -- Contact Lovable Support for database restoration
-   -- Or manually revert specific migrations
-   ```
-
-3. **Notify Users**
-   ```
-   Send notification explaining rollback and estimated resolution time
-   ```
-
-## Post-Deployment Monitoring
-
-### First 24 Hours
-- Monitor error rates every hour
-- Check user login success rate
-- Verify background jobs are running
-- Monitor database performance
-- Check for security incidents
-
-### First Week
-- Daily health check review
-- Monitor user feedback
-- Track performance metrics
-- Review audit logs for anomalies
-- Check storage usage trends
-
-### Ongoing
-- Weekly security scans
-- Monthly dependency updates
-- Quarterly load testing
-- Continuous user feedback collection
-
-## Health Monitoring Endpoints
-
-### Application Health
+#### Environment Variables:
 ```bash
-curl https://fpzuxwynuivqdyltpydj.supabase.co/functions/v1/health-check
+# Production values
+VITE_SUPABASE_URL=https://your-prod-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-prod-anon-key
+VITE_SUPABASE_PROJECT_ID=your-prod-project-id
+VITE_ENV=production
+VITE_APP_URL=https://your-domain.com
 ```
 
-Expected response:
+### 2. Security Configuration ✅
+
+#### Database (Supabase)
+- [ ] Enable Row Level Security on all tables (already done)
+- [ ] Review and test all RLS policies
+- [ ] Set up database backups (daily recommended)
+- [ ] Enable audit logging
+- [ ] Configure connection pooling
+
+#### Application
+- [ ] Enable MFA for all admin users
+- [ ] Configure session timeout (15 minutes default)
+- [ ] Review rate limiting settings
+- [ ] Test breach detection triggers
+- [ ] Verify all Edge Functions are deployed
+
+### 3. HIPAA Compliance ✅
+
+- [ ] Complete risk assessment
+- [ ] Sign Business Associate Agreement (BAA) with Supabase
+- [ ] Document security measures
+- [ ] Train staff on HIPAA policies
+- [ ] Set up incident response team
+- [ ] Configure audit log retention (6 years minimum)
+
+### 4. Code Quality ⚠️
+
+- [ ] Fix TypeScript errors (enable strict mode gradually)
+- [ ] Replace remaining console.logs with logger utility
+- [ ] Run `npm audit` and resolve vulnerabilities
+- [ ] Test all critical user flows
+- [ ] Perform accessibility audit
+
+---
+
+## Deployment Methods
+
+### Option 1: Lovable Cloud (Recommended)
+
+**Pros:**
+- One-click deployment
+- Automatic SSL certificates
+- CDN hosting
+- Environment variable management
+- Zero DevOps overhead
+
+**Steps:**
+1. Open your project in [Lovable](https://lovable.dev)
+2. Click "Share" → "Publish"
+3. Configure custom domain (optional)
+4. Set production environment variables in Lovable UI
+5. Deploy
+
+**Post-Deployment:**
+- Monitor application at: `https://your-project.lovable.app`
+- Check health endpoint: `/health-check`
+- Review Supabase logs
+
+### Option 2: Vercel
+
+**Steps:**
+1. Install Vercel CLI: `npm i -g vercel`
+2. Connect repository: `vercel link`
+3. Configure environment variables:
+   ```bash
+   vercel env add VITE_SUPABASE_URL production
+   vercel env add VITE_SUPABASE_PUBLISHABLE_KEY production
+   ```
+4. Deploy: `vercel --prod`
+
+**Configuration:**
+Create `vercel.json`:
 ```json
 {
-  "timestamp": "2025-01-15T10:30:00Z",
-  "status": "healthy",
-  "checks": {
-    "database": { "status": "healthy", "message": "Connected" },
-    "auth": { "status": "healthy", "message": "Connected" },
-    "storage": { "status": "healthy", "message": "6 buckets available" }
-  }
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
+
+### Option 3: Netlify
+
+**Steps:**
+1. Install Netlify CLI: `npm i -g netlify-cli`
+2. Login: `netlify login`
+3. Initialize: `netlify init`
+4. Set environment variables in Netlify UI
+5. Deploy: `netlify deploy --prod`
+
+**Configuration:**
+Create `netlify.toml`:
+```toml
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+```
+
+---
+
+## Database Migration
+
+### Production Database Setup
+
+1. **Create Production Supabase Project**
+   - Go to [Supabase Dashboard](https://app.supabase.com)
+   - Create new project (select closest region to users)
+   - Note the connection details
+
+2. **Run Migrations**
+   ```bash
+   # Install Supabase CLI
+   npm install -g supabase
+
+   # Link to production project
+   supabase link --project-ref your-prod-project-id
+
+   # Push all migrations
+   supabase db push
+   ```
+
+3. **Verify Schema**
+   ```bash
+   # Check all tables exist
+   supabase db inspect
+
+   # Test RLS policies
+   # (Run test queries from Supabase SQL editor)
+   ```
+
+4. **Seed Initial Data** (if needed)
+   ```sql
+   -- Create initial admin user
+   -- Set up default practice settings
+   -- Add service codes, etc.
+   ```
+
+---
+
+## Post-Deployment Verification
+
+### Automated Health Checks
+
+1. **Application Health**
+   - Visit: `https://your-domain.com/health-check`
+   - Should return `200 OK` with all checks passing
+
+2. **Database Connectivity**
+   ```bash
+   curl https://your-domain.com/health-check
+   # Should return JSON with status: "healthy"
+   ```
+
+### Manual Testing Checklist
+
+- [ ] **Authentication**
+  - Sign up new user
+  - Sign in with existing user
+  - Test MFA flow
+  - Test password reset
+
+- [ ] **Core Workflows**
+  - Create new client
+  - Schedule appointment
+  - Write clinical note
+  - Submit billing charge
+
+- [ ] **Security Features**
+  - Verify session timeout (15 min)
+  - Test rate limiting (password reset)
+  - Check audit logs are recording
+  - Verify RLS policies (try unauthorized access)
+
+- [ ] **Performance**
+  - Page load times < 3 seconds
+  - Database queries < 500ms
+  - No console errors
+  - Mobile responsiveness
+
+---
+
+## Monitoring & Alerts
+
+### Application Monitoring (Optional but Recommended)
+
+**Sentry Setup:**
+```bash
+npm install @sentry/react
+```
+
+Add to `.env.production`:
+```bash
+VITE_SENTRY_DSN=your-sentry-dsn
+```
+
+Initialize in `src/main.tsx`:
+```typescript
+import * as Sentry from "@sentry/react";
+
+if (import.meta.env.PROD) {
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    environment: "production",
+    tracesSampleRate: 0.1,
+  });
 }
 ```
 
 ### Database Monitoring
-- Connection count: Should be < 80% of max
-- Query performance: 95th percentile < 500ms
-- Storage usage: Monitor growth rate
 
-## Emergency Contacts
-
-### Lovable Support
-- Email: support@lovable.dev
-- Dashboard: https://lovable.app
-
-### Supabase Support
-- Dashboard: (Access via Lovable Cloud)
-- Status page: status.supabase.com
-
-## Compliance Notes
-
-### HIPAA Requirements
-- All PHI access is logged in `audit_logs` table
-- Encryption at rest and in transit is handled by Supabase (TLS 1.2+)
-- Row Level Security enforces need-to-know access
-- Breach detection system monitors for suspicious activity
-- Business Associate Agreement with Supabase is required
-
-### Data Retention
-- Clinical records: 7 years minimum (per state requirements)
-- Audit logs: 6 years minimum
-- Session recordings: 90 days (configurable)
-- Deleted data: 30-day soft delete before permanent removal
-
-## Performance Baselines
-
-### Target Metrics
-- Page Load Time: < 3 seconds (95th percentile)
-- Time to Interactive: < 5 seconds
-- API Response Time: < 500ms (95th percentile)
-- Database Query Time: < 200ms (95th percentile)
-- Uptime: 99.9% (excluding scheduled maintenance)
-
-### Resource Usage
-- Database connections: < 50 concurrent
-- Storage growth: ~10-50 MB per client over time
-- Edge function invocations: ~100-500 per hour per user
-
-## Troubleshooting Common Issues
-
-### Users Can't Log In
-1. Check Supabase Auth status
-2. Verify email confirmation settings
-3. Check for account lockouts in `login_attempts` table
-4. Review rate limiting logs
-
-### Slow Performance
-1. Check database connection pool
-2. Review slow query logs
-3. Verify CDN is serving static assets
-4. Check Edge Function cold starts
-
-### Missing Data
-1. Check RLS policies for user role
-2. Verify database migrations completed
-3. Review audit logs for deletions
-4. Check for soft-deleted records
-
-### Email/SMS Not Sending
-1. Verify Resend/Twilio API keys
-2. Check Edge Function logs for errors
-3. Verify rate limits not exceeded
-4. Check email/phone validation
+- **Supabase Dashboard**: Monitor query performance
+- **Alerts**: Set up email alerts for:
+  - High error rates
+  - Slow queries (> 1s)
+  - High connection usage
+  - Failed backups
 
 ---
 
-**Last Updated:** 2025-01-15  
-**Version:** 1.0  
-**Maintained By:** MentalSpace Development Team
+## Backup & Recovery
+
+### Automated Backups
+
+Supabase provides automatic daily backups (Pro plan required).
+
+**Manual Backup:**
+```bash
+# Export database
+supabase db dump -f backup-$(date +%Y%m%d).sql
+
+# Export storage (if needed)
+# Use Supabase Dashboard → Storage → Download
+```
+
+### Recovery Procedures
+
+1. **Database Restore**
+   ```bash
+   supabase db reset
+   psql -h db.your-project.supabase.co -U postgres < backup.sql
+   ```
+
+2. **Application Rollback**
+   - Lovable: Use "Rollback" feature
+   - Vercel: `vercel rollback`
+   - Netlify: Redeploy previous version
+
+---
+
+## Scaling Considerations
+
+### Performance Optimization
+
+- **Database**:
+  - Enable connection pooling (Supabase Pooler)
+  - Add indexes for slow queries
+  - Use database read replicas (Enterprise)
+
+- **Frontend**:
+  - Enable CDN caching
+  - Lazy load components
+  - Optimize images (WebP format)
+  - Code splitting
+
+### Capacity Planning
+
+**Estimated Limits (Supabase Pro):**
+- Database: 8 GB included, expandable
+- Storage: 100 GB included
+- Bandwidth: 250 GB/month
+- Concurrent connections: 500
+
+**Scaling Triggers:**
+- Database CPU > 80% for 5 minutes
+- API response time > 2 seconds
+- Storage > 80% capacity
+
+---
+
+## Security Hardening
+
+### Post-Launch Checklist
+
+- [ ] Enable Supabase auth rate limiting
+- [ ] Configure CORS to allow only production domain
+- [ ] Enable security headers (CSP, HSTS)
+- [ ] Set up WAF (Web Application Firewall)
+- [ ] Schedule quarterly penetration testing
+- [ ] Review access logs monthly
+- [ ] Update dependencies monthly
+
+### Security Headers
+
+Add to `vite.config.ts`:
+```typescript
+export default defineConfig({
+  server: {
+    headers: {
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'X-XSS-Protection': '1; mode=block',
+      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+    }
+  }
+});
+```
+
+---
+
+## Rollback Procedures
+
+### Emergency Rollback
+
+**If critical bug discovered:**
+
+1. **Immediate Action** (< 5 minutes)
+   ```bash
+   # Lovable
+   Click "Rollback" in Lovable UI
+
+   # Vercel
+   vercel rollback
+
+   # Netlify
+   netlify rollback
+   ```
+
+2. **Communicate** (< 15 minutes)
+   - Notify users via in-app banner
+   - Email administrators
+   - Update status page
+
+3. **Fix & Redeploy** (< 2 hours)
+   - Identify root cause
+   - Fix in development
+   - Test thoroughly
+   - Redeploy
+
+---
+
+## Support & Maintenance
+
+### Regular Maintenance Tasks
+
+**Daily:**
+- Check error logs
+- Monitor uptime (should be > 99.9%)
+- Review security alerts
+
+**Weekly:**
+- Review audit logs for anomalies
+- Check database performance
+- Verify backups are running
+
+**Monthly:**
+- Update dependencies (`npm update`)
+- Review and rotate API keys
+- Security patch review
+- Performance optimization
+
+**Quarterly:**
+- HIPAA compliance audit
+- Disaster recovery drill
+- User feedback review
+- Feature roadmap planning
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**Application Won't Start:**
+- Check environment variables are set
+- Verify Supabase credentials
+- Check browser console for errors
+
+**Database Connection Errors:**
+- Verify Supabase project is active
+- Check IP allowlist settings
+- Confirm RLS policies aren't blocking access
+
+**Slow Performance:**
+- Review database query performance
+- Check for N+1 queries
+- Optimize large data fetches
+- Enable browser caching
+
+### Getting Help
+
+- **Documentation**: [Supabase Docs](https://supabase.com/docs)
+- **Community**: Lovable Discord, Supabase Discord
+- **Support**: support@lovable.dev (for Lovable issues)
+
+---
+
+## Compliance Documentation
+
+### Required for HIPAA Audit
+
+1. **Security Risk Assessment** (annually)
+2. **BAA with Supabase** (signed)
+3. **Breach Notification Procedures** (see `SECURITY_BREACH_RESPONSE.md`)
+4. **Staff Training Records** (HIPAA awareness)
+5. **Access Control Policies** (documented)
+6. **Audit Log Retention** (6 years)
+7. **Disaster Recovery Plan** (tested annually)
+
+---
+
+## Success Criteria
+
+### Production Readiness Checklist ✅
+
+- [x] .gitignore excludes .env
+- [x] Environment variables configured
+- [x] Database migrations applied
+- [x] RLS policies enabled
+- [x] Health check endpoint working
+- [ ] All critical tests passing
+- [ ] Security audit completed
+- [ ] HIPAA compliance verified
+- [ ] Staff trained
+- [ ] Monitoring configured
+- [ ] Backups tested
+- [ ] Rollback procedure tested
+
+**When all items are checked, you're ready for production!** 🚀
+
+---
+
+**Last Updated:** January 2025
+**Document Owner:** DevOps Team
+**Next Review:** Quarterly

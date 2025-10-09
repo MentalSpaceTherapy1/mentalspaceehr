@@ -274,7 +274,7 @@ export default function ClientChart() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
-                  <p className="text-base">{client?.date_of_birth}</p>
+                  <p className="text-base">{client?.date_of_birth && format(new Date(client.date_of_birth), 'MM/dd/yyyy')}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Gender</p>

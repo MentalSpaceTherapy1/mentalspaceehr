@@ -19,6 +19,7 @@ interface CancellationDialogProps {
 
 const CANCELLATION_REASONS = [
   'Client Request',
+  'Client No Show',
   'Provider Cancellation',
   'Emergency',
   'Insurance Issue',

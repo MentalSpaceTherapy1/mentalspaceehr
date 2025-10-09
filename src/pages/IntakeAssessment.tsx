@@ -895,7 +895,7 @@ export default function IntakeAssessment() {
                     ) : (
                       appointments.map((apt) => (
                         <SelectItem key={apt.id} value={apt.id}>
-                          {new Date(apt.appointment_date).toLocaleDateString()} at {apt.start_time} - {apt.appointment_type} ({apt.status})
+                          {new Date(apt.appointment_date).toLocaleDateString('en-US')} at {apt.start_time} - {apt.appointment_type} ({apt.status})
                         </SelectItem>
                       ))
                     )}
@@ -1016,7 +1016,7 @@ export default function IntakeAssessment() {
                   <SelectContent>
                     {availableClients.map((client) => (
                       <SelectItem key={client.id} value={client.id}>
-                        {client.last_name}, {client.first_name} - MRN: {client.medical_record_number} (DOB: {new Date(client.date_of_birth).toLocaleDateString()})
+                        {client.last_name}, {client.first_name} - MRN: {client.medical_record_number} (DOB: {new Date(client.date_of_birth).toLocaleDateString('en-US')})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1050,7 +1050,7 @@ export default function IntakeAssessment() {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Date of Birth</Label>
-                  <p className="font-semibold">{new Date(clientData.date_of_birth).toLocaleDateString()}</p>
+                  <p className="font-semibold">{new Date(clientData.date_of_birth).toLocaleDateString('en-US')}</p>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Age</Label>
@@ -1185,7 +1185,7 @@ export default function IntakeAssessment() {
                     </Badge>
                     {metadata.supervisorCosignDate && (
                       <span className="text-sm text-muted-foreground">
-                        on {new Date(metadata.supervisorCosignDate).toLocaleDateString()} at {new Date(metadata.supervisorCosignDate).toLocaleTimeString()}
+                        on {new Date(metadata.supervisorCosignDate).toLocaleDateString('en-US')} at {new Date(metadata.supervisorCosignDate).toLocaleTimeString('en-US')}
                       </span>
                     )}
                   </div>

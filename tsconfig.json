@@ -6,11 +6,17 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "noImplicitAny": false,
-    "noUnusedParameters": false,
+    // Gradually enable strict mode for production quality
+    "strict": false, // Set to true once codebase is ready
+    "noImplicitAny": true, // ENABLED: Catch implicit any types
+    "strictNullChecks": true, // ENABLED: Prevent null/undefined bugs
+    "noUnusedParameters": true, // ENABLED: Remove dead code
+    "noUnusedLocals": true, // ENABLED: Remove unused variables
     "skipLibCheck": true,
     "allowJs": true,
-    "noUnusedLocals": false,
-    "strictNullChecks": false
+    // Additional production-ready flags
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "forceConsistentCasingInFileNames": true
   }
 }

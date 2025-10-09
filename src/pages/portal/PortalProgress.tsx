@@ -78,6 +78,8 @@ export default function PortalProgress() {
     }
   };
 
+  if (loading) {
+    return (
       <>
         <div className="space-y-6">
           <Skeleton className="h-12 w-64" />
@@ -89,7 +91,10 @@ export default function PortalProgress() {
           <Skeleton className="h-96" />
         </div>
       </>
+    );
+  }
 
+  return (
     <>
       <div className="space-y-6">
         <div>
@@ -347,4 +352,5 @@ export default function PortalProgress() {
         </>
       )}
     </>
+  );
 }

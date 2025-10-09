@@ -281,22 +281,43 @@ This checklist ensures safe, compliant, and zero-downtime deployments of the Men
   - Billing workflow functioning
   - Portal engagement metrics
 
-### 14. Post-Release Review Scheduled
+### 14. Post-Release Review Scheduled (MANDATORY)
 
-- [ ] **72-hour review meeting scheduled**
-  - Date and time set
-  - Participants invited:
+⚠️ **ENFORCEMENT**: Post-release reviews are MANDATORY. See [POST_RELEASE_REVIEW_PROCESS.md](docs/processes/POST_RELEASE_REVIEW_PROCESS.md)
+
+- [ ] **72-hour review automatically scheduled** (T+48h)
+  - Automated calendar invite sent to stakeholders
+  - Review meeting set at exactly T+72h from deployment
+  - Participants auto-invited from `release_stakeholders` table:
     - Release manager
     - Engineering lead
     - Operations manager
     - Product owner
     - QA lead
+    - Database administrator
+    - Security lead
 
-- [ ] **Metrics dashboard prepared for review**
-  - Deployment timeline
-  - Defect count
-  - User feedback summary
-  - Performance comparison
+- [ ] **Metrics collection verified**
+  - 24-hour metrics captured automatically
+  - 48-hour metrics captured automatically
+  - 72-hour metrics will capture before review
+  - Baseline comparison calculated
+
+- [ ] **Review dashboard accessible**
+  - Deployment timeline visible
+  - Defect count and severity breakdown
+  - User feedback summary from support tickets
+  - Performance comparison charts (before/after)
+  - Business metrics comparison
+  - Action from previous reviews tracked
+
+- [ ] **Release record created in database**
+  - Entry exists in `releases` table
+  - `review_status` = 'scheduled'
+  - `review_scheduled_at` set to T+72h
+  - Git commit hash and branch recorded
+
+**Note**: If review not completed by T+96h, status becomes 'overdue' and escalation notifications sent
 
 ---
 
@@ -377,10 +398,24 @@ This checklist ensures safe, compliant, and zero-downtime deployments of the Men
   - Explanation of issue
   - Timeline for fix and redeployment
 
+- [ ] **Rollback recorded in database**
+  - `releases.was_rolled_back` set to TRUE
+  - `releases.rollback_at` timestamp recorded
+  - `releases.rollback_reason` documented
+  - Audit log entry created
+
+- [ ] **Emergency post-rollback review scheduled** (MANDATORY)
+  - Review must occur within 24 hours of rollback
+  - All stakeholders notified immediately
+  - Root cause analysis prepared
+  - Incident timeline documented
+  - Action items assigned for fix and redeployment
+
 - [ ] **Post-mortem scheduled**
-  - Root cause analysis meeting set
+  - Root cause analysis meeting set (within 48h)
   - Incident timeline documented
   - Action items assigned
+  - Lessons learned captured
 
 ---
 

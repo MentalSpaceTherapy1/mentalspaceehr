@@ -221,10 +221,15 @@ export default function Schedule() {
     return [...appointmentEvents, ...blockedEvents];
   }, [appointments, blockedTimes, selectedClinicians]);
 
-  const handleSelectSlot = useCallback(({ start }: { start: Date }) => {
+  const handleSelectSlot = useCallback(({ start, end }: { start: Date; end: Date }) => {
     setDefaultDate(start);
     setDefaultClientId(undefined);
     setSelectedAppointment(null);
+    // Store the selected time slot for pre-filling the dialog
+    (window as any).__selectedTimeSlot = {
+      startTime: format(start, 'HH:mm'),
+      endTime: format(end, 'HH:mm')
+    };
     setDialogOpen(true);
   }, []);
 
@@ -589,6 +594,9 @@ export default function Schedule() {
                 </Badge>
                 <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md">
                   No Show
+                </Badge>
+                <Badge className="bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-md">
+                  Cancelled
                 </Badge>
                 <Badge variant="outline" className="shadow-md flex items-center gap-1 border-gray-400">
                   <div className="w-3 h-3 bg-gray-400 rounded" />

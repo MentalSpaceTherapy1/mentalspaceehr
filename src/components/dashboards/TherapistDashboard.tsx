@@ -20,6 +20,18 @@ import { ComplianceAlerts } from './ComplianceAlerts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
+interface TodaysAppointment {
+  id: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  appointment_type: string;
+  clients: {
+    first_name: string;
+    last_name: string;
+  };
+}
+
 export const TherapistDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -28,8 +40,11 @@ export const TherapistDashboard = () => {
     todaysSessions: 0,
     pendingNotes: 0,
     activeClients: 0,
-    complianceRate: 100
+    complianceRate: 100,
+    treatmentPlansDue: 0,
+    sessionsCompletedThisWeek: 0
   });
+  const [todaysAppointments, setTodaysAppointments] = useState<TodaysAppointment[]>([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -38,16 +53,33 @@ export const TherapistDashboard = () => {
       try {
         setLoading(true);
         const today = new Date().toISOString().split('T')[0];
+        const currentTime = new Date().toTimeString().slice(0, 5); // HH:MM format
 
-        // Fetch today's appointments
+        // ✅ FIX #1: Fetch today's appointments with ALL active statuses and client details
+        // Include: Scheduled, Checked In, In Session (not just Scheduled)
+        // Only show remaining sessions (end_time >= current time)
         const { data: appointments, error: apptError } = await supabase
           .from('appointments')
-          .select('id')
+          .select(`
+            id,
+            start_time,
+            end_time,
+            status,
+            appointment_type,
+            clients!inner (
+              first_name,
+              last_name
+            )
+          `)
           .eq('clinician_id', user.id)
           .eq('appointment_date', today)
-          .eq('status', 'Scheduled');
+          .in('status', ['Scheduled', 'Checked In', 'In Session'])
+          .gte('end_time', currentTime)
+          .order('start_time');
 
         if (apptError) throw apptError;
+
+        setTodaysAppointments(appointments || []);
 
         // Fetch active clients
         const { data: clients, error: clientError } = await supabase
@@ -58,25 +90,63 @@ export const TherapistDashboard = () => {
 
         if (clientError) throw clientError;
 
-        // Fetch pending notes from compliance status
-        const { data: complianceData, error: complianceError } = await supabase
+        // ✅ FIX #2: Fetch UNSIGNED/DRAFT notes from clinical_notes table
+        // These are notes that have been saved but not yet signed (locked = false)
+        const { data: unsignedNotes, error: unsignedError } = await supabase
+          .from('clinical_notes')
+          .select('id')
+          .eq('clinician_id', user.id)
+          .or('locked.is.null,locked.eq.false');
+
+        if (unsignedError) console.error('[TherapistDashboard] Error fetching unsigned notes:', unsignedError);
+
+        // ✅ FIX #3: Fetch ALL notes for accurate compliance calculation
+        const { data: allComplianceData, error: allComplianceError } = await supabase
           .from('note_compliance_status')
           .select('id, status')
+          .eq('clinician_id', user.id);
+
+        if (allComplianceError) throw allComplianceError;
+
+        // ✅ FIX #3: Calculate compliance rate correctly
+        // Compliance = (On Time notes) / (Total notes) * 100
+        const totalNotes = allComplianceData?.length || 0;
+        const onTimeNotes = allComplianceData?.filter(n => n.status === 'On Time')?.length || 0;
+        const complianceRate = totalNotes === 0 ? 100 : Math.round((onTimeNotes / totalNotes) * 100);
+
+        // ✅ FIX #6: Fetch completed sessions this week for productivity metrics
+        const startOfWeek = new Date();
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Sunday
+        const startOfWeekStr = startOfWeek.toISOString().split('T')[0];
+
+        const { data: completedSessions, error: completedError } = await supabase
+          .from('appointments')
+          .select('id')
           .eq('clinician_id', user.id)
-          .in('status', ['Due Soon', 'Overdue', 'Late', 'Locked']);
+          .eq('status', 'Completed')
+          .gte('appointment_date', startOfWeekStr);
 
-        if (complianceError) throw complianceError;
+        if (completedError) console.error('[TherapistDashboard] Error fetching completed sessions:', completedError);
 
-        // Calculate compliance rate
-        const totalNotes = complianceData?.length || 0;
-        const overdueNotes = complianceData?.filter(n => ['Overdue', 'Late', 'Locked'].includes(n.status as string))?.length || 0;
-        const complianceRate = totalNotes === 0 ? 100 : Math.round(((totalNotes - overdueNotes) / totalNotes) * 100);
+        // Fetch treatment plans due for review (if table exists)
+        const { data: treatmentPlans, error: treatmentError } = await supabase
+          .from('treatment_plans')
+          .select('id')
+          .eq('therapist_id', user.id)
+          .lt('next_review_date', today)
+          .eq('status', 'Active');
 
+        // Don't throw error if treatment_plans table doesn't exist
+        const treatmentPlansDue = treatmentPlans?.length || 0;
+
+        // ✅ FIX #2: Use unsigned/draft notes count for "Pending Notes"
         setStats({
           todaysSessions: appointments?.length || 0,
-          pendingNotes: totalNotes,
+          pendingNotes: unsignedNotes?.length || 0, // ✅ FIXED: Use unsigned notes from clinical_notes table
           activeClients: clients?.length || 0,
-          complianceRate
+          complianceRate, // ✅ FIXED: Now calculated correctly
+          treatmentPlansDue, // ✅ NEW: Actual treatment plans due
+          sessionsCompletedThisWeek: completedSessions?.length || 0 // ✅ NEW: Actual completed sessions
         });
       } catch (error) {
         console.error('[TherapistDashboard] Error fetching data:', error);
@@ -165,22 +235,27 @@ export const TherapistDashboard = () => {
               Today's Schedule
             </GradientCardTitle>
             <GradientCardDescription>
-              {new Date().toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
               })}
             </GradientCardDescription>
           </GradientCardHeader>
           <GradientCardContent>
-            <div className="space-y-3">
+            {loading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ) : todaysAppointments.length === 0 ? (
               <div className="flex items-center justify-center p-8 text-center">
                 <div>
                   <Calendar className="h-12 w-12 text-primary/50 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">No appointments scheduled</p>
-                  <Button 
-                    variant="default" 
+                  <Button
+                    variant="default"
                     className="mt-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
                     onClick={() => navigate('/schedule')}
                   >
@@ -188,7 +263,39 @@ export const TherapistDashboard = () => {
                   </Button>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {todaysAppointments.map((apt) => (
+                  <div
+                    key={apt.id}
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/clients/${apt.clients?.first_name}`)}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium text-sm">
+                          {apt.start_time.slice(0, 5)} - {apt.end_time.slice(0, 5)}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium mt-1">
+                        {apt.clients?.last_name}, {apt.clients?.first_name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {apt.appointment_type}
+                      </p>
+                    </div>
+                    <Badge variant={
+                      apt.status === 'Scheduled' ? 'outline' :
+                      apt.status === 'Checked In' ? 'secondary' :
+                      'default'
+                    }>
+                      {apt.status}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
           </GradientCardContent>
         </GradientCard>
 
@@ -203,7 +310,10 @@ export const TherapistDashboard = () => {
           </GradientCardHeader>
           <GradientCardContent>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div
+                className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors cursor-pointer"
+                onClick={() => navigate('/notes?filter=unsigned')}
+              >
                 <div className="flex items-center gap-3">
                   <FileText className="h-4 w-4 text-warning" />
                   <div>
@@ -211,10 +321,15 @@ export const TherapistDashboard = () => {
                     <p className="text-xs text-muted-foreground">Complete documentation</p>
                   </div>
                 </div>
-                <Badge variant="secondary">0</Badge>
+                <Badge variant={stats.pendingNotes > 0 ? "destructive" : "secondary"}>
+                  {stats.pendingNotes}
+                </Badge>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div
+                className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors cursor-pointer"
+                onClick={() => navigate('/treatment-plans?filter=due')}
+              >
                 <div className="flex items-center gap-3">
                   <ClipboardList className="h-4 w-4 text-primary" />
                   <div>
@@ -222,7 +337,9 @@ export const TherapistDashboard = () => {
                     <p className="text-xs text-muted-foreground">Review and update</p>
                   </div>
                 </div>
-                <Badge variant="secondary">0</Badge>
+                <Badge variant={stats.treatmentPlansDue > 0 ? "destructive" : "secondary"}>
+                  {stats.treatmentPlansDue}
+                </Badge>
               </div>
             </div>
           </GradientCardContent>
@@ -287,11 +404,17 @@ export const TherapistDashboard = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Sessions Completed</span>
-                  <span className="font-medium">0</span>
+                  <span className="font-medium">{stats.sessionsCompletedThisWeek}</span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: '0%' }} />
+                  <div
+                    className="h-full bg-primary transition-all duration-500"
+                    style={{
+                      width: `${Math.min((stats.sessionsCompletedThisWeek / 25) * 100, 100)}%`
+                    }}
+                  />
                 </div>
+                <p className="text-xs text-muted-foreground">This week (Target: 25)</p>
               </div>
 
               <Separator />
@@ -299,18 +422,30 @@ export const TherapistDashboard = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Documentation Rate</span>
-                  <span className="font-medium">100%</span>
+                  <span className="font-medium">{stats.complianceRate}%</span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-success" style={{ width: '100%' }} />
+                  <div
+                    className={`h-full transition-all duration-500 ${
+                      stats.complianceRate >= 90 ? 'bg-success' :
+                      stats.complianceRate >= 70 ? 'bg-warning' :
+                      'bg-destructive'
+                    }`}
+                    style={{ width: `${stats.complianceRate}%` }}
+                  />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.complianceRate >= 90 ? 'Excellent!' :
+                   stats.complianceRate >= 70 ? 'Good - room for improvement' :
+                   'Needs attention'}
+                </p>
               </div>
 
               <Separator />
 
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Average Response Time</span>
-                <span className="font-medium">N/A</span>
+                <span className="text-muted-foreground">Active Caseload</span>
+                <span className="font-medium">{stats.activeClients} clients</span>
               </div>
             </div>
           </GradientCardContent>

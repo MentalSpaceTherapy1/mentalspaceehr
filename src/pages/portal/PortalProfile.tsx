@@ -53,14 +53,23 @@ export default function PortalProfile() {
     loadInsuranceData();
   };
 
+  if (loading) {
+    return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
+    );
+  }
 
+  if (error) {
+    return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">Unable to load profile data</p>
       </div>
+    );
+  }
 
+  return (
     <>
       <div className="space-y-6">
         <div>
@@ -113,4 +122,5 @@ export default function PortalProfile() {
         </Tabs>
       </div>
     </>
+  );
 }

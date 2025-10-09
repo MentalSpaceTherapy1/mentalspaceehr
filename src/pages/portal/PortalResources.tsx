@@ -79,6 +79,8 @@ export default function PortalResources() {
   const filteredRecommended = filterResources(recommendedResources);
   const filteredAll = filterResources(resources);
 
+  if (loading) {
+    return (
       <>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
@@ -89,7 +91,10 @@ export default function PortalResources() {
           </div>
         </div>
       </>
+    );
+  }
 
+  return (
     <>
       <div className="space-y-6">
         {/* Header */}
@@ -177,4 +182,5 @@ export default function PortalResources() {
         </div>
       </div>
     </>
+  );
 }
