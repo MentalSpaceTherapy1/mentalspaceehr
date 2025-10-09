@@ -248,27 +248,45 @@ export const useWebRTC = (sessionId: string, userId: string, role: 'host' | 'cli
 
   // Setup signaling via Supabase Realtime
   useEffect(() => {
-    if (!localStream || !userId || !sessionId) return;
+    if (!localStream || !userId || !sessionId) {
+      console.log('[WebRTC] Not ready:', { hasStream: !!localStream, userId, sessionId });
+      return;
+    }
+
+    console.log('[WebRTC] Setting up signaling channel for session:', sessionId);
 
     const channel = supabase.channel(`webrtc-${sessionId}`)
       .on('broadcast', { event: 'peer-joined' }, async ({ payload }) => {
         // Another peer joined - create offer if we haven't already connected
-        if (payload.peerId === userId || peerConnections.current.has(payload.peerId)) return;
+        if (payload.peerId === userId) {
+          console.log('[WebRTC] Ignoring own peer-joined event');
+          return;
+        }
 
-        console.log('[WebRTC] Peer joined:', payload.peerId, 'Creating offer...');
-        const pc = createPeerConnection(payload.peerId, localStream);
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
+        if (peerConnections.current.has(payload.peerId)) {
+          console.log('[WebRTC] Already connected to peer:', payload.peerId);
+          return;
+        }
 
-        channel.send({
-          type: 'broadcast',
-          event: 'offer',
-          payload: {
-            offer,
-            targetPeerId: payload.peerId,
-            fromPeerId: userId
-          }
-        });
+        try {
+          console.log('[WebRTC] Peer joined:', payload.peerId, 'Creating offer...');
+          const pc = createPeerConnection(payload.peerId, localStream);
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+
+          console.log('[WebRTC] Sending offer to peer:', payload.peerId);
+          channel.send({
+            type: 'broadcast',
+            event: 'offer',
+            payload: {
+              offer,
+              targetPeerId: payload.peerId,
+              fromPeerId: userId
+            }
+          });
+        } catch (err) {
+          console.error('[WebRTC] Error creating offer for peer:', payload.peerId, err);
+        }
       })
       .on('broadcast', { event: 'offer' }, async ({ payload }) => {
         if (payload.targetPeerId !== userId || !localStream) return;
