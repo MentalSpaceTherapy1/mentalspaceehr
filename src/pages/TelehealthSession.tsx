@@ -125,14 +125,21 @@ export default function TelehealthSession() {
       // unique candidates in priority order
       const candidates = Array.from(new Set([noColon, withPrefix, withoutPrefix]));
 
-      // Detect if user is a portal client by checking if they have a client record with their user ID as portal_user_id
+      // Detect if user is a portal client by checking route or client record
+      const isPortalRoute = window.location.pathname.startsWith('/portal/');
+      
       const { data: clientData } = await supabase
         .from('clients')
-        .select('id, first_name, last_name')
+        .select('id, first_name, last_name, portal_enabled')
         .eq('portal_user_id', user?.id)
+        .eq('portal_enabled', true)
         .maybeSingle();
       
-      const isPortalClient = !!clientData;
+      const isPortalClient = isPortalRoute || !!clientData;
+      
+      if (isPortalRoute && !clientData) {
+        console.warn('Portal route detected but client record not found for user:', user?.id);
+      }
 
       // 1) Try to fetch existing session by any candidate
       const { data: foundSessions, error: findErr } = await supabase
@@ -145,7 +152,12 @@ export default function TelehealthSession() {
         `)
         .in('session_id', candidates);
 
-      if (findErr) throw findErr;
+      if (findErr) {
+        console.error('Error fetching telehealth session:', findErr);
+        throw new Error(isPortalClient 
+          ? 'Unable to access session. Please wait for your clinician to start the session or contact support.'
+          : 'Failed to load telehealth session. Please check your access permissions.');
+      }
 
       // Prefer the one matching withPrefix if multiple
       let sessionData = (foundSessions || []).sort((a: any, b: any) => {
@@ -197,7 +209,12 @@ export default function TelehealthSession() {
             `)
             .maybeSingle();
 
-          if (insertErr) throw insertErr;
+          if (insertErr) {
+            console.error('Error creating telehealth session:', insertErr);
+            throw new Error(isPortalClient
+              ? 'Unable to join session. Please ensure your portal access is properly configured and try again.'
+              : 'Failed to create telehealth session. Please check your permissions.');
+          }
           if (!created) throw new Error('Failed to create telehealth session');
 
           sessionData = created;
@@ -218,7 +235,10 @@ export default function TelehealthSession() {
 
           toast({ title: 'Session initialized', description: 'A new session was created for this link.' });
         } else {
-          setError('Session not found or access denied');
+          const errorMsg = isPortalClient
+            ? 'Session not found. Please use the "Join Session" link from your appointments page.'
+            : 'Session not found or you do not have permission to access this session.';
+          setError(errorMsg);
           setLoading(false);
           return;
         }
@@ -349,7 +369,9 @@ export default function TelehealthSession() {
 
       setLoading(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load session');
+      console.error('Session load error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load session';
+      setError(errorMessage);
       setLoading(false);
     }
   };
