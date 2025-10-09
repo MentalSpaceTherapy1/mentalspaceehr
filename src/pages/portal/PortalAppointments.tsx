@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PortalLayout } from '@/components/portal/PortalLayout';
+
 import { useAppointments } from '@/hooks/useAppointments';
 import { usePortalAccount } from '@/hooks/usePortalAccount';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -104,7 +104,7 @@ export default function PortalAppointments() {
 
   if (contextLoading || appointmentsLoading) {
     return (
-      <PortalLayout>
+      <>
         <div className="space-y-6">
           <h1 className="text-3xl font-bold">Appointments</h1>
           <div className="space-y-3">
@@ -117,12 +117,12 @@ export default function PortalAppointments() {
             ))}
           </div>
         </div>
-      </PortalLayout>
+      </>
     );
   }
 
   return (
-    <PortalLayout>
+    <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Appointments</h1>
@@ -266,6 +266,6 @@ export default function PortalAppointments() {
         open={requestNewOpen}
         onOpenChange={setRequestNewOpen}
       />
-    </PortalLayout>
+    </>
   );
 }

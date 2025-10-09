@@ -73,13 +73,7 @@ export default function PortalDashboard() {
       // Fetch upcoming appointments with explicit client_id filter
       const { data: appointments, error: appointmentsError } = await supabase
         .from('appointments')
-        .select(`
-          id,
-          appointment_date,
-          start_time,
-          appointment_type,
-          profiles!appointments_clinician_id_fkey(first_name, last_name)
-        `)
+        .select('id, appointment_date, start_time, appointment_type, clinician_id')
         .eq('client_id', client.id)
         .eq('status', 'Scheduled')
         .gte('appointment_date', new Date().toISOString().split('T')[0])
@@ -101,7 +95,7 @@ export default function PortalDashboard() {
           appointment_date: appt.appointment_date,
           start_time: appt.start_time,
           appointment_type: appt.appointment_type,
-          clinician_name: `${(appt.profiles as any).first_name} ${(appt.profiles as any).last_name}`
+          clinician_name: 'Your clinician'
         });
       }
 
