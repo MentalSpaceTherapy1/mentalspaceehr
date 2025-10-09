@@ -589,6 +589,11 @@ export default function TelehealthSession() {
   }
 
   if (error) {
+    // Detect if user is a portal client
+    const isPortalRoute = window.location.pathname.startsWith('/portal/');
+    const returnRoute = isPortalRoute ? '/portal/appointments' : '/schedule';
+    const returnLabel = isPortalRoute ? 'Return to Appointments' : 'Return to Schedule';
+
     return (
       <div className="flex items-center justify-center h-screen p-4">
         <Card className="p-8 max-w-md">
@@ -596,8 +601,8 @@ export default function TelehealthSession() {
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
-          <Button className="w-full mt-4" onClick={() => navigate('/schedule')}>
-            Return to Schedule
+          <Button className="w-full mt-4" onClick={() => navigate(returnRoute)}>
+            {returnLabel}
           </Button>
         </Card>
       </div>

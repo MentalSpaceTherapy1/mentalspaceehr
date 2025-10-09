@@ -83,10 +83,15 @@ export default function PortalAppointments() {
       return false;
     }
 
+    // Only show join for Scheduled or Confirmed appointments
+    if (appointment.status !== 'Scheduled' && appointment.status !== 'Confirmed') {
+      return false;
+    }
+
     const now = new Date(); // Evaluate current time on each check
     const appointmentDateTime = new Date(`${appointment.appointment_date}T${appointment.start_time}`);
     const startTime = subMinutes(appointmentDateTime, 15);
-    const endTime = addMinutes(appointmentDateTime, 30);
+    const endTime = addMinutes(appointmentDateTime, 60); // Allow join up to 1 hour after start
 
     return isWithinInterval(now, { start: startTime, end: endTime });
   };
@@ -238,7 +243,7 @@ export default function PortalAppointments() {
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          <span>{formatTime12Hour(appointment.start_time)}</span>
+                          <span>{formatTime12Hour(appointment.start_time)} - {formatTime12Hour(appointment.end_time)}</span>
                         </div>
                       </div>
                     </div>
