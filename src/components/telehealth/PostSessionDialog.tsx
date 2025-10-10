@@ -20,6 +20,7 @@ interface PostSessionDialogProps {
   recordingDuration: number;
   audioBlob: Blob | null;
   appointmentId?: string;
+  appointmentType?: string; // Add appointment type
   clientId: string;
   enableAIGenerate?: boolean;
   aiTranscript?: string;
@@ -39,6 +40,7 @@ export const PostSessionDialog = ({
   recordingDuration,
   audioBlob,
   appointmentId,
+  appointmentType = 'Individual Therapy',
   clientId,
   enableAIGenerate = false,
   aiTranscript,
@@ -146,7 +148,18 @@ export const PostSessionDialog = ({
 
   const handleManualNote = async () => {
     await updateBillingInfo();
-    navigate(`/notes/new?clientId=${clientId}${appointmentId ? `&appointmentId=${appointmentId}` : ''}`);
+    
+    // Route to specific note type based on appointment type
+    const appointmentTypeToRoute: Record<string, string> = {
+      'Individual Therapy': 'progress-note',
+      'Psychiatric Evaluation': 'psychiatric-evaluation',
+      'Testing/Assessment': 'testing-assessment',
+      'Initial Evaluation': 'intake-assessment',
+      'Termination Session': 'termination-note',
+    };
+    
+    const noteRoute = appointmentTypeToRoute[appointmentType] || 'progress-note';
+    navigate(`/${noteRoute}?clientId=${clientId}${appointmentId ? `&appointmentId=${appointmentId}` : ''}`);
     onOpenChange(false);
   };
 

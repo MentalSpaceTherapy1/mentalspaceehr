@@ -85,22 +85,70 @@ export function ClientContactInfo({ formData, setFormData }: ClientContactInfoPr
           />
         </div>
 
-        <div className="space-y-2">
-          <Label>Preferred Contact Method</Label>
-          <Select
-            value={formData.preferredContactMethod}
-            onValueChange={(value) => setFormData({ ...formData, preferredContactMethod: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-card border z-50">
-              <SelectItem value="Phone">Phone</SelectItem>
-              <SelectItem value="Email">Email</SelectItem>
-              <SelectItem value="Text">Text</SelectItem>
-              <SelectItem value="Portal">Portal</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="space-y-2 md:col-span-2">
+          <Label>Preferred Contact Methods (Select all that apply)</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="contactPhone"
+                checked={(formData.preferredContactMethods || []).includes('Phone')}
+                onCheckedChange={(checked) => {
+                  const methods = formData.preferredContactMethods || [];
+                  if (checked) {
+                    setFormData({ ...formData, preferredContactMethods: [...methods, 'Phone'] });
+                  } else {
+                    setFormData({ ...formData, preferredContactMethods: methods.filter((m: string) => m !== 'Phone') });
+                  }
+                }}
+              />
+              <Label htmlFor="contactPhone" className="cursor-pointer font-normal">Phone</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="contactEmail"
+                checked={(formData.preferredContactMethods || []).includes('Email')}
+                onCheckedChange={(checked) => {
+                  const methods = formData.preferredContactMethods || [];
+                  if (checked) {
+                    setFormData({ ...formData, preferredContactMethods: [...methods, 'Email'] });
+                  } else {
+                    setFormData({ ...formData, preferredContactMethods: methods.filter((m: string) => m !== 'Email') });
+                  }
+                }}
+              />
+              <Label htmlFor="contactEmail" className="cursor-pointer font-normal">Email</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="contactText"
+                checked={(formData.preferredContactMethods || []).includes('Text')}
+                onCheckedChange={(checked) => {
+                  const methods = formData.preferredContactMethods || [];
+                  if (checked) {
+                    setFormData({ ...formData, preferredContactMethods: [...methods, 'Text'] });
+                  } else {
+                    setFormData({ ...formData, preferredContactMethods: methods.filter((m: string) => m !== 'Text') });
+                  }
+                }}
+              />
+              <Label htmlFor="contactText" className="cursor-pointer font-normal">Text</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="contactPortal"
+                checked={(formData.preferredContactMethods || []).includes('Portal')}
+                onCheckedChange={(checked) => {
+                  const methods = formData.preferredContactMethods || [];
+                  if (checked) {
+                    setFormData({ ...formData, preferredContactMethods: [...methods, 'Portal'] });
+                  } else {
+                    setFormData({ ...formData, preferredContactMethods: methods.filter((m: string) => m !== 'Portal') });
+                  }
+                }}
+              />
+              <Label htmlFor="contactPortal" className="cursor-pointer font-normal">Portal</Label>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center space-x-2 pt-8">
@@ -172,12 +220,68 @@ export function ClientContactInfo({ formData, setFormData }: ClientContactInfoPr
 
         <div className="space-y-2">
           <Label htmlFor="state">State *</Label>
-          <Input
-            id="state"
+          <Select
             value={formData.state}
-            onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-            required
-          />
+            onValueChange={(value) => setFormData({ ...formData, state: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select state" />
+            </SelectTrigger>
+            <SelectContent className="bg-card border z-50">
+              <SelectItem value="AL">Alabama</SelectItem>
+              <SelectItem value="AK">Alaska</SelectItem>
+              <SelectItem value="AZ">Arizona</SelectItem>
+              <SelectItem value="AR">Arkansas</SelectItem>
+              <SelectItem value="CA">California</SelectItem>
+              <SelectItem value="CO">Colorado</SelectItem>
+              <SelectItem value="CT">Connecticut</SelectItem>
+              <SelectItem value="DE">Delaware</SelectItem>
+              <SelectItem value="DC">District of Columbia</SelectItem>
+              <SelectItem value="FL">Florida</SelectItem>
+              <SelectItem value="GA">Georgia</SelectItem>
+              <SelectItem value="HI">Hawaii</SelectItem>
+              <SelectItem value="ID">Idaho</SelectItem>
+              <SelectItem value="IL">Illinois</SelectItem>
+              <SelectItem value="IN">Indiana</SelectItem>
+              <SelectItem value="IA">Iowa</SelectItem>
+              <SelectItem value="KS">Kansas</SelectItem>
+              <SelectItem value="KY">Kentucky</SelectItem>
+              <SelectItem value="LA">Louisiana</SelectItem>
+              <SelectItem value="ME">Maine</SelectItem>
+              <SelectItem value="MD">Maryland</SelectItem>
+              <SelectItem value="MA">Massachusetts</SelectItem>
+              <SelectItem value="MI">Michigan</SelectItem>
+              <SelectItem value="MN">Minnesota</SelectItem>
+              <SelectItem value="MS">Mississippi</SelectItem>
+              <SelectItem value="MO">Missouri</SelectItem>
+              <SelectItem value="MT">Montana</SelectItem>
+              <SelectItem value="NE">Nebraska</SelectItem>
+              <SelectItem value="NV">Nevada</SelectItem>
+              <SelectItem value="NH">New Hampshire</SelectItem>
+              <SelectItem value="NJ">New Jersey</SelectItem>
+              <SelectItem value="NM">New Mexico</SelectItem>
+              <SelectItem value="NY">New York</SelectItem>
+              <SelectItem value="NC">North Carolina</SelectItem>
+              <SelectItem value="ND">North Dakota</SelectItem>
+              <SelectItem value="OH">Ohio</SelectItem>
+              <SelectItem value="OK">Oklahoma</SelectItem>
+              <SelectItem value="OR">Oregon</SelectItem>
+              <SelectItem value="PA">Pennsylvania</SelectItem>
+              <SelectItem value="PR">Puerto Rico</SelectItem>
+              <SelectItem value="RI">Rhode Island</SelectItem>
+              <SelectItem value="SC">South Carolina</SelectItem>
+              <SelectItem value="SD">South Dakota</SelectItem>
+              <SelectItem value="TN">Tennessee</SelectItem>
+              <SelectItem value="TX">Texas</SelectItem>
+              <SelectItem value="UT">Utah</SelectItem>
+              <SelectItem value="VT">Vermont</SelectItem>
+              <SelectItem value="VA">Virginia</SelectItem>
+              <SelectItem value="WA">Washington</SelectItem>
+              <SelectItem value="WV">West Virginia</SelectItem>
+              <SelectItem value="WI">Wisconsin</SelectItem>
+              <SelectItem value="WY">Wyoming</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">

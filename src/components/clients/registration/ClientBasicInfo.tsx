@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { format, differenceInYears } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -52,15 +53,29 @@ export function ClientBasicInfo({ formData, setFormData }: ClientBasicInfoProps)
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="suffix">Suffix</Label>
-          <Input
-            id="suffix"
-            value={formData.suffix}
-            onChange={(e) => setFormData({ ...formData, suffix: e.target.value })}
-            placeholder="Jr., Sr., III, etc."
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="suffix">Suffix</Label>
+        <Select
+          value={formData.suffix}
+          onValueChange={(value) => setFormData({ ...formData, suffix: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select suffix" />
+          </SelectTrigger>
+          <SelectContent className="bg-card border z-50">
+            <SelectItem value="">None</SelectItem>
+            <SelectItem value="Jr.">Jr.</SelectItem>
+            <SelectItem value="Sr.">Sr.</SelectItem>
+            <SelectItem value="II">II</SelectItem>
+            <SelectItem value="III">III</SelectItem>
+            <SelectItem value="IV">IV</SelectItem>
+            <SelectItem value="V">V</SelectItem>
+            <SelectItem value="Esq.">Esq.</SelectItem>
+            <SelectItem value="PhD">PhD</SelectItem>
+            <SelectItem value="MD">MD</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
         <div className="space-y-2">
           <Label htmlFor="preferredName">Preferred Name</Label>
@@ -73,12 +88,24 @@ export function ClientBasicInfo({ formData, setFormData }: ClientBasicInfoProps)
 
       <div className="space-y-2">
         <Label htmlFor="pronouns">Pronouns</Label>
-        <Input
-          id="pronouns"
+        <Select
           value={formData.pronouns}
-          onChange={(e) => setFormData({ ...formData, pronouns: e.target.value })}
-          placeholder="He/Him, She/Her, They/Them, etc."
-        />
+          onValueChange={(value) => setFormData({ ...formData, pronouns: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select pronouns" />
+          </SelectTrigger>
+          <SelectContent className="bg-card border z-50">
+            <SelectItem value="He/Him">He/Him</SelectItem>
+            <SelectItem value="She/Her">She/Her</SelectItem>
+            <SelectItem value="They/Them">They/Them</SelectItem>
+            <SelectItem value="He/They">He/They</SelectItem>
+            <SelectItem value="She/They">She/They</SelectItem>
+            <SelectItem value="Ze/Zir">Ze/Zir</SelectItem>
+            <SelectItem value="Other">Other</SelectItem>
+            <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
 

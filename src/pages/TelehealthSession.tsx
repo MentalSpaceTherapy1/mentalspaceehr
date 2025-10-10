@@ -233,7 +233,8 @@ export default function TelehealthSession() {
         .select(`
           *,
           appointments:appointment_id (
-            client_id
+            client_id,
+            appointment_type
           )
         `)
         .in('session_id', candidates);
@@ -290,7 +291,8 @@ export default function TelehealthSession() {
             .select(`
               *,
               appointments:appointment_id (
-                client_id
+                client_id,
+                appointment_type
               )
             `)
             .maybeSingle();
@@ -1008,6 +1010,7 @@ export default function TelehealthSession() {
         recordingDuration={recordingDuration}
         audioBlob={audioBlob}
         appointmentId={session?.appointment_id}
+        appointmentType={session?.appointments?.appointment_type}
         clientId={session?.appointments?.client_id || ''}
         enableAIGenerate={teleFlags.ai_note_generation_enabled}
         aiTranscript={aiSessionSummary}

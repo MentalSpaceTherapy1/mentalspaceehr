@@ -214,9 +214,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           toast.success('Welcome back!');
           navigate('/portal');
         } else {
-          // Staff user - redirect to dashboard
+        // Staff user - redirect to dashboard or return URL
+        const returnUrl = localStorage.getItem('returnUrl');
+        if (returnUrl && returnUrl !== '/auth') {
+          localStorage.removeItem('returnUrl');
+          toast.success('Welcome back!');
+          navigate(returnUrl);
+        } else {
           toast.success('Welcome back!');
           navigate('/dashboard');
+        }
         }
       } else {
         navigate('/dashboard');
@@ -275,6 +282,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    // Store current URL for redirect after login
+    const currentPath = window.location.pathname + window.location.search;
+    if (currentPath !== '/auth') {
+      localStorage.setItem('returnUrl', currentPath);
+    }
+    
     try {
       const { error } = await supabase.auth.signOut();
       

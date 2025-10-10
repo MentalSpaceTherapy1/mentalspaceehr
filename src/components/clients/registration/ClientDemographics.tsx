@@ -152,7 +152,12 @@ export function ClientDemographics({ formData, setFormData }: ClientDemographics
               <SelectValue placeholder="Select ethnicity" />
             </SelectTrigger>
             <SelectContent className="bg-card border z-50">
-              <SelectItem value="Hispanic or Latino">Hispanic or Latino</SelectItem>
+              <SelectItem value="Mexican, Mexican American, Chicano/a">Mexican, Mexican American, Chicano/a</SelectItem>
+              <SelectItem value="Puerto Rican">Puerto Rican</SelectItem>
+              <SelectItem value="Cuban">Cuban</SelectItem>
+              <SelectItem value="Central American">Central American</SelectItem>
+              <SelectItem value="South American">South American</SelectItem>
+              <SelectItem value="Other Hispanic/Latino">Other Hispanic/Latino</SelectItem>
               <SelectItem value="Not Hispanic or Latino">Not Hispanic or Latino</SelectItem>
               <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
             </SelectContent>
@@ -164,11 +169,31 @@ export function ClientDemographics({ formData, setFormData }: ClientDemographics
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="primaryLanguage">Primary Language</Label>
-          <Input
-            id="primaryLanguage"
+          <Select
             value={formData.primaryLanguage}
-            onChange={(e) => setFormData({ ...formData, primaryLanguage: e.target.value })}
-          />
+            onValueChange={(value) => setFormData({ ...formData, primaryLanguage: value })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-card border z-50">
+              <SelectItem value="English">English</SelectItem>
+              <SelectItem value="Spanish">Spanish</SelectItem>
+              <SelectItem value="Chinese (Mandarin)">Chinese (Mandarin)</SelectItem>
+              <SelectItem value="Chinese (Cantonese)">Chinese (Cantonese)</SelectItem>
+              <SelectItem value="Tagalog">Tagalog</SelectItem>
+              <SelectItem value="Vietnamese">Vietnamese</SelectItem>
+              <SelectItem value="Arabic">Arabic</SelectItem>
+              <SelectItem value="French">French</SelectItem>
+              <SelectItem value="Korean">Korean</SelectItem>
+              <SelectItem value="Russian">Russian</SelectItem>
+              <SelectItem value="German">German</SelectItem>
+              <SelectItem value="Portuguese">Portuguese</SelectItem>
+              <SelectItem value="Italian">Italian</SelectItem>
+              <SelectItem value="Polish">Polish</SelectItem>
+              <SelectItem value="Other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2 md:col-span-2">
@@ -211,11 +236,29 @@ export function ClientDemographics({ formData, setFormData }: ClientDemographics
 
         <div className="space-y-2">
           <Label htmlFor="religion">Religion</Label>
-          <Input
-            id="religion"
+          <Select
             value={formData.religion}
-            onChange={(e) => setFormData({ ...formData, religion: e.target.value })}
-          />
+            onValueChange={(value) => setFormData({ ...formData, religion: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select religion" />
+            </SelectTrigger>
+            <SelectContent className="bg-card border z-50">
+              <SelectItem value="Christianity - Catholic">Christianity - Catholic</SelectItem>
+              <SelectItem value="Christianity - Protestant">Christianity - Protestant</SelectItem>
+              <SelectItem value="Christianity - Orthodox">Christianity - Orthodox</SelectItem>
+              <SelectItem value="Christianity - Other">Christianity - Other</SelectItem>
+              <SelectItem value="Islam">Islam</SelectItem>
+              <SelectItem value="Judaism">Judaism</SelectItem>
+              <SelectItem value="Buddhism">Buddhism</SelectItem>
+              <SelectItem value="Hinduism">Hinduism</SelectItem>
+              <SelectItem value="Sikhism">Sikhism</SelectItem>
+              <SelectItem value="Atheist/Agnostic">Atheist/Agnostic</SelectItem>
+              <SelectItem value="Spiritual but not religious">Spiritual but not religious</SelectItem>
+              <SelectItem value="Other">Other</SelectItem>
+              <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex items-center space-x-2 pt-8">

@@ -183,7 +183,7 @@ export default function ProgressNote() {
   const { isLocked, lockDetails, loading: lockLoading } = useNoteLockStatus(noteId || null, 'progress_note');
 
   const [formData, setFormData] = useState<ProgressNoteData>({
-    clientId: '',
+    clientId: searchParams.get('clientId') || '',
     clinicianId: user?.id || '',
     appointmentId: appointmentId || '',
     sessionDate: new Date().toISOString().split('T')[0],

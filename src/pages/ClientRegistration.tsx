@@ -321,13 +321,45 @@ export default function ClientRegistration() {
           </Tabs>
 
           <div className="flex justify-between mt-6 pt-6 border-t">
-            <Button variant="outline" onClick={() => navigate('/clients')}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={loading}>
-              <Save className="h-4 w-4 mr-2" />
-              {loading ? 'Saving...' : 'Save Client'}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate('/clients')}>
+                Cancel
+              </Button>
+              {activeTab !== 'basic' && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    const tabs = ['basic', 'contact', 'demographics', 'medical', 'providers', 'special', 'emergency', 'consents'];
+                    const currentIndex = tabs.indexOf(activeTab);
+                    if (currentIndex > 0) {
+                      setActiveTab(tabs[currentIndex - 1]);
+                    }
+                  }}
+                >
+                  Previous
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {activeTab !== 'consents' && (
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    const tabs = ['basic', 'contact', 'demographics', 'medical', 'providers', 'special', 'emergency', 'consents'];
+                    const currentIndex = tabs.indexOf(activeTab);
+                    if (currentIndex < tabs.length - 1) {
+                      setActiveTab(tabs[currentIndex + 1]);
+                    }
+                  }}
+                >
+                  Next
+                </Button>
+              )}
+              <Button onClick={handleSubmit} disabled={loading}>
+                <Save className="h-4 w-4 mr-2" />
+                {loading ? 'Saving...' : 'Save Client'}
+              </Button>
+            </div>
           </div>
         </Card>
       </div>
