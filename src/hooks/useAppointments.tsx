@@ -222,7 +222,7 @@ export const useAppointments = (
         .select('id, start_time, end_time, appointment_type')
         .eq('clinician_id', appointment.clinician_id)
         .eq('appointment_date', appointment.appointment_date)
-        .not('status', 'in', '("Cancelled","No Show","Rescheduled")');
+        .not('status', 'in', ['Cancelled', 'No Show', 'Rescheduled']);
 
       if (conflicts && conflicts.length > 0) {
         const startTime = appointment.start_time.substring(0, 5);
@@ -318,7 +318,10 @@ export const useAppointments = (
           .select()
           .single();
 
-        if (parentError) throw parentError;
+        if (parentError) {
+          const errorMsg = parentError.message || 'Failed to create appointment';
+          throw new Error(errorMsg);
+        }
 
         // Create telehealth session for Internal/Twilio platform
         if (appointment.service_location === 'Telehealth' && (appointment.telehealth_platform === 'Internal' || appointment.telehealth_platform === 'Twilio') && parentData) {
@@ -485,7 +488,7 @@ export const useAppointments = (
             .eq('clinician_id', checkClinicianId)
             .eq('appointment_date', checkDate)
             .neq('id', id)
-            .not('status', 'in', '("Cancelled","No Show","Rescheduled")');
+            .not('status', 'in', ['Cancelled', 'No Show', 'Rescheduled']);
 
           if (conflicts && conflicts.length > 0) {
             const startTime = checkStartTime.substring(0, 5);
@@ -548,7 +551,10 @@ export const useAppointments = (
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        const errorMsg = error.message || 'Failed to update appointment';
+        throw new Error(errorMsg);
+      }
       
       toast({
         title: "Success",
@@ -601,7 +607,10 @@ export const useAppointments = (
         })
         .or(`id.eq.${parentId},parent_recurrence_id.eq.${parentId}`);
 
-      if (error) throw error;
+      if (error) {
+        const errorMsg = error.message || 'Failed to update recurring series';
+        throw new Error(errorMsg);
+      }
       
       toast({
         title: "Success",

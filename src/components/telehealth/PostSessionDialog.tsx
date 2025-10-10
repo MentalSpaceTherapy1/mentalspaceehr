@@ -139,7 +139,6 @@ export const PostSessionDialog = ({
       const { error } = await supabase
         .from('appointments')
         .update({
-          telehealth_platform: 'integrated',
           billing_status: billingInfo.billAsTelemedicine ? 'Ready to Bill' : 'Not Billed'
         })
         .eq('id', appointmentId);

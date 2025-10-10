@@ -41,6 +41,7 @@ export const useTwilioVideo = (sessionId: string, userId: string, userName: stri
 
   const connect = useCallback(async () => {
     try {
+      console.log('[Twilio Debug] Connecting to room:', sessionId, 'as:', userName);
       const { data, error } = await supabase.functions.invoke('get-twilio-token', {
         body: { identity: userName, room_name: sessionId },
       });

@@ -15,6 +15,7 @@ import { useAvailableSlots } from '@/hooks/useAvailableSlots';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -315,6 +316,9 @@ export function AppointmentDialog({
               </Badge>
             )}
           </DialogTitle>
+          <DialogDescription>
+            {appointment ? 'Update appointment details and settings' : 'Schedule a new appointment with client and clinician'}
+          </DialogDescription>
           {editSeries && appointment?.is_recurring && (
             <div className="mt-2 p-3 bg-primary/10 border border-primary/20 rounded-md">
               <p className="text-sm font-medium flex items-center gap-2">
@@ -645,7 +649,7 @@ export function AppointmentDialog({
                             <SelectItem value="Twilio">Twilio Video (Recommended)</SelectItem>
                             <SelectItem value="Internal">Legacy WebRTC</SelectItem>
                             <SelectItem value="Zoom">Zoom</SelectItem>
-                            <SelectItem value="Doxy.me">Doxy.me</SelectItem>
+                            <SelectItem value="Doxy">Doxy.me</SelectItem>
                             <SelectItem value="External">External Link</SelectItem>
                           </SelectContent>
                         </Select>
