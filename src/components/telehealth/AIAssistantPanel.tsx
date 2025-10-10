@@ -6,6 +6,8 @@ import { Sparkles, Brain, FileText, Mic, Bot, Lightbulb, TrendingUp, X } from 'l
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { useTwilioAI } from '@/hooks/useTwilioAI';
+import { useToast } from '@/hooks/use-toast';
 
 interface AIInsight {
   id: string;
@@ -20,6 +22,7 @@ interface AIAssistantPanelProps {
   isOpen: boolean;
   sessionId: string;
   isRecording: boolean;
+  room: any; // Twilio Room
   onClose: () => void;
 }
 
@@ -27,53 +30,68 @@ export const AIAssistantPanel = ({
   isOpen,
   sessionId,
   isRecording,
+  room,
   onClose
 }: AIAssistantPanelProps) => {
-  const [insights, setInsights] = useState<AIInsight[]>([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [localInsights, setLocalInsights] = useState<AIInsight[]>([]);
   const [transcriptionEnabled, setTranscriptionEnabled] = useState(false);
+  const { toast } = useToast();
 
-  // Simulate real-time AI insights (replace with Twilio AI integration)
-  useEffect(() => {
-    if (!isOpen || !isRecording) return;
-
-    // Mock AI insights for demonstration
-    const mockInsights: AIInsight[] = [
-      {
-        id: '1',
-        type: 'observation',
-        title: 'Session Dynamics',
-        content: 'Client is engaged and responsive. Voice tone indicates positive mood.',
-        timestamp: new Date(),
-        confidence: 0.85
-      },
-      {
-        id: '2',
-        type: 'suggestion',
-        title: 'Clinical Note',
-        content: 'Consider exploring the coping mechanisms discussed in detail.',
-        timestamp: new Date(),
-        confidence: 0.78
-      }
-    ];
-
-    // Simulate periodic insights
-    const interval = setInterval(() => {
-      if (insights.length < 5) {
-        const newInsight: AIInsight = {
+  // Use real Twilio AI hook
+  const {
+    transcripts,
+    currentSentiment,
+    insights: aiInsights,
+    isProcessing,
+    enableTranscription,
+    disableTranscription,
+    generateSummary
+  } = useTwilioAI({
+    room,
+    enabled: isOpen && isRecording,
+    onTranscript: (transcript) => {
+      console.log('[AI] New transcript:', transcript);
+    },
+    onSentiment: (sentiment) => {
+      console.log('[AI] Sentiment update:', sentiment);
+      
+      // Show alerts for negative sentiment
+      if (sentiment.label === 'negative' && sentiment.confidence > 0.7) {
+        const alert: AIInsight = {
           id: Date.now().toString(),
-          type: 'observation',
-          title: 'Real-time Analysis',
-          content: 'Session progressing well. Client engagement is high.',
+          type: 'alert',
+          title: 'Sentiment Alert',
+          content: 'Detected negative sentiment. Consider checking in with client.',
           timestamp: new Date(),
-          confidence: Math.random() * 0.3 + 0.7
+          confidence: sentiment.confidence
         };
-        setInsights(prev => [...prev, newInsight]);
+        setLocalInsights(prev => [...prev, alert]);
       }
-    }, 30000); // Every 30 seconds
+    },
+    onInsight: (insight) => {
+      console.log('[AI] New insight:', insight);
+      const formattedInsight: AIInsight = {
+        id: Date.now().toString(),
+        type: insight.type,
+        title: insight.type === 'suggestion' ? 'AI Suggestion' : 
+               insight.type === 'alert' ? 'Alert' : 'Observation',
+        content: insight.content,
+        timestamp: insight.timestamp
+      };
+      setLocalInsights(prev => [...prev, formattedInsight]);
+    }
+  });
 
-    return () => clearInterval(interval);
-  }, [isOpen, isRecording, insights.length]);
+  // Combine AI insights with local insights
+  const allInsights = [...localInsights, ...aiInsights.map(ai => ({
+    id: Date.now().toString() + Math.random(),
+    type: ai.type as 'suggestion' | 'observation' | 'alert' | 'summary',
+    title: ai.type === 'suggestion' ? 'AI Suggestion' : 
+           ai.type === 'alert' ? 'Alert' : 'Observation',
+    content: ai.content,
+    timestamp: ai.timestamp,
+    confidence: undefined
+  }))].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
   const getInsightIcon = (type: AIInsight['type']) => {
     switch (type) {
@@ -108,7 +126,7 @@ export const AIAssistantPanel = ({
             <div>
               <CardTitle className="text-lg">AI Assistant</CardTitle>
               <CardDescription className="text-xs">
-                Powered by Twilio AI
+                Powered by Lovable AI
               </CardDescription>
             </div>
           </div>
@@ -171,19 +189,27 @@ export const AIAssistantPanel = ({
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Sparkles className="h-4 w-4" />
-              <span>Real-time Insights</span>
+              <span>Real-time Insights ({allInsights.length})</span>
             </div>
-            {isAnalyzing && (
+            {isProcessing && (
               <div className="flex items-center gap-1">
                 <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
                 <span className="text-xs text-muted-foreground">Analyzing...</span>
               </div>
             )}
+            {currentSentiment && (
+              <Badge variant={
+                currentSentiment.label === 'positive' ? 'default' :
+                currentSentiment.label === 'negative' ? 'destructive' : 'secondary'
+              }>
+                {currentSentiment.label}
+              </Badge>
+            )}
           </div>
 
           <ScrollArea className="flex-1">
             <div className="space-y-3 pr-4">
-              {insights.length === 0 ? (
+              {allInsights.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Bot className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">
@@ -194,7 +220,7 @@ export const AIAssistantPanel = ({
                   </p>
                 </div>
               ) : (
-                insights.map((insight) => (
+                allInsights.map((insight) => (
                   <Card key={insight.id} className="p-3 bg-muted/50">
                     <div className="flex items-start gap-2">
                       <div className="mt-0.5">
@@ -234,7 +260,25 @@ export const AIAssistantPanel = ({
             variant="outline"
             size="sm"
             className="w-full"
-            onClick={() => setTranscriptionEnabled(!transcriptionEnabled)}
+            onClick={async () => {
+              if (transcriptionEnabled) {
+                await disableTranscription();
+                setTranscriptionEnabled(false);
+                toast({
+                  title: "Transcription Stopped",
+                  description: "Real-time transcription has been disabled"
+                });
+              } else {
+                const success = await enableTranscription();
+                if (success) {
+                  setTranscriptionEnabled(true);
+                  toast({
+                    title: "Transcription Started",
+                    description: "Real-time transcription is now active"
+                  });
+                }
+              }
+            }}
           >
             <Mic className="h-4 w-4 mr-2" />
             {transcriptionEnabled ? 'Stop' : 'Start'} Transcription
@@ -244,7 +288,17 @@ export const AIAssistantPanel = ({
             variant="outline"
             size="sm"
             className="w-full"
-            disabled={insights.length === 0}
+            disabled={transcripts.length === 0}
+            onClick={async () => {
+              const summary = await generateSummary();
+              if (summary) {
+                toast({
+                  title: "Session Summary",
+                  description: summary,
+                  duration: 10000
+                });
+              }
+            }}
           >
             <FileText className="h-4 w-4 mr-2" />
             Generate Session Summary

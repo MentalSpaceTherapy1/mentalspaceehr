@@ -852,6 +852,7 @@ export default function TelehealthSession() {
             isOpen={isAIPanelOpen}
             sessionId={normalizedSessionId}
             isRecording={isRecording}
+            room={room}
             onClose={() => setIsAIPanelOpen(false)}
           />
         )}
