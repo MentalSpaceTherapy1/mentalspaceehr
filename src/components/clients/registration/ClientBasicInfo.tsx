@@ -56,14 +56,13 @@ export function ClientBasicInfo({ formData, setFormData }: ClientBasicInfoProps)
       <div className="space-y-2">
         <Label htmlFor="suffix">Suffix</Label>
         <Select
-          value={formData.suffix}
+          value={formData.suffix || undefined}
           onValueChange={(value) => setFormData({ ...formData, suffix: value })}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select suffix" />
+            <SelectValue placeholder="Select suffix (optional)" />
           </SelectTrigger>
           <SelectContent className="bg-card border z-50">
-            <SelectItem value="">None</SelectItem>
             <SelectItem value="Jr.">Jr.</SelectItem>
             <SelectItem value="Sr.">Sr.</SelectItem>
             <SelectItem value="II">II</SelectItem>
