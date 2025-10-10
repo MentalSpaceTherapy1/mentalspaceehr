@@ -22,6 +22,7 @@ export const useTwilioVideo = (sessionId: string, userId: string, userName: stri
   const [remoteParticipants, setRemoteParticipants] = useState<Map<string, RemoteParticipant>>(
     new Map()
   );
+  const [remoteTracks, setRemoteTracks] = useState<Map<string, MediaStream>>(new Map());
   const [connectionState, setConnectionState] = useState<'new' | 'connected' | 'reconnecting' | 'disconnected'>('new');
   const [connectionQuality, setConnectionQuality] = useState<ConnectionQuality>({
     packetLoss: 0,
@@ -68,20 +69,67 @@ export const useTwilioVideo = (sessionId: string, userId: string, userName: stri
       setLocalParticipant(connectedRoom.localParticipant);
       setConnectionState('connected');
 
-      connectedRoom.on('participantConnected', (p: RemoteParticipant) => {
-        console.log('Participant connected:', p.identity);
+      const handleTrackSubscribed = (track: any, participant: RemoteParticipant) => {
+        console.log(`Track subscribed: ${track.kind} from ${participant.identity}`);
+        setRemoteTracks((prev) => {
+          const stream = prev.get(participant.sid) || new MediaStream();
+          stream.addTrack(track.mediaStreamTrack);
+          return new Map(prev).set(participant.sid, stream);
+        });
+      };
+
+      const handleTrackUnsubscribed = (track: any, participant: RemoteParticipant) => {
+        console.log(`Track unsubscribed: ${track.kind} from ${participant.identity}`);
+        setRemoteTracks((prev) => {
+          const stream = prev.get(participant.sid);
+          if (stream) {
+            stream.removeTrack(track.mediaStreamTrack);
+            if (stream.getTracks().length === 0) {
+              const newMap = new Map(prev);
+              newMap.delete(participant.sid);
+              return newMap;
+            }
+          }
+          return prev;
+        });
+      };
+
+      const setupParticipant = (p: RemoteParticipant) => {
+        console.log('Setting up participant:', p.identity);
         setRemoteParticipants((prev) => new Map(prev).set(p.sid, p));
-      });
+        
+        p.tracks.forEach((publication) => {
+          if (publication.track && publication.track.kind !== 'data') {
+            handleTrackSubscribed(publication.track, p);
+          }
+        });
+
+        p.on('trackSubscribed', (track) => {
+          if (track.kind !== 'data') handleTrackSubscribed(track, p);
+        });
+        
+        p.on('trackUnsubscribed', (track) => {
+          if (track.kind !== 'data') handleTrackUnsubscribed(track, p);
+        });
+      };
+
+      connectedRoom.on('participantConnected', setupParticipant);
 
       connectedRoom.on('participantDisconnected', (p: RemoteParticipant) => {
         console.log('Participant disconnected:', p.identity);
-        setRemoteParticipants((prev) => { const u = new Map(prev); u.delete(p.sid); return u; });
+        setRemoteParticipants((prev) => { 
+          const u = new Map(prev); 
+          u.delete(p.sid); 
+          return u; 
+        });
+        setRemoteTracks((prev) => {
+          const u = new Map(prev);
+          u.delete(p.sid);
+          return u;
+        });
       });
 
-      connectedRoom.participants.forEach((p) => {
-        console.log('Existing participant:', p.identity);
-        setRemoteParticipants((prev) => new Map(prev).set(p.sid, p));
-      });
+      connectedRoom.participants.forEach(setupParticipant);
 
       return connectedRoom;
     } catch (error) {
@@ -116,7 +164,7 @@ export const useTwilioVideo = (sessionId: string, userId: string, userName: stri
   useEffect(() => () => disconnect(), [disconnect]);
 
   return {
-    room, localParticipant, remoteParticipants, connectionState, connectionQuality,
+    room, localParticipant, remoteParticipants, remoteTracks, connectionState, connectionQuality,
     isMuted, isVideoEnabled, isScreenSharing, localVideoTrack, localAudioTrack,
     connect, disconnect, toggleMute, toggleVideo
   };

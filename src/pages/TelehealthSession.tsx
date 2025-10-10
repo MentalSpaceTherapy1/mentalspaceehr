@@ -61,13 +61,13 @@ export default function TelehealthSession() {
   const [waitingRoomAdmitted, setWaitingRoomAdmitted] = useState(false);
   
   const timeoutCheckRef = useRef<NodeJS.Timeout | null>(null);
-  const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(new Map());
   const userName = profile ? `${profile.first_name} ${profile.last_name}` : 'User';
 
   const {
     room,
     localParticipant: twilioLocalParticipant,
     remoteParticipants,
+    remoteTracks,
     connectionState,
     connectionQuality,
     isMuted,
@@ -97,69 +97,7 @@ export default function TelehealthSession() {
     return new MediaStream(tracks);
   }, [localVideoTrack, localAudioTrack]);
 
-  // Handle Twilio remote participant tracks
-  useEffect(() => {
-    if (!room) return;
-
-    const handleTrackSubscribed = (track: RemoteVideoTrack | RemoteAudioTrack, participant: RemoteParticipant) => {
-      console.log('Track subscribed:', track.kind, 'from', participant.identity);
-      
-      setRemoteStreams((prev) => {
-        const existingStream = prev.get(participant.sid);
-        const tracks = existingStream ? Array.from(existingStream.getTracks()) : [];
-        tracks.push(track.mediaStreamTrack);
-        return new Map(prev).set(participant.sid, new MediaStream(tracks));
-      });
-    };
-
-    const handleTrackUnsubscribed = (track: RemoteVideoTrack | RemoteAudioTrack, participant: RemoteParticipant) => {
-      console.log('Track unsubscribed:', track.kind, 'from', participant.identity);
-      
-      setRemoteStreams((prev) => {
-        const existingStream = prev.get(participant.sid);
-        if (!existingStream) return prev;
-        
-        const remainingTracks = Array.from(existingStream.getTracks()).filter(
-          t => t.id !== track.mediaStreamTrack.id
-        );
-        
-        if (remainingTracks.length === 0) {
-          const newMap = new Map(prev);
-          newMap.delete(participant.sid);
-          return newMap;
-        }
-        
-        return new Map(prev).set(participant.sid, new MediaStream(remainingTracks));
-      });
-    };
-
-    // Subscribe to existing participants' tracks
-    room.participants.forEach((participant) => {
-      participant.tracks.forEach((publication) => {
-        if (publication.track && publication.track.kind !== 'data') {
-          handleTrackSubscribed(publication.track as RemoteVideoTrack | RemoteAudioTrack, participant);
-        }
-      });
-
-      participant.on('trackSubscribed', (track) => {
-        if (track.kind !== 'data') {
-          handleTrackSubscribed(track as RemoteVideoTrack | RemoteAudioTrack, participant);
-        }
-      });
-      participant.on('trackUnsubscribed', (track) => {
-        if (track.kind !== 'data') {
-          handleTrackUnsubscribed(track as RemoteVideoTrack | RemoteAudioTrack, participant);
-        }
-      });
-    });
-
-    return () => {
-      room.participants.forEach((participant) => {
-        participant.removeAllListeners('trackSubscribed');
-        participant.removeAllListeners('trackUnsubscribed');
-      });
-    };
-  }, [room]);
+  // Remote tracks are now managed by the useTwilioVideo hook
 
   // Update participant connection state in DB when Twilio connects
   useEffect(() => {
@@ -826,13 +764,16 @@ export default function TelehealthSession() {
   };
 
   const remoteParticipantsList = Array.from(remoteParticipants.values()).map((participant) => {
-    const stream = remoteStreams.get(participant.sid);
+    const stream = remoteTracks.get(participant.sid);
+    const hasAudio = stream?.getAudioTracks().length > 0;
+    const hasVideo = stream?.getVideoTracks().length > 0;
+    
     return {
       id: participant.sid,
       name: participant.identity,
       stream: stream || null,
-      isMuted: false,
-      isVideoEnabled: stream !== null,
+      isMuted: !hasAudio,
+      isVideoEnabled: hasVideo,
       isScreenSharing: false,
       role: 'client' as const
     };
@@ -878,22 +819,18 @@ export default function TelehealthSession() {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 p-4">
-          <div className="h-full max-w-screen-2xl mx-auto flex flex-col gap-4">
-            <WaitingRoom sessionId={session?.id} isHost={isHost} />
-            
-            <div className="flex-1">
-              <VideoGrid
-                localParticipant={localParticipant}
-                remoteParticipants={remoteParticipantsList}
-                layout={remoteParticipantsList.length > 2 ? 'grid' : 'spotlight'}
-              />
-            </div>
+        <div className={`flex-1 flex flex-col ${isChatOpen ? 'pr-4' : ''}`}>
+          <div className="flex-1 p-4 overflow-hidden">
+            <VideoGrid
+              localParticipant={localParticipant}
+              remoteParticipants={remoteParticipantsList}
+              layout={remoteParticipantsList.length > 2 ? 'grid' : 'spotlight'}
+            />
           </div>
         </div>
 
         {isChatOpen && (
-          <div className="w-80">
+          <div className="w-80 border-l">
             <ChatSidebar
               sessionId={session?.id}
               currentUserId={user?.id || ''}

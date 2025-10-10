@@ -30,7 +30,7 @@ const VideoTile = ({ participant, isLocal }: { participant: Participant; isLocal
   }, [participant.stream]);
 
   return (
-    <Card className="relative overflow-hidden bg-muted aspect-video group">
+    <Card className="relative overflow-hidden bg-muted group w-full h-full">
       <video
         ref={videoRef}
         autoPlay
@@ -112,21 +112,23 @@ export const VideoGrid = ({
     const thumbnails = [localParticipant, ...remoteParticipants.slice(1)];
 
     return (
-      <div className="flex flex-col h-full gap-4">
-        <div className="flex-1">
+      <div className="flex flex-col h-full gap-4 w-full">
+        <div className="flex-1 min-h-0">
           <VideoTile participant={spotlightParticipant} isLocal={false} />
         </div>
         
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {thumbnails.map((participant, idx) => (
-            <div key={participant.id} className="w-48 flex-shrink-0">
-              <VideoTile 
-                participant={participant} 
-                isLocal={idx === 0} 
-              />
-            </div>
-          ))}
-        </div>
+        {thumbnails.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-2 flex-shrink-0">
+            {thumbnails.map((participant, idx) => (
+              <div key={participant.id} className="w-48 h-36 flex-shrink-0">
+                <VideoTile 
+                  participant={participant} 
+                  isLocal={idx === 0} 
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -134,9 +136,13 @@ export const VideoGrid = ({
   // Grid layout with mobile optimization
   return (
     <div className={cn(
-      "grid gap-2 md:gap-4 h-full auto-rows-fr",
+      "grid gap-2 md:gap-4 w-full h-full",
       getGridColumns()
-    )}>
+    )}
+    style={{
+      gridAutoRows: '1fr',
+      maxHeight: '100%'
+    }}>
       <VideoTile participant={localParticipant} isLocal={true} />
       
       {remoteParticipants.map((participant) => (
