@@ -216,6 +216,36 @@ export const useAppointments = (
 
   const createAppointment = async (appointment: any) => {
     try {
+      // Check for existing appointment conflicts before database operation
+      const { data: conflicts } = await supabase
+        .from('appointments')
+        .select('id, start_time, end_time, appointment_type')
+        .eq('clinician_id', appointment.clinician_id)
+        .eq('appointment_date', appointment.appointment_date)
+        .not('status', 'in', '("Cancelled","No Show","Rescheduled")');
+
+      if (conflicts && conflicts.length > 0) {
+        const startTime = appointment.start_time.substring(0, 5);
+        const endTime = appointment.end_time.substring(0, 5);
+        
+        const conflictingAppt = conflicts.find(appt => {
+          const existingStart = appt.start_time.substring(0, 5);
+          const existingEnd = appt.end_time.substring(0, 5);
+          
+          return (
+            (startTime >= existingStart && startTime < existingEnd) ||
+            (endTime > existingStart && endTime <= existingEnd) ||
+            (startTime <= existingStart && endTime >= existingEnd)
+          );
+        });
+
+        if (conflictingAppt) {
+          throw new Error(
+            `Time conflict: An appointment (${conflictingAppt.appointment_type}) already exists from ${conflictingAppt.start_time.substring(0, 5)} to ${conflictingAppt.end_time.substring(0, 5)}. Please choose a different time.`
+          );
+        }
+      }
+
       // Validate against clinician schedule
       const scheduleValidation = await validateAgainstSchedule(
         appointment.clinician_id,
@@ -433,6 +463,52 @@ export const useAppointments = (
       }
       if (typeof normalized.end_time === 'string' && normalized.end_time.length === 5) {
         normalized.end_time = `${normalized.end_time}:00`;
+      }
+
+      // Check for conflicts if time/date is being updated
+      if (normalized.appointment_date || normalized.start_time || normalized.end_time || normalized.clinician_id) {
+        const { data: currentAppt } = await supabase
+          .from('appointments')
+          .select('clinician_id, appointment_date, start_time, end_time')
+          .eq('id', id)
+          .single();
+
+        if (currentAppt) {
+          const checkClinicianId = normalized.clinician_id || currentAppt.clinician_id;
+          const checkDate = normalized.appointment_date || currentAppt.appointment_date;
+          const checkStartTime = normalized.start_time || currentAppt.start_time;
+          const checkEndTime = normalized.end_time || currentAppt.end_time;
+
+          const { data: conflicts } = await supabase
+            .from('appointments')
+            .select('id, start_time, end_time, appointment_type')
+            .eq('clinician_id', checkClinicianId)
+            .eq('appointment_date', checkDate)
+            .neq('id', id)
+            .not('status', 'in', '("Cancelled","No Show","Rescheduled")');
+
+          if (conflicts && conflicts.length > 0) {
+            const startTime = checkStartTime.substring(0, 5);
+            const endTime = checkEndTime.substring(0, 5);
+            
+            const conflictingAppt = conflicts.find(appt => {
+              const existingStart = appt.start_time.substring(0, 5);
+              const existingEnd = appt.end_time.substring(0, 5);
+              
+              return (
+                (startTime >= existingStart && startTime < existingEnd) ||
+                (endTime > existingStart && endTime <= existingEnd) ||
+                (startTime <= existingStart && endTime >= existingEnd)
+              );
+            });
+
+            if (conflictingAppt) {
+              throw new Error(
+                `Time conflict: An appointment (${conflictingAppt.appointment_type}) already exists from ${conflictingAppt.start_time.substring(0, 5)} to ${conflictingAppt.end_time.substring(0, 5)}. Please choose a different time.`
+              );
+            }
+          }
+        }
       }
 
       // If telehealth with Internal/Twilio platform, create/ensure session
