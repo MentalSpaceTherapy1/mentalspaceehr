@@ -67,6 +67,7 @@ export default function TelehealthSession() {
   const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
   const [aiSessionSummary, setAiSessionSummary] = useState<string>('');
   const [aiProvider, setAiProvider] = useState<'lovable_ai' | 'twilio'>('lovable_ai');
+  const [layout, setLayout] = useState<'grid' | 'speaker' | 'gallery'>('grid');
   
   const timeoutCheckRef = useRef<NodeJS.Timeout | null>(null);
   const userName = profile ? `${profile.first_name} ${profile.last_name}` : 'User';
@@ -547,11 +548,13 @@ export default function TelehealthSession() {
       if (isHost) {
         setShowPostSessionDialog(true);
       } else {
-        // For clients, just navigate back to appointments
-        const returnRoute = window.location.pathname.startsWith('/portal/')
-          ? '/portal/appointments'
-          : '/schedule';
-        navigate(returnRoute);
+        // For clients, navigate back to appointments with a small delay
+        setTimeout(() => {
+          const returnRoute = window.location.pathname.startsWith('/portal/')
+            ? '/portal/appointments'
+            : '/schedule';
+          navigate(returnRoute, { replace: true });
+        }, 500);
       }
     } catch (err) {
       toast({
@@ -911,7 +914,7 @@ export default function TelehealthSession() {
             <VideoGrid
               localParticipant={localParticipant}
               remoteParticipants={remoteParticipantsList}
-              layout={remoteParticipantsList.length > 2 ? 'grid' : 'spotlight'}
+              layout={layout}
             />
           </div>
         </div>
@@ -920,7 +923,7 @@ export default function TelehealthSession() {
         {isChatOpen && (
           <div className="w-80">
             <ChatSidebar
-              sessionId={session?.id}
+              sessionId={normalizedSessionId}
               currentUserId={user?.id || ''}
               currentUserName={profile ? `${profile.first_name} ${profile.last_name}` : 'You'}
               isOpen={isChatOpen}
@@ -960,6 +963,7 @@ export default function TelehealthSession() {
             isOpen={isNotesPanelOpen}
             sessionId={normalizedSessionId}
             onClose={() => setIsNotesPanelOpen(false)}
+            aiSuggestions={aiSessionSummary ? [aiSessionSummary] : []}
             appointmentId={session?.appointment_id}
             clientId={session?.appointments?.client_id}
           />
@@ -983,9 +987,11 @@ export default function TelehealthSession() {
         onToggleAI={() => setIsAIPanelOpen(!isAIPanelOpen)}
         onToggleParticipants={() => setIsParticipantsPanelOpen(!isParticipantsPanelOpen)}
         onToggleNotes={() => setIsNotesPanelOpen(!isNotesPanelOpen)}
+        onChangeLayout={setLayout}
         isAIEnabled={isAIPanelOpen}
         isParticipantsOpen={isParticipantsPanelOpen}
         isNotesOpen={isNotesPanelOpen}
+        currentLayout={layout}
       />
 
       <RecordingConsentDialog
