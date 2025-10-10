@@ -7237,6 +7237,42 @@ export type Database = {
           },
         ]
       }
+      session_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          message_type: string | null
+          metadata: Json | null
+          read_by: string[] | null
+          session_id: string
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          message_type?: string | null
+          metadata?: Json | null
+          read_by?: string[] | null
+          session_id: string
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          message_type?: string | null
+          metadata?: Json | null
+          read_by?: string[] | null
+          session_id?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
       session_participants: {
         Row: {
           connection_quality: Json | null
