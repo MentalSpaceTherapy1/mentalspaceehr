@@ -148,17 +148,18 @@ export const WaitingRoomClient = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl">
+      <Card className="w-full max-w-2xl shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="relative">
-              <Loader2 className="h-12 w-12 text-primary animate-spin" />
+              <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+              <Loader2 className="h-12 w-12 text-primary animate-spin relative" />
               <Clock className="h-6 w-6 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Please Wait</CardTitle>
+          <CardTitle className="text-2xl">Waiting Room</CardTitle>
           <CardDescription className="text-lg">
-            Your clinician will join shortly
+            {clinicianName} will join shortly
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -229,8 +230,14 @@ export const WaitingRoomClient = ({
             </div>
           </div>
 
-          <div className="text-center text-sm text-muted-foreground">
-            You will be automatically connected when your clinician joins
+          <div className="text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              You will be automatically connected when your clinician joins
+            </p>
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+              <span>Connected</span>
+            </div>
           </div>
         </CardContent>
       </Card>

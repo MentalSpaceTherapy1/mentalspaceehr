@@ -166,12 +166,14 @@ export const WaitingRoomClinician = ({ clinicianId, onAdmitClient }: WaitingRoom
 
   return (
     <>
-      <Card className="fixed top-4 right-4 w-80 z-50 shadow-lg">
+      <Card className="fixed top-4 right-4 w-80 z-50 shadow-xl border-2 border-primary/20 animate-in slide-in-from-right duration-300">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
+            <div className="relative">
+              <Clock className="h-5 w-5 text-primary animate-pulse" />
+            </div>
             Waiting Room
-            <Badge variant="secondary">{waitingClients.length}</Badge>
+            <Badge variant="default" className="animate-pulse">{waitingClients.length}</Badge>
           </CardTitle>
           <CardDescription>Clients waiting to join</CardDescription>
         </CardHeader>
