@@ -242,7 +242,7 @@ export const useAppointments = (
 
       // Handle telehealth session creation for Internal platform
       let telehealthLink = appointment.telehealth_link;
-      if (appointment.service_location === 'Telehealth' && appointment.telehealth_platform === 'Internal') {
+      if (appointment.service_location === 'Telehealth' && (appointment.telehealth_platform === 'Internal' || appointment.telehealth_platform === 'Twilio')) {
         const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         telehealthLink = `/telehealth/session/${sessionId}`;
       }
@@ -290,8 +290,8 @@ export const useAppointments = (
 
         if (parentError) throw parentError;
 
-        // Create telehealth session for Internal platform
-        if (appointment.service_location === 'Telehealth' && appointment.telehealth_platform === 'Internal' && parentData) {
+        // Create telehealth session for Internal/Twilio platform
+        if (appointment.service_location === 'Telehealth' && (appointment.telehealth_platform === 'Internal' || appointment.telehealth_platform === 'Twilio') && parentData) {
           await supabase
             .from('telehealth_sessions')
             .insert({
@@ -307,7 +307,7 @@ export const useAppointments = (
           const childAppointments = series.slice(1).map(apt => {
             // Generate unique telehealth link for each occurrence
             let aptTelehealthLink = null;
-            if (appointment.service_location === 'Telehealth' && appointment.telehealth_platform === 'Internal') {
+            if (appointment.service_location === 'Telehealth' && (appointment.telehealth_platform === 'Internal' || appointment.telehealth_platform === 'Twilio')) {
               const uniqueSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
               aptTelehealthLink = `/telehealth/session/${uniqueSessionId}`;
             }
@@ -334,7 +334,7 @@ export const useAppointments = (
           if (childError) throw childError;
 
           // Create telehealth sessions for all child appointments
-          if (appointment.service_location === 'Telehealth' && appointment.telehealth_platform === 'Internal' && childData) {
+          if (appointment.service_location === 'Telehealth' && (appointment.telehealth_platform === 'Internal' || appointment.telehealth_platform === 'Twilio') && childData) {
             const sessions = childData.map(apt => ({
               appointment_id: apt.id,
               host_id: apt.clinician_id,
@@ -382,8 +382,8 @@ export const useAppointments = (
 
         if (error) throw error;
 
-        // Create telehealth session for Internal platform
-        if (appointment.service_location === 'Telehealth' && appointment.telehealth_platform === 'Internal' && data) {
+        // Create telehealth session for Internal/Twilio platform
+        if (appointment.service_location === 'Telehealth' && (appointment.telehealth_platform === 'Internal' || appointment.telehealth_platform === 'Twilio') && data) {
           await supabase
             .from('telehealth_sessions')
             .insert({
@@ -435,8 +435,8 @@ export const useAppointments = (
         normalized.end_time = `${normalized.end_time}:00`;
       }
 
-      // If telehealth with Internal platform, create/ensure session
-      if (normalized.service_location === 'Telehealth' && normalized.telehealth_platform === 'Internal') {
+      // If telehealth with Internal/Twilio platform, create/ensure session
+      if (normalized.service_location === 'Telehealth' && (normalized.telehealth_platform === 'Internal' || normalized.telehealth_platform === 'Twilio')) {
         const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         
         // Check if session exists

@@ -145,7 +145,7 @@ export function AppointmentDialog({
       service_location: 'Office',
       appointment_type: 'Therapy Session',
       is_recurring: false,
-      telehealth_platform: 'Internal',
+      telehealth_platform: 'Twilio',
       icd_codes: [],
       start_time: '09:00', // Add default start time
     },
@@ -182,7 +182,7 @@ export function AppointmentDialog({
         room: appointment.room ?? '',
         appointment_notes: appointment.appointment_notes ?? '',
         client_notes: appointment.client_notes ?? '',
-        telehealth_platform: appointment.telehealth_platform || 'Internal',
+        telehealth_platform: appointment.telehealth_platform || 'Twilio',
         telehealth_link: appointment.telehealth_link || '',
         cpt_code: appointment.cpt_code || '',
         icd_codes: appointment.icd_codes || [],
@@ -201,7 +201,7 @@ export function AppointmentDialog({
         service_location: 'Office',
         appointment_type: 'Therapy Session',
         is_recurring: false,
-        telehealth_platform: 'Internal',
+        telehealth_platform: 'Twilio',
         icd_codes: [],
         start_time: '09:00',
       });
@@ -627,13 +627,13 @@ export function AppointmentDialog({
                       <FormItem>
                         <FormLabel>Platform</FormLabel>
                         <Select 
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            // Clear link if not Internal - let useAppointments handle generation
-                            if (value !== 'Internal') {
-                              form.setValue('telehealth_link', '');
-                            }
-                          }}
+            onValueChange={(value) => {
+              field.onChange(value);
+              // Clear link if not Internal/Twilio - let useAppointments handle generation
+              if (value !== 'Internal' && value !== 'Twilio') {
+                form.setValue('telehealth_link', '');
+              }
+            }}
                           value={field.value}
                         >
                           <FormControl>
@@ -642,7 +642,8 @@ export function AppointmentDialog({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Internal">Internal WebRTC</SelectItem>
+                            <SelectItem value="Twilio">Twilio Video (Recommended)</SelectItem>
+                            <SelectItem value="Internal">Legacy WebRTC</SelectItem>
                             <SelectItem value="Zoom">Zoom</SelectItem>
                             <SelectItem value="Doxy.me">Doxy.me</SelectItem>
                             <SelectItem value="External">External Link</SelectItem>
@@ -663,11 +664,11 @@ export function AppointmentDialog({
                           <Input 
                             {...field} 
                             placeholder={
-                              form.watch('telehealth_platform') === 'Internal' 
+                              (form.watch('telehealth_platform') === 'Internal' || form.watch('telehealth_platform') === 'Twilio')
                                 ? 'Auto-generated' 
                                 : 'Enter meeting URL'
                             }
-                            disabled={form.watch('telehealth_platform') === 'Internal'}
+                            disabled={form.watch('telehealth_platform') === 'Internal' || form.watch('telehealth_platform') === 'Twilio'}
                           />
                         </FormControl>
                         <FormMessage />
@@ -776,7 +777,7 @@ export function AppointmentDialog({
               </Button>
               {appointment && 
                 appointment.service_location === 'Telehealth' && 
-                appointment.telehealth_platform === 'Internal' &&
+                (appointment.telehealth_platform === 'Internal' || appointment.telehealth_platform === 'Twilio') &&
                 (appointment.status === 'Scheduled' || appointment.status === 'Confirmed') &&
                 (isToday(new Date(appointment.appointment_date)) || isPast(new Date(appointment.appointment_date))) && (
                 <Button

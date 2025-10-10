@@ -116,7 +116,7 @@ export function ClientAppointments({ clientId }: ClientAppointmentsProps) {
   const canJoinSession = (apt: Appointment) => {
     return (
       apt.service_location === 'Telehealth' &&
-      apt.telehealth_platform === 'Internal' &&
+      (apt.telehealth_platform === 'Internal' || apt.telehealth_platform === 'Twilio') &&
       apt.telehealth_link &&
       isToday(parseISO(apt.appointment_date)) &&
       (apt.status === 'Scheduled' || apt.status === 'Confirmed' || apt.status === 'Checked In')
