@@ -83,6 +83,7 @@ export default function TelehealthSession() {
     isVideoEnabled,
     localVideoTrack,
     localAudioTrack,
+    dominantSpeaker,
     connect,
     disconnect,
     toggleMute,
@@ -917,6 +918,7 @@ export default function TelehealthSession() {
               localParticipant={localParticipant}
               remoteParticipants={remoteParticipantsList}
               layout={layout}
+              dominantSpeaker={dominantSpeaker}
             />
           </div>
         </div>

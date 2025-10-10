@@ -20,16 +20,19 @@ interface VideoGridProps {
   localParticipant: Participant;
   remoteParticipants: Participant[];
   layout?: 'grid' | 'spotlight' | 'speaker' | 'gallery';
+  dominantSpeaker?: any;
 }
 
 const VideoTile = ({
   participant,
   isLocal,
+  isDominantSpeaker,
   onFullscreen,
   onPiP
 }: {
   participant: Participant;
   isLocal: boolean;
+  isDominantSpeaker?: boolean;
   onFullscreen?: () => void;
   onPiP?: () => void;
 }) => {
@@ -59,7 +62,10 @@ const VideoTile = ({
 
   return (
     <Card
-      className="relative overflow-hidden bg-muted group w-full h-full"
+      className={cn(
+        "relative overflow-hidden bg-muted group w-full h-full transition-all duration-300",
+        isDominantSpeaker && "ring-4 ring-primary shadow-lg shadow-primary/50"
+      )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -119,6 +125,11 @@ const VideoTile = ({
             {participant.role === 'host' && (
               <Badge variant="secondary" className="text-xs">Host</Badge>
             )}
+            {isDominantSpeaker && (
+              <Badge variant="default" className="text-xs animate-pulse bg-primary">
+                Speaking
+              </Badge>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -152,11 +163,21 @@ const VideoTile = ({
 export const VideoGrid = ({
   localParticipant,
   remoteParticipants,
-  layout = 'grid'
+  layout = 'grid',
+  dominantSpeaker
 }: VideoGridProps) => {
   const [fullscreenParticipant, setFullscreenParticipant] = useState<Participant | null>(null);
   const { toast } = useToast();
   const totalParticipants = 1 + remoteParticipants.length;
+
+  // Helper function to check if a participant is the dominant speaker
+  const isDominant = (participant: Participant) => {
+    if (!dominantSpeaker) return false;
+    // Check if the participant's ID matches the dominant speaker's identity or sid
+    return participant.id === dominantSpeaker.sid ||
+           participant.id === dominantSpeaker.identity ||
+           participant.name === dominantSpeaker.identity;
+  };
 
   const getGridColumns = () => {
     if (totalParticipants === 1) return 'grid-cols-1';
@@ -197,6 +218,7 @@ export const VideoGrid = ({
         <VideoTile
           participant={fullscreenParticipant}
           isLocal={fullscreenParticipant.id === localParticipant.id}
+          isDominantSpeaker={isDominant(fullscreenParticipant)}
           onPiP={handlePiP}
         />
       </div>
@@ -214,6 +236,7 @@ export const VideoGrid = ({
           <VideoTile
             participant={speakerParticipant}
             isLocal={false}
+            isDominantSpeaker={isDominant(speakerParticipant)}
             onFullscreen={() => handleFullscreen(speakerParticipant)}
             onPiP={handlePiP}
           />
@@ -226,6 +249,7 @@ export const VideoGrid = ({
                 <VideoTile
                   participant={participant}
                   isLocal={idx === 0}
+                  isDominantSpeaker={isDominant(participant)}
                   onFullscreen={() => handleFullscreen(participant)}
                   onPiP={handlePiP}
                 />
@@ -255,6 +279,7 @@ export const VideoGrid = ({
             key={participant.id}
             participant={participant}
             isLocal={idx === 0}
+            isDominantSpeaker={isDominant(participant)}
             onFullscreen={() => handleFullscreen(participant)}
             onPiP={handlePiP}
           />
@@ -276,6 +301,7 @@ export const VideoGrid = ({
       <VideoTile
         participant={localParticipant}
         isLocal={true}
+        isDominantSpeaker={isDominant(localParticipant)}
         onFullscreen={() => handleFullscreen(localParticipant)}
         onPiP={handlePiP}
       />
@@ -285,6 +311,7 @@ export const VideoGrid = ({
           key={participant.id}
           participant={participant}
           isLocal={false}
+          isDominantSpeaker={isDominant(participant)}
           onFullscreen={() => handleFullscreen(participant)}
           onPiP={handlePiP}
         />

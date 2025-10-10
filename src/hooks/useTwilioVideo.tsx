@@ -36,6 +36,7 @@ export const useTwilioVideo = (sessionId: string, userId: string, userName: stri
   const [localVideoTrack, setLocalVideoTrack] = useState<LocalVideoTrack | null>(null);
   const [localAudioTrack, setLocalAudioTrack] = useState<LocalAudioTrack | null>(null);
   const [screenTrack, setScreenTrack] = useState<LocalVideoTrack | null>(null);
+  const [dominantSpeaker, setDominantSpeaker] = useState<RemoteParticipant | null>(null);
 
   const { toast } = useToast();
   const roomRef = useRef<Room | null>(null);
@@ -62,6 +63,21 @@ export const useTwilioVideo = (sessionId: string, userId: string, userName: stri
         name: sessionId,
         tracks: [videoTrack, audioTrack],
         networkQuality: { local: 3, remote: 1 },
+        dominantSpeaker: true,
+        bandwidthProfile: {
+          video: {
+            mode: 'collaboration',
+            maxTracks: 10,
+            dominantSpeakerPriority: 'high',
+            renderDimensions: {
+              high: { width: 1280, height: 720 },
+              standard: { width: 640, height: 480 },
+              low: { width: 320, height: 240 }
+            }
+          }
+        },
+        preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }],
+        maxAudioBitrate: 16000,
       });
 
       roomRef.current = connectedRoom;
@@ -131,6 +147,12 @@ export const useTwilioVideo = (sessionId: string, userId: string, userName: stri
 
       connectedRoom.participants.forEach(setupParticipant);
 
+      // Listen for dominant speaker changes
+      connectedRoom.on('dominantSpeakerChanged', (participant: RemoteParticipant | null) => {
+        console.log('[Twilio] Dominant speaker changed:', participant?.identity || 'None');
+        setDominantSpeaker(participant);
+      });
+
       return connectedRoom;
     } catch (error) {
       toast({ title: 'Connection Error', variant: 'destructive' });
@@ -166,6 +188,7 @@ export const useTwilioVideo = (sessionId: string, userId: string, userName: stri
   return {
     room, localParticipant, remoteParticipants, remoteTracks, connectionState, connectionQuality,
     isMuted, isVideoEnabled, isScreenSharing, localVideoTrack, localAudioTrack,
+    dominantSpeaker,
     connect, disconnect, toggleMute, toggleVideo
   };
 };
