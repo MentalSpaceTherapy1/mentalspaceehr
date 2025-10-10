@@ -14,7 +14,8 @@
       "Bash(npx supabase db pull:*)",
       "Bash(git pull:*)",
       "Bash(git stash:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(psql:*)"
     ],
     "deny": [],
     "ask": []

@@ -203,18 +203,18 @@ export const VideoGrid = ({
     );
   }
 
-  if (layout === 'spotlight' && remoteParticipants.length > 0) {
-    // Spotlight: Large main video + small thumbnails
-    const spotlightParticipant = remoteParticipants[0];
+  // Speaker View: Large active speaker + thumbnails
+  if (layout === 'speaker' && remoteParticipants.length > 0) {
+    const speakerParticipant = remoteParticipants[0];
     const thumbnails = [localParticipant, ...remoteParticipants.slice(1)];
 
     return (
       <div className="flex flex-col h-full gap-4 w-full">
         <div className="flex-1 min-h-0">
           <VideoTile
-            participant={spotlightParticipant}
+            participant={speakerParticipant}
             isLocal={false}
-            onFullscreen={() => handleFullscreen(spotlightParticipant)}
+            onFullscreen={() => handleFullscreen(speakerParticipant)}
             onPiP={handlePiP}
           />
         </div>
@@ -233,6 +233,32 @@ export const VideoGrid = ({
             ))}
           </div>
         )}
+      </div>
+    );
+  }
+
+  // Gallery View: All participants equal size, optimized grid
+  if (layout === 'gallery') {
+    const allParticipants = [localParticipant, ...remoteParticipants];
+
+    return (
+      <div className={cn(
+        "grid gap-2 md:gap-4 w-full h-full auto-rows-fr",
+        allParticipants.length === 1 && "grid-cols-1",
+        allParticipants.length === 2 && "grid-cols-2",
+        allParticipants.length >= 3 && allParticipants.length <= 4 && "grid-cols-2 grid-rows-2",
+        allParticipants.length >= 5 && allParticipants.length <= 9 && "grid-cols-3",
+        allParticipants.length > 9 && "grid-cols-4"
+      )}>
+        {allParticipants.map((participant, idx) => (
+          <VideoTile
+            key={participant.id}
+            participant={participant}
+            isLocal={idx === 0}
+            onFullscreen={() => handleFullscreen(participant)}
+            onPiP={handlePiP}
+          />
+        ))}
       </div>
     );
   }
