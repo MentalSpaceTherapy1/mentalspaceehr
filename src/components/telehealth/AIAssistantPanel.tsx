@@ -48,7 +48,7 @@ export const AIAssistantPanel = ({
     generateSummary
   } = useTwilioAI({
     room,
-    enabled: isOpen && isRecording,
+    enabled: isRecording || transcriptionEnabled,
     onTranscript: (transcript) => {
       console.log('[AI] New transcript:', transcript);
     },
@@ -113,198 +113,202 @@ export const AIAssistantPanel = ({
     return 'bg-orange-500';
   };
 
-  if (!isOpen) return null;
+  // Keep mounted even when closed to continue AI processing
 
   return (
-    <Card className="w-80 h-full border-l flex flex-col">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500">
-              <Sparkles className="h-4 w-4 text-white" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">AI Assistant</CardTitle>
-              <CardDescription className="text-xs">
-                Powered by Lovable AI
-              </CardDescription>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="h-8 w-8 p-0"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardHeader>
-
-      <Separator />
-
-      <CardContent className="flex-1 p-4 space-y-4 overflow-hidden flex flex-col">
-        {/* Features Section */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <Bot className="h-4 w-4" />
-            <span>Active Features</span>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+    <>
+      {isOpen && (
+        <Card className="w-80 h-full border-l flex flex-col">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Mic className="h-3 w-3" />
-                <span className="text-xs">Live Transcription</span>
-              </div>
-              <Badge variant={transcriptionEnabled ? "default" : "secondary"} className="text-xs">
-                {transcriptionEnabled ? "On" : "Off"}
-              </Badge>
-            </div>
-
-            <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-              <div className="flex items-center gap-2">
-                <Brain className="h-3 w-3" />
-                <span className="text-xs">Sentiment Analysis</span>
-              </div>
-              <Badge variant={isRecording ? "default" : "secondary"} className="text-xs">
-                {isRecording ? "Active" : "Inactive"}
-              </Badge>
-            </div>
-
-            <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-              <div className="flex items-center gap-2">
-                <FileText className="h-3 w-3" />
-                <span className="text-xs">Note Suggestions</span>
-              </div>
-              <Badge variant="default" className="text-xs">On</Badge>
-            </div>
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Real-time Insights */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Sparkles className="h-4 w-4" />
-              <span>Real-time Insights ({allInsights.length})</span>
-            </div>
-            {isProcessing && (
-              <div className="flex items-center gap-1">
-                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
-                <span className="text-xs text-muted-foreground">Analyzing...</span>
-              </div>
-            )}
-            {currentSentiment && (
-              <Badge variant={
-                currentSentiment.label === 'positive' ? 'default' :
-                currentSentiment.label === 'negative' ? 'destructive' : 'secondary'
-              }>
-                {currentSentiment.label}
-              </Badge>
-            )}
-          </div>
-
-          <ScrollArea className="flex-1">
-            <div className="space-y-3 pr-4">
-              {allInsights.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Bot className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">
-                    {isRecording
-                      ? "AI is listening and will provide insights..."
-                      : "Start recording to enable AI insights"
-                    }
-                  </p>
+                <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500">
+                  <Sparkles className="h-4 w-4 text-white" />
                 </div>
-              ) : (
-                allInsights.map((insight) => (
-                  <Card key={insight.id} className="p-3 bg-muted/50">
-                    <div className="flex items-start gap-2">
-                      <div className="mt-0.5">
-                        {getInsightIcon(insight.type)}
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium">{insight.title}</p>
-                          {insight.confidence && (
-                            <div className="flex items-center gap-1">
-                              <div className={cn(
-                                "h-2 w-2 rounded-full",
-                                getConfidenceColor(insight.confidence)
-                              )} />
-                              <span className="text-xs text-muted-foreground">
-                                {Math.round(insight.confidence * 100)}%
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground">{insight.content}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {insight.timestamp.toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-                ))
-              )}
+                <div>
+                  <CardTitle className="text-lg">AI Assistant</CardTitle>
+                  <CardDescription className="text-xs">
+                    Powered by Lovable AI
+                  </CardDescription>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
-          </ScrollArea>
-        </div>
+          </CardHeader>
 
-        {/* Action Buttons */}
-        <div className="space-y-2 pt-2 border-t">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={async () => {
-              if (transcriptionEnabled) {
-                await disableTranscription();
-                setTranscriptionEnabled(false);
-                toast({
-                  title: "Transcription Stopped",
-                  description: "Real-time transcription has been disabled"
-                });
-              } else {
-                const success = await enableTranscription();
-                if (success) {
-                  setTranscriptionEnabled(true);
-                  toast({
-                    title: "Transcription Started",
-                    description: "Real-time transcription is now active"
-                  });
-                }
-              }
-            }}
-          >
-            <Mic className="h-4 w-4 mr-2" />
-            {transcriptionEnabled ? 'Stop' : 'Start'} Transcription
-          </Button>
+          <Separator />
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            disabled={transcripts.length === 0}
-            onClick={async () => {
-              const summary = await generateSummary();
-              if (summary) {
-                toast({
-                  title: "Session Summary",
-                  description: summary,
-                  duration: 10000
-                });
-              }
-            }}
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            Generate Session Summary
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          <CardContent className="flex-1 p-4 space-y-4 overflow-hidden flex flex-col">
+            {/* Features Section */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Bot className="h-4 w-4" />
+                <span>Active Features</span>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Mic className="h-3 w-3" />
+                    <span className="text-xs">Live Transcription</span>
+                  </div>
+                  <Badge variant={transcriptionEnabled ? "default" : "secondary"} className="text-xs">
+                    {transcriptionEnabled ? "On" : "Off"}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-3 w-3" />
+                    <span className="text-xs">Sentiment Analysis</span>
+                  </div>
+                  <Badge variant={isRecording ? "default" : "secondary"} className="text-xs">
+                    {isRecording ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-3 w-3" />
+                    <span className="text-xs">Note Suggestions</span>
+                  </div>
+                  <Badge variant="default" className="text-xs">On</Badge>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Real-time Insights */}
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Sparkles className="h-4 w-4" />
+                  <span>Real-time Insights ({allInsights.length})</span>
+                </div>
+                {isProcessing && (
+                  <div className="flex items-center gap-1">
+                    <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                    <span className="text-xs text-muted-foreground">Analyzing...</span>
+                  </div>
+                )}
+                {currentSentiment && (
+                  <Badge variant={
+                    currentSentiment.label === 'positive' ? 'default' :
+                    currentSentiment.label === 'negative' ? 'destructive' : 'secondary'
+                  }>
+                    {currentSentiment.label}
+                  </Badge>
+                )}
+              </div>
+
+              <ScrollArea className="flex-1">
+                <div className="space-y-3 pr-4">
+                  {allInsights.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Bot className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">
+                        {isRecording
+                          ? "AI is listening and will provide insights..."
+                          : "Start recording to enable AI insights"
+                        }
+                      </p>
+                    </div>
+                  ) : (
+                    allInsights.map((insight) => (
+                      <Card key={insight.id} className="p-3 bg-muted/50">
+                        <div className="flex items-start gap-2">
+                          <div className="mt-0.5">
+                            {getInsightIcon(insight.type)}
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium">{insight.title}</p>
+                              {insight.confidence && (
+                                <div className="flex items-center gap-1">
+                                  <div className={cn(
+                                    "h-2 w-2 rounded-full",
+                                    getConfidenceColor(insight.confidence)
+                                  )} />
+                                  <span className="text-xs text-muted-foreground">
+                                    {Math.round(insight.confidence * 100)}%
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">{insight.content}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {insight.timestamp.toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2 pt-2 border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={async () => {
+                  if (transcriptionEnabled) {
+                    await disableTranscription();
+                    setTranscriptionEnabled(false);
+                    toast({
+                      title: "Transcription Stopped",
+                      description: "Real-time transcription has been disabled"
+                    });
+                  } else {
+                    const success = await enableTranscription();
+                    if (success) {
+                      setTranscriptionEnabled(true);
+                      toast({
+                        title: "Transcription Started",
+                        description: "Real-time transcription is now active"
+                      });
+                    }
+                  }
+                }}
+              >
+                <Mic className="h-4 w-4 mr-2" />
+                {transcriptionEnabled ? 'Stop' : 'Start'} Transcription
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                disabled={transcripts.length === 0}
+                onClick={async () => {
+                  const summary = await generateSummary();
+                  if (summary) {
+                    toast({
+                      title: "Session Summary",
+                      description: summary,
+                      duration: 10000
+                    });
+                  }
+                }}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Generate Session Summary
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </>
   );
 };
