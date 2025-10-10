@@ -25,6 +25,7 @@ interface AIAssistantPanelProps {
   room: any; // Twilio Room
   provider?: 'lovable_ai' | 'twilio';
   onClose: () => void;
+  onProviderChange?: (provider: 'lovable_ai' | 'twilio') => void;
 }
 
 export const AIAssistantPanel = ({
@@ -33,7 +34,8 @@ export const AIAssistantPanel = ({
   isRecording,
   room,
   provider = 'lovable_ai',
-  onClose
+  onClose,
+  onProviderChange
 }: AIAssistantPanelProps) => {
   const [localInsights, setLocalInsights] = useState<AIInsight[]>([]);
   const [transcriptionEnabled, setTranscriptionEnabled] = useState(false);
@@ -131,18 +133,30 @@ export const AIAssistantPanel = ({
                 <div>
                   <CardTitle className="text-lg">AI Assistant</CardTitle>
                   <CardDescription className="text-xs">
-                    Powered by Lovable AI
+                    {provider === 'twilio' ? 'Twilio Voice Intelligence' : 'Powered by Lovable AI'}
                   </CardDescription>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                {onProviderChange && (
+                  <select
+                    value={provider}
+                    onChange={(e) => onProviderChange(e.target.value as 'lovable_ai' | 'twilio')}
+                    className="text-xs border rounded px-2 py-1 bg-background"
+                  >
+                    <option value="lovable_ai">Lovable AI</option>
+                    <option value="twilio">Twilio AI</option>
+                  </select>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClose}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </CardHeader>
 

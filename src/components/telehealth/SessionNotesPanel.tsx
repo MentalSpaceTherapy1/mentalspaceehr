@@ -13,13 +13,17 @@ interface SessionNotesPanelProps {
   sessionId: string;
   onClose: () => void;
   aiSuggestions?: string[];
+  appointmentId?: string;
+  clientId?: string;
 }
 
 export const SessionNotesPanel = ({
   isOpen,
   sessionId,
   onClose,
-  aiSuggestions = []
+  aiSuggestions = [],
+  appointmentId,
+  clientId
 }: SessionNotesPanelProps) => {
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -38,15 +42,16 @@ export const SessionNotesPanel = ({
 
     setIsSaving(true);
     try {
-      // TODO: Implement actual save to database
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Store notes temporarily in localStorage for this session
+      localStorage.setItem(`session_notes_${sessionId}`, notes);
 
       setLastSaved(new Date());
       toast({
         title: 'Notes saved',
-        description: 'Your session notes have been saved successfully'
+        description: 'Your session notes have been saved locally'
       });
     } catch (error) {
+      console.error('Save error:', error);
       toast({
         title: 'Error',
         description: 'Failed to save notes',
@@ -164,7 +169,12 @@ You can include:
             <Button
               variant="outline"
               size="sm"
-              disabled
+              onClick={() => {
+                toast({
+                  title: 'Templates',
+                  description: 'Note templates feature coming soon'
+                });
+              }}
             >
               <FileText className="h-4 w-4 mr-2" />
               Templates
@@ -172,7 +182,42 @@ You can include:
             <Button
               variant="outline"
               size="sm"
-              disabled
+              onClick={async () => {
+                if (!notes.trim()) {
+                  toast({
+                    title: 'No content',
+                    description: 'Write some notes first to expand with AI',
+                    variant: 'destructive'
+                  });
+                  return;
+                }
+                
+                setIsSaving(true);
+                try {
+                  const { supabase } = await import('@/integrations/supabase/client');
+                  const { data, error } = await supabase.functions.invoke('suggest-clinical-content', {
+                    body: { text: notes, context: 'session_notes' }
+                  });
+                  
+                  if (error) throw error;
+                  
+                  if (data?.suggestion) {
+                    setNotes(prev => prev + '\n\n' + data.suggestion);
+                    toast({
+                      title: 'AI Expanded',
+                      description: 'AI suggestions added to your notes'
+                    });
+                  }
+                } catch (error) {
+                  toast({
+                    title: 'Error',
+                    description: 'Failed to expand with AI',
+                    variant: 'destructive'
+                  });
+                } finally {
+                  setIsSaving(false);
+                }
+              }}
             >
               <Sparkles className="h-4 w-4 mr-2" />
               AI Expand

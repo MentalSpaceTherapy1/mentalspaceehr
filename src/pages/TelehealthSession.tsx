@@ -960,6 +960,8 @@ export default function TelehealthSession() {
             isOpen={isNotesPanelOpen}
             sessionId={normalizedSessionId}
             onClose={() => setIsNotesPanelOpen(false)}
+            appointmentId={session?.appointment_id}
+            clientId={session?.appointments?.client_id}
           />
         )}
       </div>
