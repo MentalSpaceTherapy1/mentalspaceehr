@@ -20,7 +20,6 @@ import { BlockedTimesDialog } from '@/components/schedule/BlockedTimesDialog';
 import { RecurringEditDialog } from '@/components/schedule/RecurringEditDialog';
 import { ClinicianSelectorDialog } from '@/components/schedule/ClinicianSelectorDialog';
 import { AppointmentTooltip } from '@/components/schedule/AppointmentTooltip';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -509,6 +508,9 @@ export default function Schedule() {
     ['administrator', 'front_desk', 'therapist'].includes(role)
   );
 
+  const [hoveredEvent, setHoveredEvent] = useState<any>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+
   // Custom event component with tooltip
   const EventComponent = ({ event }: any) => {
     const resource = event.resource;
@@ -518,26 +520,32 @@ export default function Schedule() {
       return <span>{event.title}</span>;
     }
     
-    // Appointment with tooltip
+    // Appointment with hover tooltip
     const appointment = resource.data as Appointment;
     
     return (
-      <TooltipProvider delayDuration={300}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="cursor-pointer">{event.title}</span>
-          </TooltipTrigger>
-          <TooltipContent side="right" className="p-0 border-0 bg-transparent shadow-none">
-            <AppointmentTooltip appointment={appointment} />
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <span 
+        className="cursor-pointer w-full h-full block relative"
+        onMouseEnter={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          setTooltipPosition({ 
+            x: rect.right + 10, 
+            y: rect.top 
+          });
+          setHoveredEvent(appointment);
+        }}
+        onMouseLeave={() => {
+          setHoveredEvent(null);
+        }}
+      >
+        {event.title}
+      </span>
     );
   };
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="container mx-auto p-6 space-y-6 relative">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Schedule</h1>
@@ -758,6 +766,19 @@ export default function Schedule() {
           selectedClinicians={selectedClinicians}
           onApply={setSelectedClinicians}
         />
+
+        {/* Floating tooltip for hovered appointments */}
+        {hoveredEvent && (
+          <div 
+            className="fixed z-[9999] pointer-events-none"
+            style={{
+              left: `${tooltipPosition.x}px`,
+              top: `${tooltipPosition.y}px`,
+            }}
+          >
+            <AppointmentTooltip appointment={hoveredEvent} />
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
