@@ -18,6 +18,9 @@ import { BandwidthTestDialog } from '@/components/telehealth/BandwidthTestDialog
 import { ConsentVerificationGate } from '@/components/telehealth/ConsentVerificationGate';
 import { WaitingRoomClient } from '@/components/telehealth/WaitingRoomClient';
 import { WaitingRoomClinician } from '@/components/telehealth/WaitingRoomClinician';
+import { AIAssistantPanel } from '@/components/telehealth/AIAssistantPanel';
+import { ParticipantsPanel } from '@/components/telehealth/ParticipantsPanel';
+import { SessionNotesPanel } from '@/components/telehealth/SessionNotesPanel';
 import { BandwidthTestResult } from '@/hooks/useBandwidthTest';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -59,6 +62,9 @@ export default function TelehealthSession() {
   const [waitingRoomId, setWaitingRoomId] = useState<string | null>(null);
   const [inWaitingRoom, setInWaitingRoom] = useState(false);
   const [waitingRoomAdmitted, setWaitingRoomAdmitted] = useState(false);
+  const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
+  const [isParticipantsPanelOpen, setIsParticipantsPanelOpen] = useState(false);
+  const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
   
   const timeoutCheckRef = useRef<NodeJS.Timeout | null>(null);
   const userName = profile ? `${profile.first_name} ${profile.last_name}` : 'User';
@@ -819,7 +825,7 @@ export default function TelehealthSession() {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        <div className={`flex-1 flex flex-col ${isChatOpen ? 'pr-4' : ''}`}>
+        <div className="flex-1 flex flex-col">
           <div className="flex-1 p-4 overflow-hidden">
             <VideoGrid
               localParticipant={localParticipant}
@@ -829,8 +835,9 @@ export default function TelehealthSession() {
           </div>
         </div>
 
+        {/* Sidebars */}
         {isChatOpen && (
-          <div className="w-80 border-l">
+          <div className="w-80">
             <ChatSidebar
               sessionId={session?.id}
               currentUserId={user?.id || ''}
@@ -838,6 +845,40 @@ export default function TelehealthSession() {
               isOpen={isChatOpen}
             />
           </div>
+        )}
+
+        {isAIPanelOpen && (
+          <AIAssistantPanel
+            isOpen={isAIPanelOpen}
+            sessionId={normalizedSessionId}
+            isRecording={isRecording}
+            onClose={() => setIsAIPanelOpen(false)}
+          />
+        )}
+
+        {isParticipantsPanelOpen && (
+          <ParticipantsPanel
+            isOpen={isParticipantsPanelOpen}
+            participants={remoteParticipantsList.map(p => ({
+              id: p.id,
+              name: p.name,
+              role: p.id === session?.host_id ? 'host' : 'client',
+              isMuted: p.isMuted,
+              isVideoEnabled: p.isVideoEnabled,
+              connectionQuality: 'good'
+            }))}
+            currentUserId={user?.id || ''}
+            isHost={isHost}
+            onClose={() => setIsParticipantsPanelOpen(false)}
+          />
+        )}
+
+        {isNotesPanelOpen && (
+          <SessionNotesPanel
+            isOpen={isNotesPanelOpen}
+            sessionId={normalizedSessionId}
+            onClose={() => setIsNotesPanelOpen(false)}
+          />
         )}
       </div>
 
@@ -855,6 +896,12 @@ export default function TelehealthSession() {
         onToggleChat={() => setIsChatOpen(!isChatOpen)}
         onToggleRecording={teleFlags.recording_feature_enabled ? handleToggleRecording : undefined}
         onEndSession={handleEndSession}
+        onToggleAI={() => setIsAIPanelOpen(!isAIPanelOpen)}
+        onToggleParticipants={() => setIsParticipantsPanelOpen(!isParticipantsPanelOpen)}
+        onToggleNotes={() => setIsNotesPanelOpen(!isNotesPanelOpen)}
+        isAIEnabled={isAIPanelOpen}
+        isParticipantsOpen={isParticipantsPanelOpen}
+        isNotesOpen={isNotesPanelOpen}
       />
 
       <RecordingConsentDialog

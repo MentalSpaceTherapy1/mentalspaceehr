@@ -19,7 +19,7 @@ interface Participant {
 interface VideoGridProps {
   localParticipant: Participant;
   remoteParticipants: Participant[];
-  layout?: 'grid' | 'spotlight';
+  layout?: 'grid' | 'spotlight' | 'speaker' | 'gallery';
 }
 
 const VideoTile = ({
