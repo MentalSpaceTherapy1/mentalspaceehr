@@ -45,7 +45,7 @@ export const ChatSidebar = ({
     const loadMessages = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('session_messages')
           .select('*')
           .eq('session_id', sessionId)
@@ -59,7 +59,7 @@ export const ChatSidebar = ({
             variant: 'destructive'
           });
         } else {
-          setMessages(data || []);
+          setMessages((data || []) as ChatMessage[]);
         }
       } catch (err) {
         console.error('Error loading messages:', err);
@@ -109,7 +109,7 @@ export const ChatSidebar = ({
     try {
       setSending(true);
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('session_messages')
         .insert({
           session_id: sessionId,
