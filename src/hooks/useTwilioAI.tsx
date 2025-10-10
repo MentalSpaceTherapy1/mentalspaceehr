@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Room } from 'twilio-video';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -25,6 +25,7 @@ interface AIInsight {
 interface UseTwilioAIOptions {
   room: Room | null;
   enabled: boolean;
+  provider?: 'lovable_ai' | 'twilio';
   onTranscript?: (transcript: AITranscript) => void;
   onSentiment?: (sentiment: AISentiment) => void;
   onInsight?: (insight: AIInsight) => void;
@@ -33,6 +34,7 @@ interface UseTwilioAIOptions {
 export const useTwilioAI = ({
   room,
   enabled,
+  provider = 'lovable_ai',
   onTranscript,
   onSentiment,
   onInsight
@@ -41,6 +43,7 @@ export const useTwilioAI = ({
   const [currentSentiment, setCurrentSentiment] = useState<AISentiment | null>(null);
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const twilioTrackRef = useRef<any>(null);
 
   // Real-time audio analysis using Lovable AI
   useEffect(() => {
@@ -152,22 +155,37 @@ export const useTwilioAI = ({
     if (!room) return false;
 
     try {
-      // TODO: Enable Twilio Voice Intelligence transcription
-      // await room.localParticipant.publishTrack(transcriptionTrack);
+      if (provider === 'twilio') {
+        // Enable Twilio Voice Intelligence
+        const { data, error } = await supabase.functions.invoke('enable-twilio-transcription', {
+          body: { roomSid: room.sid }
+        });
+        
+        if (error) throw error;
+        
+        console.log('[Twilio AI] Twilio Voice Intelligence enabled');
+        twilioTrackRef.current = data?.trackSid;
+      } else {
+        console.log('[Twilio AI] Lovable AI transcription enabled (mock)');
+      }
 
-      console.log('[Twilio AI] Transcription enabled');
       return true;
     } catch (error) {
       console.error('[Twilio AI] Failed to enable transcription:', error);
       return false;
     }
-  }, [room]);
+  }, [room, provider]);
 
   const disableTranscription = useCallback(async () => {
     if (!room) return false;
 
     try {
-      // TODO: Disable Twilio Voice Intelligence transcription
+      if (provider === 'twilio' && twilioTrackRef.current) {
+        await supabase.functions.invoke('disable-twilio-transcription', {
+          body: { roomSid: room.sid, trackSid: twilioTrackRef.current }
+        });
+        twilioTrackRef.current = null;
+      }
 
       console.log('[Twilio AI] Transcription disabled');
       return true;
@@ -175,7 +193,7 @@ export const useTwilioAI = ({
       console.error('[Twilio AI] Failed to disable transcription:', error);
       return false;
     }
-  }, [room]);
+  }, [room, provider]);
 
   const generateSummary = useCallback(async (): Promise<string | null> => {
     if (!room || transcripts.length === 0) return null;

@@ -22,6 +22,8 @@ interface PostSessionDialogProps {
   appointmentId?: string;
   clientId: string;
   enableAIGenerate?: boolean;
+  aiTranscript?: string;
+  onGenerateAINote?: () => Promise<void>;
 }
 
 interface BillingInfo {
@@ -39,6 +41,8 @@ export const PostSessionDialog = ({
   appointmentId,
   clientId,
   enableAIGenerate = false,
+  aiTranscript,
+  onGenerateAINote,
 }: PostSessionDialogProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -120,16 +124,30 @@ export const PostSessionDialog = ({
     }
   };
 
+  const handleGenerateAI = async () => {
+    setIsProcessing(true);
+    try {
+      await updateBillingInfo();
+      if (onGenerateAINote) {
+        await onGenerateAINote();
+      } else {
+        await handleGenerateFromRecording();
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to generate AI note',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleManualNote = async () => {
     await updateBillingInfo();
     navigate(`/notes/new?clientId=${clientId}${appointmentId ? `&appointmentId=${appointmentId}` : ''}`);
     onOpenChange(false);
-  };
-
-  const handleSkip = async () => {
-    await updateBillingInfo();
-    onOpenChange(false);
-    navigate('/schedule');
   };
 
   const updateBillingInfo = async () => {
@@ -150,12 +168,12 @@ export const PostSessionDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={() => {}}>
+      <DialogContent className="sm:max-w-md" onEscapeKeyDown={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Session Ended</DialogTitle>
+          <DialogTitle>Session Ended - Create Note</DialogTitle>
           <DialogDescription>
-            Would you like to create a clinical note for this session?
+            You must create a clinical note before closing this session.
           </DialogDescription>
         </DialogHeader>
 
@@ -212,9 +230,9 @@ export const PostSessionDialog = ({
           </div>
 
           <div className="space-y-2">
-            {hasRecording && enableAIGenerate && (
+            {(hasRecording || aiTranscript) && enableAIGenerate && (
               <Button
-                onClick={handleGenerateFromRecording}
+                onClick={handleGenerateAI}
                 disabled={isProcessing}
                 className="w-full"
                 size="lg"
@@ -227,7 +245,7 @@ export const PostSessionDialog = ({
                  ) : (
                   <>
                     <Circle className="mr-2 h-4 w-4 fill-current" />
-                    AI: Generate Note from Recording
+                    AI: Generate Note from Session
                   </>
                 )}
               </Button>
@@ -235,24 +253,13 @@ export const PostSessionDialog = ({
 
             <Button
               onClick={handleManualNote}
-              variant="outline"
+              variant={enableAIGenerate ? "outline" : "default"}
               className="w-full"
               size="lg"
               disabled={isProcessing}
             >
               <FileText className="mr-2 h-4 w-4" />
               Create Manual Note
-            </Button>
-
-            <Button
-              onClick={handleSkip}
-              variant="ghost"
-              className="w-full"
-              size="lg"
-              disabled={isProcessing}
-            >
-              <X className="mr-2 h-4 w-4" />
-              Skip for Now
             </Button>
           </div>
         </div>

@@ -23,6 +23,7 @@ interface AIAssistantPanelProps {
   sessionId: string;
   isRecording: boolean;
   room: any; // Twilio Room
+  provider?: 'lovable_ai' | 'twilio';
   onClose: () => void;
 }
 
@@ -31,6 +32,7 @@ export const AIAssistantPanel = ({
   sessionId,
   isRecording,
   room,
+  provider = 'lovable_ai',
   onClose
 }: AIAssistantPanelProps) => {
   const [localInsights, setLocalInsights] = useState<AIInsight[]>([]);
@@ -49,6 +51,7 @@ export const AIAssistantPanel = ({
   } = useTwilioAI({
     room,
     enabled: isRecording || transcriptionEnabled,
+    provider,
     onTranscript: (transcript) => {
       console.log('[AI] New transcript:', transcript);
     },

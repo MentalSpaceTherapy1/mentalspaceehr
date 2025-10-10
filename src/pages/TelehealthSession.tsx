@@ -65,6 +65,8 @@ export default function TelehealthSession() {
   const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
   const [isParticipantsPanelOpen, setIsParticipantsPanelOpen] = useState(false);
   const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
+  const [aiSessionSummary, setAiSessionSummary] = useState<string>('');
+  const [aiProvider, setAiProvider] = useState<'lovable_ai' | 'twilio'>('lovable_ai');
   
   const timeoutCheckRef = useRef<NodeJS.Timeout | null>(null);
   const userName = profile ? `${profile.first_name} ${profile.last_name}` : 'User';
@@ -178,6 +180,16 @@ export default function TelehealthSession() {
           recording_feature_enabled: !!tele.recording_feature_enabled,
           ai_note_generation_enabled: !!tele.ai_note_generation_enabled,
         });
+
+        // Fetch AI provider setting
+        const { data: aiSettings } = await supabase
+          .from('ai_note_settings')
+          .select('provider')
+          .single();
+        
+        if (aiSettings?.provider) {
+          setAiProvider(aiSettings.provider as 'lovable_ai' | 'twilio');
+        }
       } catch (e) {
         // Silently fail - use default flags
       }
@@ -491,6 +503,19 @@ export default function TelehealthSession() {
         setAudioBlob(blob);
       }
 
+      // Generate AI summary if AI was active
+      if (room && (isAIPanelOpen || isRecording)) {
+        try {
+          // Import the hook's generateSummary dynamically
+          const summary = await generateAISummary();
+          if (summary) {
+            setAiSessionSummary(summary);
+          }
+        } catch (err) {
+          console.error('Failed to generate AI summary:', err);
+        }
+      }
+
       // Update session
       await supabase
         .from('telehealth_sessions')
@@ -534,6 +559,62 @@ export default function TelehealthSession() {
         description: "Failed to end session properly",
         variant: "destructive"
       });
+    }
+  };
+
+  const generateAISummary = async (): Promise<string | null> => {
+    try {
+      const { data: functionData, error: functionError } = await supabase.functions.invoke(
+        'analyze-session-audio',
+        {
+          body: {
+            audioText: 'Session completed',
+            sessionContext: `Session ID: ${normalizedSessionId}`,
+            analysisType: 'summary'
+          }
+        }
+      );
+
+      if (functionError || !functionData) {
+        throw new Error('Failed to generate summary');
+      }
+
+      return functionData.content || null;
+    } catch (error) {
+      console.error('[AI] Failed to generate summary:', error);
+      return null;
+    }
+  };
+
+  const handleGenerateAINote = async () => {
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) throw new Error('Not authenticated');
+
+      const { data: result, error } = await supabase.functions.invoke(
+        'generate-note-from-transcript',
+        {
+          body: {
+            transcript: aiSessionSummary,
+            clientId: session?.appointments?.client_id,
+            clinicianId: currentUser.id,
+            appointmentId: session?.appointment_id,
+            sessionId: normalizedSessionId,
+          },
+        }
+      );
+
+      if (error) throw error;
+
+      toast({
+        title: 'AI Note Generated!',
+        description: 'Clinical note has been created from session transcript.',
+      });
+
+      navigate(`/notes/${result.noteId}`);
+      setShowPostSessionDialog(false);
+    } catch (error) {
+      throw error;
     }
   };
 
@@ -853,6 +934,7 @@ export default function TelehealthSession() {
             sessionId={normalizedSessionId}
             isRecording={isRecording}
             room={room}
+            provider={aiProvider}
             onClose={() => setIsAIPanelOpen(false)}
           />
         )}
@@ -921,6 +1003,8 @@ export default function TelehealthSession() {
         appointmentId={session?.appointment_id}
         clientId={session?.appointments?.client_id || ''}
         enableAIGenerate={teleFlags.ai_note_generation_enabled}
+        aiTranscript={aiSessionSummary}
+        onGenerateAINote={handleGenerateAINote}
       />
 
       <SessionTimeoutWarning
