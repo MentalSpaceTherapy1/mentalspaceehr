@@ -32,6 +32,13 @@ export interface Appointment {
   created_by: string;
   is_incident_to?: boolean;
   billed_under_provider_id?: string;
+  client?: {
+    first_name: string;
+    last_name: string;
+    preferred_name?: string;
+    date_of_birth: string;
+    medical_record_number: string;
+  };
 }
 
 export const useAppointments = (
@@ -89,7 +96,10 @@ export const useAppointments = (
       setLoading(true);
       let query = supabase
         .from('appointments')
-        .select('*')
+        .select(`
+          *,
+          client:clients(first_name, last_name, preferred_name, date_of_birth, medical_record_number)
+        `)
         .order('appointment_date', { ascending: true })
         .order('start_time', { ascending: true });
 
