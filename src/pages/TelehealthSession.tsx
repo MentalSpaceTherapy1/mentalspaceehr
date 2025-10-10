@@ -928,7 +928,6 @@ export default function TelehealthSession() {
           </div>
         )}
 
-        {isAIPanelOpen && (
           <AIAssistantPanel
             isOpen={isAIPanelOpen}
             sessionId={normalizedSessionId}
@@ -936,8 +935,8 @@ export default function TelehealthSession() {
             room={room}
             provider={aiProvider}
             onClose={() => setIsAIPanelOpen(false)}
+            onProviderChange={(p) => setAiProvider(p)}
           />
-        )}
 
         {isParticipantsPanelOpen && (
           <ParticipantsPanel
