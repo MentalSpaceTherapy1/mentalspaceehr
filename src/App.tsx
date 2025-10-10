@@ -492,61 +492,61 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            <Route 
-              path="/intake-assessment" 
+            <Route
+              path="/intake-assessment/:clientId?/:noteId?"
               element={
                 <ProtectedRoute>
                   <IntakeAssessment />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/progress-note" 
+            <Route
+              path="/progress-note/:clientId?/:noteId?"
               element={
                 <ProtectedRoute>
                   <ProgressNote />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/treatment-plan" 
+            <Route
+              path="/treatment-plan/:clientId?/:noteId?"
               element={
                 <ProtectedRoute>
                   <TreatmentPlan />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/cancellation-note" 
+            <Route
+              path="/cancellation-note/:clientId?/:noteId?"
               element={
                 <ProtectedRoute>
                   <CancellationNote />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/contact-note" 
+            <Route
+              path="/contact-note/:clientId?/:noteId?"
               element={
                 <ProtectedRoute>
                   <ContactNote />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/consultation-note" 
+            <Route
+              path="/consultation-note/:clientId?/:noteId?"
               element={
                 <ProtectedRoute>
                   <ConsultationNote />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/miscellaneous-note" 
+            <Route
+              path="/miscellaneous-note/:clientId?/:noteId?"
               element={
                 <ProtectedRoute>
                   <MiscellaneousNote />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route 
               path="/clinical-note/:clientId/:noteId?" 

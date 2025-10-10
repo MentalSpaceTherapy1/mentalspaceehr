@@ -123,7 +123,7 @@ export function ClinicalDocumentsDashboard({ clientId }: ClinicalDocumentsDashbo
     const pathMap: Record<string, string> = {
       'progress_note': '/progress-note',
       'intake_assessment': '/intake-assessment',
-      'psychiatric_evaluation': '/psychiatric-evaluation',
+      'psychiatric_evaluation': '/clinical-note',
       'treatment_plan': '/treatment-plan',
       'consultation': '/consultation-note',
       'contact': '/contact-note',
@@ -131,7 +131,7 @@ export function ClinicalDocumentsDashboard({ clientId }: ClinicalDocumentsDashbo
       'cancellation': '/cancellation-note',
       'termination': '/termination-note',
     };
-    
+
     navigate(`${pathMap[noteType] || '/progress-note'}/${clientId}`);
   };
 
