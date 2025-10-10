@@ -557,7 +557,23 @@ const App = () => (
               } 
             />
             <Route 
-              path="/termination-note/:clientId/:noteId?" 
+              path="/psychiatric-evaluation/:clientId?/:noteId?" 
+              element={
+                <ProtectedRoute>
+                  <ClinicalNote />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/testing-assessment/:clientId?/:noteId?" 
+              element={
+                <ProtectedRoute>
+                  <ClinicalNote />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/termination-note/:clientId/:noteId?"
               element={
                 <ProtectedRoute>
                   <TerminationNote />
