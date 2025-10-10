@@ -19,6 +19,8 @@ import { CancellationDialog } from '@/components/schedule/CancellationDialog';
 import { BlockedTimesDialog } from '@/components/schedule/BlockedTimesDialog';
 import { RecurringEditDialog } from '@/components/schedule/RecurringEditDialog';
 import { ClinicianSelectorDialog } from '@/components/schedule/ClinicianSelectorDialog';
+import { AppointmentTooltip } from '@/components/schedule/AppointmentTooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCurrentUserRoles } from '@/hooks/useUserRoles';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -507,6 +509,32 @@ export default function Schedule() {
     ['administrator', 'front_desk', 'therapist'].includes(role)
   );
 
+  // Custom event component with tooltip
+  const EventComponent = ({ event }: any) => {
+    const resource = event.resource;
+    
+    // Blocked time - no tooltip
+    if (resource.type === 'blocked') {
+      return <span>{event.title}</span>;
+    }
+    
+    // Appointment with tooltip
+    const appointment = resource.data as Appointment;
+    
+    return (
+      <TooltipProvider delayDuration={300}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="cursor-pointer">{event.title}</span>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="p-0 border-0 bg-transparent shadow-none">
+            <AppointmentTooltip appointment={appointment} />
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
+
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6 space-y-6">
@@ -637,6 +665,9 @@ export default function Schedule() {
                 selectable={canCreateAppointments}
                 eventPropGetter={eventStyleGetter}
                 slotPropGetter={slotPropGetter}
+                components={{
+                  event: EventComponent,
+                }}
                 step={15}
                 timeslots={4}
                 defaultView="week"

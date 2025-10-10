@@ -196,42 +196,31 @@ export function ClientDemographics({ formData, setFormData }: ClientDemographics
           </Select>
         </div>
 
-        <div className="space-y-2 md:col-span-2">
+        <div>
           <Label>Other Languages Spoken</Label>
-          <p className="text-sm text-muted-foreground mb-2">Add any additional languages the client speaks</p>
-          {(formData.otherLanguagesSpoken || []).map((lang: string, index: number) => (
-            <div key={index} className="flex gap-2 mb-2">
-              <Input
-                value={lang}
-                onChange={(e) => {
-                  const updated = [...formData.otherLanguagesSpoken];
-                  updated[index] = e.target.value;
-                  setFormData({ ...formData, otherLanguagesSpoken: updated });
-                }}
-                placeholder="Language name"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  const updated = formData.otherLanguagesSpoken.filter((_: any, i: number) => i !== index);
-                  setFormData({ ...formData, otherLanguagesSpoken: updated });
-                }}
-              >
-                Remove
-              </Button>
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setFormData({ ...formData, otherLanguagesSpoken: [...(formData.otherLanguagesSpoken || []), ''] });
-            }}
-            className="w-full"
-          >
-            Add Language
-          </Button>
+          <p className="text-sm text-muted-foreground mb-3">Select all that apply</p>
+          <div className="grid grid-cols-2 gap-3">
+            {['Spanish', 'Chinese (Mandarin)', 'Chinese (Cantonese)', 'Tagalog', 'Vietnamese', 
+              'Arabic', 'French', 'Korean', 'Russian', 'German', 'Portuguese', 'Italian', 
+              'Polish', 'Other'].map((lang) => (
+              <div key={lang} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`lang-${lang}`}
+                  checked={(formData.otherLanguagesSpoken || []).includes(lang)}
+                  onCheckedChange={(checked) => {
+                    const current = formData.otherLanguagesSpoken || [];
+                    const updated = checked
+                      ? [...current, lang]
+                      : current.filter((l: string) => l !== lang);
+                    setFormData({ ...formData, otherLanguagesSpoken: updated });
+                  }}
+                />
+                <Label htmlFor={`lang-${lang}`} className="cursor-pointer font-normal">
+                  {lang}
+                </Label>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-2">

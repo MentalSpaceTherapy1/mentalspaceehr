@@ -39,7 +39,7 @@ export default function ClientRegistration() {
     secondaryPhone: '',
     secondaryPhoneType: '',
     email: '',
-    preferredContactMethod: 'Phone',
+    preferredContactMethods: [] as string[], // Changed to array
     okayToLeaveMessage: false,
     smsConsent: false,
     
@@ -174,7 +174,9 @@ export default function ClientRegistration() {
           secondary_phone: formData.secondaryPhone || null,
           secondary_phone_type: formData.secondaryPhoneType || null,
           email: formData.email || null,
-          preferred_contact_method: formData.preferredContactMethod,
+          preferred_contact_method: formData.preferredContactMethods.length > 0 
+            ? formData.preferredContactMethods.join(', ') // Convert array to comma-separated string
+            : null,
           okay_to_leave_message: formData.okayToLeaveMessage,
           sms_consent: formData.smsConsent || false,
           street1: formData.street1,
