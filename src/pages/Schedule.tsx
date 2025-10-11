@@ -824,15 +824,27 @@ export default function Schedule() {
         />
 
         {/* Floating tooltip for hovered appointments - rendered via portal */}
-        {hoveredAppointment && createPortal(
+        {hoveredAppointment && tooltipPosition && createPortal(
           <div 
-            className="fixed z-[9999] pointer-events-none"
+            className="fixed z-[9999]"
             style={{
               left: `${tooltipPosition.x}px`,
               top: `${tooltipPosition.y}px`,
             }}
+            onMouseEnter={() => {
+              if (hoverTimeoutRef.current) {
+                clearTimeout(hoverTimeoutRef.current);
+              }
+            }}
+            onMouseLeave={() => {
+              setHoveredAppointment(null);
+              setTooltipPosition(null);
+            }}
           >
-            <AppointmentTooltip appointment={hoveredAppointment} />
+            <AppointmentTooltip appointment={{
+              ...hoveredAppointment,
+              client_id: hoveredAppointment.client_id,
+            }} />
           </div>,
           document.body
         )}

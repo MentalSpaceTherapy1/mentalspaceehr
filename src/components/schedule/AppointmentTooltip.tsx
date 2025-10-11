@@ -2,9 +2,11 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Calendar, Clock, MapPin, User, FileText, Cake } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 interface AppointmentTooltipProps {
   appointment: {
+    client_id?: string;
     client?: {
       first_name: string;
       last_name: string;
@@ -23,9 +25,17 @@ interface AppointmentTooltipProps {
 }
 
 export function AppointmentTooltip({ appointment }: AppointmentTooltipProps) {
+  const navigate = useNavigate();
+  
   const clientName = appointment.client
     ? `${appointment.client.last_name}, ${appointment.client.preferred_name || appointment.client.first_name}`
     : 'Unknown Client';
+  
+  const handleClientClick = () => {
+    if (appointment.client_id) {
+      navigate(`/client/${appointment.client_id}`);
+    }
+  };
 
   const dob = appointment.client?.date_of_birth
     ? format(new Date(appointment.client.date_of_birth), 'MM/dd/yyyy')
@@ -52,7 +62,15 @@ export function AppointmentTooltip({ appointment }: AppointmentTooltipProps) {
             <User className="h-6 w-6" />
           </div>
           <div className="flex-1">
-            <div className="font-bold text-lg">{clientName}</div>
+            <div 
+              className={cn(
+                "font-bold text-lg",
+                appointment.client_id && "cursor-pointer hover:underline"
+              )}
+              onClick={handleClientClick}
+            >
+              {clientName}
+            </div>
             <div className="text-xs text-primary-foreground/80 font-medium">MRN: {mrn}</div>
           </div>
         </div>
