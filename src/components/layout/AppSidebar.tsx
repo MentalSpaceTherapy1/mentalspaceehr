@@ -27,6 +27,7 @@ import {
   BarChart3,
   Library,
   FolderOpen,
+  Receipt,
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
@@ -81,18 +82,27 @@ export function AppSidebar() {
   // Admin navigation categories
   const adminCategories = [
     {
+      title: 'Billing & Revenue',
+      icon: DollarSign,
+      items: [
+        { title: 'Billing Hub', url: '/billing', icon: DollarSign, color: 'from-green-400 to-emerald-400' },
+        { title: 'Eligibility Verification', url: '/billing/eligibility-verification', icon: CheckSquare, color: 'from-blue-400 to-cyan-400' },
+        { title: 'Claims Management', url: '/billing/claims', icon: FileText, color: 'from-cyan-400 to-blue-400' },
+        { title: 'Payment Processing', url: '/billing/payment-processing', icon: Receipt, color: 'from-purple-400 to-pink-400' },
+        { title: 'Client Statements', url: '/billing/client-statements', icon: FileText, color: 'from-orange-400 to-red-400' },
+        { title: 'Fee Schedules', url: '/billing/fee-schedules', icon: DollarSign, color: 'from-indigo-400 to-violet-400' },
+        { title: 'Charge Management', url: '/billing/management', icon: Calendar, color: 'from-teal-400 to-cyan-400' },
+        { title: 'Payroll', url: '/billing/payroll', icon: Users, color: 'from-rose-400 to-red-400' },
+        { title: 'Reports & Analytics', url: '/billing/reports', icon: BarChart3, color: 'from-amber-400 to-yellow-400' },
+      ]
+    },
+    {
       title: 'System & Users',
       icon: UserCog,
       items: [
         { title: 'User Management', url: '/admin/users', icon: UserCog, color: 'from-secondary to-accent' },
         { title: 'Practice Settings', url: '/admin/practice-settings', icon: Building2, color: 'from-primary to-success' },
         { title: 'BAA Management', url: '/admin/baa-management', icon: Shield, color: 'from-green-400 to-emerald-400' },
-        { title: 'Insurance Claims', url: '/admin/insurance-claims', icon: FileText, color: 'from-cyan-400 to-blue-400' },
-        { title: 'Client Statements', url: '/admin/client-statements', icon: FileText, color: 'from-blue-400 to-indigo-400' },
-        { title: 'Fee Schedules', url: '/admin/fee-schedules', icon: DollarSign, color: 'from-indigo-400 to-purple-400' },
-        { title: 'Eligibility Verification', url: '/admin/eligibility-verification', icon: CheckSquare, color: 'from-purple-400 to-pink-400' },
-        { title: 'Payroll Management', url: '/admin/payroll', icon: DollarSign, color: 'from-pink-400 to-rose-400' },
-        { title: 'Reports & Analytics', url: '/admin/reports', icon: BarChart3, color: 'from-rose-400 to-red-400' },
       ]
     },
     {

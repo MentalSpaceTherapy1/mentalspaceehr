@@ -59,6 +59,9 @@ import FeeSchedules from "@/pages/admin/FeeSchedules";
 import EligibilityVerification from "@/pages/admin/EligibilityVerification";
 import PayrollManagement from "@/pages/admin/PayrollManagement";
 import Reports from "@/pages/admin/Reports";
+import Billing from "./pages/Billing";
+import ClaimsManagement from "./pages/ClaimsManagement";
+import PaymentProcessing from "./pages/PaymentProcessing";
 import NotFound from "./pages/NotFound";
 import ProgressNote from "./pages/ProgressNote";
 import TreatmentPlan from "./pages/TreatmentPlan";
@@ -412,8 +415,17 @@ const App = () => (
                 </AdminRoute>
               } 
             />
+            {/* Billing & Revenue Cycle Routes */}
             <Route 
               path="/billing" 
+              element={
+                <AdminRoute>
+                  <Billing />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/billing/management" 
               element={
                 <AdminRoute>
                   <BillingManagement />
@@ -421,15 +433,23 @@ const App = () => (
               } 
             />
             <Route 
-              path="/admin/insurance-claims" 
+              path="/billing/claims" 
               element={
                 <AdminRoute>
-                  <InsuranceClaims />
+                  <ClaimsManagement />
                 </AdminRoute>
               } 
             />
             <Route 
-              path="/admin/client-statements" 
+              path="/billing/payment-processing" 
+              element={
+                <AdminRoute>
+                  <PaymentProcessing />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/billing/client-statements" 
               element={
                 <AdminRoute>
                   <ClientStatements />
@@ -437,7 +457,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/admin/fee-schedules" 
+              path="/billing/fee-schedules" 
               element={
                 <AdminRoute>
                   <FeeSchedules />
@@ -445,7 +465,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/admin/eligibility-verification" 
+              path="/billing/eligibility-verification" 
               element={
                 <AdminRoute>
                   <EligibilityVerification />
@@ -453,7 +473,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/admin/payroll" 
+              path="/billing/payroll" 
               element={
                 <AdminRoute>
                   <PayrollManagement />
@@ -461,10 +481,20 @@ const App = () => (
               } 
             />
             <Route 
-              path="/admin/reports" 
+              path="/billing/reports" 
               element={
                 <AdminRoute>
                   <Reports />
+                </AdminRoute>
+              } 
+            />
+            
+            {/* Legacy Routes - Redirect to new billing paths */}
+            <Route 
+              path="/admin/insurance-claims" 
+              element={
+                <AdminRoute>
+                  <InsuranceClaims />
                 </AdminRoute>
               } 
             />
