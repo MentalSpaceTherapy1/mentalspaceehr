@@ -93,7 +93,7 @@ export function AppSidebar() {
         { title: 'Fee Schedules', url: '/billing/fee-schedules', icon: DollarSign, color: 'from-indigo-400 to-violet-400' },
         { title: 'Charge Management', url: '/billing/management', icon: Calendar, color: 'from-teal-400 to-cyan-400' },
         { title: 'Payroll', url: '/billing/payroll', icon: Users, color: 'from-rose-400 to-red-400' },
-        { title: 'Reports & Analytics', url: '/billing/reports', icon: BarChart3, color: 'from-amber-400 to-yellow-400' },
+        { title: 'Reports & Analytics', url: '/billing/analytics', icon: BarChart3, color: 'from-amber-400 to-yellow-400' },
       ]
     },
     {
