@@ -23,6 +23,11 @@ export { ERAUploadProcessor } from './ERAUploadProcessor';
 export { PaymentDashboard } from './PaymentDashboard';
 export { ManualPaymentForm } from './ManualPaymentForm';
 export { PaymentReconciliation } from './PaymentReconciliation';
-export { EOBGenerator } from './EOBGenerator';
+export { EOBGenerator} from './EOBGenerator';
 export { PatientStatementGenerator } from './PatientStatementGenerator';
 export { PaymentReversalDialog } from './PaymentReversalDialog';
+
+// Phase 5: Reporting & Analytics
+export { ClaimsAgingReport } from './ClaimsAgingReport';
+export { PayerPerformanceReport } from './PayerPerformanceReport';
+export { RevenueCycleDashboard } from './RevenueCycleDashboard';
