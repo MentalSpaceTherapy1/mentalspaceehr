@@ -105,7 +105,7 @@ serve(async (req) => {
     console.error('[AdvancedMD Proxy] Error:', error);
     return new Response(
       JSON.stringify({
-        error: error.message || 'API request failed',
+        error: error instanceof Error ? error.message : 'API request failed',
       }),
       {
         status: 500,

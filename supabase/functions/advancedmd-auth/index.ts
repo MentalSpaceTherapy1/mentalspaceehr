@@ -73,7 +73,7 @@ serve(async (req) => {
     console.error('[AdvancedMD Auth] Error:', error);
     return new Response(
       JSON.stringify({
-        error: error.message || 'Authentication failed',
+        error: error instanceof Error ? error.message : 'Authentication failed',
       }),
       {
         status: 500,

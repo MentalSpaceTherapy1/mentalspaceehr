@@ -60,7 +60,7 @@ serve(async (req) => {
     console.error('[InsuranceCardOCR] Error:', error);
     return new Response(
       JSON.stringify({
-        error: error.message || 'Failed to extract insurance card data',
+        error: error instanceof Error ? error.message : 'Failed to extract insurance card data',
       }),
       {
         status: 500,
