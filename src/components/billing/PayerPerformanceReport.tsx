@@ -40,9 +40,15 @@ export function PayerPerformanceReport() {
   const loadReport = async () => {
     try {
       setLoading(true);
-      // TODO: This view will be created in Phase 5 database migration
-      // Temporarily showing empty state
-      setPayers([]);
+
+      const { data } = await supabase
+        .from('payer_performance_report' as any)
+        .select('*')
+        .order(sortBy, { ascending: false });
+
+      if (data) {
+        setPayers(data as unknown as PayerPerformance[]);
+      }
     } catch (error) {
       console.error('Error loading payer performance:', error);
     } finally {

@@ -53,10 +53,30 @@ export function RevenueCycleDashboard() {
   const loadDashboard = async () => {
     try {
       setLoading(true);
-      // TODO: These tables/views will be created in Phase 5 database migration
-      // Temporarily showing empty state
-      setMetrics([]);
-      setARSummary(null);
+
+      // Load revenue cycle metrics
+      const { data: metricsData } = await supabase
+        .from('revenue_cycle_metrics' as any)
+        .select('*')
+        .order('month', { ascending: true })
+        .limit(12);
+
+      if (metricsData) {
+        setMetrics(metricsData.map((m: any) => ({
+          ...m,
+          month: new Date(m.month).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+        })));
+      }
+
+      // Load AR aging summary
+      const { data: arData } = await supabase
+        .from('ar_aging_summary' as any)
+        .select('*')
+        .maybeSingle();
+
+      if (arData) {
+        setARSummary(arData as any);
+      }
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {

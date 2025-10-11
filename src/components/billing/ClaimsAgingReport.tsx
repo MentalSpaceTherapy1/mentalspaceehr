@@ -55,10 +55,40 @@ export function ClaimsAgingReport() {
   const loadReport = async () => {
     try {
       setLoading(true);
-      // TODO: These tables/views will be created in Phase 5 database migration
-      // Temporarily showing empty state
-      setClaims([]);
-      setSummary([]);
+
+      // Load claims aging data
+      let query = supabase
+        .from('claims_aging_report' as any)
+        .select('*')
+        .order('days_outstanding', { ascending: false });
+
+      if (filterBucket !== 'all') {
+        query = query.eq('aging_bucket', filterBucket);
+      }
+
+      if (dateRange.start) {
+        query = query.gte('submission_date', dateRange.start);
+      }
+
+      if (dateRange.end) {
+        query = query.lte('submission_date', dateRange.end);
+      }
+
+      const { data: claimsData } = await query;
+
+      if (claimsData) {
+        setClaims(claimsData as unknown as AgingClaim[]);
+      }
+
+      // Load aging summary
+      const { data: summaryData } = await supabase.rpc('get_claims_aging_breakdown' as any, {
+        p_start_date: dateRange.start || null,
+        p_end_date: dateRange.end || null,
+      }) as any;
+
+      if (summaryData) {
+        setSummary(summaryData as any);
+      }
     } catch (error) {
       console.error('Error loading aging report:', error);
     } finally {

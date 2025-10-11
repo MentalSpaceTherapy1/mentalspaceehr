@@ -60,6 +60,7 @@ import EligibilityVerification from "@/pages/admin/EligibilityVerification";
 import PayrollManagement from "@/pages/admin/PayrollManagement";
 import Reports from "@/pages/admin/Reports";
 import Billing from "./pages/Billing";
+import BillingAnalytics from "./pages/BillingAnalytics";
 import ClaimsManagement from "./pages/ClaimsManagement";
 import PaymentProcessing from "./pages/PaymentProcessing";
 import NotFound from "./pages/NotFound";
@@ -485,6 +486,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <Reports />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/billing/analytics" 
+              element={
+                <AdminRoute>
+                  <BillingAnalytics />
                 </AdminRoute>
               } 
             />
