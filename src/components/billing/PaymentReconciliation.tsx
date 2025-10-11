@@ -27,6 +27,7 @@ import { format } from 'date-fns';
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 const formatDate = (date: string | Date) => format(new Date(date), 'MMM d, yyyy');
+const sb = supabase as any;
 
 interface ERAFileForReconciliation {
   id: string;
@@ -75,12 +76,11 @@ export function PaymentReconciliation() {
     try {
       setLoading(true);
 
-      // Load unreconciled ERA files
-      const { data: unreconciledData } = await supabase
+      // Load unreconciled ERA files (basic filter; detailed filtering handled in UI)
+      const { data: unreconciledData } = await sb
         .from('advancedmd_era_files')
         .select('*')
         .eq('processing_status', 'Posted')
-        .not('id', 'in', supabase.from('advancedmd_payment_reconciliation').select('era_file_id'))
         .order('payment_date', { ascending: false });
 
       if (unreconciledData) {
@@ -88,7 +88,7 @@ export function PaymentReconciliation() {
       }
 
       // Load reconciliation records
-      const { data: reconciledData } = await supabase
+      const { data: reconciledData } = await sb
         .from('advancedmd_payment_reconciliation')
         .select(
           `
@@ -118,7 +118,7 @@ export function PaymentReconciliation() {
       setSelectedERA(era);
 
       // Get all payment postings for this ERA
-      const { data: postings } = await supabase
+      const { data: postings } = await sb
         .from('advancedmd_payment_postings')
         .select('payment_amount')
         .eq('era_file_id', era.id);
@@ -156,7 +156,7 @@ export function PaymentReconciliation() {
       } = await supabase.auth.getUser();
 
       // Create reconciliation record
-      const { error: reconciliationError } = await supabase
+      const { error: reconciliationError } = await sb
         .from('advancedmd_payment_reconciliation')
         .insert({
           era_file_id: era.id,
@@ -204,7 +204,7 @@ export function PaymentReconciliation() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      const { error } = await supabase
+      const { error } = await sb
         .from('advancedmd_payment_reconciliation')
         .update({
           reconciliation_status: 'Resolved',

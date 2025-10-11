@@ -23,6 +23,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getAdvancedMDClient } from '@/lib/advancedmd';
 import { useToast } from '@/hooks/use-toast';
 import type { PatientSyncRequest, PatientSyncResponse } from '@/lib/advancedmd';
+const sb = supabase as any;
 
 interface PatientSyncDialogProps {
   clientId: string;
@@ -83,28 +84,28 @@ export function PatientSyncDialog({ clientId, trigger }: PatientSyncDialogProps)
 
     try {
       // Fetch client data
-      const { data: client, error: clientError } = await supabase
+      const { data: client, error: clientError } = await sb
         .from('clients')
         .select('*')
         .eq('id', clientId)
         .single();
 
       if (clientError) throw clientError;
-      setClientData(client);
+      setClientData(client as any);
 
       // Fetch insurance data
-      const { data: insuranceData, error: insuranceError } = await supabase
+      const { data: insuranceData, error: insuranceError } = await sb
         .from('client_insurance')
         .select('*')
         .eq('client_id', clientId)
         .eq('status', 'Active');
 
       if (!insuranceError && insuranceData) {
-        setInsurances(insuranceData);
+        setInsurances(insuranceData as any);
       }
 
       // Check sync status
-      const { data: mapping, error: mappingError } = await supabase
+      const { data: mapping, error: mappingError } = await sb
         .from('advancedmd_patient_mapping')
         .select('*')
         .eq('client_id', clientId)
@@ -113,10 +114,10 @@ export function PatientSyncDialog({ clientId, trigger }: PatientSyncDialogProps)
       if (!mappingError && mapping) {
         setSyncStatus({
           isSynced: true,
-          advancedmdPatientId: mapping.advancedmd_patient_id,
-          lastSyncedAt: mapping.last_synced_at,
-          syncStatus: mapping.sync_status,
-          syncError: mapping.sync_error,
+          advancedmdPatientId: (mapping as any).advancedmd_patient_id,
+          lastSyncedAt: (mapping as any).last_synced_at,
+          syncStatus: (mapping as any).sync_status,
+          syncError: (mapping as any).sync_error,
         });
       }
     } catch (error: any) {
@@ -180,7 +181,7 @@ export function PatientSyncDialog({ clientId, trigger }: PatientSyncDialogProps)
         // Update sync status
         setSyncStatus({
           isSynced: true,
-          advancedmdPatientId: response.data.advancedmdPatientId,
+          advancedmdPatientId: (response.data as any).advancedMDPatientId,
           lastSyncedAt: new Date().toISOString(),
           syncStatus: response.data.status,
           syncError: null,
@@ -188,7 +189,7 @@ export function PatientSyncDialog({ clientId, trigger }: PatientSyncDialogProps)
 
         toast({
           title: 'Patient Synced Successfully',
-          description: `Patient ID in AdvancedMD: ${response.data.advancedmdPatientId}`,
+          description: `Patient ID in AdvancedMD: ${(response.data as any).advancedMDPatientId}`,
         });
       } else {
         throw new Error(response.error?.message || 'Sync failed');
@@ -371,9 +372,9 @@ export function PatientSyncDialog({ clientId, trigger }: PatientSyncDialogProps)
                       Sync Successful!
                     </p>
                     <div className="mt-2 space-y-1 text-sm">
-                      <p>AdvancedMD Patient ID: <span className="font-mono">{syncResult.advancedmdPatientId}</span></p>
+                      <p>AdvancedMD Patient ID: <span className="font-mono">{(syncResult as any).advancedMDPatientId}</span></p>
                       <p>Status: <Badge variant="outline">{syncResult.status}</Badge></p>
-                      {syncResult.message && <p>{syncResult.message}</p>}
+                      {(syncResult as any).message && <p>{(syncResult as any).message}</p>}
                     </div>
                   </AlertDescription>
                 </Alert>

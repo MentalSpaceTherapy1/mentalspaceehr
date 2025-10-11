@@ -149,8 +149,8 @@ export function PaymentDashboard() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusColors: Record<string, 'default' | 'secondary' | 'success' | 'destructive'> = {
-      Posted: 'success',
+    const statusColors: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+      Posted: 'secondary',
       Pending: 'secondary',
       Reversed: 'destructive',
       Error: 'destructive',

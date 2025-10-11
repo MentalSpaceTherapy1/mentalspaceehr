@@ -103,7 +103,7 @@ export function PatientStatementGenerator() {
       setGenerating(true);
 
       // Get all unpaid claims for this client
-      const { data: claims } = await supabase
+      const { data: claims } = await sb
         .from('advancedmd_claims')
         .select('*')
         .eq('client_id', client.id)
@@ -120,7 +120,7 @@ export function PatientStatementGenerator() {
       }
 
       // Get payments for this client
-      const { data: payments } = await supabase
+      const { data: payments } = await sb
         .from('advancedmd_payment_postings')
         .select('*, advancedmd_claims!inner(client_id)')
         .eq('advancedmd_claims.client_id', client.id);
@@ -130,8 +130,9 @@ export function PatientStatementGenerator() {
       const periodStart = new Date();
       periodStart.setDate(periodStart.getDate() - 90); // Last 90 days
 
-      const totalCharges = claims.reduce((sum, c) => sum + (c.billed_amount || 0), 0);
-      const totalPayments = payments?.reduce((sum, p) => sum + (p.payment_amount || 0), 0) || 0;
+      const claimsArr = (claims || []) as any[];
+      const totalCharges = claimsArr.reduce((sum, c: any) => sum + (c.billed_amount || 0), 0);
+      const totalPayments = ((payments || []) as any[]).reduce((sum, p: any) => sum + (p.payment_amount || 0), 0) || 0;
 
       // Calculate aging buckets
       const today = new Date();
@@ -140,7 +141,7 @@ export function PatientStatementGenerator() {
       let amount_61_90 = 0;
       let amount_over_90 = 0;
 
-      claims.forEach((claim) => {
+      claimsArr.forEach((claim: any) => {
         const claimDate = new Date(claim.statement_from_date);
         const daysSince = Math.floor((today.getTime() - claimDate.getTime()) / (1000 * 60 * 60 * 24));
         const balance = (claim.billed_amount || 0) - (claim.paid_amount || 0);
@@ -151,7 +152,7 @@ export function PatientStatementGenerator() {
         else amount_over_90 += balance;
       });
 
-      const statementLines = claims.map((claim) => ({
+      const statementLines = claimsArr.map((claim: any) => ({
         date: claim.statement_from_date,
         description: `Medical Services - ${claim.claim_id}`,
         charges: claim.billed_amount,
@@ -164,7 +165,7 @@ export function PatientStatementGenerator() {
       } = await supabase.auth.getUser();
 
       // Create statement
-      const { error } = await supabase.from('advancedmd_patient_statements').insert({
+      const { error } = await sb.from('advancedmd_patient_statements').insert({
         client_id: client.id,
         statement_number: statementNumber,
         statement_date: statementDate.toISOString().split('T')[0],
@@ -206,7 +207,7 @@ export function PatientStatementGenerator() {
 
   const sendStatement = async (statement: Statement) => {
     try {
-      const { error } = await supabase
+      const { error } = await sb
         .from('advancedmd_patient_statements')
         .update({
           statement_status: 'Sent',

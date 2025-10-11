@@ -73,7 +73,18 @@ export function EOBGenerator() {
     try {
       setLoading(true);
 
-      // Load paid claims without EOBs
+      // Load existing EOBs first
+      const { data: eobsData } = await sb
+        .from('advancedmd_eobs')
+        .select('*')
+        .order('eob_date', { ascending: false })
+        .limit(50);
+
+      if (eobsData) {
+        setEOBs(eobsData as any);
+      }
+
+      // Load paid claims (filter out those already in EOBs client-side)
       const { data: claimsData } = await sb
         .from('advancedmd_claims')
         .select(
@@ -92,23 +103,13 @@ export function EOBGenerator() {
         `
         )
         .eq('claim_status', 'Paid')
-        .not('id', 'in', supabase.from('advancedmd_eobs').select('claim_id'))
         .order('statement_from_date', { ascending: false })
         .limit(50);
 
       if (claimsData) {
-        setClaims(claimsData as any);
-      }
-
-      // Load existing EOBs
-      const { data: eobsData } = await sb
-        .from('advancedmd_eobs')
-        .select('*')
-        .order('eob_date', { ascending: false })
-        .limit(50);
-
-      if (eobsData) {
-        setEOBs(eobsData);
+        const eobClaimIds = new Set((eobsData || []).map((e: any) => e.claim_id));
+        const filtered = (claimsData as any[]).filter((c: any) => !eobClaimIds.has(c.id));
+        setClaims(filtered as any);
       }
     } catch (error) {
       console.error('Error loading data:', error);
