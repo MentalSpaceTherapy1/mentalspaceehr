@@ -90,10 +90,10 @@ export function useClaimStatusPolling({
 
           // Update database
           await sb
-            .from('advancedmd_claims')
+            .from('insurance_claims')
             .update({
               claim_status: newStatus,
-              updated_at: new Date().toISOString(),
+              last_modified: new Date().toISOString(),
             })
             .eq('claim_id', claimId);
         }
@@ -205,7 +205,7 @@ export function useClaimStatusPolling({
     const loadInitialStatuses = async () => {
       try {
         const { data, error } = await sb
-          .from('advancedmd_claims')
+          .from('insurance_claims')
           .select('claim_id, claim_status')
           .in('claim_id', claimIds);
 
@@ -259,11 +259,11 @@ export function useAutoClaimStatusMonitoring(options: {
         cutoffDate.setDate(cutoffDate.getDate() - maxAge);
 
         const { data, error } = await sb
-          .from('advancedmd_claims')
+          .from('insurance_claims')
           .select('claim_id')
           .in('claim_status', statuses)
-          .gte('submission_date', cutoffDate.toISOString())
-          .order('submission_date', { ascending: false });
+          .gte('claim_submitted_date', cutoffDate.toISOString())
+          .order('claim_submitted_date', { ascending: false });
 
         if (error) throw error;
 

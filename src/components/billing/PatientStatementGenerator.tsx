@@ -104,11 +104,11 @@ export function PatientStatementGenerator() {
 
       // Get all unpaid claims for this client
       const { data: claims } = await sb
-        .from('advancedmd_claims')
+        .from('insurance_claims')
         .select('*')
         .eq('client_id', client.id)
-        .in('claim_status', ['Submitted', 'In Process', 'Paid'])
-        .order('statement_from_date', { ascending: false });
+        .in('claim_status', ['Submitted', 'Accepted', 'Paid'])
+        .order('claim_created_date', { ascending: false });
 
       if (!claims || claims.length === 0) {
         toast({
@@ -119,11 +119,12 @@ export function PatientStatementGenerator() {
         return;
       }
 
-      // Get payments for this client
-      const { data: payments } = await sb
-        .from('advancedmd_payment_postings')
-        .select('*, advancedmd_claims!inner(client_id)')
-        .eq('advancedmd_claims.client_id', client.id);
+      // Get payments for this client (commented out - table doesn't exist yet)
+      // const { data: payments } = await sb
+      //   .from('payment_postings')
+      //   .select('*, insurance_claims!inner(client_id)')
+      //   .eq('insurance_claims.client_id', client.id);
+      const payments = [];
 
       const statementNumber = `STMT-${Date.now()}-${client.id.substring(0, 8)}`;
       const statementDate = new Date();
@@ -131,7 +132,7 @@ export function PatientStatementGenerator() {
       periodStart.setDate(periodStart.getDate() - 90); // Last 90 days
 
       const claimsArr = (claims || []) as any[];
-      const totalCharges = claimsArr.reduce((sum, c: any) => sum + (c.billed_amount || 0), 0);
+      const totalCharges = claimsArr.reduce((sum, c: any) => sum + (c.total_charge_amount || 0), 0);
       const totalPayments = ((payments || []) as any[]).reduce((sum, p: any) => sum + (p.payment_amount || 0), 0) || 0;
 
       // Calculate aging buckets

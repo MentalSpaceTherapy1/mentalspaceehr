@@ -92,44 +92,42 @@ export function PaymentDashboard() {
       }
 
       // Load recent payments
-      const { data: paymentsData } = await sb
-        .from('advancedmd_payment_postings')
-        .select(
-          `
-          id,
-          claim_id,
-          payment_date,
-          payment_amount,
-          payment_method,
-          posting_type,
-          posting_status,
-          advancedmd_claims (
-            clients (
-              first_name,
-              last_name
-            )
-          )
-        `
-        )
-        .order('created_at', { ascending: false })
-        .limit(10);
+      // Load recent payments (commented out - table doesn't exist yet)
+      // const { data: paymentsData } = await sb
+      //   .from('payment_postings')
+      //   .select(`
+      //     id,
+      //     claim_id,
+      //     payment_date,
+      //     payment_amount,
+      //     payment_method,
+      //     posting_type,
+      //     posting_status,
+      //     insurance_claims (
+      //       clients (
+      //         first_name,
+      //         last_name
+      //       )
+      //     )
+      //   `)
+      //   .order('created_at', { ascending: false })
+      //   .limit(10);
 
-      if (paymentsData) {
-        setRecentPayments(
-          paymentsData.map((p: any) => ({
-            id: p.id,
-            claim_id: p.claim_id,
-            payment_date: p.payment_date,
-            payment_amount: p.payment_amount,
-            payment_method: p.payment_method,
-            posting_type: p.posting_type,
-            posting_status: p.posting_status,
-            patient_name: p.advancedmd_claims?.clients
-              ? `${p.advancedmd_claims.clients.first_name} ${p.advancedmd_claims.clients.last_name}`
-              : undefined,
-          }))
-        );
-      }
+      // if (paymentsData) {
+      //   setRecentPayments(paymentsData.map((p: any) => ({
+      //     id: p.id,
+      //     claim_id: p.claim_id,
+      //     payment_date: p.payment_date,
+      //     payment_amount: p.payment_amount,
+      //     payment_method: p.payment_method,
+      //     posting_type: p.posting_type,
+      //     posting_status: p.posting_status,
+      //     patient_name: p.insurance_claims?.clients
+      //       ? `${p.insurance_claims.clients.first_name} ${p.insurance_claims.clients.last_name}`
+      //       : undefined,
+      //   })));
+      // }
+      setRecentPayments([]);
 
       // Load ERA files
       const { data: eraFilesData } = await sb

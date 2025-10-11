@@ -111,9 +111,9 @@ export function ClaimsDashboard() {
 
     try {
       const { data, error: fetchError } = await sb
-        .from('advancedmd_claims')
+        .from('insurance_claims')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_date', { ascending: false })
         .limit(100);
 
       if (fetchError) throw fetchError;

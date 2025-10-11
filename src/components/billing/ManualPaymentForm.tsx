@@ -96,22 +96,21 @@ export function ManualPaymentForm() {
 
   const loadClaims = async () => {
     const { data, error } = await sb
-      .from('advancedmd_claims')
+      .from('insurance_claims')
       .select(
         `
         id,
         claim_id,
-        billed_amount,
+        total_charge_amount,
         paid_amount,
         claim_status,
         clients (
           first_name,
           last_name
         )
-      `
-      )
-      .in('claim_status', ['Submitted', 'Accepted', 'In Process'])
-      .order('created_at', { ascending: false })
+      `)
+      .in('claim_status', ['Submitted', 'Accepted', 'Paid'])
+      .order('claim_created_date', { ascending: false })
       .limit(100);
 
     if (data) {

@@ -86,15 +86,15 @@ export function EOBGenerator() {
 
       // Load paid claims (filter out those already in EOBs client-side)
       const { data: claimsData } = await sb
-        .from('advancedmd_claims')
+        .from('insurance_claims')
         .select(
           `
           id,
           claim_id,
-          billed_amount,
+          total_charge_amount,
           paid_amount,
           claim_status,
-          statement_from_date,
+          claim_created_date,
           clients (
             id,
             first_name,
@@ -103,7 +103,7 @@ export function EOBGenerator() {
         `
         )
         .eq('claim_status', 'Paid')
-        .order('statement_from_date', { ascending: false })
+        .order('claim_created_date', { ascending: false })
         .limit(50);
 
       if (claimsData) {
@@ -139,8 +139,8 @@ export function EOBGenerator() {
 
       // Get service lines from claim
       const { data: claimDetails } = await sb
-        .from('advancedmd_claims')
-        .select('service_lines')
+        .from('insurance_claims')
+        .select('*')
         .eq('id', claim.id)
         .single();
 

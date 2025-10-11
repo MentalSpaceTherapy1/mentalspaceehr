@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { FileText, AlertTriangle, TrendingUp, Plus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import {
   Dialog,
   DialogContent,
@@ -34,7 +35,8 @@ export default function ClaimsManagement() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <DashboardLayout>
+      <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -94,6 +96,7 @@ export default function ClaimsManagement() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

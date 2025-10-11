@@ -163,10 +163,10 @@ export function DenialManagement() {
 
     try {
       const { data, error } = await sb
-        .from('advancedmd_claims')
+        .from('insurance_claims')
         .select('*')
         .in('claim_status', ['Denied', 'Rejected'])
-        .order('submission_date', { ascending: false });
+        .order('claim_submitted_date', { ascending: false });
 
       if (error) throw error;
 
@@ -208,12 +208,12 @@ export function DenialManagement() {
     try {
       // Update claim status to Draft for correction
       const { error } = await sb
-        .from('advancedmd_claims')
+        .from('insurance_claims')
         .update({
           claim_status: 'Draft',
           claim_type: 'Replacement',
-          notes: correctionNotes,
-          updated_at: new Date().toISOString(),
+          billing_notes: correctionNotes,
+          last_modified: new Date().toISOString(),
         })
         .eq('id', selectedClaim.id);
 
@@ -246,11 +246,13 @@ export function DenialManagement() {
     try {
       // Update claim status to Appealed
       const { error } = await sb
-        .from('advancedmd_claims')
+        .from('insurance_claims')
         .update({
-          claim_status: 'Appealed',
-          notes: appealNotes,
-          updated_at: new Date().toISOString(),
+          claim_status: 'Pending',
+          appeal_filed: true,
+          appeal_date: new Date().toISOString(),
+          billing_notes: appealNotes,
+          last_modified: new Date().toISOString(),
         })
         .eq('id', selectedClaim.id);
 

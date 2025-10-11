@@ -9,6 +9,7 @@ import {
   Users
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import {
   ERAUploadProcessor,
   PaymentDashboard,
@@ -22,7 +23,8 @@ export default function PaymentProcessing() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <DashboardLayout>
+      <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Payment Processing</h1>
@@ -84,6 +86,7 @@ export default function PaymentProcessing() {
           <PatientStatementGenerator />
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
