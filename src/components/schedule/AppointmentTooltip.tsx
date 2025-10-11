@@ -33,7 +33,7 @@ export function AppointmentTooltip({ appointment }: AppointmentTooltipProps) {
   
   const handleClientClick = () => {
     if (appointment.client_id) {
-      navigate(`/client/${appointment.client_id}`);
+      navigate(`/clients/${appointment.client_id}`);
     }
   };
 
