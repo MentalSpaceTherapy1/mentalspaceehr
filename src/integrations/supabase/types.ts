@@ -14,6 +14,503 @@ export type Database = {
   }
   public: {
     Tables: {
+      advancedmd_api_logs: {
+        Row: {
+          created_at: string | null
+          endpoint: string
+          error_message: string | null
+          id: string
+          ip_address: string | null
+          method: string
+          request_payload: Json | null
+          response_payload: Json | null
+          response_time_ms: number | null
+          status_code: number | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          method: string
+          request_payload?: Json | null
+          response_payload?: Json | null
+          response_time_ms?: number | null
+          status_code?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          method?: string
+          request_payload?: Json | null
+          response_payload?: Json | null
+          response_time_ms?: number | null
+          status_code?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      advancedmd_auth_tokens: {
+        Row: {
+          access_token: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          refresh_token: string | null
+          scope: string | null
+          token_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          access_token: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          refresh_token?: string | null
+          scope?: string | null
+          token_type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          refresh_token?: string | null
+          scope?: string | null
+          token_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      advancedmd_batch_claims: {
+        Row: {
+          batch_id: string
+          claim_id: string
+          claim_status: string
+          created_at: string | null
+          error_codes: Json | null
+          id: string
+          sequence_number: number
+        }
+        Insert: {
+          batch_id: string
+          claim_id: string
+          claim_status?: string
+          created_at?: string | null
+          error_codes?: Json | null
+          id?: string
+          sequence_number: number
+        }
+        Update: {
+          batch_id?: string
+          claim_id?: string
+          claim_status?: string
+          created_at?: string | null
+          error_codes?: Json | null
+          id?: string
+          sequence_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advancedmd_batch_claims_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "advancedmd_edi_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_batch_claims_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "advancedmd_claims"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advancedmd_claim_appeals: {
+        Row: {
+          appeal_amount: number | null
+          appeal_date: string
+          appeal_level: number
+          appeal_reason: string
+          appeal_status: string
+          claim_id: string
+          created_at: string | null
+          filed_by: string | null
+          id: string
+          outcome: string | null
+          recovered_amount: number | null
+          response_date: string | null
+          response_description: string | null
+          supporting_documents: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          appeal_amount?: number | null
+          appeal_date: string
+          appeal_level?: number
+          appeal_reason: string
+          appeal_status?: string
+          claim_id: string
+          created_at?: string | null
+          filed_by?: string | null
+          id?: string
+          outcome?: string | null
+          recovered_amount?: number | null
+          response_date?: string | null
+          response_description?: string | null
+          supporting_documents?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          appeal_amount?: number | null
+          appeal_date?: string
+          appeal_level?: number
+          appeal_reason?: string
+          appeal_status?: string
+          claim_id?: string
+          created_at?: string | null
+          filed_by?: string | null
+          id?: string
+          outcome?: string | null
+          recovered_amount?: number | null
+          response_date?: string | null
+          response_description?: string | null
+          supporting_documents?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advancedmd_claim_appeals_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "advancedmd_claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_claim_appeals_filed_by_fkey"
+            columns: ["filed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advancedmd_claim_scrubbing_rules: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          rule_criteria: Json
+          rule_name: string
+          rule_type: string
+          severity: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          rule_criteria: Json
+          rule_name: string
+          rule_type: string
+          severity?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          rule_criteria?: Json
+          rule_name?: string
+          rule_type?: string
+          severity?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      advancedmd_claim_status_mappings: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          external_status_code: string
+          id: string
+          internal_status: string
+          status_category: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          external_status_code: string
+          id?: string
+          internal_status: string
+          status_category: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          external_status_code?: string
+          id?: string
+          internal_status?: string
+          status_category?: string
+        }
+        Relationships: []
+      }
+      advancedmd_claims: {
+        Row: {
+          accepted_date: string | null
+          adjustment_amount: number | null
+          billing_provider_id: string | null
+          claim_note: string | null
+          claim_number: string
+          claim_status: string
+          claim_total_amount: number
+          claim_type: string
+          clearinghouse_claim_id: string | null
+          clearinghouse_id: string | null
+          created_at: string | null
+          created_by: string | null
+          diagnoses: Json
+          id: string
+          last_modified_by: string | null
+          paid_amount: number | null
+          paid_date: string | null
+          patient_id: string
+          patient_responsibility: number | null
+          payer_claim_id: string | null
+          payer_id: string
+          payer_name: string
+          prior_auth_number: string | null
+          provider_id: string
+          referral_number: string | null
+          rejected_date: string | null
+          rejection_codes: Json | null
+          rejection_reason: string | null
+          service_from_date: string
+          service_lines: Json
+          service_to_date: string
+          submission_method: string | null
+          submitted_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_date?: string | null
+          adjustment_amount?: number | null
+          billing_provider_id?: string | null
+          claim_note?: string | null
+          claim_number: string
+          claim_status?: string
+          claim_total_amount: number
+          claim_type?: string
+          clearinghouse_claim_id?: string | null
+          clearinghouse_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          diagnoses: Json
+          id?: string
+          last_modified_by?: string | null
+          paid_amount?: number | null
+          paid_date?: string | null
+          patient_id: string
+          patient_responsibility?: number | null
+          payer_claim_id?: string | null
+          payer_id: string
+          payer_name: string
+          prior_auth_number?: string | null
+          provider_id: string
+          referral_number?: string | null
+          rejected_date?: string | null
+          rejection_codes?: Json | null
+          rejection_reason?: string | null
+          service_from_date: string
+          service_lines: Json
+          service_to_date: string
+          submission_method?: string | null
+          submitted_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_date?: string | null
+          adjustment_amount?: number | null
+          billing_provider_id?: string | null
+          claim_note?: string | null
+          claim_number?: string
+          claim_status?: string
+          claim_total_amount?: number
+          claim_type?: string
+          clearinghouse_claim_id?: string | null
+          clearinghouse_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          diagnoses?: Json
+          id?: string
+          last_modified_by?: string | null
+          paid_amount?: number | null
+          paid_date?: string | null
+          patient_id?: string
+          patient_responsibility?: number | null
+          payer_claim_id?: string | null
+          payer_id?: string
+          payer_name?: string
+          prior_auth_number?: string | null
+          provider_id?: string
+          referral_number?: string | null
+          rejected_date?: string | null
+          rejection_codes?: Json | null
+          rejection_reason?: string | null
+          service_from_date?: string
+          service_lines?: Json
+          service_to_date?: string
+          submission_method?: string | null
+          submitted_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advancedmd_claims_billing_provider_id_fkey"
+            columns: ["billing_provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_claims_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_claims_last_modified_by_fkey"
+            columns: ["last_modified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_claims_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_claims_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advancedmd_clearinghouses: {
+        Row: {
+          clearinghouse_id: string
+          clearinghouse_name: string
+          configuration: Json | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          is_primary: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          clearinghouse_id: string
+          clearinghouse_name: string
+          configuration?: Json | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          clearinghouse_id?: string
+          clearinghouse_name?: string
+          configuration?: Json | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      advancedmd_edi_batches: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledgment_file_path: string | null
+          batch_number: string
+          batch_status: string
+          batch_type: string
+          clearinghouse_id: string | null
+          control_number: string | null
+          created_at: string | null
+          created_by: string | null
+          edi_file_path: string | null
+          error_messages: Json | null
+          id: string
+          interchange_id: string | null
+          submitted_at: string | null
+          total_amount: number | null
+          total_claims: number | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledgment_file_path?: string | null
+          batch_number: string
+          batch_status?: string
+          batch_type?: string
+          clearinghouse_id?: string | null
+          control_number?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          edi_file_path?: string | null
+          error_messages?: Json | null
+          id?: string
+          interchange_id?: string | null
+          submitted_at?: string | null
+          total_amount?: number | null
+          total_claims?: number | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledgment_file_path?: string | null
+          batch_number?: string
+          batch_status?: string
+          batch_type?: string
+          clearinghouse_id?: string | null
+          control_number?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          edi_file_path?: string | null
+          error_messages?: Json | null
+          id?: string
+          interchange_id?: string | null
+          submitted_at?: string | null
+          total_amount?: number | null
+          total_claims?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advancedmd_edi_batches_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       advancedmd_eligibility_alerts: {
         Row: {
           acknowledged: boolean | null
@@ -282,6 +779,510 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      advancedmd_era_files: {
+        Row: {
+          check_amount: number | null
+          check_date: string | null
+          check_number: string | null
+          created_at: string | null
+          error_message: string | null
+          file_name: string
+          file_path: string
+          id: string
+          parsed_data: Json | null
+          payer_id: string | null
+          payer_name: string
+          processed_at: string | null
+          processing_status: string
+          raw_content: string | null
+          total_claims: number | null
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          check_amount?: number | null
+          check_date?: string | null
+          check_number?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          file_name: string
+          file_path: string
+          id?: string
+          parsed_data?: Json | null
+          payer_id?: string | null
+          payer_name: string
+          processed_at?: string | null
+          processing_status?: string
+          raw_content?: string | null
+          total_claims?: number | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          check_amount?: number | null
+          check_date?: string | null
+          check_number?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          file_name?: string
+          file_path?: string
+          id?: string
+          parsed_data?: Json | null
+          payer_id?: string | null
+          payer_name?: string
+          processed_at?: string | null
+          processing_status?: string
+          raw_content?: string | null
+          total_claims?: number | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advancedmd_era_files_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advancedmd_era_transactions: {
+        Row: {
+          adjustment_amount: number | null
+          adjustment_reason_codes: Json | null
+          allowed_amount: number | null
+          billed_amount: number | null
+          check_number: string | null
+          claim_id: string | null
+          claim_status_code: string | null
+          claim_status_description: string | null
+          created_at: string | null
+          era_file_id: string
+          id: string
+          paid_amount: number | null
+          patient_id: string | null
+          patient_responsibility: number | null
+          payer_claim_number: string | null
+          posted_at: string | null
+          posted_by: string | null
+          posting_status: string
+          processed_date: string | null
+          provider_claim_number: string | null
+          remark_codes: Json | null
+          service_date_from: string | null
+          service_date_to: string | null
+          service_lines: Json | null
+        }
+        Insert: {
+          adjustment_amount?: number | null
+          adjustment_reason_codes?: Json | null
+          allowed_amount?: number | null
+          billed_amount?: number | null
+          check_number?: string | null
+          claim_id?: string | null
+          claim_status_code?: string | null
+          claim_status_description?: string | null
+          created_at?: string | null
+          era_file_id: string
+          id?: string
+          paid_amount?: number | null
+          patient_id?: string | null
+          patient_responsibility?: number | null
+          payer_claim_number?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          posting_status?: string
+          processed_date?: string | null
+          provider_claim_number?: string | null
+          remark_codes?: Json | null
+          service_date_from?: string | null
+          service_date_to?: string | null
+          service_lines?: Json | null
+        }
+        Update: {
+          adjustment_amount?: number | null
+          adjustment_reason_codes?: Json | null
+          allowed_amount?: number | null
+          billed_amount?: number | null
+          check_number?: string | null
+          claim_id?: string | null
+          claim_status_code?: string | null
+          claim_status_description?: string | null
+          created_at?: string | null
+          era_file_id?: string
+          id?: string
+          paid_amount?: number | null
+          patient_id?: string | null
+          patient_responsibility?: number | null
+          payer_claim_number?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          posting_status?: string
+          processed_date?: string | null
+          provider_claim_number?: string | null
+          remark_codes?: Json | null
+          service_date_from?: string | null
+          service_date_to?: string | null
+          service_lines?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advancedmd_era_transactions_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "advancedmd_claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_era_transactions_era_file_id_fkey"
+            columns: ["era_file_id"]
+            isOneToOne: false
+            referencedRelation: "advancedmd_era_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_era_transactions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_era_transactions_posted_by_fkey"
+            columns: ["posted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advancedmd_payer_enrollments: {
+        Row: {
+          created_at: string | null
+          enrollment_date: string | null
+          enrollment_status: string
+          id: string
+          notes: string | null
+          payer_id: string
+          payer_name: string
+          provider_id: string | null
+          termination_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          enrollment_date?: string | null
+          enrollment_status?: string
+          id?: string
+          notes?: string | null
+          payer_id: string
+          payer_name: string
+          provider_id?: string | null
+          termination_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          enrollment_date?: string | null
+          enrollment_status?: string
+          id?: string
+          notes?: string | null
+          payer_id?: string
+          payer_name?: string
+          provider_id?: string | null
+          termination_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advancedmd_payer_enrollments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "advancedmd_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advancedmd_payment_postings: {
+        Row: {
+          adjustment_amount: number | null
+          charge_entry_id: string | null
+          check_number: string | null
+          created_at: string | null
+          era_transaction_id: string | null
+          id: string
+          patient_id: string
+          patient_responsibility: number | null
+          payment_amount: number
+          payment_date: string
+          payment_method: string | null
+          payment_source: string
+          payment_type: string
+          posted_at: string | null
+          posted_by: string | null
+          posting_notes: string | null
+          reference_number: string | null
+          reversal_reason: string | null
+          reversal_status: string | null
+          reversed_at: string | null
+          reversed_by: string | null
+        }
+        Insert: {
+          adjustment_amount?: number | null
+          charge_entry_id?: string | null
+          check_number?: string | null
+          created_at?: string | null
+          era_transaction_id?: string | null
+          id?: string
+          patient_id: string
+          patient_responsibility?: number | null
+          payment_amount: number
+          payment_date: string
+          payment_method?: string | null
+          payment_source: string
+          payment_type: string
+          posted_at?: string | null
+          posted_by?: string | null
+          posting_notes?: string | null
+          reference_number?: string | null
+          reversal_reason?: string | null
+          reversal_status?: string | null
+          reversed_at?: string | null
+          reversed_by?: string | null
+        }
+        Update: {
+          adjustment_amount?: number | null
+          charge_entry_id?: string | null
+          check_number?: string | null
+          created_at?: string | null
+          era_transaction_id?: string | null
+          id?: string
+          patient_id?: string
+          patient_responsibility?: number | null
+          payment_amount?: number
+          payment_date?: string
+          payment_method?: string | null
+          payment_source?: string
+          payment_type?: string
+          posted_at?: string | null
+          posted_by?: string | null
+          posting_notes?: string | null
+          reference_number?: string | null
+          reversal_reason?: string | null
+          reversal_status?: string | null
+          reversed_at?: string | null
+          reversed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advancedmd_payment_postings_charge_entry_id_fkey"
+            columns: ["charge_entry_id"]
+            isOneToOne: false
+            referencedRelation: "charge_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_payment_postings_era_transaction_id_fkey"
+            columns: ["era_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "advancedmd_era_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_payment_postings_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_payment_postings_posted_by_fkey"
+            columns: ["posted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_payment_postings_reversed_by_fkey"
+            columns: ["reversed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advancedmd_practice_settings: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value: Json
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      advancedmd_providers: {
+        Row: {
+          created_at: string | null
+          first_name: string
+          id: string
+          is_active: boolean | null
+          last_name: string
+          license_number: string | null
+          license_state: string | null
+          npi: string
+          provider_id: string
+          specialty: string | null
+          taxonomy_code: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          first_name: string
+          id?: string
+          is_active?: boolean | null
+          last_name: string
+          license_number?: string | null
+          license_state?: string | null
+          npi: string
+          provider_id: string
+          specialty?: string | null
+          taxonomy_code?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          first_name?: string
+          id?: string
+          is_active?: boolean | null
+          last_name?: string
+          license_number?: string | null
+          license_state?: string | null
+          npi?: string
+          provider_id?: string
+          specialty?: string | null
+          taxonomy_code?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      advancedmd_rate_limits: {
+        Row: {
+          created_at: string | null
+          endpoint: string
+          id: string
+          request_count: number | null
+          updated_at: string | null
+          window_end: string
+          window_start: string
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          request_count?: number | null
+          updated_at?: string | null
+          window_end: string
+          window_start: string
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          request_count?: number | null
+          updated_at?: string | null
+          window_end?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      advancedmd_rejection_codes: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string
+          id: string
+          rejection_code: string
+          resolution_steps: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          rejection_code: string
+          resolution_steps?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          rejection_code?: string
+          resolution_steps?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      advancedmd_sync_logs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string
+          error_message: string | null
+          id: string
+          records_synced: number | null
+          started_at: string | null
+          status: string
+          sync_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type: string
+          error_message?: string | null
+          id?: string
+          records_synced?: number | null
+          started_at?: string | null
+          status: string
+          sync_type: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          error_message?: string | null
+          id?: string
+          records_synced?: number | null
+          started_at?: string | null
+          status?: string
+          sync_type?: string
+        }
+        Relationships: []
       }
       ai_note_settings: {
         Row: {
