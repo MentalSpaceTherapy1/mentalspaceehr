@@ -86,7 +86,7 @@ export function AppSidebar() {
       icon: DollarSign,
       items: [
         { title: 'Billing Hub', url: '/billing', icon: DollarSign, color: 'from-green-400 to-emerald-400' },
-        { title: 'Eligibility Verification', url: '/billing/eligibility-verification', icon: CheckSquare, color: 'from-blue-400 to-cyan-400' },
+        { title: 'Eligibility Verification', url: '/billing/eligibility-advanced', icon: CheckSquare, color: 'from-blue-400 to-cyan-400' },
         { title: 'Claims Management', url: '/billing/claims', icon: FileText, color: 'from-cyan-400 to-blue-400' },
         { title: 'Payment Processing', url: '/billing/payment-processing', icon: Receipt, color: 'from-purple-400 to-pink-400' },
         { title: 'Client Statements', url: '/billing/client-statements', icon: FileText, color: 'from-orange-400 to-red-400' },

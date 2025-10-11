@@ -279,7 +279,7 @@ export const BillingDashboard = () => {
             <Button 
               variant="outline" 
               className="h-auto flex flex-col gap-2 p-4"
-              onClick={() => navigate('/admin/eligibility-verification')}
+              onClick={() => navigate('/billing/eligibility-advanced')}
             >
               <AlertCircle className="h-5 w-5" />
               <span className="text-sm">Verify Insurance</span>

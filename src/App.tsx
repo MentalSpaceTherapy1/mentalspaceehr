@@ -470,7 +470,7 @@ const App = () => (
               path="/billing/eligibility-verification" 
               element={
                 <AdminRoute>
-                  <EligibilityVerification />
+                  <EligibilityVerificationAdvanced />
                 </AdminRoute>
               } 
             />
