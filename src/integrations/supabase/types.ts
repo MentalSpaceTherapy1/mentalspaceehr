@@ -14,6 +14,275 @@ export type Database = {
   }
   public: {
     Tables: {
+      advancedmd_eligibility_alerts: {
+        Row: {
+          acknowledged: boolean | null
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          created_at: string | null
+          details: Json | null
+          eligibility_request_id: string | null
+          id: string
+          message: string
+          patient_id: string
+          severity: string
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          created_at?: string | null
+          details?: Json | null
+          eligibility_request_id?: string | null
+          id?: string
+          message: string
+          patient_id: string
+          severity?: string
+        }
+        Update: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          created_at?: string | null
+          details?: Json | null
+          eligibility_request_id?: string | null
+          id?: string
+          message?: string
+          patient_id?: string
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advancedmd_eligibility_alerts_eligibility_request_id_fkey"
+            columns: ["eligibility_request_id"]
+            isOneToOne: false
+            referencedRelation: "advancedmd_eligibility_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_eligibility_alerts_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advancedmd_eligibility_batch_items: {
+        Row: {
+          batch_id: string
+          created_at: string | null
+          eligibility_request_id: string | null
+          error_message: string | null
+          id: string
+          insurance_id: string | null
+          patient_id: string
+          processed_at: string | null
+          status: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string | null
+          eligibility_request_id?: string | null
+          error_message?: string | null
+          id?: string
+          insurance_id?: string | null
+          patient_id: string
+          processed_at?: string | null
+          status?: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string | null
+          eligibility_request_id?: string | null
+          error_message?: string | null
+          id?: string
+          insurance_id?: string | null
+          patient_id?: string
+          processed_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advancedmd_eligibility_batch_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "advancedmd_eligibility_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_eligibility_batch_items_eligibility_request_id_fkey"
+            columns: ["eligibility_request_id"]
+            isOneToOne: false
+            referencedRelation: "advancedmd_eligibility_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_eligibility_batch_items_insurance_id_fkey"
+            columns: ["insurance_id"]
+            isOneToOne: false
+            referencedRelation: "client_insurance"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_eligibility_batch_items_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advancedmd_eligibility_batches: {
+        Row: {
+          batch_name: string
+          completed_at: string | null
+          completed_count: number | null
+          created_at: string | null
+          created_by: string | null
+          failed_count: number | null
+          id: string
+          scheduled_date: string
+          started_at: string | null
+          status: string
+          total_patients: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          batch_name: string
+          completed_at?: string | null
+          completed_count?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          failed_count?: number | null
+          id?: string
+          scheduled_date: string
+          started_at?: string | null
+          status?: string
+          total_patients?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          batch_name?: string
+          completed_at?: string | null
+          completed_count?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          failed_count?: number | null
+          id?: string
+          scheduled_date?: string
+          started_at?: string | null
+          status?: string
+          total_patients?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      advancedmd_eligibility_requests: {
+        Row: {
+          benefits: Json | null
+          copay_amount: number | null
+          coverage_active: boolean | null
+          coverage_details: Json | null
+          created_at: string | null
+          deductible_remaining: number | null
+          effective_date: string | null
+          error_message: string | null
+          id: string
+          insurance_id: string | null
+          limitations: Json | null
+          member_id: string
+          out_of_pocket_remaining: number | null
+          patient_id: string
+          payer_name: string
+          prior_auth_required: boolean | null
+          raw_response: Json | null
+          referral_required: boolean | null
+          request_date: string | null
+          requested_by: string | null
+          response_received_at: string | null
+          service_date: string
+          service_type: string
+          status: string
+          termination_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          benefits?: Json | null
+          copay_amount?: number | null
+          coverage_active?: boolean | null
+          coverage_details?: Json | null
+          created_at?: string | null
+          deductible_remaining?: number | null
+          effective_date?: string | null
+          error_message?: string | null
+          id?: string
+          insurance_id?: string | null
+          limitations?: Json | null
+          member_id: string
+          out_of_pocket_remaining?: number | null
+          patient_id: string
+          payer_name: string
+          prior_auth_required?: boolean | null
+          raw_response?: Json | null
+          referral_required?: boolean | null
+          request_date?: string | null
+          requested_by?: string | null
+          response_received_at?: string | null
+          service_date?: string
+          service_type?: string
+          status?: string
+          termination_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          benefits?: Json | null
+          copay_amount?: number | null
+          coverage_active?: boolean | null
+          coverage_details?: Json | null
+          created_at?: string | null
+          deductible_remaining?: number | null
+          effective_date?: string | null
+          error_message?: string | null
+          id?: string
+          insurance_id?: string | null
+          limitations?: Json | null
+          member_id?: string
+          out_of_pocket_remaining?: number | null
+          patient_id?: string
+          payer_name?: string
+          prior_auth_required?: boolean | null
+          raw_response?: Json | null
+          referral_required?: boolean | null
+          request_date?: string | null
+          requested_by?: string | null
+          response_received_at?: string | null
+          service_date?: string
+          service_type?: string
+          status?: string
+          termination_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advancedmd_eligibility_requests_insurance_id_fkey"
+            columns: ["insurance_id"]
+            isOneToOne: false
+            referencedRelation: "client_insurance"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advancedmd_eligibility_requests_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_note_settings: {
         Row: {
           anonymize_before_sending: boolean
@@ -9065,6 +9334,17 @@ export type Database = {
         }
         Returns: string
       }
+      create_eligibility_alert: {
+        Args: {
+          p_alert_type: string
+          p_details?: Json
+          p_eligibility_request_id: string
+          p_message: string
+          p_patient_id: string
+          p_severity: string
+        }
+        Returns: string
+      }
       find_matching_slots: {
         Args: { _waitlist_id: string }
         Returns: {
@@ -9093,6 +9373,17 @@ export type Database = {
       generate_statement_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_latest_eligibility: {
+        Args: { p_patient_id: string }
+        Returns: {
+          coverage_active: boolean
+          coverage_details: Json
+          id: string
+          payer_name: string
+          request_date: string
+          status: string
+        }[]
       }
       get_user_roles: {
         Args: { _user_id: string }
@@ -9124,6 +9415,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      needs_eligibility_refresh: {
+        Args: { p_days_threshold?: number; p_patient_id: string }
+        Returns: boolean
       }
       track_document_view: {
         Args: { document_id: string; viewer_id: string }
