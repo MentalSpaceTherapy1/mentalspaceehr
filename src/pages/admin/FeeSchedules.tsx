@@ -29,6 +29,7 @@ export default function FeeSchedules() {
   const { schedules, isLoading, deleteSchedule } = useFeeSchedules();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [scheduleToDelete, setScheduleToDelete] = useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const handleDelete = (id: string) => {
     setScheduleToDelete(id);
@@ -53,7 +54,7 @@ export default function FeeSchedules() {
               Manage service fee schedules by type and insurance
             </p>
           </div>
-          <Button>
+          <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             New Fee Schedule
           </Button>
@@ -151,6 +152,20 @@ export default function FeeSchedules() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Create Fee Schedule</AlertDialogTitle>
+            <AlertDialogDescription>
+              Fee schedule creation form coming soon. This will allow you to define service fees by CPT code, insurance type, and modifiers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Close</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

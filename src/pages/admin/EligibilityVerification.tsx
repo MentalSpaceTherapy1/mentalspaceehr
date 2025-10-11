@@ -14,6 +14,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const statusIcons = {
   Active: <CheckCircle className="w-4 h-4 text-success" />,
@@ -31,6 +40,7 @@ const statusVariants = {
 
 export default function EligibilityVerification() {
   const { checks, isLoading } = useEligibilityChecks();
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   return (
     <DashboardLayout>
@@ -42,7 +52,7 @@ export default function EligibilityVerification() {
               Verify and manage client insurance eligibility
             </p>
           </div>
-          <Button>
+          <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             New Eligibility Check
           </Button>
@@ -174,6 +184,20 @@ export default function EligibilityVerification() {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>New Eligibility Check</AlertDialogTitle>
+            <AlertDialogDescription>
+              Eligibility check form coming soon. This will allow you to verify insurance coverage and benefits for clients in real-time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Close</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

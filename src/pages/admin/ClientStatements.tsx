@@ -8,6 +8,15 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Send, Eye, AlertTriangle, Search } from 'lucide-react';
 import { useClientStatements } from '@/hooks/useClientStatements';
 import { ClientStatementDialog } from '@/components/billing/ClientStatementDialog';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 
 export default function ClientStatements() {
@@ -15,6 +24,7 @@ export default function ClientStatements() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatement, setSelectedStatement] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
 
   const filteredStatements = statements.filter((statement) =>
     statement.client?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -59,7 +69,7 @@ export default function ClientStatements() {
               Manage and track client billing statements
             </p>
           </div>
-          <Button>
+          <Button onClick={() => setGenerateDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Generate Statement
           </Button>
@@ -217,6 +227,20 @@ export default function ClientStatements() {
         onOpenChange={setDialogOpen}
         statement={selectedStatement}
       />
+
+      <AlertDialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Generate Client Statement</AlertDialogTitle>
+            <AlertDialogDescription>
+              Statement generation form coming soon. This will allow you to create billing statements for clients with outstanding balances.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Close</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
