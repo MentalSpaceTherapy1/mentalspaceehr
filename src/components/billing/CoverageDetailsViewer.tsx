@@ -19,14 +19,14 @@ export function CoverageDetailsViewer() {
 
   // Fetch patients
   const { data: patients } = useQuery({
-    queryKey: ['patients'],
+    queryKey: ['clients'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('patients')
+        .from('clients')
         .select('id, first_name, last_name')
         .order('last_name');
       if (error) throw error;
-      return data;
+      return data as any;
     },
   });
 

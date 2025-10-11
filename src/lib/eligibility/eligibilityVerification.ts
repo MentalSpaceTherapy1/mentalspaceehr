@@ -91,15 +91,15 @@ export async function submitEligibilityRequest(request: EligibilityRequest): Pro
     const requestNumber = `EV-${Date.now()}-${request.patientId.slice(0, 8)}`;
 
     // Insert request into database
-    const { data: requestData, error: requestError } = await supabase
+    const { data: requestData, error: requestError } = await (supabase as any)
       .from('advancedmd_eligibility_requests')
       .insert({
-        request_number: requestNumber,
         patient_id: request.patientId,
         insurance_id: request.insuranceId,
-        verification_type: request.verificationType,
-        service_type: request.serviceType,
-        status: 'processing',
+        service_date: new Date().toISOString().split('T')[0],
+        service_type: request.serviceType === 'Mental Health' ? '30' : '30',
+        submission_method: request.verificationType === 'real_time' ? 'real-time' : 'batch',
+        request_status: 'processing',
       })
       .select()
       .single();
@@ -111,21 +111,26 @@ export async function submitEligibilityRequest(request: EligibilityRequest): Pro
     const mockResponse = await simulateEligibilityCheck(request);
 
     // Update request with response
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('advancedmd_eligibility_requests')
       .update({
-        status: 'completed',
-        is_eligible: mockResponse.isEligible,
-        eligibility_status: mockResponse.eligibilityStatus,
-        effective_date: mockResponse.effectiveDate,
-        termination_date: mockResponse.terminationDate,
+        request_status: 'completed',
+        coverage_status: mockResponse.eligibilityStatus.toLowerCase(),
         payer_name: mockResponse.payerName,
-        subscriber_id: mockResponse.subscriberId,
+        member_id: mockResponse.subscriberId,
         group_number: mockResponse.groupNumber,
-        coverage_details: mockResponse.coverageDetails,
-        plan_details: mockResponse.planDetails,
-        service_limitations: mockResponse.serviceLimitations,
-        response_received_at: new Date().toISOString(),
+        plan_name: mockResponse.planDetails?.planName,
+        copay: mockResponse.coverageDetails?.copay?.officeVisit,
+        coinsurance: mockResponse.coverageDetails?.coinsurance?.inNetwork,
+        deductible_total: mockResponse.coverageDetails?.deductible?.individual,
+        deductible_met: mockResponse.coverageDetails?.deductible?.individualMet,
+        deductible_remaining: mockResponse.coverageDetails?.deductible?.individual ? mockResponse.coverageDetails.deductible.individual - mockResponse.coverageDetails.deductible.individualMet : undefined,
+        oop_max_total: mockResponse.coverageDetails?.outOfPocketMax?.individual,
+        oop_max_met: mockResponse.coverageDetails?.outOfPocketMax?.individualMet,
+        oop_max_remaining: mockResponse.coverageDetails?.outOfPocketMax?.individual ? mockResponse.coverageDetails.outOfPocketMax.individual - mockResponse.coverageDetails.outOfPocketMax.individualMet : undefined,
+        benefits: mockResponse.coverageDetails,
+        limitations: mockResponse.serviceLimitations,
+        response_received_date: new Date().toISOString(),
       })
       .eq('id', requestData.id);
 
@@ -149,11 +154,11 @@ export async function submitEligibilityRequest(request: EligibilityRequest): Pro
  * Get eligibility history for a patient
  */
 export async function getEligibilityHistory(patientId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('advancedmd_eligibility_requests')
     .select('*')
     .eq('patient_id', patientId)
-    .order('requested_at', { ascending: false });
+    .order('request_date', { ascending: false });
 
   if (error) throw error;
   return data;
@@ -163,24 +168,31 @@ export async function getEligibilityHistory(patientId: string) {
  * Get latest eligibility for a patient
  */
 export async function getLatestEligibility(patientId: string): Promise<EligibilityResponse | null> {
-  const { data, error } = await supabase
-    .rpc('get_latest_eligibility', { p_patient_id: patientId });
+  const { data, error } = await (supabase as any)
+    .from('advancedmd_eligibility_requests')
+    .select('*')
+    .eq('patient_id', patientId)
+    .eq('request_status', 'completed')
+    .order('request_date', { ascending: false })
+    .limit(1)
+    .single();
 
-  if (error) throw error;
-  if (!data || data.length === 0) return null;
+  if (error && error.code !== 'PGRST116') throw error;
+  if (!data) return null;
 
-  const latest = data[0];
   return {
-    requestId: latest.request_id,
-    requestNumber: latest.request_number,
-    isEligible: latest.is_eligible,
-    eligibilityStatus: latest.eligibility_status,
-    effectiveDate: latest.effective_date,
-    terminationDate: latest.termination_date,
-    payerName: latest.payer_name,
-    subscriberId: latest.subscriber_id,
-    coverageDetails: latest.coverage_details,
-    planDetails: latest.plan_details,
+    requestId: data.id,
+    requestNumber: `EV-${data.request_date}`,
+    isEligible: data.coverage_status === 'active',
+    eligibilityStatus: data.coverage_status || 'unknown',
+    effectiveDate: data.service_date,
+    terminationDate: undefined,
+    payerName: data.payer_name,
+    subscriberId: data.member_id,
+    groupNumber: data.group_number,
+    coverageDetails: data.benefits,
+    planDetails: { planName: data.plan_name },
+    serviceLimitations: data.limitations,
   };
 }
 
@@ -188,14 +200,20 @@ export async function getLatestEligibility(patientId: string): Promise<Eligibili
  * Check if patient needs eligibility refresh
  */
 export async function needsEligibilityRefresh(patientId: string, daysThreshold: number = 30): Promise<boolean> {
-  const { data, error } = await supabase
-    .rpc('needs_eligibility_refresh', {
-      p_patient_id: patientId,
-      p_days_threshold: daysThreshold
-    });
+  const { data, error } = await (supabase as any)
+    .from('advancedmd_eligibility_requests')
+    .select('request_date')
+    .eq('patient_id', patientId)
+    .eq('request_status', 'completed')
+    .order('request_date', { ascending: false })
+    .limit(1)
+    .single();
 
-  if (error) throw error;
-  return data;
+  if (error && error.code !== 'PGRST116') return true;
+  if (!data) return true;
+  
+  const daysSinceCheck = Math.floor((Date.now() - new Date(data.request_date).getTime()) / (1000 * 60 * 60 * 24));
+  return daysSinceCheck > daysThreshold;
 }
 
 /**
@@ -206,56 +224,43 @@ export async function createBatchEligibilityJob(job: BatchEligibilityJob) {
     const batchNumber = `BATCH-${Date.now()}`;
 
     // Create batch job
-    const { data: batchData, error: batchError } = await supabase
+    const { data: batchData, error: batchError } = await (supabase as any)
       .from('advancedmd_eligibility_batches')
       .insert({
-        batch_number: batchNumber,
         batch_name: job.batchName,
         scheduled_date: job.scheduledDate,
+        service_date: new Date().toISOString().split('T')[0],
         total_patients: job.patientIds.length,
-        status: 'pending',
+        status: 'scheduled',
       })
       .select()
       .single();
 
     if (batchError) throw batchError;
 
-    // Create individual requests for each patient
-    const requests = await Promise.all(
-      job.patientIds.map(async (patientId, index) => {
-        const requestNumber = `EV-${Date.now()}-${patientId.slice(0, 8)}-${index}`;
-
-        const { data: requestData, error: requestError } = await supabase
-          .from('advancedmd_eligibility_requests')
+    // Create batch items for each patient
+    const items = await Promise.all(
+      job.patientIds.map(async (patientId) => {
+        const { data, error } = await (supabase as any)
+          .from('advancedmd_eligibility_batch_items')
           .insert({
-            request_number: requestNumber,
+            batch_id: batchData.id,
             patient_id: patientId,
-            verification_type: 'batch',
-            service_type: 'Mental Health',
+            insurance_id: null, // Will be populated during processing
             status: 'pending',
           })
           .select()
           .single();
 
-        if (requestError) throw requestError;
-
-        // Link request to batch
-        await supabase
-          .from('advancedmd_eligibility_batch_items')
-          .insert({
-            batch_id: batchData.id,
-            request_id: requestData.id,
-            sequence_number: index + 1,
-          });
-
-        return requestData;
+        if (error) throw error;
+        return data;
       })
     );
 
     return {
       batchId: batchData.id,
       batchNumber,
-      totalRequests: requests.length,
+      totalRequests: items.length,
     };
   } catch (error) {
     console.error('Failed to create batch eligibility job:', error);
@@ -269,18 +274,18 @@ export async function createBatchEligibilityJob(job: BatchEligibilityJob) {
 export async function processBatchEligibilityJob(batchId: string) {
   try {
     // Update batch status to processing
-    await supabase
+    await (supabase as any)
       .from('advancedmd_eligibility_batches')
       .update({
         status: 'processing',
-        started_at: new Date().toISOString(),
+        start_date: new Date().toISOString(),
       })
       .eq('id', batchId);
 
     // Get all batch items
-    const { data: items, error: itemsError } = await supabase
+    const { data: items, error: itemsError } = await (supabase as any)
       .from('advancedmd_eligibility_batch_items')
-      .select('request_id, advancedmd_eligibility_requests(*)')
+      .select('*')
       .eq('batch_id', batchId);
 
     if (itemsError) throw itemsError;
@@ -288,54 +293,48 @@ export async function processBatchEligibilityJob(batchId: string) {
     let successCount = 0;
     let failedCount = 0;
 
-    // Process each request
+    // Process each item (simplified - in production would create actual requests)
     for (const item of items) {
       try {
-        const request = item.advancedmd_eligibility_requests as any;
         const mockResponse = await simulateEligibilityCheck({
-          patientId: request.patient_id,
-          insuranceId: request.insurance_id,
-          serviceType: request.service_type,
+          patientId: item.patient_id,
+          insuranceId: item.insurance_id,
+          serviceType: '30',
           verificationType: 'batch',
         });
 
-        await supabase
-          .from('advancedmd_eligibility_requests')
+        await (supabase as any)
+          .from('advancedmd_eligibility_batch_items')
           .update({
             status: 'completed',
-            is_eligible: mockResponse.isEligible,
-            eligibility_status: mockResponse.eligibilityStatus,
-            effective_date: mockResponse.effectiveDate,
-            termination_date: mockResponse.terminationDate,
-            payer_name: mockResponse.payerName,
-            subscriber_id: mockResponse.subscriberId,
-            coverage_details: mockResponse.coverageDetails,
-            plan_details: mockResponse.planDetails,
-            response_received_at: new Date().toISOString(),
+            coverage_status: mockResponse.eligibilityStatus.toLowerCase(),
+            processed_date: new Date().toISOString(),
           })
-          .eq('id', request.id);
+          .eq('id', item.id);
 
         successCount++;
       } catch (error) {
         failedCount++;
-        console.error(`Failed to process request ${item.request_id}:`, error);
+        await (supabase as any)
+          .from('advancedmd_eligibility_batch_items')
+          .update({
+            status: 'failed',
+            error_message: error instanceof Error ? error.message : 'Unknown error',
+            processed_date: new Date().toISOString(),
+          })
+          .eq('id', item.id);
       }
     }
 
     // Update batch with results
-    await supabase
+    await (supabase as any)
       .from('advancedmd_eligibility_batches')
       .update({
-        status: successCount + failedCount === items.length ? 'completed' : 'partial',
+        status: successCount + failedCount === items.length ? 'completed' : 'failed',
         processed_count: successCount + failedCount,
-        successful_count: successCount,
-        failed_count: failedCount,
-        completed_at: new Date().toISOString(),
-        result_summary: {
-          total: items.length,
-          successful: successCount,
-          failed: failedCount,
-        },
+        success_count: successCount,
+        failure_count: failedCount,
+        completion_date: new Date().toISOString(),
       })
       .eq('id', batchId);
 
@@ -355,26 +354,26 @@ export async function processBatchEligibilityJob(batchId: string) {
  * Get unacknowledged eligibility alerts
  */
 export async function getUnacknowledgedAlerts(): Promise<EligibilityAlert[]> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('advancedmd_eligibility_alerts')
-    .select('*, patients(first_name, last_name)')
-    .eq('is_acknowledged', false)
-    .order('created_at', { ascending: false });
+    .select('*')
+    .eq('acknowledged', false)
+    .order('triggered_date', { ascending: false });
 
   if (error) throw error;
-  return data as EligibilityAlert[];
+  return data as any;
 }
 
 /**
  * Acknowledge an alert
  */
 export async function acknowledgeAlert(alertId: string) {
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('advancedmd_eligibility_alerts')
     .update({
-      is_acknowledged: true,
+      acknowledged: true,
       acknowledged_by: (await supabase.auth.getUser()).data.user?.id,
-      acknowledged_at: new Date().toISOString(),
+      acknowledged_date: new Date().toISOString(),
     })
     .eq('id', alertId);
 
@@ -496,13 +495,13 @@ async function checkAndCreateAlerts(requestId: string, patientId: string, respon
 
   // Create alerts in database
   for (const alert of alerts) {
-    await supabase.rpc('create_eligibility_alert', {
-      p_patient_id: patientId,
-      p_insurance_id: null,
-      p_alert_type: alert.type,
-      p_severity: alert.severity,
-      p_message: alert.message,
-      p_related_request_id: requestId,
+    await (supabase as any).from('advancedmd_eligibility_alerts').insert({
+      patient_id: patientId,
+      insurance_id: null,
+      eligibility_request_id: requestId,
+      alert_type: alert.type,
+      severity: alert.severity,
+      message: alert.message,
     });
   }
 }

@@ -57,6 +57,7 @@ import ConfirmPasswordReset from "./pages/ConfirmPasswordReset";
 import ClientStatements from "@/pages/admin/ClientStatements";
 import FeeSchedules from "@/pages/admin/FeeSchedules";
 import EligibilityVerification from "@/pages/admin/EligibilityVerification";
+import EligibilityVerificationAdvanced from "@/pages/EligibilityVerificationAdvanced";
 import PayrollManagement from "@/pages/admin/PayrollManagement";
 import Reports from "@/pages/admin/Reports";
 import Billing from "./pages/Billing";
@@ -474,7 +475,15 @@ const App = () => (
               } 
             />
             <Route 
-              path="/billing/payroll" 
+              path="/billing/eligibility-advanced" 
+              element={
+                <AdminRoute>
+                  <EligibilityVerificationAdvanced />
+                </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/billing/payroll"
               element={
                 <AdminRoute>
                   <PayrollManagement />

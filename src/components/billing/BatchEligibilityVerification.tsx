@@ -51,14 +51,14 @@ export function BatchEligibilityVerification() {
 
   // Fetch all patients
   const { data: patients } = useQuery({
-    queryKey: ['patients'],
+    queryKey: ['clients'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('patients')
+        .from('clients')
         .select('id, first_name, last_name, date_of_birth')
         .order('last_name');
       if (error) throw error;
-      return data;
+      return data as any;
     },
   });
 
@@ -66,13 +66,13 @@ export function BatchEligibilityVerification() {
   const { data: batches, isLoading: batchesLoading } = useQuery({
     queryKey: ['eligibility-batches'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('advancedmd_eligibility_batches')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(10);
       if (error) throw error;
-      return data as BatchJob[];
+      return data as any;
     },
   });
 

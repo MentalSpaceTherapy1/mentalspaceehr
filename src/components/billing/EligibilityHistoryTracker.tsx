@@ -37,14 +37,14 @@ export function EligibilityHistoryTracker() {
 
   // Fetch patients
   const { data: patients } = useQuery({
-    queryKey: ['patients'],
+    queryKey: ['clients'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('patients')
+        .from('clients')
         .select('id, first_name, last_name')
         .order('last_name');
       if (error) throw error;
-      return data;
+      return data as any;
     },
   });
 
@@ -54,14 +54,14 @@ export function EligibilityHistoryTracker() {
     queryFn: async () => {
       if (!selectedPatientId) return [];
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('advancedmd_eligibility_requests')
         .select('*')
         .eq('patient_id', selectedPatientId)
-        .order('requested_at', { ascending: false });
+        .order('request_date', { ascending: false });
 
       if (error) throw error;
-      return data as EligibilityHistory[];
+      return data as any;
     },
     enabled: !!selectedPatientId,
   });
