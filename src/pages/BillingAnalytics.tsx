@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BarChart3, TrendingUp, Clock, DollarSign } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import {
   ClaimsAgingReport,
   PayerPerformanceReport,
@@ -11,7 +12,8 @@ export default function BillingAnalytics() {
   const [activeTab, setActiveTab] = useState('revenue');
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <DashboardLayout>
+      <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Billing Analytics</h1>
@@ -50,5 +52,6 @@ export default function BillingAnalytics() {
         </TabsContent>
       </Tabs>
     </div>
+    </DashboardLayout>
   );
 }
