@@ -13,10 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatDate } from '@/lib/utils';
-
-const supabase = createClient();
 
 interface AgingClaim {
   id: string;
@@ -57,40 +55,10 @@ export function ClaimsAgingReport() {
   const loadReport = async () => {
     try {
       setLoading(true);
-
-      // Load claims aging data
-      let query = supabase
-        .from('claims_aging_report')
-        .select('*')
-        .order('days_outstanding', { ascending: false });
-
-      if (filterBucket !== 'all') {
-        query = query.eq('aging_bucket', filterBucket);
-      }
-
-      if (dateRange.start) {
-        query = query.gte('submission_date', dateRange.start);
-      }
-
-      if (dateRange.end) {
-        query = query.lte('submission_date', dateRange.end);
-      }
-
-      const { data: claimsData } = await query;
-
-      if (claimsData) {
-        setClaims(claimsData as AgingClaim[]);
-      }
-
-      // Load aging summary
-      const { data: summaryData } = await supabase.rpc('get_claims_aging_breakdown', {
-        p_start_date: dateRange.start || null,
-        p_end_date: dateRange.end || null,
-      });
-
-      if (summaryData) {
-        setSummary(summaryData);
-      }
+      // TODO: These tables/views will be created in Phase 5 database migration
+      // Temporarily showing empty state
+      setClaims([]);
+      setSummary([]);
     } catch (error) {
       console.error('Error loading aging report:', error);
     } finally {

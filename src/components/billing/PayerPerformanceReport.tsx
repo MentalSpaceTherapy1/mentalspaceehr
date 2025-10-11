@@ -11,10 +11,8 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/utils';
-
-const supabase = createClient();
 
 interface PayerPerformance {
   payer_name: string;
@@ -42,15 +40,9 @@ export function PayerPerformanceReport() {
   const loadReport = async () => {
     try {
       setLoading(true);
-
-      const { data } = await supabase
-        .from('payer_performance_report')
-        .select('*')
-        .order(sortBy, { ascending: false });
-
-      if (data) {
-        setPayers(data as PayerPerformance[]);
-      }
+      // TODO: This view will be created in Phase 5 database migration
+      // Temporarily showing empty state
+      setPayers([]);
     } catch (error) {
       console.error('Error loading payer performance:', error);
     } finally {

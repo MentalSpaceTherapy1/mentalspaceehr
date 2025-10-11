@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, Clock, AlertTriangle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/utils';
 import {
   LineChart,
@@ -15,8 +15,6 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-
-const supabase = createClient();
 
 interface RevenueCycleMetric {
   month: string;
@@ -55,30 +53,10 @@ export function RevenueCycleDashboard() {
   const loadDashboard = async () => {
     try {
       setLoading(true);
-
-      // Load revenue cycle metrics
-      const { data: metricsData } = await supabase
-        .from('revenue_cycle_metrics')
-        .select('*')
-        .order('month', { ascending: true })
-        .limit(12);
-
-      if (metricsData) {
-        setMetrics(metricsData.map((m: any) => ({
-          ...m,
-          month: new Date(m.month).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-        })));
-      }
-
-      // Load AR aging summary
-      const { data: arData } = await supabase
-        .from('ar_aging_summary')
-        .select('*')
-        .single();
-
-      if (arData) {
-        setARSummary(arData);
-      }
+      // TODO: These tables/views will be created in Phase 5 database migration
+      // Temporarily showing empty state
+      setMetrics([]);
+      setARSummary(null);
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
