@@ -21,3 +21,8 @@ export { ICD10CodePicker } from './ICD10CodePicker';
 // Phase 4: ERA & Payment Posting
 export { ERAUploadProcessor } from './ERAUploadProcessor';
 export { PaymentDashboard } from './PaymentDashboard';
+export { ManualPaymentForm } from './ManualPaymentForm';
+export { PaymentReconciliation } from './PaymentReconciliation';
+export { EOBGenerator } from './EOBGenerator';
+export { PatientStatementGenerator } from './PatientStatementGenerator';
+export { PaymentReversalDialog } from './PaymentReversalDialog';
