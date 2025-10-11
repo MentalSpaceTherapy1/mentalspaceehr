@@ -31,3 +31,10 @@ export { PaymentReversalDialog } from './PaymentReversalDialog';
 export { ClaimsAgingReport } from './ClaimsAgingReport';
 export { PayerPerformanceReport } from './PayerPerformanceReport';
 export { RevenueCycleDashboard } from './RevenueCycleDashboard';
+
+
+// Phase 6: Insurance Eligibility Verification
+export { RealTimeEligibilityCheck } from './RealTimeEligibilityCheck';
+export { BatchEligibilityVerification } from './BatchEligibilityVerification';
+export { EligibilityHistoryTracker } from './EligibilityHistoryTracker';
+export { CoverageDetailsViewer } from './CoverageDetailsViewer';
