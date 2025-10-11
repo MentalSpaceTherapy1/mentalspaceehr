@@ -18,7 +18,9 @@
       "Bash(psql:*)",
       "Bash(git log:*)",
       "Bash(npx supabase link:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
