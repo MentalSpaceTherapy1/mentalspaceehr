@@ -533,9 +533,15 @@ export default function Schedule() {
             clearTimeout(hoverTimeoutRef.current);
           }
 
+          // Capture the target element reference before the timeout
+          const targetElement = e.currentTarget;
+
           // Set tooltip with a small delay for smoother UX
           hoverTimeoutRef.current = setTimeout(() => {
-            const rect = e.currentTarget.getBoundingClientRect();
+            // Check if element still exists
+            if (!targetElement) return;
+            
+            const rect = targetElement.getBoundingClientRect();
             const viewportWidth = window.innerWidth;
             const tooltipWidth = 360; // max-w-[360px]
 
