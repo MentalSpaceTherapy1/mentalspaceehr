@@ -17,3 +17,7 @@ export { ClaimsDashboard } from './ClaimsDashboard';
 export { DenialManagement } from './DenialManagement';
 export { CPTCodeSearch } from './CPTCodeSearch';
 export { ICD10CodePicker } from './ICD10CodePicker';
+
+// Phase 4: ERA & Payment Posting
+export { ERAUploadProcessor } from './ERAUploadProcessor';
+export { PaymentDashboard } from './PaymentDashboard';
