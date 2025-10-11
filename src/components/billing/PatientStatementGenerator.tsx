@@ -24,6 +24,7 @@ import { format } from 'date-fns';
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 const formatDate = (date: string | Date) => format(new Date(date), 'MMM d, yyyy');
+const sb = supabase as any;
 
 interface ClientBalance {
   id: string;
@@ -62,7 +63,7 @@ export function PatientStatementGenerator() {
       setLoading(true);
 
       // Load patient balance summary
-      const { data: balanceData } = await supabase
+      const { data: balanceData } = await sb
         .from('patient_balance_summary')
         .select('*')
         .order('outstanding_balance', { ascending: false })
@@ -73,7 +74,7 @@ export function PatientStatementGenerator() {
       }
 
       // Load existing statements
-      const { data: statementsData } = await supabase
+      const { data: statementsData } = await sb
         .from('advancedmd_patient_statements')
         .select(
           `

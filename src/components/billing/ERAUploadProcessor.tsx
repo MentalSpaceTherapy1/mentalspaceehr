@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { parse835EDI } from '@/lib/advancedmd/era-835-parser';
 import { postERAPayments } from '@/lib/advancedmd/payment-posting';
+const sb = supabase as any;
 
 interface ProcessingStatus {
   status: 'idle' | 'uploading' | 'parsing' | 'posting' | 'complete' | 'error';
@@ -77,7 +78,7 @@ export function ERAUploadProcessor() {
       }
 
       // Create ERA file record
-      const { data: eraFile, error: eraFileError } = await supabase
+      const { data: eraFile, error: eraFileError } = await sb
         .from('advancedmd_era_files')
         .insert({
           file_name: file.name,
@@ -104,7 +105,7 @@ export function ERAUploadProcessor() {
       const parseResult = parse835EDI(fileContent);
 
       if (!parseResult.success || !parseResult.data) {
-        await supabase
+        await sb
           .from('advancedmd_era_files')
           .update({
             processing_status: 'Error',
@@ -126,7 +127,7 @@ export function ERAUploadProcessor() {
       const eraData = parseResult.data;
 
       // Update ERA file with parsed data
-      await supabase
+      await sb
         .from('advancedmd_era_files')
         .update({
           processing_status: 'Parsed',

@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
+const sb = supabase as any;
 
 interface Claim {
   id: string;
@@ -109,7 +110,7 @@ export function ClaimsDashboard() {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await supabase
+      const { data, error: fetchError } = await sb
         .from('advancedmd_claims')
         .select('*')
         .order('created_at', { ascending: false })

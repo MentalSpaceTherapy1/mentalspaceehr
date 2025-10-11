@@ -38,6 +38,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
+const sb = supabase as any;
 import { useToast } from '@/hooks/use-toast';
 
 interface DeniedClaim {
@@ -161,7 +162,7 @@ export function DenialManagement() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('advancedmd_claims')
         .select('*')
         .in('claim_status', ['Denied', 'Rejected'])
@@ -206,7 +207,7 @@ export function DenialManagement() {
 
     try {
       // Update claim status to Draft for correction
-      const { error } = await supabase
+      const { error } = await sb
         .from('advancedmd_claims')
         .update({
           claim_status: 'Draft',
@@ -244,7 +245,7 @@ export function DenialManagement() {
 
     try {
       // Update claim status to Appealed
-      const { error } = await supabase
+      const { error } = await sb
         .from('advancedmd_claims')
         .update({
           claim_status: 'Appealed',

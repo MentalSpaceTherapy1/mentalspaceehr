@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 const formatDate = (date: string | Date) => format(new Date(date), 'MMM d, yyyy');
+const sb = supabase as any;
 
 interface PaymentStats {
   totalEraFiles: number;
@@ -73,7 +74,7 @@ export function PaymentDashboard() {
       setLoading(true);
 
       // Load payment stats
-      const { data: statsData } = await supabase
+      const { data: statsData } = await sb
         .from('payment_dashboard_stats')
         .select('*')
         .single();
@@ -91,7 +92,7 @@ export function PaymentDashboard() {
       }
 
       // Load recent payments
-      const { data: paymentsData } = await supabase
+      const { data: paymentsData } = await sb
         .from('advancedmd_payment_postings')
         .select(
           `
@@ -131,7 +132,7 @@ export function PaymentDashboard() {
       }
 
       // Load ERA files
-      const { data: eraFilesData } = await supabase
+      const { data: eraFilesData } = await sb
         .from('advancedmd_era_files')
         .select('*')
         .order('created_at', { ascending: false })

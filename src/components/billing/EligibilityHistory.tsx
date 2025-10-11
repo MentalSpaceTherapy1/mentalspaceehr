@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/collapsible';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
+const sb = supabase as any;
 import { BenefitVisualization } from './BenefitVisualization';
 import type { EligibilityResponse } from '@/lib/advancedmd';
 
@@ -68,7 +69,7 @@ export function EligibilityHistory({ clientId, limit = 10 }: EligibilityHistoryP
     setError(null);
 
     try {
-      const { data, error: fetchError } = await supabase
+      const { data, error: fetchError } = await sb
         .from('advancedmd_eligibility_checks')
         .select('*')
         .eq('client_id', clientId)

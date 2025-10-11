@@ -27,6 +27,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { postManualPayment } from '@/lib/advancedmd/payment-posting';
 import { getCARCDescription } from '@/lib/advancedmd/era-835-parser';
+const sb = supabase as any;
 
 const adjustmentSchema = z.object({
   adjustmentGroup: z.enum(['CO', 'PR', 'OA', 'PI']),
@@ -94,7 +95,7 @@ export function ManualPaymentForm() {
   }, []);
 
   const loadClaims = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('advancedmd_claims')
       .select(
         `

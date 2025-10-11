@@ -24,6 +24,7 @@ import { format } from 'date-fns';
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 const formatDate = (date: string | Date) => format(new Date(date), 'MMM d, yyyy');
+const sb = supabase as any;
 
 interface Claim {
   id: string;
@@ -73,7 +74,7 @@ export function EOBGenerator() {
       setLoading(true);
 
       // Load paid claims without EOBs
-      const { data: claimsData } = await supabase
+      const { data: claimsData } = await sb
         .from('advancedmd_claims')
         .select(
           `
@@ -100,7 +101,7 @@ export function EOBGenerator() {
       }
 
       // Load existing EOBs
-      const { data: eobsData } = await supabase
+      const { data: eobsData } = await sb
         .from('advancedmd_eobs')
         .select('*')
         .order('eob_date', { ascending: false })
@@ -121,7 +122,7 @@ export function EOBGenerator() {
       setGenerating(true);
 
       // Get payment details
-      const { data: payments } = await supabase
+      const { data: payments } = await sb
         .from('advancedmd_payment_postings')
         .select('*, advancedmd_payment_adjustments(*)')
         .eq('claim_id', claim.id);
@@ -136,7 +137,7 @@ export function EOBGenerator() {
       }
 
       // Get service lines from claim
-      const { data: claimDetails } = await supabase
+      const { data: claimDetails } = await sb
         .from('advancedmd_claims')
         .select('service_lines')
         .eq('id', claim.id)
@@ -156,7 +157,7 @@ export function EOBGenerator() {
       } = await supabase.auth.getUser();
 
       // Create EOB record
-      const { data: eob, error } = await supabase
+      const { data: eob, error } = await sb
         .from('advancedmd_eobs')
         .insert({
           claim_id: claim.id,
@@ -203,7 +204,7 @@ export function EOBGenerator() {
 
   const sendEOBToPatient = async (eob: EOBRecord) => {
     try {
-      const { error } = await supabase
+      const { error } = await sb
         .from('advancedmd_eobs')
         .update({
           sent_to_patient: true,
