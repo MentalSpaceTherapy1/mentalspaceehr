@@ -20,7 +20,8 @@
       "Bash(npx supabase link:*)",
       "Bash(cat:*)",
       "Bash(find:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(npm run test:run:*)"
     ],
     "deny": [],
     "ask": []
