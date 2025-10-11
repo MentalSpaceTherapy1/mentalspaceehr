@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
 import { format, parse, startOfWeek, getDay, addDays, subDays } from 'date-fns';
@@ -508,67 +509,92 @@ export default function Schedule() {
     ['administrator', 'front_desk', 'therapist'].includes(role)
   );
 
-  const [hoveredEvent, setHoveredEvent] = useState<any>(null);
+  const [hoveredAppointment, setHoveredAppointment] = useState<Appointment | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Custom event component with tooltip
-  const EventComponent = ({ event }: any) => {
+  // Hide tooltip on scroll or resize
+  useEffect(() => {
+    const hideTooltip = () => {
+      setHoveredAppointment(null);
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
+      }
+    };
+
+    window.addEventListener('scroll', hideTooltip, true);
+    window.addEventListener('resize', hideTooltip);
+
+    return () => {
+      window.removeEventListener('scroll', hideTooltip, true);
+      window.removeEventListener('resize', hideTooltip);
+    };
+  }, []);
+
+  // Custom event wrapper that handles hover at the wrapper level
+  const CustomEventWrapper = ({ event, children }: any) => {
     const resource = event.resource;
 
-    // Blocked time - no tooltip
-    if (resource.type === 'blocked') {
-      return <span>{event.title}</span>;
+    // Only attach hover for appointments, not blocked times
+    if (resource.type !== 'appointment') {
+      return <div>{children}</div>;
     }
 
-    // Appointment with hover tooltip
     const appointment = resource.data as Appointment;
 
     return (
-      <span
-        className="cursor-pointer w-full h-full block relative"
+      <div
         onMouseEnter={(e) => {
           // Clear any existing timeout
           if (hoverTimeoutRef.current) {
             clearTimeout(hoverTimeoutRef.current);
           }
 
-          // Capture the target element reference before the timeout
           const targetElement = e.currentTarget;
 
-          // Set tooltip with a small delay for smoother UX
+          // Set tooltip with reduced delay
           hoverTimeoutRef.current = setTimeout(() => {
-            // Check if element still exists
-            if (!targetElement) return;
-            
+            if (!targetElement || !appointment) return;
+
             const rect = targetElement.getBoundingClientRect();
             const viewportWidth = window.innerWidth;
-            const tooltipWidth = 360; // max-w-[360px]
+            const viewportHeight = window.innerHeight;
+            const tooltipWidth = 360;
+            const tooltipHeight = 250; // Approximate tooltip height
 
-            // Position tooltip to the right, but if it goes off screen, show on left
+            // Position to the right by default
             let xPos = rect.right + 10;
-            if (xPos + tooltipWidth > viewportWidth) {
+            
+            // If it goes off screen to the right, show on left
+            if (xPos + tooltipWidth > viewportWidth - 10) {
               xPos = rect.left - tooltipWidth - 10;
             }
+            
+            // Clamp to viewport
+            xPos = Math.max(10, Math.min(xPos, viewportWidth - tooltipWidth - 10));
 
-            setTooltipPosition({
-              x: Math.max(10, xPos),
-              y: rect.top
-            });
-            setHoveredEvent(appointment);
-          }, 300); // 300ms delay before showing tooltip
+            // Vertical positioning - try to center on event
+            let yPos = rect.top + (rect.height / 2) - (tooltipHeight / 2);
+            
+            // Clamp to viewport vertically
+            yPos = Math.max(10, Math.min(yPos, viewportHeight - tooltipHeight - 10));
+
+            setTooltipPosition({ x: xPos, y: yPos });
+            setHoveredAppointment(appointment);
+          }, 120); // 120ms delay
         }}
         onMouseLeave={() => {
-          // Clear timeout and immediately hide tooltip
+          // Clear timeout and hide tooltip
           if (hoverTimeoutRef.current) {
             clearTimeout(hoverTimeoutRef.current);
             hoverTimeoutRef.current = null;
           }
-          setHoveredEvent(null);
+          setHoveredAppointment(null);
         }}
       >
-        {event.title}
-      </span>
+        {children}
+      </div>
     );
   };
 
@@ -703,8 +729,9 @@ export default function Schedule() {
                 eventPropGetter={eventStyleGetter}
                 slotPropGetter={slotPropGetter}
                 components={{
-                  event: EventComponent,
+                  eventWrapper: CustomEventWrapper,
                 }}
+                popup={true}
                 step={15}
                 timeslots={4}
                 defaultView="week"
@@ -796,8 +823,8 @@ export default function Schedule() {
           onApply={setSelectedClinicians}
         />
 
-        {/* Floating tooltip for hovered appointments */}
-        {hoveredEvent && (
+        {/* Floating tooltip for hovered appointments - rendered via portal */}
+        {hoveredAppointment && createPortal(
           <div 
             className="fixed z-[9999] pointer-events-none"
             style={{
@@ -805,8 +832,9 @@ export default function Schedule() {
               top: `${tooltipPosition.y}px`,
             }}
           >
-            <AppointmentTooltip appointment={hoveredEvent} />
-          </div>
+            <AppointmentTooltip appointment={hoveredAppointment} />
+          </div>,
+          document.body
         )}
       </div>
     </DashboardLayout>
