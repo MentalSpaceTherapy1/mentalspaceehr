@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
 import { format, parse, startOfWeek, getDay, addDays, subDays } from 'date-fns';
@@ -510,31 +510,54 @@ export default function Schedule() {
 
   const [hoveredEvent, setHoveredEvent] = useState<any>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Custom event component with tooltip
   const EventComponent = ({ event }: any) => {
     const resource = event.resource;
-    
+
     // Blocked time - no tooltip
     if (resource.type === 'blocked') {
       return <span>{event.title}</span>;
     }
-    
+
     // Appointment with hover tooltip
     const appointment = resource.data as Appointment;
-    
+
     return (
-      <span 
+      <span
         className="cursor-pointer w-full h-full block relative"
         onMouseEnter={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          setTooltipPosition({ 
-            x: rect.right + 10, 
-            y: rect.top 
-          });
-          setHoveredEvent(appointment);
+          // Clear any existing timeout
+          if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+          }
+
+          // Set tooltip with a small delay for smoother UX
+          hoverTimeoutRef.current = setTimeout(() => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const tooltipWidth = 360; // max-w-[360px]
+
+            // Position tooltip to the right, but if it goes off screen, show on left
+            let xPos = rect.right + 10;
+            if (xPos + tooltipWidth > viewportWidth) {
+              xPos = rect.left - tooltipWidth - 10;
+            }
+
+            setTooltipPosition({
+              x: Math.max(10, xPos),
+              y: rect.top
+            });
+            setHoveredEvent(appointment);
+          }, 300); // 300ms delay before showing tooltip
         }}
         onMouseLeave={() => {
+          // Clear timeout and immediately hide tooltip
+          if (hoverTimeoutRef.current) {
+            clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+          }
           setHoveredEvent(null);
         }}
       >
