@@ -3,10 +3,10 @@
  * Posts payments from ERA files to claims automatically
  */
 
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import type { ERAClaim, ERAFile, ERAServiceLine } from './era-835-parser';
 
-const supabase = createClient();
+const sb = supabase as any;
 
 export interface PaymentPostingResult {
   success: boolean;
@@ -38,7 +38,7 @@ export async function postERAPayments(
   let failedPosts = 0;
 
   // Update ERA file status
-  await supabase
+  await sb
     .from('advancedmd_era_files')
     .update({
       processing_status: 'Posting',
@@ -61,7 +61,7 @@ export async function postERAPayments(
   // Update ERA file final status
   const finalStatus = failedPosts === 0 ? 'Posted' : failedPosts === eraData.claims.length ? 'Error' : 'Partially Posted';
 
-  await supabase
+  await sb
     .from('advancedmd_era_files')
     .update({
       processing_status: finalStatus,
@@ -99,7 +99,7 @@ async function postClaimPayment(
       errors.push(`No matching claim found for patient control number: ${eraClaim.patientControlNumber}`);
 
       // Save ERA claim detail with error
-      const { data: eraClaimDetail } = await supabase
+      const { data: eraClaimDetail } = await sb
         .from('advancedmd_era_claim_details')
         .insert({
           era_file_id: eraFileId,
@@ -124,7 +124,7 @@ async function postClaimPayment(
     }
 
     // Step 2: Save ERA claim detail
-    const { data: eraClaimDetail, error: eraClaimError } = await supabase
+    const { data: eraClaimDetail, error: eraClaimError } = await sb
       .from('advancedmd_era_claim_details')
       .insert({
         era_file_id: eraFileId,
@@ -151,7 +151,7 @@ async function postClaimPayment(
 
     // Step 3: Save service lines
     for (const serviceLine of eraClaim.serviceLines) {
-      await supabase.from('advancedmd_era_service_lines').insert({
+      await sb.from('advancedmd_era_service_lines').insert({
         era_claim_detail_id: eraClaimDetail.id,
         service_date: serviceLine.serviceDate.toISOString().split('T')[0],
         procedure_code: serviceLine.procedureCode,
@@ -177,7 +177,7 @@ async function postClaimPayment(
     const totalCoinsurance = eraClaim.serviceLines.reduce((sum, sl) => sum + sl.coinsurance, 0);
 
     // Step 5: Create payment posting
-    const { data: paymentPosting, error: postingError } = await supabase
+    const { data: paymentPosting, error: postingError } = await sb
       .from('advancedmd_payment_postings')
       .insert({
         era_file_id: eraFileId,
@@ -203,7 +203,7 @@ async function postClaimPayment(
     if (postingError || !paymentPosting) {
       errors.push(`Failed to create payment posting: ${postingError?.message}`);
 
-      await supabase
+      await sb
         .from('advancedmd_era_claim_details')
         .update({
           posting_status: 'Error',
@@ -217,7 +217,7 @@ async function postClaimPayment(
     // Step 6: Create adjustment records
     for (const serviceLine of eraClaim.serviceLines) {
       for (const adjustment of serviceLine.adjustments) {
-        await supabase.from('advancedmd_payment_adjustments').insert({
+        await sb.from('advancedmd_payment_adjustments').insert({
           payment_posting_id: paymentPosting.id,
           adjustment_group: adjustment.adjustmentGroup,
           adjustment_code: adjustment.adjustmentReasonCode,
@@ -231,7 +231,7 @@ async function postClaimPayment(
     // Step 7: Update claim status
     const newClaimStatus = determineClaimStatus(eraClaim, claim);
 
-    await supabase
+    await sb
       .from('advancedmd_claims')
       .update({
         claim_status: newClaimStatus,
@@ -241,7 +241,7 @@ async function postClaimPayment(
       .eq('id', claim.id);
 
     // Step 8: Update ERA claim detail as posted
-    await supabase
+    await sb
       .from('advancedmd_era_claim_details')
       .update({
         posting_status: 'Posted',
@@ -279,7 +279,7 @@ async function findMatchingClaim(eraClaim: ERAClaim): Promise<any> {
 
   // Strategy 1: Match by payer claim control number
   if (eraClaim.payerClaimControlNumber) {
-    const { data: claimByPayer } = await supabase
+    const { data: claimByPayer } = await sb
       .from('advancedmd_claims')
       .select('*')
       .eq('claim_id', eraClaim.payerClaimControlNumber)
@@ -290,7 +290,7 @@ async function findMatchingClaim(eraClaim: ERAClaim): Promise<any> {
 
   // Strategy 2: Match by patient control number (our internal claim ID)
   if (eraClaim.patientControlNumber) {
-    const { data: claimByPatient } = await supabase
+    const { data: claimByPatient } = await sb
       .from('advancedmd_claims')
       .select('*')
       .eq('claim_id', eraClaim.patientControlNumber)
@@ -301,7 +301,7 @@ async function findMatchingClaim(eraClaim: ERAClaim): Promise<any> {
 
   // Strategy 3: Match by patient name and service dates
   if (eraClaim.patient.lastName && eraClaim.statementFromDate) {
-    const { data: claims } = await supabase
+    const { data: claims } = await sb
       .from('advancedmd_claims')
       .select(`
         *,
@@ -378,7 +378,7 @@ export async function postManualPayment(
 
   try {
     // Validate claim exists
-    const { data: claim, error: claimError } = await supabase
+    const { data: claim, error: claimError } = await sb
       .from('advancedmd_claims')
       .select('*')
       .eq('id', request.claimId)
@@ -389,13 +389,15 @@ export async function postManualPayment(
       return { success: false, errors };
     }
 
+    const claimRecord = claim as any;
+
     // Calculate adjustment totals
     const totalAdjustments = request.adjustments?.reduce((sum, adj) => sum + adj.adjustmentAmount, 0) || 0;
     const contractualAdj = request.adjustments?.filter((a) => a.adjustmentGroup === 'CO').reduce((sum, a) => sum + a.adjustmentAmount, 0) || 0;
     const patientRespAdj = request.adjustments?.filter((a) => a.adjustmentGroup === 'PR').reduce((sum, a) => sum + a.adjustmentAmount, 0) || 0;
 
     // Create payment posting
-    const { data: paymentPosting, error: postingError } = await supabase
+    const { data: paymentPosting, error: postingError } = await sb
       .from('advancedmd_payment_postings')
       .insert({
         claim_id: request.claimId,
@@ -403,7 +405,7 @@ export async function postManualPayment(
         payment_method: request.paymentMethod,
         check_eft_number: request.checkNumber,
         payment_amount: request.paymentAmount,
-        billed_amount: claim.billed_amount,
+        billed_amount: claimRecord.billed_amount,
         contractual_adjustment: contractualAdj,
         other_adjustments: totalAdjustments - contractualAdj - patientRespAdj,
         patient_responsibility: patientRespAdj,
@@ -423,7 +425,7 @@ export async function postManualPayment(
     // Create adjustment records
     if (request.adjustments) {
       for (const adjustment of request.adjustments) {
-        await supabase.from('advancedmd_payment_adjustments').insert({
+        await sb.from('advancedmd_payment_adjustments').insert({
           payment_posting_id: paymentPosting.id,
           adjustment_group: adjustment.adjustmentGroup,
           adjustment_code: adjustment.adjustmentCode,
@@ -434,10 +436,10 @@ export async function postManualPayment(
     }
 
     // Update claim
-    const newPaidAmount = (claim.paid_amount || 0) + request.paymentAmount;
-    const newStatus = newPaidAmount >= claim.billed_amount ? 'Paid' : 'In Process';
+    const newPaidAmount = ((claimRecord as any).paid_amount || 0) + request.paymentAmount;
+    const newStatus = newPaidAmount >= (claimRecord as any).billed_amount ? 'Paid' : 'In Process';
 
-    await supabase
+    await sb
       .from('advancedmd_claims')
       .update({
         claim_status: newStatus,
@@ -467,7 +469,7 @@ export async function reversePaymentPosting(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Get payment posting
-    const { data: posting, error: postingError } = await supabase
+    const { data: posting, error: postingError } = await sb
       .from('advancedmd_payment_postings')
       .select('*')
       .eq('id', paymentPostingId)
@@ -477,8 +479,10 @@ export async function reversePaymentPosting(
       return { success: false, error: 'Payment posting not found' };
     }
 
+    const postingRecord = posting as any;
+
     // Update posting status
-    await supabase
+    await sb
       .from('advancedmd_payment_postings')
       .update({
         posting_status: 'Reversed',
@@ -489,21 +493,22 @@ export async function reversePaymentPosting(
       .eq('id', paymentPostingId);
 
     // Update claim paid amount
-    const { data: claim } = await supabase
+    const { data: claim } = await sb
       .from('advancedmd_claims')
       .select('*')
-      .eq('id', posting.claim_id)
+      .eq('id', postingRecord.claim_id)
       .single();
 
     if (claim) {
-      const newPaidAmount = Math.max(0, (claim.paid_amount || 0) - posting.payment_amount);
-      await supabase
+      const claimRecord = claim as any;
+      const newPaidAmount = Math.max(0, (claimRecord.paid_amount || 0) - postingRecord.payment_amount);
+      await sb
         .from('advancedmd_claims')
         .update({
           paid_amount: newPaidAmount,
           claim_status: newPaidAmount === 0 ? 'Submitted' : 'In Process',
         })
-        .eq('id', posting.claim_id);
+        .eq('id', postingRecord.claim_id);
     }
 
     return { success: true };

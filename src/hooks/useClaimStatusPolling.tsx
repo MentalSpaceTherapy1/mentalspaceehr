@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { getAdvancedMDClient } from '@/lib/advancedmd';
 import { useToast } from '@/hooks/use-toast';
 
+const sb = supabase as any;
+
 interface ClaimStatusUpdate {
   claimId: string;
   previousStatus: string;
@@ -87,7 +89,7 @@ export function useClaimStatusPolling({
           });
 
           // Update database
-          await supabase
+          await sb
             .from('advancedmd_claims')
             .update({
               claim_status: newStatus,
@@ -202,7 +204,7 @@ export function useClaimStatusPolling({
 
     const loadInitialStatuses = async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await sb
           .from('advancedmd_claims')
           .select('claim_id, claim_status')
           .in('claim_id', claimIds);
@@ -210,7 +212,8 @@ export function useClaimStatusPolling({
         if (error) throw error;
 
         if (data) {
-          data.forEach((claim) => {
+          const records = data as any[];
+          records.forEach((claim: any) => {
             previousStatusesRef.current.set(claim.claim_id, claim.claim_status);
           });
         }
@@ -255,7 +258,7 @@ export function useAutoClaimStatusMonitoring(options: {
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - maxAge);
 
-        const { data, error } = await supabase
+        const { data, error } = await sb
           .from('advancedmd_claims')
           .select('claim_id')
           .in('claim_status', statuses)
@@ -264,8 +267,8 @@ export function useAutoClaimStatusMonitoring(options: {
 
         if (error) throw error;
 
-        setClaimIds(data?.map((c) => c.claim_id) || []);
-        console.log(`[AutoClaimMonitoring] Monitoring ${data?.length || 0} claims`);
+        setClaimIds((data as any[])?.map((c: any) => c.claim_id) || []);
+        console.log(`[AutoClaimMonitoring] Monitoring ${(data as any[])?.length || 0} claims`);
       } catch (error) {
         console.error('[AutoClaimMonitoring] Error:', error);
       } finally {

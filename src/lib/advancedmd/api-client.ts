@@ -9,7 +9,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { getAdvancedMDConfig, ADVANCEDMD_ENDPOINTS, RATE_LIMITS, ErrorCode } from './config';
+import { getAdvancedMDConfig, ADVANCEDMD_ENDPOINTS, RATE_LIMITS, ERROR_CODES } from './config';
 import type {
   AuthToken,
   AuthResponse,
@@ -77,7 +77,7 @@ export class AdvancedMDClient {
 
       if (error) {
         throw this.createError(
-          ErrorCode.AUTHENTICATION_FAILED,
+          ERROR_CODES.AUTH_FAILED,
           'Failed to authenticate with AdvancedMD',
           { error },
           true
@@ -199,7 +199,8 @@ export class AdvancedMDClient {
    */
   private async storeToken(token: AuthToken): Promise<void> {
     try {
-      const { error } = await supabase
+      const sb = supabase as any;
+      const { error } = await sb
         .from('advancedmd_auth_tokens')
         .upsert({
           environment: this.config.environment,
@@ -355,7 +356,7 @@ export class AdvancedMDClient {
       const rateLimitStatus = this.checkRateLimit(endpoint);
       if (!rateLimitStatus.withinLimit) {
         throw this.createError(
-          ErrorCode.RATE_LIMIT_EXCEEDED,
+          ERROR_CODES.RATE_LIMIT_EXCEEDED,
           'Rate limit exceeded',
           { limitInfo: rateLimitStatus.limitInfo },
           true
@@ -400,7 +401,7 @@ export class AdvancedMDClient {
 
       if (error) {
         throw this.createError(
-          ErrorCode.API_ERROR,
+          ERROR_CODES.NETWORK_ERROR,
           'API request failed',
           { error, endpoint },
           this.isRetryable(error)
@@ -503,7 +504,7 @@ export class AdvancedMDClient {
   async syncPatient(request: PatientSyncRequest): Promise<APIResponse<PatientSyncResponse>> {
     console.log('[AdvancedMD] Syncing patient:', request.internalPatientId);
 
-    return this.request<PatientSyncResponse>(ADVANCEDMD_ENDPOINTS.PATIENT_SYNC, {
+    return this.request<PatientSyncResponse>(ADVANCEDMD_ENDPOINTS.PATIENT_CREATE, {
       method: 'POST',
       body: request
     });
@@ -517,7 +518,7 @@ export class AdvancedMDClient {
    * Create standardized API error
    */
   private createError(
-    code: ErrorCode | string,
+    code: string,
     message: string,
     details?: Record<string, any>,
     retryable: boolean = false
@@ -535,9 +536,9 @@ export class AdvancedMDClient {
    */
   private isRetryable(error: any): boolean {
     const retryableCodes = [
-      ErrorCode.RATE_LIMIT_EXCEEDED,
-      ErrorCode.TIMEOUT,
-      ErrorCode.NETWORK_ERROR
+      ERROR_CODES.RATE_LIMIT_EXCEEDED,
+      ERROR_CODES.TIMEOUT,
+      ERROR_CODES.NETWORK_ERROR
     ];
 
     return retryableCodes.includes(error.code) ||
@@ -558,7 +559,8 @@ export class AdvancedMDClient {
    */
   private async logAPICall(log: APIAuditLog): Promise<void> {
     try {
-      const { error } = await supabase
+      const sb = supabase as any;
+      const { error } = await sb
         .from('advancedmd_api_logs')
         .insert({
           id: log.id,

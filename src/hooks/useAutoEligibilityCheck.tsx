@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { getAdvancedMDClient } from '@/lib/advancedmd';
 import type { EligibilityResponse } from '@/lib/advancedmd';
 
+const sb = supabase as any;
+
 interface AutoEligibilityCheckOptions {
   enabled?: boolean;
   cacheHours?: number; // How long to consider cached results valid (default: 24 hours)
@@ -62,7 +64,7 @@ export function useAutoEligibilityCheck(
     if (!clientId || !insuranceId) return null;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('advancedmd_eligibility_checks')
         .select('*')
         .eq('client_id', clientId)
@@ -74,33 +76,34 @@ export function useAutoEligibilityCheck(
 
       if (error || !data) return null;
 
+      const record = data as any;
       // Check if cache is still valid
-      if (!isCacheValid(data.check_date)) return null;
+      if (!isCacheValid(record.check_date)) return null;
 
-      console.log('[AutoEligibility] Using cached result from', data.check_date);
+      console.log('[AutoEligibility] Using cached result from', record.check_date);
 
       // Map database fields to EligibilityResponse
       return {
-        coverageStatus: data.coverage_status as any,
-        payerName: data.payer_name,
-        payerId: data.payer_id,
-        memberId: data.member_id,
-        groupNumber: data.group_number,
-        planName: data.plan_name,
-        copay: data.copay ? parseFloat(data.copay) : undefined,
-        coinsurance: data.coinsurance ? parseFloat(data.coinsurance) : undefined,
-        deductibleTotal: data.deductible_total ? parseFloat(data.deductible_total) : undefined,
-        deductibleMet: data.deductible_met ? parseFloat(data.deductible_met) : undefined,
-        deductibleRemaining: data.deductible_remaining ? parseFloat(data.deductible_remaining) : undefined,
-        oopMaxTotal: data.oop_max_total ? parseFloat(data.oop_max_total) : undefined,
-        oopMaxMet: data.oop_max_met ? parseFloat(data.oop_max_met) : undefined,
-        oopMaxRemaining: data.oop_max_remaining ? parseFloat(data.oop_max_remaining) : undefined,
-        priorAuthRequired: data.prior_auth_required,
-        priorAuthNumber: data.prior_auth_number,
-        benefits: data.benefits as any,
-        limitations: data.limitations as any,
-        checkDate: data.check_date,
-        responseCode: data.response_code,
+        coverageStatus: record.coverage_status as any,
+        payerName: record.payer_name,
+        payerId: record.payer_id,
+        memberId: record.member_id,
+        groupNumber: record.group_number,
+        planName: record.plan_name,
+        copay: record.copay ? parseFloat(record.copay) : undefined,
+        coinsurance: record.coinsurance ? parseFloat(record.coinsurance) : undefined,
+        deductibleTotal: record.deductible_total ? parseFloat(record.deductible_total) : undefined,
+        deductibleMet: record.deductible_met ? parseFloat(record.deductible_met) : undefined,
+        deductibleRemaining: record.deductible_remaining ? parseFloat(record.deductible_remaining) : undefined,
+        oopMaxTotal: record.oop_max_total ? parseFloat(record.oop_max_total) : undefined,
+        oopMaxMet: record.oop_max_met ? parseFloat(record.oop_max_met) : undefined,
+        oopMaxRemaining: record.oop_max_remaining ? parseFloat(record.oop_max_remaining) : undefined,
+        priorAuthRequired: record.prior_auth_required,
+        priorAuthNumber: record.prior_auth_number,
+        benefits: record.benefits as any,
+        limitations: record.limitations as any,
+        checkDate: record.check_date,
+        responseCode: record.response_code,
       };
     } catch (error) {
       console.error('[AutoEligibility] Error getting cached eligibility:', error);

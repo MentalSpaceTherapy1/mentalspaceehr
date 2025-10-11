@@ -9,9 +9,10 @@ export {
   getAdvancedMDConfig,
   ADVANCEDMD_ENDPOINTS,
   RATE_LIMITS,
-  ErrorCode,
+  ERROR_CODES,
   type AdvancedMDEnvironment,
-  type AdvancedMDConfig
+  type AdvancedMDConfig,
+  type ErrorCode
 } from './config';
 
 // Export types
