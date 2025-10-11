@@ -14,7 +14,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { reversePaymentPosting } from '@/lib/advancedmd/payment-posting';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { format } from 'date-fns';
+
+const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+const formatDate = (date: string | Date) => format(new Date(date), 'MMM d, yyyy');
 
 interface PaymentPostingDetails {
   id: string;

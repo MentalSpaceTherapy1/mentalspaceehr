@@ -6,11 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { createClient } from '@/lib/supabase/client';
-import { parse835EDI } from '@/lib/advancedmd/era-835-parser';
-import { postERAPayments } from '@/lib/advancedmd/payment-posting';
-
-const supabase = createClient();
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProcessingStatus {
   status: 'idle' | 'uploading' | 'parsing' | 'posting' | 'complete' | 'error';

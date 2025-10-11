@@ -24,11 +24,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { postManualPayment } from '@/lib/advancedmd/payment-posting';
 import { getCARCDescription } from '@/lib/advancedmd/era-835-parser';
-
-const supabase = createClient();
 
 const adjustmentSchema = z.object({
   adjustmentGroup: z.enum(['CO', 'PR', 'OA', 'PI']),
