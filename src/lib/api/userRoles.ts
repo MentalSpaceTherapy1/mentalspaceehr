@@ -19,9 +19,11 @@ export const getUserRoles = async (userId: string): Promise<AppRole[]> => {
 };
 
 export const getAllUsersWithRoles = async () => {
-  const apiEndpoint = import.meta.env.VITE_API_ENDPOINT || 'https://cyf1w472y8.execute-api.us-east-1.amazonaws.com';
+  // HARDCODED for now to bypass environment variable caching issues
+  const apiEndpoint = 'https://cyf1w472y8.execute-api.us-east-1.amazonaws.com';
 
-  console.log('[getAllUsersWithRoles] Fetching from:', `${apiEndpoint}/users`);
+  console.log('[getAllUsersWithRoles] HARDCODED URL - Fetching from:', `${apiEndpoint}/users`);
+  console.log('[getAllUsersWithRoles] env value was:', import.meta.env.VITE_API_ENDPOINT);
 
   try {
     const response = await fetch(`${apiEndpoint}/users`, {

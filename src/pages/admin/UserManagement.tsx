@@ -48,10 +48,13 @@ export default function UserManagement() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      console.log('[UserManagement] Calling getAllUsersWithRoles()...');
       const data = await getAllUsersWithRoles();
+      console.log('[UserManagement] Received data:', data);
       setUsers(data);
       setFilteredUsers(data);
     } catch (error) {
+      console.error('[UserManagement] Error fetching users:', error);
       toast({
         title: 'Error',
         description: 'Failed to load users',
