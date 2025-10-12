@@ -21,7 +21,11 @@
       "Bash(cat:*)",
       "Bash(find:*)",
       "Bash(tree:*)",
-      "Bash(npm run test:run:*)"
+      "Bash(npm run test:run:*)",
+      "Bash(npm run test:coverage:*)",
+      "Bash(aws:*)",
+      "Bash(cdk:*)",
+      "Bash(npx cdk:*)"
     ],
     "deny": [],
     "ask": []
