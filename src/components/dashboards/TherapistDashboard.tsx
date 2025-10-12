@@ -17,7 +17,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ComplianceAlerts } from './ComplianceAlerts';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/aws-api-client';
 import { useAuth } from '@/hooks/useAuth';
 
 interface TodaysAppointment {
@@ -58,7 +58,7 @@ export const TherapistDashboard = () => {
         // ✅ FIX #1: Fetch today's appointments with ALL active statuses and client details
         // Include: Scheduled, Checked In, In Session (not just Scheduled)
         // Only show remaining sessions (end_time >= current time)
-        const { data: appointments, error: apptError } = await supabase
+        const { data: appointments, error: apptError } = await apiClient
           .from('appointments')
           .select(`
             id,
@@ -75,36 +75,40 @@ export const TherapistDashboard = () => {
           .eq('appointment_date', today)
           .in('status', ['Scheduled', 'Checked In', 'In Session'])
           .gte('end_time', currentTime)
-          .order('start_time');
+          .order('start_time')
+          .execute();
 
         if (apptError) throw apptError;
 
         setTodaysAppointments(appointments || []);
 
         // Fetch active clients
-        const { data: clients, error: clientError } = await supabase
+        const { data: clients, error: clientError } = await apiClient
           .from('clients')
           .select('id')
           .eq('primary_therapist_id', user.id)
-          .eq('status', 'Active');
+          .eq('status', 'Active')
+          .execute();
 
         if (clientError) throw clientError;
 
         // ✅ FIX #2: Fetch UNSIGNED/DRAFT notes from clinical_notes table
         // These are notes that have been saved but not yet signed (locked = false)
-        const { data: unsignedNotes, error: unsignedError } = await supabase
+        const { data: unsignedNotes, error: unsignedError } = await apiClient
           .from('clinical_notes')
           .select('id')
           .eq('clinician_id', user.id)
-          .or('locked.is.null,locked.eq.false');
+          .or('locked.is.null,locked.eq.false')
+          .execute();
 
         if (unsignedError) console.error('[TherapistDashboard] Error fetching unsigned notes:', unsignedError);
 
         // ✅ FIX #3: Fetch ALL notes for accurate compliance calculation
-        const { data: allComplianceData, error: allComplianceError } = await supabase
+        const { data: allComplianceData, error: allComplianceError } = await apiClient
           .from('note_compliance_status')
           .select('id, status')
-          .eq('clinician_id', user.id);
+          .eq('clinician_id', user.id)
+          .execute();
 
         if (allComplianceError) throw allComplianceError;
 
@@ -119,12 +123,13 @@ export const TherapistDashboard = () => {
         startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Sunday
         const startOfWeekStr = startOfWeek.toISOString().split('T')[0];
 
-        const { data: completedSessions, error: completedError } = await supabase
+        const { data: completedSessions, error: completedError } = await apiClient
           .from('appointments')
           .select('id')
           .eq('clinician_id', user.id)
           .eq('status', 'Completed')
-          .gte('appointment_date', startOfWeekStr);
+          .gte('appointment_date', startOfWeekStr)
+          .execute();
 
         if (completedError) console.error('[TherapistDashboard] Error fetching completed sessions:', completedError);
 

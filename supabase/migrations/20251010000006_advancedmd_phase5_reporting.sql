@@ -58,25 +58,26 @@ SELECT
   c.paid_amount,
   (c.billed_amount - COALESCE(c.paid_amount, 0)) AS balance,
   c.claim_status,
-  c.payer_name,
-  EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date)) AS days_outstanding,
+  ci.insurance_company AS payer_name,
+  EXTRACT(DAY FROM (NOW() - c.submission_date)) AS days_outstanding,
   CASE
-    WHEN EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date)) <= 30 THEN '0-30'
-    WHEN EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date)) <= 60 THEN '31-60'
-    WHEN EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date)) <= 90 THEN '61-90'
-    WHEN EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date)) <= 120 THEN '91-120'
+    WHEN EXTRACT(DAY FROM (NOW() - c.submission_date)) <= 30 THEN '0-30'
+    WHEN EXTRACT(DAY FROM (NOW() - c.submission_date)) <= 60 THEN '31-60'
+    WHEN EXTRACT(DAY FROM (NOW() - c.submission_date)) <= 90 THEN '61-90'
+    WHEN EXTRACT(DAY FROM (NOW() - c.submission_date)) <= 120 THEN '91-120'
     ELSE '120+'
   END AS aging_bucket
 FROM advancedmd_claims c
 LEFT JOIN clients cl ON c.client_id = cl.id
+LEFT JOIN client_insurance ci ON c.insurance_id = ci.id
 WHERE c.claim_status NOT IN ('Paid', 'Void')
   AND c.submission_date IS NOT NULL;
 
 -- Payer Performance View
 CREATE OR REPLACE VIEW payer_performance_report AS
 SELECT
-  c.payer_name,
-  c.payer_id,
+  ci.insurance_company AS payer_name,
+  c.insurance_id AS payer_id,
   COUNT(DISTINCT c.id) AS total_claims,
   COUNT(DISTINCT CASE WHEN c.claim_status = 'Paid' THEN c.id END) AS paid_claims,
   COUNT(DISTINCT CASE WHEN c.claim_status = 'Denied' THEN c.id END) AS denied_claims,
@@ -87,20 +88,21 @@ SELECT
   ROUND((COUNT(DISTINCT CASE WHEN c.claim_status = 'Denied' THEN c.id END)::DECIMAL / NULLIF(COUNT(DISTINCT c.id), 0) * 100), 2) AS denial_rate,
   AVG(CASE
     WHEN c.paid_date IS NOT NULL AND c.submission_date IS NOT NULL
-    THEN EXTRACT(DAY FROM (c.paid_date - c.submission_date))
+    THEN EXTRACT(DAY FROM (c.paid_date::TIMESTAMPTZ - c.submission_date::TIMESTAMPTZ))
   END) AS avg_days_to_payment,
   MIN(c.submission_date) AS first_claim_date,
   MAX(c.submission_date) AS last_claim_date
 FROM advancedmd_claims c
+LEFT JOIN client_insurance ci ON c.insurance_id = ci.id
 WHERE c.submission_date IS NOT NULL
-GROUP BY c.payer_name, c.payer_id;
+GROUP BY ci.insurance_company, c.insurance_id;
 
 -- Provider Productivity View
 CREATE OR REPLACE VIEW provider_productivity_report AS
 SELECT
   p.id AS provider_id,
   p.first_name || ' ' || p.last_name AS provider_name,
-  p.npi,
+  p.npi_number AS npi,
   DATE_TRUNC('month', c.statement_from_date) AS month,
   COUNT(DISTINCT c.id) AS claims_submitted,
   COUNT(DISTINCT c.client_id) AS unique_patients,
@@ -111,13 +113,13 @@ SELECT
   COUNT(DISTINCT sl.id) AS total_services,
   AVG(CASE
     WHEN c.paid_date IS NOT NULL AND c.statement_from_date IS NOT NULL
-    THEN EXTRACT(DAY FROM (c.paid_date - c.statement_from_date))
+    THEN EXTRACT(DAY FROM (c.paid_date::TIMESTAMPTZ - c.statement_from_date::TIMESTAMPTZ))
   END) AS avg_days_to_payment
-FROM advancedmd_providers p
+FROM profiles p
 LEFT JOIN advancedmd_claims c ON p.id = c.rendering_provider_id
-LEFT JOIN advancedmd_service_lines sl ON c.id = sl.claim_id
+LEFT JOIN advancedmd_claim_service_lines sl ON c.id = sl.claim_id
 WHERE c.statement_from_date >= CURRENT_DATE - INTERVAL '12 months'
-GROUP BY p.id, p.first_name, p.last_name, p.npi, DATE_TRUNC('month', c.statement_from_date);
+GROUP BY p.id, p.first_name, p.last_name, p.npi_number, DATE_TRUNC('month', c.statement_from_date);
 
 -- Revenue Cycle Metrics View
 CREATE OR REPLACE VIEW revenue_cycle_metrics AS
@@ -131,11 +133,11 @@ WITH monthly_data AS (
     SUM(pp.contractual_adjustment) AS contractual_adjustments,
     AVG(CASE
       WHEN c.paid_date IS NOT NULL AND c.submission_date IS NOT NULL
-      THEN EXTRACT(DAY FROM (c.paid_date - c.submission_date))
+      THEN EXTRACT(DAY FROM (c.paid_date::TIMESTAMPTZ - c.submission_date::TIMESTAMPTZ))
     END) AS avg_days_to_payment,
     AVG(CASE
       WHEN c.submission_date IS NOT NULL AND c.statement_from_date IS NOT NULL
-      THEN EXTRACT(DAY FROM (c.submission_date - c.statement_from_date))
+      THEN EXTRACT(DAY FROM (c.submission_date::TIMESTAMPTZ - c.statement_from_date::TIMESTAMPTZ))
     END) AS avg_days_to_submission
   FROM advancedmd_claims c
   LEFT JOIN advancedmd_payment_postings pp ON c.id = pp.claim_id
@@ -163,31 +165,31 @@ SELECT
   COUNT(DISTINCT c.id) AS total_claims,
   SUM(c.billed_amount - COALESCE(c.paid_amount, 0)) AS total_ar,
   SUM(CASE
-    WHEN EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date)) <= 30
+    WHEN EXTRACT(DAY FROM (NOW() - c.submission_date)) <= 30
     THEN c.billed_amount - COALESCE(c.paid_amount, 0)
     ELSE 0
   END) AS ar_0_30,
   SUM(CASE
-    WHEN EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date)) BETWEEN 31 AND 60
+    WHEN EXTRACT(DAY FROM (NOW() - c.submission_date)) BETWEEN 31 AND 60
     THEN c.billed_amount - COALESCE(c.paid_amount, 0)
     ELSE 0
   END) AS ar_31_60,
   SUM(CASE
-    WHEN EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date)) BETWEEN 61 AND 90
+    WHEN EXTRACT(DAY FROM (NOW() - c.submission_date)) BETWEEN 61 AND 90
     THEN c.billed_amount - COALESCE(c.paid_amount, 0)
     ELSE 0
   END) AS ar_61_90,
   SUM(CASE
-    WHEN EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date)) BETWEEN 91 AND 120
+    WHEN EXTRACT(DAY FROM (NOW() - c.submission_date)) BETWEEN 91 AND 120
     THEN c.billed_amount - COALESCE(c.paid_amount, 0)
     ELSE 0
   END) AS ar_91_120,
   SUM(CASE
-    WHEN EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date)) > 120
+    WHEN EXTRACT(DAY FROM (NOW() - c.submission_date)) > 120
     THEN c.billed_amount - COALESCE(c.paid_amount, 0)
     ELSE 0
   END) AS ar_over_120,
-  ROUND(AVG(EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date))), 1) AS avg_days_in_ar
+  ROUND(AVG(EXTRACT(DAY FROM (NOW() - c.submission_date))), 1) AS avg_days_in_ar
 FROM advancedmd_claims c
 WHERE c.claim_status NOT IN ('Paid', 'Void')
   AND c.submission_date IS NOT NULL;
@@ -244,7 +246,7 @@ SELECT
     NULLIF(COUNT(DISTINCT ca.id), 0) * 100), 2) AS appeal_success_rate,
   AVG(CASE
     WHEN ca.decision_date IS NOT NULL AND ca.appeal_date IS NOT NULL
-    THEN EXTRACT(DAY FROM (ca.decision_date - ca.appeal_date))
+    THEN EXTRACT(DAY FROM (ca.decision_date::TIMESTAMPTZ - ca.appeal_date::TIMESTAMPTZ))
   END) AS avg_appeal_days
 FROM advancedmd_claims c
 LEFT JOIN denial_codes dc ON c.denial_code = dc.code
@@ -273,10 +275,10 @@ BEGIN
   WITH aging_data AS (
     SELECT
       CASE
-        WHEN EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date)) <= 30 THEN '0-30 days'
-        WHEN EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date)) <= 60 THEN '31-60 days'
-        WHEN EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date)) <= 90 THEN '61-90 days'
-        WHEN EXTRACT(DAY FROM (CURRENT_DATE - c.submission_date)) <= 120 THEN '91-120 days'
+        WHEN EXTRACT(DAY FROM (NOW() - c.submission_date)) <= 30 THEN '0-30 days'
+        WHEN EXTRACT(DAY FROM (NOW() - c.submission_date)) <= 60 THEN '31-60 days'
+        WHEN EXTRACT(DAY FROM (NOW() - c.submission_date)) <= 90 THEN '61-90 days'
+        WHEN EXTRACT(DAY FROM (NOW() - c.submission_date)) <= 120 THEN '91-120 days'
         ELSE '120+ days'
       END AS bucket,
       c.billed_amount - COALESCE(c.paid_amount, 0) AS balance
@@ -381,6 +383,7 @@ CREATE POLICY "Administrators can manage scheduled reports" ON advancedmd_schedu
 -- Triggers
 -- ============================================================================
 
+DROP TRIGGER IF EXISTS update_advancedmd_scheduled_reports_updated_at ON advancedmd_scheduled_reports;
 CREATE TRIGGER update_advancedmd_scheduled_reports_updated_at
   BEFORE UPDATE ON advancedmd_scheduled_reports
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

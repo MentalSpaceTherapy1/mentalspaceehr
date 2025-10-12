@@ -17,10 +17,29 @@ import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { UnlockRequestManagement } from '@/components/compliance/UnlockRequestManagement';
+import { useEffect, useState } from 'react';
+import { apiClient } from '@/lib/aws-api-client';
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [stats, setStats] = useState({
+    activeUsers: 0,
+    pendingApprovals: 0,
+    complianceAlerts: 0
+  });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const { data: profiles } = await apiClient.from('profiles').select('*').execute();
+        setStats(prev => ({ ...prev, activeUsers: profiles?.length || 0 }));
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+    };
+    loadStats();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -50,8 +69,8 @@ export const AdminDashboard = () => {
             <Users className="h-5 w-5 text-primary" />
           </GradientCardHeader>
           <GradientCardContent>
-            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">0</div>
-            <p className="text-xs text-muted-foreground">Currently logged in</p>
+            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{stats.activeUsers}</div>
+            <p className="text-xs text-muted-foreground">Total registered users</p>
           </GradientCardContent>
         </GradientCard>
 

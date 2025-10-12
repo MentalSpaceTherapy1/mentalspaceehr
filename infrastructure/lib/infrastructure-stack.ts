@@ -10,6 +10,8 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as lambdaNodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 
 export class MentalSpaceEhrStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -333,41 +335,111 @@ export class MentalSpaceEhrStack extends cdk.Stack {
       methodResponses: [{ statusCode: '200' }],
     });
 
+    // ========================================
+    // 14. Lambda Security Group
+    // ========================================
+    const lambdaSecurityGroup = new ec2.SecurityGroup(this, 'LambdaSecurityGroup', {
+      vpc,
+      description: 'Security group for Lambda functions',
+      allowAllOutbound: true,
+    });
+
+    // Allow Lambda to access Aurora
+    dbSecurityGroup.addIngressRule(
+      lambdaSecurityGroup,
+      ec2.Port.tcp(5432),
+      'Allow Lambda functions to access Aurora'
+    );
+
+    // ========================================
+    // 15. Lambda Layer for Dependencies
+    // ========================================
+    const databaseLayer = new lambda.LayerVersion(this, 'DatabaseLayer', {
+      code: lambda.Code.fromAsset('lambda-layers/database'),
+      compatibleRuntimes: [lambda.Runtime.NODEJS_20_X],
+      description: 'PostgreSQL client (pg) library',
+    });
+
+    // ========================================
+    // 16. Lambda Execution Role
+    // ========================================
+    const lambdaExecutionRole = new iam.Role(this, 'LambdaExecutionRole', {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+      ],
+    });
+
+    // Allow Lambda to read database credentials
+    dbSecret.grantRead(lambdaExecutionRole);
+
+    // ========================================
+    // 17. Database Migration Lambda
+    // ========================================
+    const migrationFunction = new lambda.Function(this, 'MigrationFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/migrate-database'),
+      role: lambdaExecutionRole,
+      vpc,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+      },
+      securityGroups: [lambdaSecurityGroup],
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 512,
+      environment: {
+        DATABASE_SECRET_ARN: dbSecret.secretArn,
+        DATABASE_NAME: 'mentalspaceehr',
+      },
+      layers: [databaseLayer],
+    });
+
+    // Add migration endpoint to API
+    const migrate = api.root.addResource('migrate');
+    migrate.addMethod('POST', new apigateway.LambdaIntegration(migrationFunction));
+
+    // ========================================
+    // 18. Health Check Lambda
+    // ========================================
+    const healthCheckFunction = new lambda.Function(this, 'HealthCheckFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/health-check'),
+      role: lambdaExecutionRole,
+      vpc,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+      },
+      securityGroups: [lambdaSecurityGroup],
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      environment: {
+        DATABASE_SECRET_ARN: dbSecret.secretArn,
+        DATABASE_NAME: 'mentalspaceehr',
+      },
+      layers: [databaseLayer],
+    });
+
+    // Add health check to existing endpoint
+    health.addMethod('POST', new apigateway.LambdaIntegration(healthCheckFunction));
+
     // Cognito Authorizer (defined after API for proper attachment)
     const authorizer = new apigateway.CognitoUserPoolsAuthorizer(this, 'ApiAuthorizer', {
       cognitoUserPools: [userPool],
       authorizerName: 'CognitoAuthorizer',
     });
-
-    // Add example protected endpoint that uses the authorizer
-    const patients = api.root.addResource('patients');
-    patients.addMethod('GET', new apigateway.MockIntegration({
-      integrationResponses: [{
-        statusCode: '200',
-        responseTemplates: {
-          'application/json': '{"message": "Protected endpoint"}',
-        },
-      }],
-      requestTemplates: {
-        'application/json': '{"statusCode": 200}',
-      },
-    }), {
-      authorizer,
-      authorizationType: apigateway.AuthorizationType.COGNITO,
-      methodResponses: [{ statusCode: '200' }],
-    });
+    authorizer._attachToApi(api);
 
     // ========================================
-    // 14. CloudWatch Log Groups
+    // 19. CloudWatch Log Groups (Auto-created by Lambda/API Gateway)
     // ========================================
-    new logs.LogGroup(this, 'ApiLogGroup', {
-      logGroupName: `/aws/apigateway/${api.restApiId}`,
-      retention: logs.RetentionDays.ONE_YEAR,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    });
+    // Note: Log groups are automatically created by Lambda and API Gateway
+    // with default retention (never expire). We can manage them post-deployment.
 
     // ========================================
-    // 15. Outputs
+    // 20. Outputs
     // ========================================
     new cdk.CfnOutput(this, 'VpcId', {
       value: vpc.vpcId,

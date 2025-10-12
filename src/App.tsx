@@ -90,6 +90,7 @@ import AuditLogs from "./pages/admin/AuditLogs";
 import ClinicianScheduleManagement from "./pages/admin/ClinicianScheduleManagement";
 import MySchedule from "./pages/MySchedule";
 import TestAWSUpload from "./pages/TestAWSUpload";
+import TestLogin from "./pages/TestLogin";
 
 const queryClient = new QueryClient();
 
@@ -104,6 +105,7 @@ const App = () => (
           <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/test-login" element={<TestLogin />} />
           <Route path="/portal/login" element={<PortalLogin />} />
           <Route path="/portal/forgot-password" element={<PortalForgotPassword />} />
           <Route path="/portal/reset-password" element={<PortalResetPassword />} />

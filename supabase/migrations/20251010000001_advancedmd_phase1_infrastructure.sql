@@ -92,8 +92,8 @@ CREATE TABLE IF NOT EXISTS advancedmd_claims (
   insurance_id UUID REFERENCES client_insurance(id),
 
   -- Provider Information
-  billing_provider_id UUID REFERENCES staff(id),
-  rendering_provider_id UUID REFERENCES staff(id),
+  billing_provider_id UUID REFERENCES profiles(id),
+  rendering_provider_id UUID REFERENCES profiles(id),
   service_facility_id TEXT,
 
   -- Service Information
@@ -304,10 +304,11 @@ ALTER TABLE advancedmd_patient_mapping ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Service role only" ON advancedmd_auth_tokens
   FOR ALL USING (auth.jwt() ->> 'role' = 'service_role');
 
--- API logs: Staff can view their own logs
+-- API logs: Staff (billing/admin) can view logs
 CREATE POLICY "Staff can view API logs" ON advancedmd_api_logs
   FOR SELECT USING (
-    auth.uid() IN (SELECT id FROM staff WHERE user_id = auth.uid())
+    public.has_role(auth.uid(), 'administrator') OR
+    public.has_role(auth.uid(), 'billing_staff')
   );
 
 -- Rate limits: Service role only
@@ -317,21 +318,21 @@ CREATE POLICY "Service role only" ON advancedmd_rate_limits
 -- Eligibility checks: Staff can view/insert
 CREATE POLICY "Staff can manage eligibility checks" ON advancedmd_eligibility_checks
   FOR ALL USING (
-    auth.uid() IN (SELECT id FROM staff WHERE user_id = auth.uid())
+    (public.has_role(auth.uid(), 'administrator') OR public.has_role(auth.uid(), 'billing_staff'))
   );
 
 -- Claims: Staff can view/manage claims
 CREATE POLICY "Staff can manage claims" ON advancedmd_claims
   FOR ALL USING (
-    auth.uid() IN (SELECT id FROM staff WHERE user_id = auth.uid())
+    (public.has_role(auth.uid(), 'administrator') OR public.has_role(auth.uid(), 'billing_staff'))
   );
 
 CREATE POLICY "Staff can manage claim service lines" ON advancedmd_claim_service_lines
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM advancedmd_claims c
-      WHERE c.id = claim_id
-      AND auth.uid() IN (SELECT id FROM staff WHERE user_id = auth.uid())
+      WHERE c.id = advancedmd_claim_service_lines.claim_id
+      AND (public.has_role(auth.uid(), 'administrator') OR public.has_role(auth.uid(), 'billing_staff'))
     )
   );
 
@@ -339,8 +340,8 @@ CREATE POLICY "Staff can manage claim diagnoses" ON advancedmd_claim_diagnoses
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM advancedmd_claims c
-      WHERE c.id = claim_id
-      AND auth.uid() IN (SELECT id FROM staff WHERE user_id = auth.uid())
+      WHERE c.id = advancedmd_claim_diagnoses.claim_id
+      AND (public.has_role(auth.uid(), 'administrator') OR public.has_role(auth.uid(), 'billing_staff'))
     )
   );
 
@@ -348,30 +349,30 @@ CREATE POLICY "Staff can view claim status history" ON advancedmd_claim_status_h
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM advancedmd_claims c
-      WHERE c.id = claim_id
-      AND auth.uid() IN (SELECT id FROM staff WHERE user_id = auth.uid())
+      WHERE c.id = advancedmd_claim_status_history.claim_id
+      AND (public.has_role(auth.uid(), 'administrator') OR public.has_role(auth.uid(), 'billing_staff'))
     )
   );
 
 -- ERAs: Staff can manage ERAs
 CREATE POLICY "Staff can manage ERAs" ON advancedmd_eras
   FOR ALL USING (
-    auth.uid() IN (SELECT id FROM staff WHERE user_id = auth.uid())
+    (public.has_role(auth.uid(), 'administrator') OR public.has_role(auth.uid(), 'billing_staff'))
   );
 
 CREATE POLICY "Staff can manage ERA claim payments" ON advancedmd_era_claim_payments
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM advancedmd_eras e
-      WHERE e.id = era_id
-      AND auth.uid() IN (SELECT id FROM staff WHERE user_id = auth.uid())
+      WHERE e.id = advancedmd_era_claim_payments.era_id
+      AND (public.has_role(auth.uid(), 'administrator') OR public.has_role(auth.uid(), 'billing_staff'))
     )
   );
 
 -- Patient mapping: Staff can view/manage mappings
 CREATE POLICY "Staff can manage patient mapping" ON advancedmd_patient_mapping
   FOR ALL USING (
-    auth.uid() IN (SELECT id FROM staff WHERE user_id = auth.uid())
+    (public.has_role(auth.uid(), 'administrator') OR public.has_role(auth.uid(), 'billing_staff'))
   );
 
 -- ============================================================================
@@ -386,34 +387,42 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_advancedmd_auth_tokens_updated_at ON advancedmd_auth_tokens;
 CREATE TRIGGER update_advancedmd_auth_tokens_updated_at
   BEFORE UPDATE ON advancedmd_auth_tokens
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_advancedmd_rate_limits_updated_at ON advancedmd_rate_limits;
 CREATE TRIGGER update_advancedmd_rate_limits_updated_at
   BEFORE UPDATE ON advancedmd_rate_limits
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_advancedmd_eligibility_checks_updated_at ON advancedmd_eligibility_checks;
 CREATE TRIGGER update_advancedmd_eligibility_checks_updated_at
   BEFORE UPDATE ON advancedmd_eligibility_checks
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_advancedmd_claims_updated_at ON advancedmd_claims;
 CREATE TRIGGER update_advancedmd_claims_updated_at
   BEFORE UPDATE ON advancedmd_claims
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_advancedmd_claim_service_lines_updated_at ON advancedmd_claim_service_lines;
 CREATE TRIGGER update_advancedmd_claim_service_lines_updated_at
   BEFORE UPDATE ON advancedmd_claim_service_lines
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_advancedmd_eras_updated_at ON advancedmd_eras;
 CREATE TRIGGER update_advancedmd_eras_updated_at
   BEFORE UPDATE ON advancedmd_eras
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_advancedmd_era_claim_payments_updated_at ON advancedmd_era_claim_payments;
 CREATE TRIGGER update_advancedmd_era_claim_payments_updated_at
   BEFORE UPDATE ON advancedmd_era_claim_payments
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_advancedmd_patient_mapping_updated_at ON advancedmd_patient_mapping;
 CREATE TRIGGER update_advancedmd_patient_mapping_updated_at
   BEFORE UPDATE ON advancedmd_patient_mapping
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

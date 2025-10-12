@@ -5,8 +5,8 @@
 CREATE TABLE IF NOT EXISTS advancedmd_eligibility_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   request_number TEXT UNIQUE NOT NULL,
-  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
-  insurance_id UUID REFERENCES patient_insurance(id) ON DELETE SET NULL,
+  patient_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  insurance_id UUID REFERENCES client_insurance(id) ON DELETE SET NULL,
 
   -- Request details
   verification_type TEXT NOT NULL CHECK (verification_type IN ('real_time', 'batch')),
@@ -93,8 +93,8 @@ CREATE TABLE IF NOT EXISTS advancedmd_eligibility_batch_items (
 -- Eligibility alerts table (for expiring coverage, etc.)
 CREATE TABLE IF NOT EXISTS advancedmd_eligibility_alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
-  insurance_id UUID REFERENCES patient_insurance(id) ON DELETE SET NULL,
+  patient_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  insurance_id UUID REFERENCES client_insurance(id) ON DELETE SET NULL,
 
   -- Alert details
   alert_type TEXT NOT NULL CHECK (alert_type IN ('expiring_coverage', 'coverage_terminated', 'verification_failed', 'deductible_met', 'authorization_required')),
@@ -140,9 +140,9 @@ SELECT
   er.verification_type,
   er.requested_at,
   er.status,
-  EXTRACT(DAY FROM (er.termination_date - CURRENT_DATE)) AS days_until_termination
+  EXTRACT(DAY FROM (er.termination_date::TIMESTAMPTZ - NOW())) AS days_until_termination
 FROM advancedmd_eligibility_requests er
-JOIN patients p ON er.patient_id = p.id
+JOIN clients p ON er.patient_id = p.id
 WHERE er.status = 'completed'
   AND er.is_eligible = TRUE
   AND (er.termination_date IS NULL OR er.termination_date >= CURRENT_DATE);
@@ -173,7 +173,7 @@ SELECT
   er.payer_name,
   er.subscriber_id,
   er.termination_date,
-  EXTRACT(DAY FROM (er.termination_date - CURRENT_DATE)) AS days_until_expiration,
+  EXTRACT(DAY FROM (er.termination_date::TIMESTAMPTZ - NOW())) AS days_until_expiration,
   CASE
     WHEN er.termination_date <= CURRENT_DATE THEN 'Expired'
     WHEN er.termination_date <= CURRENT_DATE + INTERVAL '7 days' THEN 'Expiring This Week'
@@ -181,7 +181,7 @@ SELECT
     ELSE 'Expiring Soon'
   END AS expiration_status
 FROM advancedmd_eligibility_requests er
-JOIN patients p ON er.patient_id = p.id
+JOIN clients p ON er.patient_id = p.id
 WHERE er.status = 'completed'
   AND er.is_eligible = TRUE
   AND er.termination_date IS NOT NULL
@@ -336,7 +336,7 @@ CREATE POLICY "Therapists can view patient eligibility" ON advancedmd_eligibilit
   USING (
     has_role(auth.uid(), 'therapist'::app_role)
     AND patient_id IN (
-      SELECT patient_id FROM appointments WHERE therapist_id = auth.uid()
+      SELECT client_id FROM appointments WHERE clinician_id = auth.uid()
     )
   );
 

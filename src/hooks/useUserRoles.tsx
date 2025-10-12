@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/aws-api-client';
 import { useAuth } from './useAuth';
 
 export type AppRole = 'administrator' | 'supervisor' | 'therapist' | 'billing_staff' | 'front_desk' | 'associate_trainee' | 'client_user';
@@ -18,15 +18,26 @@ export const useUserRoles = (userId?: string) => {
     const fetchRoles = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', userId);
+        console.log('[useUserRoles] Fetching roles for user:', userId);
 
-        if (error) throw error;
-        setRoles(data?.map(r => r.role as AppRole) || []);
+        // Direct API call to get-user-roles endpoint
+        const response = await apiClient.get(`get-user-roles?user_id=${userId}`);
+
+        console.log('[useUserRoles] Response:', response);
+
+        if (response.error) {
+          throw response.error;
+        }
+
+        const rolesData = response.data as { roles?: AppRole[] };
+        setRoles(rolesData?.roles || []);
+
+        console.log('[useUserRoles] Roles set:', rolesData?.roles);
       } catch (err) {
+        console.error('[useUserRoles] Error fetching roles:', err);
         setError(err instanceof Error ? err : new Error('Failed to fetch roles'));
+        // Fallback: if error, assume no roles
+        setRoles([]);
       } finally {
         setLoading(false);
       }
@@ -34,26 +45,8 @@ export const useUserRoles = (userId?: string) => {
 
     fetchRoles();
 
-    // Subscribe to role changes
-    const channel = supabase
-      .channel(`user_roles_${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_roles',
-          filter: `user_id=eq.${userId}`
-        },
-        () => {
-          fetchRoles();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Note: Real-time subscriptions will need to be implemented with WebSocket API
+    // For now, we'll poll or rely on page refreshes
   }, [userId]);
 
   return { roles, loading, error };

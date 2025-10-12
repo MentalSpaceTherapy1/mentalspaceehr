@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS public.advancedmd_claims (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   claim_number TEXT UNIQUE NOT NULL,
-  patient_id UUID NOT NULL REFERENCES public.clients(id),
+  client_id UUID NOT NULL REFERENCES public.clients(id),
   provider_id UUID NOT NULL REFERENCES public.profiles(id),
   payer_id TEXT NOT NULL,
   payer_name TEXT NOT NULL,
@@ -90,13 +90,13 @@ CREATE TABLE IF NOT EXISTS public.advancedmd_claim_appeals (
 );
 
 -- Indexes for performance
-CREATE INDEX IF NOT EXISTS idx_advancedmd_claims_patient ON public.advancedmd_claims(patient_id);
-CREATE INDEX IF NOT EXISTS idx_advancedmd_claims_provider ON public.advancedmd_claims(provider_id);
+CREATE INDEX IF NOT EXISTS idx_advancedmd_claims_patient ON public.advancedmd_claims(client_id);
+CREATE INDEX IF NOT EXISTS idx_advancedmd_claims_provider ON public.advancedmd_claims(rendering_provider_id);
 CREATE INDEX IF NOT EXISTS idx_advancedmd_claims_status ON public.advancedmd_claims(claim_status);
-CREATE INDEX IF NOT EXISTS idx_advancedmd_claims_submitted_date ON public.advancedmd_claims(submitted_date);
-CREATE INDEX IF NOT EXISTS idx_advancedmd_claims_claim_number ON public.advancedmd_claims(claim_number);
+CREATE INDEX IF NOT EXISTS idx_advancedmd_claims_submitted_date ON public.advancedmd_claims(submission_date);
+CREATE INDEX IF NOT EXISTS idx_advancedmd_claims_claim_number ON public.advancedmd_claims(claim_id);
 CREATE INDEX IF NOT EXISTS idx_advancedmd_edi_batches_status ON public.advancedmd_edi_batches(batch_status);
-CREATE INDEX IF NOT EXISTS idx_advancedmd_edi_batches_batch_number ON public.advancedmd_edi_batches(batch_number);
+CREATE INDEX IF NOT EXISTS idx_advancedmd_edi_batches_batch_number ON public.advancedmd_edi_batches(batch_id);
 CREATE INDEX IF NOT EXISTS idx_advancedmd_batch_claims_batch_id ON public.advancedmd_batch_claims(batch_id);
 CREATE INDEX IF NOT EXISTS idx_advancedmd_batch_claims_claim_id ON public.advancedmd_batch_claims(claim_id);
 CREATE INDEX IF NOT EXISTS idx_advancedmd_claim_appeals_claim_id ON public.advancedmd_claim_appeals(claim_id);
@@ -137,7 +137,7 @@ CREATE POLICY "Billing staff can update claims"
 CREATE POLICY "Providers can view their own claims"
   ON public.advancedmd_claims
   FOR SELECT
-  USING (provider_id = auth.uid());
+  USING (rendering_provider_id = auth.uid() OR billing_provider_id = auth.uid());
 
 -- EDI batches policies
 CREATE POLICY "Billing staff can manage EDI batches"

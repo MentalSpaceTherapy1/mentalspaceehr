@@ -10,10 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Activity, Shield, Users } from 'lucide-react';
 import { z } from 'zod';
 import logo from '@/assets/mentalspace-logo.png';
-import { MFAVerification } from '@/components/MFAVerification';
-import { EmailVerificationNotice } from '@/components/EmailVerificationNotice';
-import { supabase } from '@/integrations/supabase/client';
-import { checkTrustedDevice, addTrustedDevice } from '@/lib/api/trustedDevices';
 import { usePasswordValidation } from '@/hooks/usePasswordValidation';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 
@@ -40,32 +36,29 @@ const signInSchema = z.object({
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, verifyMFA, setNewPassword, user, needsMFA, needsPasswordChange } = useAuth();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showMFA, setShowMFA] = useState(false);
-  const [showEmailVerification, setShowEmailVerification] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState('');
+  const [mfaCode, setMFACode] = useState('');
   const [rememberDevice, setRememberDevice] = useState(false);
   const [signupPassword, setSignupPassword] = useState('');
-  
+  const [newPassword, setNewPasswordState] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+
   const passwordValidation = usePasswordValidation(signupPassword);
 
   // Redirect if already logged in
   useEffect(() => {
-    const checkAndRedirect = async () => {
-      if (user) {
-        // Check if user is a portal user (client)
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (authUser?.user_metadata?.is_portal_user) {
-          navigate('/portal');
-        } else {
-          navigate('/dashboard');
-        }
+    if (user) {
+      // Role-based navigation is handled by useAuth
+      const role = user['custom:role'];
+      if (role === 'client') {
+        navigate('/portal');
+      } else {
+        navigate('/dashboard');
       }
-    };
-    
-    checkAndRedirect();
+    }
   }, [user, navigate]);
 
   if (user) {
@@ -85,49 +78,16 @@ export default function Auth() {
 
     try {
       signInSchema.parse(data);
-      
-      // Attempt to sign in
-      const { data: { user: authUser }, error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
+
+      // Attempt to sign in via Cognito
+      const { error } = await signIn(data.email, data.password);
 
       if (error) {
-        if (error.message.includes('MFA')) {
-          // Check if device is trusted - skip MFA if it is
-          if (authUser && await checkTrustedDevice(authUser.id)) {
-            // Device is trusted, user is already signed in from the call above
-            return;
-          }
-          setShowMFA(true);
-          return;
-        }
         throw error;
       }
 
-      // Check for email verification
-      if (authUser && !authUser.email_confirmed_at) {
-        setPendingEmail(data.email);
-        setShowEmailVerification(true);
-        await supabase.auth.signOut();
-        return;
-      }
-
-      // Add trusted device if "remember me" is checked
-      if (rememberDevice && authUser) {
-        try {
-          await addTrustedDevice(authUser.id);
-        } catch (err) {
-          // Device registration failed - non-critical
-        }
-      }
-
-      // Redirect based on user type
-      if (authUser?.user_metadata?.is_portal_user) {
-        navigate('/portal');
-      } else {
-        navigate('/dashboard');
-      }
+      // If needsMFA is true, the MFA UI will show automatically
+      // Navigation is handled by useAuth hook after successful auth
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
@@ -140,6 +100,60 @@ export default function Auth() {
       } else {
         setErrors({ email: error.message || 'Invalid email or password' });
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMFAVerify = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErrors({});
+    setLoading(true);
+
+    try {
+      const { error } = await verifyMFA(mfaCode);
+
+      if (error) {
+        setErrors({ mfa: error.message || 'Invalid MFA code' });
+      }
+      // Navigation is handled by useAuth hook after successful MFA
+    } catch (error: any) {
+      setErrors({ mfa: error.message || 'MFA verification failed' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErrors({});
+
+    if (newPassword !== confirmPassword) {
+      setErrors({ confirmPassword: "Passwords don't match" });
+      return;
+    }
+
+    if (newPassword.length < 12) {
+      setErrors({ newPassword: 'Password must be at least 12 characters' });
+      return;
+    }
+
+    if (!fullName.trim()) {
+      setErrors({ fullName: 'Full name is required' });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await setNewPassword(newPassword, fullName);
+
+      if (error) {
+        setErrors({ newPassword: error.message || 'Failed to change password' });
+      }
+      // Navigation is handled by useAuth hook after successful password change
+    } catch (error: any) {
+      setErrors({ newPassword: error.message || 'Failed to change password' });
     } finally {
       setLoading(false);
     }
@@ -161,23 +175,22 @@ export default function Auth() {
 
     try {
       signUpSchema.parse(data);
-      
+
       // Check for breached password
       if (passwordValidation.isBreached) {
         setErrors({ password: 'This password has been exposed in data breaches. Please choose a different password.' });
         setLoading(false);
         return;
       }
-      
+
+      // Sign up is disabled for HIPAA compliance - admins must create accounts
       const { error } = await signUp(data.email, data.password, {
         firstName: data.firstName,
         lastName: data.lastName,
       });
-      
-      if (!error) {
-        // Show email verification notice
-        setPendingEmail(data.email);
-        setShowEmailVerification(true);
+
+      if (error) {
+        throw error;
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -188,38 +201,137 @@ export default function Auth() {
           }
         });
         setErrors(fieldErrors);
+      } else if (error instanceof Error) {
+        setErrors({ email: error.message });
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // Show MFA verification if needed
-  if (showMFA) {
-    const handleMFAVerified = async () => {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (authUser?.user_metadata?.is_portal_user) {
-        navigate('/portal');
-      } else {
-        navigate('/dashboard');
-      }
-    };
-    
+  // Show password change form if needed
+  if (needsPasswordChange) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--gradient-hero)' }}>
-        <MFAVerification
-          onVerified={handleMFAVerified}
-          onCancel={() => setShowMFA(false)}
-        />
+        <Card className="w-full max-w-md shadow-xl">
+          <form onSubmit={handlePasswordChange}>
+            <CardHeader>
+              <CardTitle>Change Password Required</CardTitle>
+              <CardDescription>
+                You must set a new password before continuing
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  autoFocus
+                />
+                {errors.fullName && <p className="text-sm text-destructive">{errors.fullName}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">New Password</Label>
+                <Input
+                  id="newPassword"
+                  name="newPassword"
+                  type="password"
+                  placeholder="Enter new password (min 12 characters)"
+                  value={newPassword}
+                  onChange={(e) => setNewPasswordState(e.target.value)}
+                  required
+                />
+                {errors.newPassword && <p className="text-sm text-destructive">{errors.newPassword}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="Confirm new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
+              </div>
+            </CardContent>
+            <CardFooter className="flex gap-2">
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={loading}
+              >
+                {loading ? 'Changing Password...' : 'Change Password'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => window.location.reload()}
+              >
+                Cancel
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
       </div>
     );
   }
 
-  // Show email verification notice if needed
-  if (showEmailVerification) {
+  // Show MFA verification if needed
+  if (needsMFA) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--gradient-hero)' }}>
-        <EmailVerificationNotice email={pendingEmail} />
+        <Card className="w-full max-w-md shadow-xl">
+          <form onSubmit={handleMFAVerify}>
+            <CardHeader>
+              <CardTitle>Multi-Factor Authentication</CardTitle>
+              <CardDescription>
+                Enter the verification code from your authenticator app
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="mfa-code">Verification Code</Label>
+                <Input
+                  id="mfa-code"
+                  name="mfaCode"
+                  type="text"
+                  placeholder="000000"
+                  value={mfaCode}
+                  onChange={(e) => setMFACode(e.target.value)}
+                  maxLength={6}
+                  required
+                  autoFocus
+                />
+                {errors.mfa && <p className="text-sm text-destructive">{errors.mfa}</p>}
+              </div>
+            </CardContent>
+            <CardFooter className="flex gap-2">
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={loading || mfaCode.length !== 6}
+              >
+                {loading ? 'Verifying...' : 'Verify'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => window.location.reload()}
+              >
+                Cancel
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
       </div>
     );
   }
@@ -321,16 +433,6 @@ export default function Auth() {
                     {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="remember"
-                      checked={rememberDevice}
-                      onCheckedChange={(checked) => setRememberDevice(checked as boolean)}
-                    />
-                    <Label htmlFor="remember" className="text-sm cursor-pointer">
-                      Remember this device for 30 days
-                    </Label>
-                  </div>
                 </CardContent>
                 
                 <CardFooter className="flex flex-col gap-4">

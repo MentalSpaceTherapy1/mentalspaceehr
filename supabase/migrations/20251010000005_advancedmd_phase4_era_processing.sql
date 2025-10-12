@@ -485,26 +485,32 @@ CREATE POLICY "Administrators and billing staff can manage payment reconciliatio
 -- Triggers for updated_at
 -- ============================================================================
 
+DROP TRIGGER IF EXISTS update_advancedmd_era_files_updated_at ON advancedmd_era_files;
 CREATE TRIGGER update_advancedmd_era_files_updated_at
   BEFORE UPDATE ON advancedmd_era_files
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_advancedmd_era_claim_details_updated_at ON advancedmd_era_claim_details;
 CREATE TRIGGER update_advancedmd_era_claim_details_updated_at
   BEFORE UPDATE ON advancedmd_era_claim_details
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_advancedmd_payment_postings_updated_at ON advancedmd_payment_postings;
 CREATE TRIGGER update_advancedmd_payment_postings_updated_at
   BEFORE UPDATE ON advancedmd_payment_postings
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_advancedmd_eobs_updated_at ON advancedmd_eobs;
 CREATE TRIGGER update_advancedmd_eobs_updated_at
   BEFORE UPDATE ON advancedmd_eobs
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_advancedmd_patient_statements_updated_at ON advancedmd_patient_statements;
 CREATE TRIGGER update_advancedmd_patient_statements_updated_at
   BEFORE UPDATE ON advancedmd_patient_statements
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_advancedmd_payment_reconciliation_updated_at ON advancedmd_payment_reconciliation;
 CREATE TRIGGER update_advancedmd_payment_reconciliation_updated_at
   BEFORE UPDATE ON advancedmd_payment_reconciliation
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

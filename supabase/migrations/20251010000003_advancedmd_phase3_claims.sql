@@ -185,25 +185,25 @@ ALTER TABLE denial_codes ENABLE ROW LEVEL SECURITY;
 -- EDI Batches: Staff can manage batches
 CREATE POLICY "Staff can manage EDI batches" ON advancedmd_edi_batches
   FOR ALL USING (
-    auth.uid() IN (SELECT id FROM staff WHERE user_id = auth.uid())
+    (public.has_role(auth.uid(), 'administrator') OR public.has_role(auth.uid(), 'billing_staff'))
   );
 
 -- Batch Claims: Staff can manage
 CREATE POLICY "Staff can manage batch claims" ON advancedmd_batch_claims
   FOR ALL USING (
-    auth.uid() IN (SELECT id FROM staff WHERE user_id = auth.uid())
+    (public.has_role(auth.uid(), 'administrator') OR public.has_role(auth.uid(), 'billing_staff'))
   );
 
 -- Appeals: Staff can manage appeals
 CREATE POLICY "Staff can manage appeals" ON advancedmd_claim_appeals
   FOR ALL USING (
-    auth.uid() IN (SELECT id FROM staff WHERE user_id = auth.uid())
+    (public.has_role(auth.uid(), 'administrator') OR public.has_role(auth.uid(), 'billing_staff'))
   );
 
 -- Corrections: Staff can manage corrections
 CREATE POLICY "Staff can manage corrections" ON advancedmd_claim_corrections
   FOR ALL USING (
-    auth.uid() IN (SELECT id FROM staff WHERE user_id = auth.uid())
+    (public.has_role(auth.uid(), 'administrator') OR public.has_role(auth.uid(), 'billing_staff'))
   );
 
 -- CPT Codes: Everyone can read, only admins can modify
@@ -212,11 +212,7 @@ CREATE POLICY "Anyone can read CPT codes" ON cpt_codes
 
 CREATE POLICY "Admins can manage CPT codes" ON cpt_codes
   FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM staff
-      WHERE staff.user_id = auth.uid()
-      AND staff.role = 'Admin'
-    )
+    public.has_role(auth.uid(), 'administrator')
   );
 
 -- ICD-10 Codes: Everyone can read, only admins can modify
@@ -225,11 +221,7 @@ CREATE POLICY "Anyone can read ICD-10 codes" ON icd10_codes
 
 CREATE POLICY "Admins can manage ICD-10 codes" ON icd10_codes
   FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM staff
-      WHERE staff.user_id = auth.uid()
-      AND staff.role = 'Admin'
-    )
+    public.has_role(auth.uid(), 'administrator')
   );
 
 -- Denial Codes: Everyone can read, only admins can modify
@@ -238,33 +230,34 @@ CREATE POLICY "Anyone can read denial codes" ON denial_codes
 
 CREATE POLICY "Admins can manage denial codes" ON denial_codes
   FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM staff
-      WHERE staff.user_id = auth.uid()
-      AND staff.role = 'Admin'
-    )
+    public.has_role(auth.uid(), 'administrator')
   );
 
 -- ============================================================================
 -- Triggers for updated_at
 -- ============================================================================
 
+DROP TRIGGER IF EXISTS update_advancedmd_edi_batches_updated_at ON advancedmd_edi_batches;
 CREATE TRIGGER update_advancedmd_edi_batches_updated_at
   BEFORE UPDATE ON advancedmd_edi_batches
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_advancedmd_claim_appeals_updated_at ON advancedmd_claim_appeals;
 CREATE TRIGGER update_advancedmd_claim_appeals_updated_at
   BEFORE UPDATE ON advancedmd_claim_appeals
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_cpt_codes_updated_at ON cpt_codes;
 CREATE TRIGGER update_cpt_codes_updated_at
   BEFORE UPDATE ON cpt_codes
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_icd10_codes_updated_at ON icd10_codes;
 CREATE TRIGGER update_icd10_codes_updated_at
   BEFORE UPDATE ON icd10_codes
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_denial_codes_updated_at ON denial_codes;
 CREATE TRIGGER update_denial_codes_updated_at
   BEFORE UPDATE ON denial_codes
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

@@ -274,22 +274,27 @@ CREATE POLICY "Administrators can manage denial codes" ON denial_codes
 -- Triggers for updated_at
 -- ============================================================================
 
+DROP TRIGGER IF EXISTS update_advancedmd_edi_batches_updated_at ON advancedmd_edi_batches;
 CREATE TRIGGER update_advancedmd_edi_batches_updated_at
   BEFORE UPDATE ON advancedmd_edi_batches
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_advancedmd_claim_appeals_updated_at ON advancedmd_claim_appeals;
 CREATE TRIGGER update_advancedmd_claim_appeals_updated_at
   BEFORE UPDATE ON advancedmd_claim_appeals
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_cpt_codes_updated_at ON cpt_codes;
 CREATE TRIGGER update_cpt_codes_updated_at
   BEFORE UPDATE ON cpt_codes
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_icd10_codes_updated_at ON icd10_codes;
 CREATE TRIGGER update_icd10_codes_updated_at
   BEFORE UPDATE ON icd10_codes
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_denial_codes_updated_at ON denial_codes;
 CREATE TRIGGER update_denial_codes_updated_at
   BEFORE UPDATE ON denial_codes
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

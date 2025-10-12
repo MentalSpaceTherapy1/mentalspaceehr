@@ -1,0 +1,15 @@
+{
+  "MentalSpaceEhrStack": {
+    "ApiEndpoint4F160690": "https://xmbq984faa.execute-api.us-east-1.amazonaws.com/prod/",
+    "VideosBucketName": "mentalspace-ehr-videos-706704660887",
+    "UserPoolClientId": "1qfsl4aufgpe358tsv264ou8ea",
+    "UserPoolId": "us-east-1_ssisECEGa",
+    "VpcId": "vpc-00829756378f4c9f9",
+    "DatabaseSecretArn": "arn:aws:secretsmanager:us-east-1:706704660887:secret:mentalspace-ehr-db-credentials-al4fLD",
+    "VideoDistributionDomain": "d33wpxg6ve4byx.cloudfront.net",
+    "FilesBucketName": "mentalspace-ehr-files-706704660887",
+    "IdentityPoolId": "us-east-1:b90f8d7d-ae3c-4de6-9fb3-05af044c378c",
+    "ApiEndpoint": "https://xmbq984faa.execute-api.us-east-1.amazonaws.com/prod/",
+    "DatabaseEndpoint": "mentalspaceehrstack-databaseb269d8bb-edwdzckxbkt7.cluster-ci16iwey2cac.us-east-1.rds.amazonaws.com"
+  }
+}

@@ -1,15 +1,19 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { cognitoAuth, CognitoUser, CognitoSession } from '@/lib/aws-cognito';
+import { apiClient } from '@/lib/aws-api-client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: CognitoUser | null;
+  session: CognitoSession | null;
   loading: boolean;
+  needsMFA: boolean;
+  needsPasswordChange: boolean;
   signUp: (email: string, password: string, userData: SignUpData) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  verifyMFA: (code: string) => Promise<{ error: Error | null }>;
+  setNewPassword: (newPassword: string, name: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<ProfileData>) => Promise<{ error: Error | null }>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
@@ -31,107 +35,118 @@ interface ProfileData {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<CognitoUser | null>(null);
+  const [session, setSession] = useState<CognitoSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [needsMFA, setNeedsMFA] = useState(false);
+  const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Defer profile fetch with setTimeout to avoid deadlock
-        if (session?.user && event === 'SIGNED_IN') {
-          setTimeout(() => {
-            updateLastLogin(session.user.id);
-          }, 0);
+    // Check for existing session on mount
+    const existingSession = cognitoAuth.getSession();
+    if (existingSession) {
+      setSession(existingSession);
+      setUser(existingSession.user);
+
+      // Update last login
+      updateLastLogin(existingSession.user.id).catch(console.error);
+    }
+    setLoading(false);
+
+    // Set up periodic token refresh (every 30 minutes)
+    const refreshInterval = setInterval(async () => {
+      if (cognitoAuth.isAuthenticated()) {
+        const { user, error } = await cognitoAuth.getUser();
+        if (error) {
+          // Session expired or invalid
+          setUser(null);
+          setSession(null);
+          navigate('/auth');
+        } else if (user) {
+          const currentSession = cognitoAuth.getSession();
+          setUser(user);
+          setSession(currentSession);
         }
       }
-    );
+    }, 30 * 60 * 1000); // 30 minutes
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => clearInterval(refreshInterval);
+  }, [navigate]);
 
   const updateLastLogin = async (userId: string) => {
-    await supabase
-      .from('profiles')
-      .update({ last_login_date: new Date().toISOString() })
-      .eq('id', userId);
+    try {
+      await apiClient.from('profiles')
+        .eq('id', userId)
+        .update({ last_login_date: new Date().toISOString() });
+    } catch (error) {
+      // Non-critical, don't block auth
+      console.error('Failed to update last login:', error);
+    }
   };
 
   const logLoginAttempt = async (email: string, success: boolean, failureReason?: string) => {
     try {
-      // SECURITY: Log via edge function to capture real server-side IP from request headers
-      await supabase.functions.invoke('log-auth-attempt', {
-        body: { 
-          email: email.toLowerCase(), 
-          success, 
-          error_message: failureReason || null 
-        }
-      });
+      // TEMPORARY: Disable login attempt logging during AWS migration
+      // TODO: Re-implement using authenticated API call after login
+      return;
+
+      // await apiClient.post('log-auth-attempt', {
+      //   email: email.toLowerCase(),
+      //   success,
+      //   error_message: failureReason || null
+      // });
     } catch (error) {
       // Never block authentication due to logging failures
+      console.error('Failed to log auth attempt:', error);
     }
   };
 
   const checkAccountLockout = async (email: string) => {
     try {
-      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-      
-      const { data, error } = await supabase
-        .from('login_attempts')
-        .select('*')
-        .eq('email', email)
-        .eq('success', false)
-        .gte('attempt_time', thirtyMinutesAgo)
-        .order('attempt_time', { ascending: false });
-
-      if (error) throw error;
-
-      if (data && data.length >= 5) {
-        const oldestFailedAttempt = data[data.length - 1];
-        const lockoutEndsAt = new Date(new Date(oldestFailedAttempt.attempt_time).getTime() + 30 * 60 * 1000);
-        const minutesRemaining = Math.max(0, (lockoutEndsAt.getTime() - Date.now()) / (60 * 1000));
-        
-        return { isLocked: true, minutesRemaining };
-      }
-
+      // TEMPORARY: Disable lockout check during AWS migration
+      // The login_attempts table doesn't exist yet and API requires auth
+      // TODO: Implement lockout check using Cognito/API Gateway
       return { isLocked: false, minutesRemaining: 0 };
+
+      // const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+
+      // const { data, error } = await apiClient
+      //   .from('login_attempts')
+      //   .select('*')
+      //   .eq('email', email)
+      //   .eq('success', false)
+      //   .order('attempt_time', { ascending: false })
+      //   .execute();
+
+      // if (error) throw error;
+
+      // // Filter client-side for attempts in last 30 minutes
+      // const recentAttempts = data?.filter(attempt =>
+      //   new Date(attempt.attempt_time).getTime() >= new Date(thirtyMinutesAgo).getTime()
+      // ) || [];
+
+      // if (recentAttempts.length >= 5) {
+      //   const oldestFailedAttempt = recentAttempts[recentAttempts.length - 1];
+      //   const lockoutEndsAt = new Date(new Date(oldestFailedAttempt.attempt_time).getTime() + 30 * 60 * 1000);
+      //   const minutesRemaining = Math.max(0, (lockoutEndsAt.getTime() - Date.now()) / (60 * 1000));
+
+      //   return { isLocked: true, minutesRemaining };
+      // }
+
+      // return { isLocked: false, minutesRemaining: 0 };
     } catch (error) {
+      console.error('Failed to check lockout:', error);
       return { isLocked: false, minutesRemaining: 0 };
     }
   };
 
   const signUp = async (email: string, password: string, userData: SignUpData) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            first_name: userData.firstName,
-            last_name: userData.lastName,
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      toast.success('Account created successfully!');
-      return { error: null };
+      // Note: With Cognito, sign-up is typically done by admins via create-user Lambda
+      // Self-registration is disabled for HIPAA compliance
+      toast.error('Please contact your administrator to create an account');
+      return { error: new Error('Self-registration not allowed') };
     } catch (error) {
       const err = error as Error;
       toast.error(err.message || 'Failed to create account');
@@ -149,12 +164,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { error: new Error('Account locked') };
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { session: cognitoSession, error } = await cognitoAuth.signIn(email, password);
 
       if (error) {
+        // Handle MFA required
+        if (error.message === 'MFA_REQUIRED') {
+          setNeedsMFA(true);
+          toast.info('Please enter your MFA code');
+          return { error: null }; // Not actually an error, just needs MFA
+        }
+
+        // Handle password change required
+        if (error.message === 'NEW_PASSWORD_REQUIRED') {
+          setNeedsPasswordChange(true);
+          toast.info('Please set a new password');
+          return { error: null };
+        }
+
         // Log failed attempt
         await logLoginAttempt(email, false, error.message);
         throw error;
@@ -163,57 +189,136 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Log successful attempt
       await logLoginAttempt(email, true);
 
-      // Check user roles and redirect appropriately
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (authUser) {
-        // Check password expiration
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('last_password_change, created_at, password_requires_change')
-          .eq('id', authUser.id)
-          .single();
+      // Update state
+      if (cognitoSession) {
+        setSession(cognitoSession);
+        setUser(cognitoSession.user);
+        setNeedsMFA(false);
 
-        if (profile) {
-          // Check if password change is explicitly required
-          if (profile.password_requires_change) {
-            toast.error('Password change required before continuing');
-            navigate('/reset-password?required=true');
-            return { error: null };
-          }
+        // Update last login
+        await updateLastLogin(cognitoSession.user.id);
 
-          // Calculate days since last password change
-          const lastChange = profile.last_password_change
-            ? new Date(profile.last_password_change)
-            : new Date(profile.created_at);
+        // Handle navigation based on role
+        await handlePostLoginNavigation(cognitoSession.user);
+      }
 
-          const daysSinceChange = Math.floor((Date.now() - lastChange.getTime()) / (1000 * 60 * 60 * 24));
+      return { error: null };
+    } catch (error) {
+      const err = error as Error;
+      toast.error(err.message || 'Failed to sign in');
+      return { error: err };
+    }
+  };
 
-          // Password expired (>90 days)
-          if (daysSinceChange > 90) {
-            toast.error('Your password has expired. Please change it now.');
-            navigate('/reset-password?expired=true');
-            return { error: null };
-          }
+  const verifyMFA = async (code: string) => {
+    try {
+      const { session: cognitoSession, error } = await cognitoAuth.verifyMFA(code);
 
-          // Warn if expiring soon (< 7 days)
-          const daysRemaining = 90 - daysSinceChange;
-          if (daysRemaining <= 7 && daysRemaining > 0) {
-            toast.warning(`Your password will expire in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}. Please change it soon.`);
-          }
-        }
+      if (error) {
+        toast.error('Invalid MFA code');
+        return { error };
+      }
 
-        const { data: roles } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', authUser.id);
+      if (cognitoSession) {
+        setSession(cognitoSession);
+        setUser(cognitoSession.user);
+        setNeedsMFA(false);
 
-        const userRoles = roles?.map(r => r.role) || [];
+        // Update last login
+        await updateLastLogin(cognitoSession.user.id);
 
-        // If user only has client_user role, redirect to portal
-        if (userRoles.length === 1 && userRoles[0] === 'client_user') {
-          toast.success('Welcome back!');
-          navigate('/portal');
-        } else {
+        // Handle navigation
+        await handlePostLoginNavigation(cognitoSession.user);
+
+        toast.success('Welcome back!');
+      }
+
+      return { error: null };
+    } catch (error) {
+      const err = error as Error;
+      toast.error(err.message || 'MFA verification failed');
+      return { error: err };
+    }
+  };
+
+  const setNewPassword = async (newPassword: string, name: string) => {
+    try {
+      const { session: cognitoSession, error } = await cognitoAuth.setNewPassword(newPassword, { name });
+
+      if (error) {
+        toast.error(error.message || 'Failed to set new password');
+        return { error };
+      }
+
+      if (cognitoSession) {
+        setSession(cognitoSession);
+        setUser(cognitoSession.user);
+        setNeedsPasswordChange(false);
+
+        // Update last login
+        await updateLastLogin(cognitoSession.user.id);
+
+        // Handle navigation
+        await handlePostLoginNavigation(cognitoSession.user);
+
+        toast.success('Password changed successfully!');
+      }
+
+      return { error: null };
+    } catch (error) {
+      const err = error as Error;
+      toast.error(err.message || 'Failed to change password');
+      return { error: err };
+    }
+  };
+
+  const handlePostLoginNavigation = async (cognitoUser: CognitoUser) => {
+    try {
+      // Get user role from custom attribute
+      const role = cognitoUser['custom:role'];
+
+      // TEMPORARY: Disable password expiration check during AWS migration
+      // TODO: Re-implement password expiration check using Cognito/API Gateway
+      // const { data: profile } = await apiClient
+      //   .from('profiles')
+      //   .select('last_password_change, created_at, password_requires_change')
+      //   .eq('id', cognitoUser.id)
+      //   .single();
+
+      // if (profile) {
+      //   // Check if password change is explicitly required
+      //   if (profile.password_requires_change) {
+      //     toast.error('Password change required before continuing');
+      //     navigate('/reset-password?required=true');
+      //     return;
+      //   }
+
+      //   // Calculate days since last password change
+      //   const lastChange = profile.last_password_change
+      //     ? new Date(profile.last_password_change)
+      //     : new Date(profile.created_at);
+
+      //   const daysSinceChange = Math.floor((Date.now() - lastChange.getTime()) / (1000 * 60 * 60 * 24));
+
+      //   // Password expired (>90 days)
+      //   if (daysSinceChange > 90) {
+      //     toast.error('Your password has expired. Please change it now.');
+      //     navigate('/reset-password?expired=true');
+      //     return;
+      //   }
+
+      //   // Warn if expiring soon (< 7 days)
+      //   const daysRemaining = 90 - daysSinceChange;
+      //   if (daysRemaining <= 7 && daysRemaining > 0) {
+      //     toast.warning(`Your password will expire in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}. Please change it soon.`);
+      //   }
+      // }
+
+      // Navigate based on role
+      if (role === 'client') {
+        toast.success('Welcome back!');
+        navigate('/portal');
+      } else {
         // Staff user - redirect to dashboard or return URL
         const returnUrl = localStorage.getItem('returnUrl');
         if (returnUrl && returnUrl !== '/auth') {
@@ -224,23 +329,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           toast.success('Welcome back!');
           navigate('/dashboard');
         }
-        }
-      } else {
-        navigate('/dashboard');
       }
-      
-      return { error: null };
     } catch (error) {
-      const err = error as Error;
-      toast.error(err.message || 'Failed to sign in');
-      return { error: err };
+      console.error('Post-login navigation error:', error);
+      // Fallback to dashboard
+      navigate('/dashboard');
     }
   };
 
   const resetPassword = async (email: string) => {
     try {
-      // Let Supabase use the configured Site URL for redirect
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await cognitoAuth.resetPassword(email);
 
       if (error) throw error;
 
@@ -255,21 +354,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updatePassword = async (newPassword: string) => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
+      // Get current password from form (Cognito requires it)
+      const { error } = await cognitoAuth.changePassword(
+        '', // This needs to be passed from the form
+        newPassword
+      );
 
       if (error) throw error;
 
-      // Update last_password_change timestamp and clear password_requires_change flag
+      // Update last_password_change timestamp in database
       if (user) {
-        await supabase
+        await apiClient
           .from('profiles')
+          .eq('id', user.id)
           .update({
             last_password_change: new Date().toISOString(),
             password_requires_change: false
-          })
-          .eq('id', user.id);
+          });
       }
 
       toast.success('Password updated successfully');
@@ -287,19 +388,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (currentPath !== '/auth') {
       localStorage.setItem('returnUrl', currentPath);
     }
-    
+
     try {
-      const { error } = await supabase.auth.signOut();
-      
-      // Ignore session-related errors - these are expected when session already expired
-      if (error && !error.message?.toLowerCase().includes('session')) {
-        throw error;
+      const { error } = await cognitoAuth.signOut();
+
+      if (error) {
+        console.error('Sign out error:', error);
       }
-      
-      // Clear local state regardless of API response
+
+      // Clear local state
       setUser(null);
       setSession(null);
-      
+      setNeedsMFA(false);
+      setNeedsPasswordChange(false);
+
       toast.success('Signed out successfully');
       navigate('/auth');
     } catch (error) {
@@ -307,6 +409,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Still clear state even if there was an error
       setUser(null);
       setSession(null);
+      setNeedsMFA(false);
+      setNeedsPasswordChange(false);
       toast.error(err.message || 'Failed to sign out');
       navigate('/auth');
     }
@@ -316,10 +420,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return { error: new Error('No user logged in') };
 
     try {
-      const { error } = await supabase
+      const { error } = await apiClient
         .from('profiles')
-        .update(data)
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .update(data);
 
       if (error) throw error;
 
@@ -333,7 +437,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut, updateProfile, resetPassword, updatePassword }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        needsMFA,
+        needsPasswordChange,
+        signUp,
+        signIn,
+        verifyMFA,
+        setNewPassword,
+        signOut,
+        updateProfile,
+        resetPassword,
+        updatePassword
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

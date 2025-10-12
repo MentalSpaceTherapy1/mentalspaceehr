@@ -77,32 +77,33 @@ CREATE TABLE IF NOT EXISTS public.advancedmd_eligibility_alerts (
 );
 
 -- Get Latest Eligibility Function
+DROP FUNCTION IF EXISTS public.get_latest_eligibility(UUID);
 CREATE OR REPLACE FUNCTION public.get_latest_eligibility(p_patient_id UUID)
 RETURNS TABLE (
   id UUID,
-  request_date TIMESTAMP WITH TIME ZONE,
+  requested_at TIMESTAMP WITH TIME ZONE,
   status TEXT,
-  coverage_active BOOLEAN,
+  is_eligible BOOLEAN,
   payer_name TEXT,
   coverage_details JSONB
-) 
+)
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     er.id,
-    er.request_date,
+    er.requested_at,
     er.status,
-    er.coverage_active,
+    er.is_eligible,
     er.payer_name,
     er.coverage_details
   FROM public.advancedmd_eligibility_requests er
   WHERE er.patient_id = p_patient_id
     AND er.status = 'completed'
-  ORDER BY er.request_date DESC
+  ORDER BY er.requested_at DESC
   LIMIT 1;
 END;
 $$;
@@ -176,11 +177,11 @@ $$;
 -- Indexes for Performance
 CREATE INDEX IF NOT EXISTS idx_eligibility_requests_patient ON public.advancedmd_eligibility_requests(patient_id);
 CREATE INDEX IF NOT EXISTS idx_eligibility_requests_status ON public.advancedmd_eligibility_requests(status);
-CREATE INDEX IF NOT EXISTS idx_eligibility_requests_date ON public.advancedmd_eligibility_requests(request_date);
+CREATE INDEX IF NOT EXISTS idx_eligibility_requests_date ON public.advancedmd_eligibility_requests(requested_at);
 CREATE INDEX IF NOT EXISTS idx_eligibility_batches_status ON public.advancedmd_eligibility_batches(status);
 CREATE INDEX IF NOT EXISTS idx_eligibility_batch_items_batch ON public.advancedmd_eligibility_batch_items(batch_id);
 CREATE INDEX IF NOT EXISTS idx_eligibility_alerts_patient ON public.advancedmd_eligibility_alerts(patient_id);
-CREATE INDEX IF NOT EXISTS idx_eligibility_alerts_acknowledged ON public.advancedmd_eligibility_alerts(acknowledged);
+CREATE INDEX IF NOT EXISTS idx_eligibility_alerts_acknowledged ON public.advancedmd_eligibility_alerts(is_acknowledged);
 
 -- RLS Policies
 ALTER TABLE public.advancedmd_eligibility_requests ENABLE ROW LEVEL SECURITY;
@@ -189,6 +190,7 @@ ALTER TABLE public.advancedmd_eligibility_batch_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.advancedmd_eligibility_alerts ENABLE ROW LEVEL SECURITY;
 
 -- Eligibility Requests Policies
+DROP POLICY IF EXISTS "Billing staff can view eligibility requests" ON public.advancedmd_eligibility_requests;
 CREATE POLICY "Billing staff can view eligibility requests" ON public.advancedmd_eligibility_requests
   FOR SELECT USING (
     has_role(auth.uid(), 'administrator') OR 
@@ -201,6 +203,7 @@ CREATE POLICY "Billing staff can view eligibility requests" ON public.advancedmd
     )
   );
 
+DROP POLICY IF EXISTS "Billing staff can create eligibility requests" ON public.advancedmd_eligibility_requests;
 CREATE POLICY "Billing staff can create eligibility requests" ON public.advancedmd_eligibility_requests
   FOR INSERT WITH CHECK (
     has_role(auth.uid(), 'administrator') OR 
@@ -208,6 +211,7 @@ CREATE POLICY "Billing staff can create eligibility requests" ON public.advanced
     has_role(auth.uid(), 'front_desk')
   );
 
+DROP POLICY IF EXISTS "Billing staff can update eligibility requests" ON public.advancedmd_eligibility_requests;
 CREATE POLICY "Billing staff can update eligibility requests" ON public.advancedmd_eligibility_requests
   FOR UPDATE USING (
     has_role(auth.uid(), 'administrator') OR 
@@ -215,12 +219,14 @@ CREATE POLICY "Billing staff can update eligibility requests" ON public.advanced
   );
 
 -- Batch Jobs Policies
+DROP POLICY IF EXISTS "Billing staff can manage batch jobs" ON public.advancedmd_eligibility_batches;
 CREATE POLICY "Billing staff can manage batch jobs" ON public.advancedmd_eligibility_batches
   FOR ALL USING (
     has_role(auth.uid(), 'administrator') OR 
     has_role(auth.uid(), 'billing_staff')
   );
 
+DROP POLICY IF EXISTS "Billing staff can manage batch items" ON public.advancedmd_eligibility_batch_items;
 CREATE POLICY "Billing staff can manage batch items" ON public.advancedmd_eligibility_batch_items
   FOR ALL USING (
     has_role(auth.uid(), 'administrator') OR 
@@ -228,6 +234,7 @@ CREATE POLICY "Billing staff can manage batch items" ON public.advancedmd_eligib
   );
 
 -- Alerts Policies
+DROP POLICY IF EXISTS "Staff can view eligibility alerts" ON public.advancedmd_eligibility_alerts;
 CREATE POLICY "Staff can view eligibility alerts" ON public.advancedmd_eligibility_alerts
   FOR SELECT USING (
     has_role(auth.uid(), 'administrator') OR 
@@ -240,6 +247,7 @@ CREATE POLICY "Staff can view eligibility alerts" ON public.advancedmd_eligibili
     )
   );
 
+DROP POLICY IF EXISTS "Staff can acknowledge alerts" ON public.advancedmd_eligibility_alerts;
 CREATE POLICY "Staff can acknowledge alerts" ON public.advancedmd_eligibility_alerts
   FOR UPDATE USING (
     has_role(auth.uid(), 'administrator') OR 

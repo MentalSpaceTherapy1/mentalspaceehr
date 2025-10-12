@@ -1,6 +1,3 @@
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- Create enum for user roles
 CREATE TYPE public.app_role AS ENUM (
   'administrator',
@@ -90,7 +87,7 @@ CREATE TABLE public.profiles (
 
 -- Create user_roles table (separate for security - prevents privilege escalation)
 CREATE TABLE public.user_roles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   role public.app_role NOT NULL,
   assigned_by UUID REFERENCES public.profiles(id),
@@ -100,7 +97,7 @@ CREATE TABLE public.user_roles (
 
 -- Create supervision relationships table
 CREATE TABLE public.supervision_relationships (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   supervisee_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   supervisor_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   start_date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -115,7 +112,7 @@ CREATE TABLE public.supervision_relationships (
 
 -- Create login attempt tracking table for security
 CREATE TABLE public.login_attempts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT NOT NULL,
   attempt_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   success BOOLEAN DEFAULT FALSE,

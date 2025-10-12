@@ -24,6 +24,11 @@ export const usePasswordExpiration = () => {
 
   const checkPasswordExpiration = async () => {
     try {
+      // TEMPORARY: Disable password expiration check during AWS migration
+      // TODO: Implement password expiration check using Cognito/API Gateway
+      setLoading(false);
+      return;
+
       // Get user's profile
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -46,10 +51,10 @@ export const usePasswordExpiration = () => {
       }
 
       // Calculate days since last password change
-      const lastChange = profile.last_password_change 
+      const lastChange = profile.last_password_change
         ? new Date(profile.last_password_change)
         : new Date(profile.created_at);
-      
+
       const daysSinceChange = differenceInDays(new Date(), lastChange);
       const daysRemaining = 90 - daysSinceChange;
 

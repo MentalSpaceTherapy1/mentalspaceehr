@@ -1,0 +1,238 @@
+{
+  "success": [
+    {
+      "name": "advancedmd-auth",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-advancedmd-auth"
+    },
+    {
+      "name": "advancedmd-proxy",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-advancedmd-proxy"
+    },
+    {
+      "name": "analyze-session-audio",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-analyze-session-audio"
+    },
+    {
+      "name": "apply-migrations-to-aurora",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-apply-migrations-to-aurora"
+    },
+    {
+      "name": "backup-health-check",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-backup-health-check"
+    },
+    {
+      "name": "calculate-clinical-analytics",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-calculate-clinical-analytics"
+    },
+    {
+      "name": "check-compliance",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-check-compliance"
+    },
+    {
+      "name": "check-critical-assessment-items",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-check-critical-assessment-items"
+    },
+    {
+      "name": "check-openai-key",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-check-openai-key"
+    },
+    {
+      "name": "cleanup-rate-limits",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-cleanup-rate-limits"
+    },
+    {
+      "name": "collect-performance-metrics",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-collect-performance-metrics"
+    },
+    {
+      "name": "collect-release-metrics",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-collect-release-metrics"
+    },
+    {
+      "name": "confirm-appointment",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-confirm-appointment"
+    },
+    {
+      "name": "cosignature-status-monitor",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-cosignature-status-monitor"
+    },
+    {
+      "name": "cosignature-workflow",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-cosignature-workflow"
+    },
+    {
+      "name": "create-portal-user",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-create-portal-user"
+    },
+    {
+      "name": "create-test-portal-user",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-create-test-portal-user"
+    },
+    {
+      "name": "create-user",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-create-user"
+    },
+    {
+      "name": "daily-compliance-check",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-daily-compliance-check"
+    },
+    {
+      "name": "data-quality-check",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-data-quality-check"
+    },
+    {
+      "name": "disable-twilio-transcription",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-disable-twilio-transcription"
+    },
+    {
+      "name": "enable-twilio-transcription",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-enable-twilio-transcription"
+    },
+    {
+      "name": "extract-insurance-card",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-extract-insurance-card"
+    },
+    {
+      "name": "generate-clinical-note",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-generate-clinical-note"
+    },
+    {
+      "name": "generate-document-from-template",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-generate-document-from-template"
+    },
+    {
+      "name": "generate-intake-note",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-generate-intake-note"
+    },
+    {
+      "name": "generate-note-from-transcript",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-generate-note-from-transcript"
+    },
+    {
+      "name": "generate-section-content",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-generate-section-content"
+    },
+    {
+      "name": "generate-treatment-plan",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-generate-treatment-plan"
+    },
+    {
+      "name": "get-twilio-token",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-get-twilio-token"
+    },
+    {
+      "name": "integration-health-check",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-integration-health-check"
+    },
+    {
+      "name": "log-auth-attempt",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-log-auth-attempt"
+    },
+    {
+      "name": "notify-waitlist-slots",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-notify-waitlist-slots"
+    },
+    {
+      "name": "process-notification-rules",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-process-notification-rules"
+    },
+    {
+      "name": "process-payment",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-process-payment"
+    },
+    {
+      "name": "reminder-capabilities",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-reminder-capabilities"
+    },
+    {
+      "name": "reset-user-password",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-reset-user-password"
+    },
+    {
+      "name": "scan-uploaded-file",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-scan-uploaded-file"
+    },
+    {
+      "name": "security-audit",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-security-audit"
+    },
+    {
+      "name": "send-admin-password-reset",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-send-admin-password-reset"
+    },
+    {
+      "name": "send-appointment-notification",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-send-appointment-notification"
+    },
+    {
+      "name": "send-appointment-reminder",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-send-appointment-reminder"
+    },
+    {
+      "name": "send-password-reset",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-send-password-reset"
+    },
+    {
+      "name": "send-portal-form-bulk-notification",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-send-portal-form-bulk-notification"
+    },
+    {
+      "name": "send-portal-form-notification",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-send-portal-form-notification"
+    },
+    {
+      "name": "send-portal-invitation",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-send-portal-invitation"
+    },
+    {
+      "name": "send-schedule-exception-notification",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-send-schedule-exception-notification"
+    },
+    {
+      "name": "send-staff-invitation",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-send-staff-invitation"
+    },
+    {
+      "name": "send-waiting-room-notification",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-send-waiting-room-notification"
+    },
+    {
+      "name": "send-waitlist-email",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-send-waitlist-email"
+    },
+    {
+      "name": "suggest-clinical-content",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-suggest-clinical-content"
+    },
+    {
+      "name": "sunday-lockout",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-sunday-lockout"
+    },
+    {
+      "name": "supervision-notifications",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-supervision-notifications"
+    },
+    {
+      "name": "telehealth-consent-renewal",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-telehealth-consent-renewal"
+    },
+    {
+      "name": "transcribe-and-generate-note",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-transcribe-and-generate-note"
+    },
+    {
+      "name": "transcribe-session",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-transcribe-session"
+    },
+    {
+      "name": "verify-incident-to-compliance",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-verify-incident-to-compliance"
+    },
+    {
+      "name": "waiting-room-timeout",
+      "arn": "arn:aws:lambda:us-east-1:706704660887:function:mentalspace-waiting-room-timeout"
+    }
+  ],
+  "failed": [],
+  "skipped": []
+}

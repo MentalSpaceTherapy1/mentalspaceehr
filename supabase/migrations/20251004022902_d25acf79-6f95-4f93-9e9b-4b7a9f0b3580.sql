@@ -1,8 +1,10 @@
 -- Insert missing note templates with proper type casting
-INSERT INTO public.note_templates (name, note_type, note_format, template_structure, ai_prompts, is_default, is_active, created_by)
-SELECT 
-  name, note_type::note_type, note_format::note_format, template_structure::jsonb, ai_prompts::jsonb, is_default, is_active, 
-  (SELECT id FROM auth.users LIMIT 1) as created_by
+-- Temporarily make created_by nullable, insert seed data, then make it NOT NULL again
+ALTER TABLE public.note_templates ALTER COLUMN created_by DROP NOT NULL;
+
+INSERT INTO public.note_templates (name, note_type, note_format, template_structure, ai_prompts, is_default, is_active)
+SELECT
+  name, note_type::note_type, note_format::note_format, template_structure::jsonb, ai_prompts::jsonb, is_default, is_active
 FROM (VALUES
   ('Standard Intake Assessment', 'intake_assessment', 'SOAP', 
    '{"subjective": {"label": "Presenting Problem & History", "placeholder": "Chief complaint, history, psychiatric/medical/family/social history"}, "objective": {"label": "Mental Status Exam", "placeholder": "Appearance, behavior, speech, mood, affect, thought process/content"}, "assessment": {"label": "Clinical Impressions", "placeholder": "Diagnostic impressions, risk assessment, strengths"}, "plan": {"label": "Treatment Recommendations", "placeholder": "Goals, modality, frequency, referrals"}}',

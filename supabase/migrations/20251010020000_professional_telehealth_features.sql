@@ -4,7 +4,7 @@
 -- Session Messages Table (Persistent Chat)
 CREATE TABLE IF NOT EXISTS public.session_messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id TEXT NOT NULL, -- telehealth_sessions.session_id
+  session_id UUID NOT NULL REFERENCES telehealth_sessions(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   user_name TEXT NOT NULL,
   message TEXT NOT NULL,
@@ -20,6 +20,7 @@ CREATE INDEX idx_session_messages_user ON public.session_messages(user_id);
 -- RLS Policies for session_messages
 ALTER TABLE public.session_messages ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view messages in their sessions" ON public.session_messages;
 CREATE POLICY "Users can view messages in their sessions"
 ON public.session_messages
 FOR SELECT
@@ -27,14 +28,12 @@ USING (
   user_id = auth.uid()
   OR EXISTS (
     SELECT 1 FROM session_participants sp
-    WHERE sp.session_id = (
-      SELECT id FROM telehealth_sessions ts
-      WHERE ts.session_id = session_messages.session_id
-    )
+    WHERE sp.session_id = session_messages.session_id
     AND sp.user_id = auth.uid()
   )
 );
 
+DROP POLICY IF EXISTS "Users can insert messages in their sessions" ON public.session_messages;
 CREATE POLICY "Users can insert messages in their sessions"
 ON public.session_messages
 FOR INSERT
@@ -42,10 +41,7 @@ WITH CHECK (
   user_id = auth.uid()
   AND EXISTS (
     SELECT 1 FROM session_participants sp
-    WHERE sp.session_id = (
-      SELECT id FROM telehealth_sessions ts
-      WHERE ts.session_id = session_messages.session_id
-    )
+    WHERE sp.session_id = session_messages.session_id
     AND sp.user_id = auth.uid()
   )
 );
@@ -53,7 +49,7 @@ WITH CHECK (
 -- Waiting Room Queue Table
 CREATE TABLE IF NOT EXISTS public.waiting_room_queue (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id TEXT NOT NULL,
+  session_id UUID NOT NULL REFERENCES telehealth_sessions(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   user_name TEXT NOT NULL,
   user_email TEXT,
@@ -73,6 +69,7 @@ CREATE INDEX idx_waiting_room_user ON public.waiting_room_queue(user_id);
 -- RLS Policies for waiting_room_queue
 ALTER TABLE public.waiting_room_queue ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view their own waiting room entries" ON public.waiting_room_queue;
 CREATE POLICY "Users can view their own waiting room entries"
 ON public.waiting_room_queue
 FOR SELECT
@@ -82,23 +79,25 @@ USING (
   OR denied_by = auth.uid()
   OR EXISTS (
     SELECT 1 FROM telehealth_sessions ts
-    WHERE ts.session_id = waiting_room_queue.session_id
+    WHERE ts.id = waiting_room_queue.session_id
     AND ts.host_id = auth.uid()
   )
 );
 
+DROP POLICY IF EXISTS "Users can insert their own waiting room entries" ON public.waiting_room_queue;
 CREATE POLICY "Users can insert their own waiting room entries"
 ON public.waiting_room_queue
 FOR INSERT
 WITH CHECK (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Hosts can update waiting room entries" ON public.waiting_room_queue;
 CREATE POLICY "Hosts can update waiting room entries"
 ON public.waiting_room_queue
 FOR UPDATE
 USING (
   EXISTS (
     SELECT 1 FROM telehealth_sessions ts
-    WHERE ts.session_id = waiting_room_queue.session_id
+    WHERE ts.id = waiting_room_queue.session_id
     AND ts.host_id = auth.uid()
   )
 );

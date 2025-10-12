@@ -1,0 +1,1 @@
+{"statusCode":200,"headers":{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, content-type, x-amz-date, x-api-key, x-amz-security-token","Access-Control-Allow-Methods":"GET, POST, PUT, DELETE, OPTIONS","Content-Type":"application/json"},"body":"{\"message\":\"Admin role verified\",\"roles\":[]}"}
