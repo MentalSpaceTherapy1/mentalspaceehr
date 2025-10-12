@@ -1,1 +1,1 @@
-{"migrationName":"test.sql","migrationSQL":"SELECT 1;"}
+{"queryStringParameters":{"user_id":"test-user-id"}}

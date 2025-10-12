@@ -55,7 +55,9 @@
       "Bash(Select-String -Pattern \"Applying:|SUCCESS|SKIPPED|FAILED|Summary:\")",
       "Bash(do sed -i \"s/process\\.env\\.AWS_REGION || ''us-east-1''/''us-east-1''/g\" \"$file\")",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(tee:*)",
+      "Bash(do echo \"Updating $func...\")"
     ],
     "deny": [],
     "ask": []

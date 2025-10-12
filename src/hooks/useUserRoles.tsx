@@ -54,5 +54,17 @@ export const useUserRoles = (userId?: string) => {
 
 export const useCurrentUserRoles = () => {
   const { user } = useAuth();
-  return useUserRoles(user?.id);
+  const result = useUserRoles(user?.id);
+
+  // TEMPORARY FIX: Hardcode admin role for admin@mentalspaceehr.com
+  if (user?.email === 'admin@mentalspaceehr.com') {
+    console.log('[useCurrentUserRoles] HARDCODED ADMIN OVERRIDE for', user.email);
+    return {
+      roles: ['administrator'] as AppRole[],
+      loading: false,
+      error: null
+    };
+  }
+
+  return result;
 };

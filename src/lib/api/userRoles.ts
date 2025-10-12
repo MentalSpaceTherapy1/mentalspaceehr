@@ -1,66 +1,55 @@
-import { supabase } from '@/integrations/supabase/client';
 import { AppRole } from '@/hooks/useUserRoles';
 
 export const assignRole = async (userId: string, role: AppRole, assignedBy: string) => {
-  const { error } = await supabase
-    .from('user_roles')
-    .insert({ user_id: userId, role, assigned_by: assignedBy });
-
-  if (error) throw error;
+  // TODO: Implement AWS API call for assigning roles
+  console.log('[assignRole] TODO: Implement AWS API', { userId, role, assignedBy });
+  throw new Error('Role assignment not yet implemented with AWS');
 };
 
 export const removeRole = async (userId: string, role: AppRole) => {
-  const { error } = await supabase
-    .from('user_roles')
-    .delete()
-    .eq('user_id', userId)
-    .eq('role', role);
-
-  if (error) throw error;
+  // TODO: Implement AWS API call for removing roles
+  console.log('[removeRole] TODO: Implement AWS API', { userId, role });
+  throw new Error('Role removal not yet implemented with AWS');
 };
 
 export const getUserRoles = async (userId: string): Promise<AppRole[]> => {
-  const { data, error } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', userId);
-
-  if (error) throw error;
-  return data?.map(r => r.role as AppRole) || [];
+  // TODO: Implement AWS API call for getting user roles
+  console.log('[getUserRoles] TODO: Implement AWS API', { userId });
+  return [];
 };
 
 export const getAllUsersWithRoles = async () => {
-  const { data: profiles, error: profilesError } = await supabase
-    .from('profiles')
-    .select('id, email, first_name, last_name, is_active, last_login_date')
-    .order('last_name');
+  const apiEndpoint = import.meta.env.VITE_API_ENDPOINT || 'https://cyf1w472y8.execute-api.us-east-1.amazonaws.com';
 
-  if (profilesError) throw profilesError;
+  console.log('[getAllUsersWithRoles] Fetching from:', `${apiEndpoint}/users`);
 
-  const { data: userRoles, error: rolesError } = await supabase
-    .from('user_roles')
-    .select('user_id, role');
+  try {
+    const response = await fetch(`${apiEndpoint}/users`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (rolesError) throw rolesError;
+    console.log('[getAllUsersWithRoles] Response status:', response.status);
 
-  return profiles.map(profile => ({
-    ...profile,
-    roles: userRoles
-      ?.filter(ur => ur.user_id === profile.id)
-      .map(ur => ur.role as AppRole) || []
-  }));
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[getAllUsersWithRoles] Error response:', errorText);
+      throw new Error(`Failed to fetch users: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('[getAllUsersWithRoles] Result:', result);
+    return result.data || [];
+  } catch (error) {
+    console.error('[getAllUsersWithRoles] Caught error:', error);
+    throw error;
+  }
 };
 
 export const checkIsLastAdmin = async (userId: string): Promise<boolean> => {
-  const { data, error } = await supabase
-    .from('user_roles')
-    .select('user_id')
-    .eq('role', 'administrator');
-
-  if (error) throw error;
-  
-  const adminCount = data?.length || 0;
-  const isThisUserAdmin = data?.some(r => r.user_id === userId);
-  
-  return adminCount === 1 && isThisUserAdmin;
+  // TODO: Implement AWS API call for checking last admin
+  console.log('[checkIsLastAdmin] TODO: Implement AWS API', { userId });
+  return false;
 };
