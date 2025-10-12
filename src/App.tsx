@@ -89,6 +89,7 @@ import BillingManagement from "./pages/admin/BillingManagement";
 import AuditLogs from "./pages/admin/AuditLogs";
 import ClinicianScheduleManagement from "./pages/admin/ClinicianScheduleManagement";
 import MySchedule from "./pages/MySchedule";
+import TestAWSUpload from "./pages/TestAWSUpload";
 
 const queryClient = new QueryClient();
 
@@ -109,13 +110,21 @@ const App = () => (
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/confirm-password-reset" element={<ConfirmPasswordReset />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-            <Route 
-              path="/dashboard" 
+            <Route
+              path="/dashboard"
               element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
-              } 
+              }
+            />
+            <Route
+              path="/test-aws-upload"
+              element={
+                <ProtectedRoute>
+                  <TestAWSUpload />
+                </ProtectedRoute>
+              }
             />
             <Route 
               path="/admin/users" 
