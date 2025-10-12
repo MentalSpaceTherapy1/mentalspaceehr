@@ -5,7 +5,10 @@
 
 import { cognitoAuth } from './aws-cognito';
 
-const API_BASE_URL = import.meta.env.VITE_API_ENDPOINT || 'https://xmbq984faa.execute-api.us-east-1.amazonaws.com/prod';
+const API_BASE_URL = import.meta.env.VITE_API_ENDPOINT || 'https://cyf1w472y8.execute-api.us-east-1.amazonaws.com';
+
+console.log('[aws-api-client] VITE_API_ENDPOINT:', import.meta.env.VITE_API_ENDPOINT);
+console.log('[aws-api-client] API_BASE_URL:', API_BASE_URL);
 
 export class APIError extends Error {
   constructor(
