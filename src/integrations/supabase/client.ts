@@ -63,4 +63,13 @@ export const supabase = {
   removeChannel: () => Promise.resolve('OK'),
   removeAllChannels: () => Promise.resolve('OK'),
   getChannels: () => [],
+  functions: {
+    invoke: (functionName: string, options?: any) => {
+      console.warn(`⚠️  Supabase function "${functionName}" called. Use AWS Lambda instead.`);
+      return Promise.resolve({
+        data: null,
+        error: { message: `Supabase functions are deprecated. Please implement AWS Lambda function for: ${functionName}` }
+      });
+    },
+  },
 } as any;
