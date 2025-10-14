@@ -1,15 +1,68 @@
 import { AppRole } from '@/hooks/useUserRoles';
 
 export const assignRole = async (userId: string, role: AppRole, assignedBy: string) => {
-  // TODO: Implement AWS API call for assigning roles
-  console.log('[assignRole] TODO: Implement AWS API', { userId, role, assignedBy });
-  throw new Error('Role assignment not yet implemented with AWS');
+  // HARDCODED for now to bypass environment variable caching issues
+  const apiEndpoint = 'https://cyf1w472y8.execute-api.us-east-1.amazonaws.com';
+
+  console.log('[assignRole] Assigning role:', { userId, role, assignedBy });
+
+  try {
+    const response = await fetch(`${apiEndpoint}/users/role`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user_id: userId, role, assigned_by: assignedBy }),
+    });
+
+    console.log('[assignRole] Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[assignRole] Error response:', errorText);
+      throw new Error(`Failed to assign role: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('[assignRole] Result:', result);
+    return result;
+  } catch (error) {
+    console.error('[assignRole] Caught error:', error);
+    throw error;
+  }
 };
 
 export const removeRole = async (userId: string, role: AppRole) => {
-  // TODO: Implement AWS API call for removing roles
-  console.log('[removeRole] TODO: Implement AWS API', { userId, role });
-  throw new Error('Role removal not yet implemented with AWS');
+  // For now, removing a role means setting it to null/empty
+  // We'll treat this as assigning no role (empty string or null)
+  const apiEndpoint = 'https://cyf1w472y8.execute-api.us-east-1.amazonaws.com';
+
+  console.log('[removeRole] Removing role:', { userId, role });
+
+  try {
+    const response = await fetch(`${apiEndpoint}/users/role`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user_id: userId, role: null, assigned_by: userId }),
+    });
+
+    console.log('[removeRole] Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[removeRole] Error response:', errorText);
+      throw new Error(`Failed to remove role: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('[removeRole] Result:', result);
+    return result;
+  } catch (error) {
+    console.error('[removeRole] Caught error:', error);
+    throw error;
+  }
 };
 
 export const getUserRoles = async (userId: string): Promise<AppRole[]> => {

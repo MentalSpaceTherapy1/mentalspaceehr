@@ -8,7 +8,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { ArrowLeft, Mail } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { checkRateLimit } from '@/lib/rateLimit';
 
@@ -46,47 +45,42 @@ export default function CreateUser() {
       // Generate temporary password
       const tempPassword = Math.random().toString(36).slice(-12) + 'Aa1!';
 
-      // Create user via edge function
-      const { data, error } = await supabase.functions.invoke('create-user', {
-        body: {
+      // HARDCODED for now to bypass environment variable caching issues
+      const apiEndpoint = 'https://cyf1w472y8.execute-api.us-east-1.amazonaws.com';
+
+      console.log('[CreateUser] Creating user via AWS API:', formData.email);
+
+      // Create user via AWS Lambda
+      const response = await fetch(`${apiEndpoint}/users/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           email: formData.email,
           password: tempPassword,
           profile: formData,
-        },
+        }),
       });
 
-      if (error) throw error;
+      console.log('[CreateUser] Response status:', response.status);
 
-      // Send invitation email if requested
-      if (sendInvitation && data?.user?.id) {
-        try {
-          const { error: inviteError } = await supabase.functions.invoke('send-staff-invitation', {
-            body: {
-              userId: data.user.id,
-              tempPassword: tempPassword,
-            },
-          });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[CreateUser] Error response:', errorText);
+        throw new Error(`Failed to create user: ${response.statusText}`);
+      }
 
-          if (inviteError) {
-            console.error('Failed to send invitation:', inviteError);
-            toast({
-              title: 'User Created',
-              description: `User created successfully but invitation email failed to send. Temporary password: ${tempPassword}`,
-              variant: 'destructive',
-            });
-          } else {
-            toast({
-              title: 'Success',
-              description: 'User created and invitation email sent successfully!',
-            });
-          }
-        } catch (inviteError) {
-          console.error('Invitation error:', inviteError);
-          toast({
-            title: 'User Created',
-            description: `User created. Temporary password: ${tempPassword}. Email invitation failed.`,
-          });
-        }
+      const result = await response.json();
+      console.log('[CreateUser] Result:', result);
+
+      // TODO: Send invitation email if requested
+      // For now, just show success message with temp password
+      if (sendInvitation) {
+        toast({
+          title: 'User Created',
+          description: `User created successfully. Temporary password: ${tempPassword}. (Email invitation not yet implemented)`,
+        });
       } else {
         toast({
           title: 'Success',
@@ -96,6 +90,7 @@ export default function CreateUser() {
 
       navigate('/admin/users');
     } catch (error) {
+      console.error('[CreateUser] Caught error:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create user',
