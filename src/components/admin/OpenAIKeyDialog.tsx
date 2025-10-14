@@ -39,7 +39,7 @@ export function OpenAIKeyDialog({ open, onOpenChange, onKeyAdded }: OpenAIKeyDia
         <div className="space-y-4">
           <Alert>
             <AlertDescription>
-              Your API key will be encrypted and stored securely in Lovable Cloud. After clicking "Setup API Key", you'll be prompted to enter your OpenAI API key in a secure modal.
+              Your API key will be encrypted and stored securely in AWS Secrets Manager. After clicking "Setup API Key", you'll be prompted to enter your OpenAI API key in a secure modal.
             </AlertDescription>
           </Alert>
 

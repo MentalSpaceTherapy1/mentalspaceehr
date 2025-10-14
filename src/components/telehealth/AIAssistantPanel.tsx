@@ -23,9 +23,9 @@ interface AIAssistantPanelProps {
   sessionId: string;
   isRecording: boolean;
   room: any; // Twilio Room
-  provider?: 'lovable_ai' | 'twilio';
+  provider?: 'openai' | 'twilio';
   onClose: () => void;
-  onProviderChange?: (provider: 'lovable_ai' | 'twilio') => void;
+  onProviderChange?: (provider: 'openai' | 'twilio') => void;
 }
 
 export const AIAssistantPanel = ({
@@ -33,7 +33,7 @@ export const AIAssistantPanel = ({
   sessionId,
   isRecording,
   room,
-  provider = 'lovable_ai',
+  provider = 'openai',
   onClose,
   onProviderChange
 }: AIAssistantPanelProps) => {
@@ -133,7 +133,7 @@ export const AIAssistantPanel = ({
                 <div>
                   <CardTitle className="text-lg">AI Assistant</CardTitle>
                   <CardDescription className="text-xs">
-                    {provider === 'twilio' ? 'Twilio Voice Intelligence' : 'Powered by Lovable AI'}
+                    {provider === 'twilio' ? 'Twilio Voice Intelligence' : 'Powered by OpenAI'}
                   </CardDescription>
                 </div>
               </div>
@@ -141,10 +141,10 @@ export const AIAssistantPanel = ({
                 {onProviderChange && (
                   <select
                     value={provider}
-                    onChange={(e) => onProviderChange(e.target.value as 'lovable_ai' | 'twilio')}
+                    onChange={(e) => onProviderChange(e.target.value as 'openai' | 'twilio')}
                     className="text-xs border rounded px-2 py-1 bg-background"
                   >
-                    <option value="lovable_ai">Lovable AI</option>
+                    <option value="openai">OpenAI</option>
                     <option value="twilio">Twilio AI</option>
                   </select>
                 )}

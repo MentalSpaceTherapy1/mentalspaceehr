@@ -25,7 +25,7 @@ interface AIInsight {
 interface UseTwilioAIOptions {
   room: Room | null;
   enabled: boolean;
-  provider?: 'lovable_ai' | 'twilio';
+  provider?: 'openai' | 'twilio';
   onTranscript?: (transcript: AITranscript) => void;
   onSentiment?: (sentiment: AISentiment) => void;
   onInsight?: (insight: AIInsight) => void;
@@ -34,7 +34,7 @@ interface UseTwilioAIOptions {
 export const useTwilioAI = ({
   room,
   enabled,
-  provider = 'lovable_ai',
+  provider = 'openai',
   onTranscript,
   onSentiment,
   onInsight
@@ -45,7 +45,7 @@ export const useTwilioAI = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const twilioTrackRef = useRef<any>(null);
 
-  // Real-time audio analysis using Lovable AI
+  // Real-time audio analysis using OpenAI
   useEffect(() => {
     if (!room || !enabled) return;
 
@@ -74,7 +74,7 @@ export const useTwilioAI = ({
         setTranscripts(prev => [...prev.slice(-50), transcript]);
         onTranscript?.(transcript);
 
-        // Analyze sentiment using Lovable AI
+        // Analyze sentiment using OpenAI
         const { data: sentimentData, error: sentimentError } = await supabase.functions.invoke(
           'analyze-session-audio',
           {
@@ -175,7 +175,7 @@ export const useTwilioAI = ({
         }
         console.log('[Twilio AI] Twilio Voice Intelligence enabled (mock mode)');
       } else {
-        console.log('[Twilio AI] Lovable AI transcription enabled');
+        console.log('[Twilio AI] OpenAI transcription enabled');
       }
 
       return true;

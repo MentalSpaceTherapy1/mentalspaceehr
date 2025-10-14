@@ -66,7 +66,7 @@ export default function TelehealthSession() {
   const [isParticipantsPanelOpen, setIsParticipantsPanelOpen] = useState(false);
   const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
   const [aiSessionSummary, setAiSessionSummary] = useState<string>('');
-  const [aiProvider, setAiProvider] = useState<'lovable_ai' | 'twilio'>('lovable_ai');
+  const [aiProvider, setAiProvider] = useState<'openai' | 'twilio'>('openai');
   const [layout, setLayout] = useState<'grid' | 'speaker' | 'gallery'>('grid');
   
   const timeoutCheckRef = useRef<NodeJS.Timeout | null>(null);
@@ -190,7 +190,7 @@ export default function TelehealthSession() {
           .single();
         
         if (aiSettings?.provider) {
-          setAiProvider(aiSettings.provider as 'lovable_ai' | 'twilio');
+          setAiProvider(aiSettings.provider as 'openai' | 'twilio');
         }
       } catch (e) {
         // Silently fail - use default flags

@@ -120,6 +120,39 @@ class APIClient {
   from(table: string) {
     return new TableQueryBuilder(this, table);
   }
+
+  /**
+   * Call AWS Lambda function (replaces Supabase RPC)
+   * Mimics: supabase.rpc('function_name', { params })
+   */
+  async rpc<T>(
+    functionName: string,
+    params?: Record<string, any>
+  ): Promise<{ data: T | null; error: APIError | null }> {
+    return this.post<T>(`rpc/${functionName}`, params);
+  }
+
+  /**
+   * Create realtime channel (polling implementation)
+   * Mimics: supabase.channel(name)
+   */
+  channel(channelName: string) {
+    return new RealtimeChannel(this, channelName);
+  }
+
+  /**
+   * Remove channel (cleanup)
+   */
+  removeChannel(channel: RealtimeChannel): void {
+    channel.unsubscribe();
+  }
+
+  /**
+   * Remove all channels
+   */
+  removeAllChannels(): void {
+    // Cleanup handled by individual channels
+  }
 }
 
 class TableQueryBuilder {
@@ -299,8 +332,145 @@ class TableQueryBuilder {
   }
 }
 
+/**
+ * Realtime Channel - Polling-based implementation
+ * Replaces Supabase Realtime with polling
+ */
+class RealtimeChannel {
+  private client: APIClient;
+  private channelName: string;
+  private listeners: Map<string, Function[]> = new Map();
+  private pollingInterval: NodeJS.Timeout | null = null;
+  private lastPollTime: string = new Date().toISOString();
+  private isSubscribed: boolean = false;
+
+  constructor(client: APIClient, channelName: string) {
+    this.client = client;
+    this.channelName = channelName;
+  }
+
+  /**
+   * Listen to database changes
+   * Mimics: channel.on('postgres_changes', { event, schema, table, filter }, callback)
+   */
+  on(
+    event: string,
+    config: {
+      event?: 'INSERT' | 'UPDATE' | 'DELETE' | '*';
+      schema?: string;
+      table?: string;
+      filter?: string;
+    },
+    callback: (payload: any) => void
+  ) {
+    const key = `${event}-${config.table}`;
+
+    if (!this.listeners.has(key)) {
+      this.listeners.set(key, []);
+    }
+
+    this.listeners.get(key)!.push(callback);
+
+    return this;
+  }
+
+  /**
+   * Subscribe to channel and start polling
+   * Mimics: channel.subscribe()
+   */
+  async subscribe() {
+    if (this.isSubscribed) return 'SUBSCRIBED';
+
+    this.isSubscribed = true;
+
+    // Start polling every 3 seconds
+    this.pollingInterval = setInterval(async () => {
+      await this.poll();
+    }, 3000);
+
+    return 'SUBSCRIBED';
+  }
+
+  /**
+   * Poll for new changes
+   */
+  private async poll() {
+    for (const [key, callbacks] of this.listeners.entries()) {
+      const [event, table] = key.split('-');
+
+      if (table) {
+        // Poll table for changes since last poll
+        const { data, error } = await this.client.get(
+          `${table}?since=${this.lastPollTime}`
+        );
+
+        if (data && !error && Array.isArray(data) && data.length > 0) {
+          // Trigger callbacks for each change
+          for (const item of data) {
+            for (const callback of callbacks) {
+              callback({
+                eventType: 'INSERT', // Simplified - assume INSERT
+                new: item,
+                old: null,
+                schema: 'public',
+                table,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    this.lastPollTime = new Date().toISOString();
+  }
+
+  /**
+   * Unsubscribe from channel
+   * Mimics: channel.unsubscribe()
+   */
+  unsubscribe() {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+    }
+
+    this.isSubscribed = false;
+    this.listeners.clear();
+
+    return 'UNSUBSCRIBED';
+  }
+}
+
 // Export singleton instance
 export const apiClient = new APIClient(API_BASE_URL);
 
+// Export compatibility alias for easier migration
+export const supabase = {
+  from: (table: string) => apiClient.from(table),
+  rpc: (fn: string, params?: any) => apiClient.rpc(fn, params),
+  channel: (name: string) => apiClient.channel(name),
+  removeChannel: (channel: any) => apiClient.removeChannel(channel),
+  removeAllChannels: () => apiClient.removeAllChannels(),
+
+  // Mock auth methods (Cognito handles auth)
+  auth: {
+    getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+    getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+    signOut: () => Promise.resolve({ error: null }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+  },
+
+  // Mock storage (use awsStorage instead)
+  storage: {
+    from: () => ({
+      upload: () => Promise.resolve({ data: null, error: new Error('Use awsStorage instead') }),
+      download: () => Promise.resolve({ data: null, error: new Error('Use awsStorage instead') }),
+      remove: () => Promise.resolve({ data: null, error: new Error('Use awsStorage instead') }),
+      list: () => Promise.resolve({ data: [], error: new Error('Use awsStorage instead') }),
+      getPublicUrl: () => ({ data: { publicUrl: '' } }),
+    }),
+  },
+};
+
 // Export types
-export type { APIClient, TableQueryBuilder };
+export type { APIClient, TableQueryBuilder, RealtimeChannel };

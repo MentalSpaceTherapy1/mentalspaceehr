@@ -1,75 +1,14 @@
-// LEGACY SUPABASE CLIENT - NOW USING AWS COGNITO + LAMBDA + AURORA
-// This is a comprehensive mock to prevent crashes. Returns empty data for all operations.
-// Migrate all data operations to AWS API client: @/lib/aws-api-client
+// SUPABASE HAS BEEN COMPLETELY REPLACED WITH AWS
+// This file now re-exports the AWS API client for backward compatibility
+// ALL new code should import from '@/lib/aws-api-client' directly
+
+import { supabase as awsSupabaseCompat } from '@/lib/aws-api-client';
 import type { Database } from './types';
 
-console.warn('⚠️  Supabase client is deprecated. Use AWS API from @/lib/aws-api-client');
+console.warn('⚠️  Supabase deprecated. Using AWS API Gateway + Lambda + Aurora PostgreSQL');
 
-// Create chainable mock that returns empty data (no errors to prevent crashes)
-const createChainableMock = (): any => {
-  const mock: any = new Proxy({}, {
-    get: (target, prop) => {
-      // Terminal methods that return promises
-      if (prop === 'then' || prop === 'catch') {
-        return (fn: any) => Promise.resolve({ data: [], error: null }).then(fn);
-      }
-      if (prop === 'single' || prop === 'maybeSingle') {
-        return () => Promise.resolve({ data: null, error: null });
-      }
-      // All other methods return the mock for chaining
-      return (...args: any[]) => mock;
-    }
-  });
-  return mock;
-};
+// Re-export AWS-backed supabase client
+export const supabase = awsSupabaseCompat;
 
-// Comprehensive mock Supabase client
-export const supabase = {
-  auth: {
-    getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-    getUser: () => Promise.resolve({ data: { user: null }, error: null }),
-    signOut: () => Promise.resolve({ error: null }),
-    signIn: () => Promise.resolve({ data: null, error: null }),
-    signUp: () => Promise.resolve({ data: null, error: null }),
-    resetPasswordForEmail: () => Promise.resolve({ data: null, error: null }),
-    updateUser: () => Promise.resolve({ data: null, error: null }),
-    setSession: () => Promise.resolve({ data: { session: null }, error: null }),
-    onAuthStateChange: (callback?: any) => {
-      if (callback) setTimeout(() => callback('SIGNED_OUT', null), 0);
-      return { data: { subscription: { unsubscribe: () => {} } } };
-    },
-  },
-  from: (table: string) => createChainableMock(),
-  rpc: (fn: string, params?: any) => Promise.resolve({ data: null, error: null }),
-  storage: {
-    from: (bucket: string) => ({
-      upload: () => Promise.resolve({ data: null, error: null }),
-      download: () => Promise.resolve({ data: null, error: null }),
-      remove: () => Promise.resolve({ data: null, error: null }),
-      list: () => Promise.resolve({ data: [], error: null }),
-      getPublicUrl: (path: string) => ({ data: { publicUrl: '' } }),
-      createSignedUrl: () => Promise.resolve({ data: null, error: null }),
-      createSignedUrls: () => Promise.resolve({ data: [], error: null }),
-    }),
-  },
-  channel: (name: string) => ({
-    on: (event: string, filter: any, callback?: any) => {
-      const self = { subscribe: () => Promise.resolve('SUBSCRIBED') };
-      return self;
-    },
-    subscribe: () => Promise.resolve('SUBSCRIBED'),
-    unsubscribe: () => Promise.resolve('UNSUBSCRIBED'),
-  }),
-  removeChannel: () => Promise.resolve('OK'),
-  removeAllChannels: () => Promise.resolve('OK'),
-  getChannels: () => [],
-  functions: {
-    invoke: (functionName: string, options?: any) => {
-      console.warn(`⚠️  Supabase function "${functionName}" called. Use AWS Lambda instead.`);
-      return Promise.resolve({
-        data: null,
-        error: { message: `Supabase functions are deprecated. Please implement AWS Lambda function for: ${functionName}` }
-      });
-    },
-  },
-} as any;
+// Re-export type for compatibility
+export type { Database };

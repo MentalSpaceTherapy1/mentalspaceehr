@@ -520,8 +520,8 @@ export default function ClientChart() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    // Use production URL - this will be your deployed app URL
-                    const portalLink = 'https://98017cf1-a287-4c75-90bf-f5c01f7922ab.lovableproject.com/portal/login';
+                    // Use your AWS-deployed portal URL
+                    const portalLink = `${import.meta.env.VITE_APP_URL || window.location.origin}/portal/login`;
                     navigator.clipboard.writeText(portalLink);
                     toast({
                       title: 'Portal Link Copied',

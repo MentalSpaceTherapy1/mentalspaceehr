@@ -185,12 +185,12 @@ export default function AINoteSettings() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="lovable_ai">Lovable AI (Recommended)</SelectItem>
+                      <SelectItem value="openai">OpenAI GPT-4 (Recommended)</SelectItem>
                       <SelectItem value="openai">OpenAI</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {settings.provider === 'lovable_ai' 
+                    {settings.provider === 'openai' 
                       ? 'Built-in HIPAA-compliant AI service (Free tier included)'
                       : 'Requires OpenAI API key and separate billing'}
                   </p>
@@ -206,7 +206,7 @@ export default function AINoteSettings() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {settings.provider === 'lovable_ai' ? (
+                      {settings.provider === 'openai' ? (
                         <>
                           <SelectItem value="google/gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</SelectItem>
                           <SelectItem value="google/gemini-2.5-pro">Gemini 2.5 Pro (High Quality)</SelectItem>
