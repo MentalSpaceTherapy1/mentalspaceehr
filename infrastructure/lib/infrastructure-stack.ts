@@ -433,6 +433,62 @@ export class MentalSpaceEhrStack extends cdk.Stack {
     authorizer._attachToApi(api);
 
     // ========================================
+    // CRUD Lambda Functions
+    // ========================================
+    const queryFunction = new lambda.Function(this, 'QueryDatabaseFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/query-database'),
+      role: lambdaExecutionRole,
+      vpc,
+      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      securityGroups: [lambdaSecurityGroup],
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+      environment: {
+        DATABASE_ENDPOINT: dbCluster.clusterEndpoint.hostname,
+        DATABASE_PORT: '5432',
+        DATABASE_NAME: 'mentalspaceehr',
+        DATABASE_USER: 'postgres',
+        DATABASE_PASSWORD: dbSecret.secretValueFromJson('password').unsafeUnwrap(),
+      },
+      layers: [databaseLayer],
+    });
+
+    const insertFunction = new lambda.Function(this, 'InsertDatabaseFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('lambda/insert-database'),
+      role: lambdaExecutionRole,
+      vpc,
+      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      securityGroups: [lambdaSecurityGroup],
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
+      environment: {
+        DATABASE_ENDPOINT: dbCluster.clusterEndpoint.hostname,
+        DATABASE_PORT: '5432',
+        DATABASE_NAME: 'mentalspaceehr',
+        DATABASE_USER: 'postgres',
+        DATABASE_PASSWORD: dbSecret.secretValueFromJson('password').unsafeUnwrap(),
+      },
+      layers: [databaseLayer],
+    });
+
+    // Add API routes
+    const queryResource = api.root.addResource('query').addResource('{table}');
+    queryResource.addMethod('GET', new apigateway.LambdaIntegration(queryFunction), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+
+    const insertResource = api.root.addResource('insert').addResource('{table}');
+    insertResource.addMethod('POST', new apigateway.LambdaIntegration(insertFunction), {
+      authorizer,
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+    });
+
+    // ========================================
     // 19. CloudWatch Log Groups (Auto-created by Lambda/API Gateway)
     // ========================================
     // Note: Log groups are automatically created by Lambda and API Gateway

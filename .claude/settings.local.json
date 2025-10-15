@@ -61,7 +61,11 @@
       "Bash(do if [ -f \"infrastructure/lambda/$func/index.js\" ])",
       "Bash(then echo \"✅ $func\")",
       "Bash(else echo \"❌ $func MISSING\")",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Read(//c/tmp/**)",
+      "Bash(tar:*)",
+      "Bash(unzip:*)",
+      "Read(//c/Users/Elize/**)"
     ],
     "deny": [],
     "ask": []
