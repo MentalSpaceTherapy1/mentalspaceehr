@@ -1,0 +1,73 @@
+{
+  "functions": [
+    { "name": "list-clients", "method": "GET", "path": "/clients", "auth": true, "vpc": true },
+    { "name": "get-client", "method": "GET", "path": "/clients/{id}", "auth": true, "vpc": true },
+    { "name": "create-client", "method": "POST", "path": "/clients", "auth": true, "vpc": true },
+    { "name": "update-client", "method": "PUT", "path": "/clients/{id}", "auth": true, "vpc": true },
+
+    { "name": "list-appointments", "method": "GET", "path": "/appointments", "auth": true, "vpc": true },
+    { "name": "create-appointment", "method": "POST", "path": "/appointments", "auth": true, "vpc": true },
+    { "name": "update-appointment", "method": "PUT", "path": "/appointments/{id}", "auth": true, "vpc": true },
+
+    { "name": "list-notes", "method": "GET", "path": "/notes", "auth": true, "vpc": true },
+    { "name": "create-note", "method": "POST", "path": "/notes", "auth": true, "vpc": true },
+
+    { "name": "list-tasks", "method": "GET", "path": "/tasks", "auth": true, "vpc": true },
+    { "name": "create-task", "method": "POST", "path": "/tasks", "auth": true, "vpc": true },
+    { "name": "update-task", "method": "PUT", "path": "/tasks/{id}", "auth": true, "vpc": true },
+
+    { "name": "list-profiles", "method": "GET", "path": "/profiles", "auth": true, "vpc": true },
+    { "name": "get-profile", "method": "GET", "path": "/profiles/{id}", "auth": true, "vpc": true },
+    { "name": "update-profile", "method": "PUT", "path": "/profiles/{id}", "auth": true, "vpc": true },
+
+    { "name": "get-dashboard-stats", "method": "GET", "path": "/dashboard/stats", "auth": true, "vpc": true },
+
+    { "name": "get-telehealth-session", "method": "GET", "path": "/telehealth/sessions/{sessionId}", "auth": true, "vpc": true },
+    { "name": "create-telehealth-session", "method": "POST", "path": "/telehealth/sessions", "auth": true, "vpc": true },
+    { "name": "update-telehealth-session", "method": "PUT", "path": "/telehealth/sessions/{sessionId}", "auth": true, "vpc": true },
+
+    { "name": "list-session-messages", "method": "GET", "path": "/telehealth/sessions/{sessionId}/messages", "auth": true, "vpc": true },
+    { "name": "create-session-message", "method": "POST", "path": "/telehealth/sessions/{sessionId}/messages", "auth": true, "vpc": true },
+
+    { "name": "create-waiting-room-entry", "method": "POST", "path": "/waiting-room", "auth": true, "vpc": true },
+    { "name": "admit-from-waiting-room", "method": "POST", "path": "/waiting-room/admit", "auth": true, "vpc": true },
+    { "name": "list-waiting-room-queue", "method": "GET", "path": "/waiting-room", "auth": true, "vpc": true },
+
+    { "name": "create-session-participant", "method": "POST", "path": "/telehealth/sessions/{sessionId}/participants", "auth": true, "vpc": true },
+    { "name": "update-session-participant", "method": "PUT", "path": "/telehealth/sessions/{sessionId}/participants", "auth": true, "vpc": true },
+    { "name": "list-session-participants", "method": "GET", "path": "/telehealth/sessions/{sessionId}/participants", "auth": true, "vpc": true },
+
+    { "name": "get-twilio-token", "method": "POST", "path": "/twilio/token", "auth": true, "vpc": false },
+
+    { "name": "list-users", "method": "GET", "path": "/users", "auth": true, "vpc": true },
+    { "name": "create-user", "method": "POST", "path": "/users", "auth": true, "vpc": true },
+    { "name": "update-user-role", "method": "PUT", "path": "/users/{id}/role", "auth": true, "vpc": true },
+    { "name": "toggle-user-active", "method": "PUT", "path": "/users/{id}/active", "auth": true, "vpc": true },
+    { "name": "get-user-roles", "method": "GET", "path": "/users/{id}/roles", "auth": true, "vpc": true },
+
+    { "name": "create-portal-user", "method": "POST", "path": "/portal/users", "auth": true, "vpc": true },
+
+    { "name": "list-claims", "method": "GET", "path": "/billing/claims", "auth": true, "vpc": true },
+    { "name": "process-payment", "method": "POST", "path": "/billing/payments", "auth": true, "vpc": true },
+
+    { "name": "generate-clinical-note", "method": "POST", "path": "/ai/generate-note", "auth": true, "vpc": false },
+    { "name": "generate-intake-note", "method": "POST", "path": "/ai/generate-intake", "auth": true, "vpc": false },
+    { "name": "generate-treatment-plan", "method": "POST", "path": "/ai/generate-treatment-plan", "auth": true, "vpc": false },
+    { "name": "generate-section-content", "method": "POST", "path": "/ai/generate-section", "auth": true, "vpc": false },
+    { "name": "suggest-clinical-content", "method": "POST", "path": "/ai/suggest-content", "auth": true, "vpc": false },
+
+    { "name": "extract-insurance-card", "method": "POST", "path": "/documents/extract-insurance", "auth": true, "vpc": false },
+    { "name": "scan-uploaded-file", "method": "POST", "path": "/documents/scan", "auth": true, "vpc": false },
+
+    { "name": "confirm-appointment", "method": "GET", "path": "/appointments/confirm/{token}", "auth": false, "vpc": true },
+
+    { "name": "security-audit", "method": "POST", "path": "/security/audit", "auth": true, "vpc": true },
+    { "name": "check-compliance", "method": "POST", "path": "/compliance/check", "auth": true, "vpc": true },
+
+    { "name": "advancedmd-auth", "method": "POST", "path": "/integrations/advancedmd/auth", "auth": true, "vpc": false },
+    { "name": "advancedmd-proxy", "method": "POST", "path": "/integrations/advancedmd/proxy", "auth": true, "vpc": false },
+
+    { "name": "check-openai-key", "method": "POST", "path": "/utilities/check-openai-key", "auth": true, "vpc": false },
+    { "name": "reset-user-password", "method": "POST", "path": "/utilities/reset-password", "auth": true, "vpc": true }
+  ]
+}
