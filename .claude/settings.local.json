@@ -57,7 +57,11 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(tee:*)",
-      "Bash(do echo \"Updating $func...\")"
+      "Bash(do echo \"Updating $func...\")",
+      "Bash(do if [ -f \"infrastructure/lambda/$func/index.js\" ])",
+      "Bash(then echo \"✅ $func\")",
+      "Bash(else echo \"❌ $func MISSING\")",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": []
